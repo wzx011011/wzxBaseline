@@ -2,7 +2,7 @@
     "test_3mf_basic": 
     {
         "vaild": {
-            "lists": [
+            "items": [
                 "立方体(1).3mf",
                 "球-bbl.3mf",
                 "风扇支架.3mf",
@@ -16,7 +16,7 @@
         },
         
         "invaild": {
-            "lists": [
+            "items": [
                 "立方体(1).3mf"
             ],
             "expectation": "fail"
