@@ -1,7 +1,7 @@
 {
     "test_3mf_basic": 
-    [
-        {
+    {
+        "vaild": {
             "lists": [
                 "立方体(1).3mf",
                 "球-bbl.3mf",
@@ -15,12 +15,12 @@
             "expectation": "successful"
         },
         
-        {
+        "invaild": {
             "lists": [
                 "立方体(1).3mf"
             ],
             "expectation": "fail"
         }
-    ]
+    }
 
 }
