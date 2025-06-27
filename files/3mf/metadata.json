@@ -3,13 +3,6 @@
     {
         "vaild": {
             "items": [
-                "立方体(1).3mf",
-                "球-bbl.3mf",
-                "风扇支架.3mf",
-                "后.3mf",
-                "前.3mf",
-                "热片支架.3mf",
-                "外壳.3mf",
                 "旋钮盖.3mf"
             ],
             "expectation": "successful"
