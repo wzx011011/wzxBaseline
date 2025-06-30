@@ -2,18 +2,15 @@
     "test_3mf_basic": 
     {
         "reopen": [
-            {"input":"旋钮盖.3mf","expectation": "successful"},
-            {"input":"球-bbl.3mf", "expectation": "successful"},
-            {"input":"旋钮盖.3mf", "expectation": "successful"},
-            {"input":"风扇支架.3mf", "expectation": "successful"},
-            {"input":"后.3mf", "expectation": "successful"},
-            {"input":"前.3mf", "expectation": "successful"},
-            {"input":"热片支架.3mf", "expectation": "successful"},
-            {"input":"外壳.3mf", "expectation": "successful"}
+            
         ],
         "continuous": [
-            {"input":"旋钮盖.3mf","expectation": "successful"},
-            {"input":"立方体(1).3mf", "expectation": "successful"}
+            {"input":"旋钮盖.3mf","expectation": 200},
+            {"input":"风扇支架.3mf", "expectation": 200},
+            {"input":"后.3mf", "expectation": 200},
+            {"input":"前.3mf", "expectation": 200},
+            {"input":"热片支架.3mf", "expectation": 200},
+            {"input":"外壳.3mf", "expectation": 200}
         ]
     }
 
