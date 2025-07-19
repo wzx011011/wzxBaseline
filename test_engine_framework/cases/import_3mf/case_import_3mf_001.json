@@ -1,0 +1,7 @@
+{
+  "name": "import-cube-3mf",
+  "model_file": "models/cube.3mf",
+  "config_file": "configs/empty.ini",
+  "expected_model_valid": true,
+  "tags": ["import_3mf"]
+}
