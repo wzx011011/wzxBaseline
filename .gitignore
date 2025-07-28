@@ -2,3 +2,6 @@ test_engine_framework/.pytest_cache
 test_engine_framework/Engine
 test_engine_framework/output/report/*
 test_engine_framework/runner/__pycache__/*
+test_engine_framework/runner/__pycache__/*
+.pytest_cache
+__pycache__
