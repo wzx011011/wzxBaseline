@@ -4,6 +4,7 @@ import time
 import sys
 import subprocess
 import json
+import socket
 from pathlib import Path
 
 import git
@@ -48,18 +49,66 @@ def test_resources_path(pytestconfig):
 def open_creality_printer():
     """Open and close creality printer.
     """
+    proc,client_socket,send_cmd_handle = open_impl(None)
+    yield send_cmd_handle
+    client_socket.close()
+    proc.terminate()
+
+@pytest.fixture()
+def open_creality_printer_with_file():
+    """Open and close creality printer with file path.
+    """
+    proc,client_socket,send_cmd_handle = open_impl(None)
+    yield send_cmd_handle
+    client_socket.close()
+    proc.terminate()
+    time.sleep(5) # 关掉软件还有退出函数在执行，先用固定睡眠等待处理
+
+def open_impl(file_path):
     if os.path.exists(log_path()):
         os.remove(log_path())
     if os.path.exists(f"{log_path()}.offset"):
-        os.remove(f"{log_path()}.offset")        
+        os.remove(f"{log_path()}.offset")
+    lanuncher = [creality_printer_path(), "test#157369"]
+    if not file_path is None:
+        lanuncher.append(file_path)
     proc = subprocess.Popen(
-        [creality_printer_path(), "test#157369"],
+        lanuncher,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
     app_respone("APP", "READY", 0)
-    yield
-    proc.terminate()
+    # cmd channel
+    client_socket,send_cmd_handle = open_cmd_channel()
+    return proc,client_socket,send_cmd_handle
+
+def open_cmd_channel():
+    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_address = ('127.0.0.1', 12345)
+    client_socket.connect(server_address)
+    def bind_send_cmd(command, params, recvcmd_timeout = None):
+        return send_cmd(client_socket, command, params, recvcmd_timeout)
+    return client_socket, bind_send_cmd
+
+def send_cmd(client_socket, command, params, recvcmd_timeout):
+    # 构造消息体：命令;参数
+    message_body = f"{command};{params}"
+    message_body_bytes = message_body.encode('utf-8')  # 转为字节
+    # 发送消息
+    print("send:", len(message_body_bytes), message_body_bytes)
+    client_socket.sendall(message_body_bytes)
+    # cmd必定是一问一答
+    if not recvcmd_timeout is None:
+        client_socket.settimeout(recvcmd_timeout)
+    try:
+        response = client_socket.recv(2048)
+        print("Server response:", response.decode('utf-8'))
+    except socket.timeout:
+        print("recv timeout!")
+        return False,"timeout",""
+    if not recvcmd_timeout is None:
+        client_socket.settimeout(None)
+    return True,"ok",response
 
 @pytest.fixture(scope="package")
 def max_windows(test_resources_path):

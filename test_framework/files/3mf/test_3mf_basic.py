@@ -13,7 +13,7 @@ def reopen_file(check_app_respone):
         pyperclip.copy(file_name)
         pyautogui.hotkey("ctrl", "v")
         pyautogui.press("enter")
-        return check_app_respone("FILES", "LOAD_PROJECT", 0, 10)
+        return check_app_respone("FILES", "LOAD_PROJECT", 1, 10)
     return inner
 
 # 连续打开
@@ -25,18 +25,15 @@ def continuous_open_file(check_app_respone):
         pyperclip.copy(file_name)
         pyautogui.hotkey("ctrl", "v")
         pyautogui.press("enter")
-        return check_app_respone("FILES", "LOAD_PROJECT", 0, 10)
+        return check_app_respone("FILES", "LOAD_PROJECT", 1, 10)
     return inner
-
-
 
 def test_reopen_3mf(reopen_item, baseline_cur_path, reopen_file):
     path = os.path.join(baseline_cur_path, reopen_item["input"])
-    ret = reopen_file(path)["code"] == 0? 200:201
+    ret = reopen_file(path)["code"] == 0
     assert ret == reopen_item["expectation"]
-
 
 def test_continuous_3mf(continuous_item, baseline_cur_path, continuous_open_file):
     path = os.path.join(baseline_cur_path, continuous_item["input"])
-    ret = continuous_open_file(path)["code"] == 0? 200:201
+    ret = continuous_open_file(path)["code"] == 0
     assert ret == continuous_item["expectation"]

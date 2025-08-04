@@ -11,7 +11,7 @@ def open_max_cp(open_creality_printer):
 
 # 动态参数化配置
 def pytest_generate_tests(metafunc):
-    from testcases.conftest import parametrize
+    from test_framework.conftest import parametrize
     parametrize(
         metafunc, 
         {

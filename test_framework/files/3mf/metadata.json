@@ -5,12 +5,12 @@
             
         ],
         "continuous": [
-            {"input":"旋钮盖.3mf","expectation": 200},
-            {"input":"风扇支架.3mf", "expectation": 200},
-            {"input":"后.3mf", "expectation": 200},
-            {"input":"前.3mf", "expectation": 200},
-            {"input":"热片支架.3mf", "expectation": 200},
-            {"input":"外壳.3mf", "expectation": 200}
+            {"input":"旋钮盖.3mf","expectation": true},
+            {"input":"风扇支架.3mf", "expectation": true},
+            {"input":"后.3mf", "expectation": true},
+            {"input":"前.3mf", "expectation": true},
+            {"input":"热片支架.3mf", "expectation": true},
+            {"input":"外壳.3mf", "expectation": true}
         ]
     }
 

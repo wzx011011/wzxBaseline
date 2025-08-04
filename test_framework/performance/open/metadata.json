@@ -1,0 +1,9 @@
+{
+    "test_performance_open": 
+    {
+        "reopen": [
+            {"input":"maorongxiong.3mf","expectation": true}
+        ]
+    }
+
+}
