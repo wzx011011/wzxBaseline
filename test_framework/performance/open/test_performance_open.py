@@ -8,6 +8,7 @@ import cv2
 import re
 import numpy as np
 import json
+import zipfile
 from pathlib import Path
 
 def are_images_similar(img1_path, img2_path, min_match_count=10):
@@ -256,37 +257,94 @@ def are_contours_similar(image_path1, image_path2, output_path1=None, output_pat
 
     return match_ratio >= match_ratio_threshold
 
+def unzip_file(zip_file_path: str, extract_to_path: str) -> bool:
+    """
+    解压 zip 文件到指定目录
+
+    参数:
+        zip_file_path (str): 压缩文件路径，例如 "example.zip"
+        extract_to_path (str): 解压目标文件夹路径，例如 "./output/"
+
+    返回:
+        bool: 解压成功返回 True，失败返回 False
+    """
+    try:
+        # 如果目标路径不存在，则创建
+        os.makedirs(extract_to_path, exist_ok=True)
+
+        # 检查 zip 文件是否存在
+        if not os.path.isfile(zip_file_path):
+            print(f"[错误] 压缩文件不存在：{zip_file_path}")
+            return False
+
+        # 打开 zip 文件并解压
+        with zipfile.ZipFile(zip_file_path, 'r') as zip_ref:
+            zip_ref.extractall(extract_to_path)
+        
+        print(f"[成功] 文件已解压到：{extract_to_path}")
+        return True
+
+    except zipfile.BadZipFile:
+        print(f"[错误] 文件 '{zip_file_path}' 不是有效的 ZIP 文件 或已损坏")
+    except PermissionError:
+        print(f"[错误] 没有权限写入目标目录：{extract_to_path}")
+    except Exception as e:
+        print(f"[错误] 解压失败，原因：{e}")
+
+    return False
+
 def test_performance_reopen(reopen_item, baseline_cur_path, open_creality_printer_with_file, check_app_respone, tmp_path):
-    prefix = tmp_path/"capture"
+    prefix = tmp_path/"test_performance_reopen"
     if prefix.exists():
         shutil.rmtree(prefix)
     prefix.mkdir()
+    # capture prefix
+    capture_prefix = prefix/"capture"
+    capture_prefix.mkdir()
+    # unzip prefix
+    extract_prefix = prefix/"extract"
+    extract_prefix.mkdir()
+
     path = os.path.join(baseline_cur_path, reopen_item["input"])
     send_cmd_handle = open_creality_printer_with_file
     # open project
     send_cmd_handle("trigger_load_project", json.dumps({"file": path}))
-    check_app_respone("FILES", "LOAD_PROJECT", 0)
-    
-    # heartbeat
-    # ret,_ = send_cmd_handle("ping", json.dumps({}), 30)
 
-    check_app_respone("FILES", "LOAD_PROJECT", 1)
+     # heartbeat
+    def heartbeat(delay):
+        ret,_,_ = send_cmd_handle("ping", json.dumps({}), 30, True)
+        return ret
+
+    check_app_respone("FILES", "LOAD_PROJECT", 0)
+    ret = check_app_respone("FILES", "LOAD_PROJECT", 1, -1, heartbeat)
+    assert ret["code"] == 0
+
+    # unzip 3mf
+    ret = unzip_file(path, str(extract_prefix))
+    assert ret == True
+
+    # found one thumnail to get size
+    list1 = find_plate_png_files(str(extract_prefix/"Metadata"))
+    thumnail_size = -1
+    if len(list1) != 0:
+        img = cv2.imread(list1[0], cv2.IMREAD_GRAYSCALE)
+        thumnail_size = img.shape[0]
+    if thumnail_size == -1:
+        thumnail_size = 300
+
     ret,_,_ = send_cmd_handle("capture", json.dumps({
         "type": "ready",
-        "save_as": str(prefix)+"/"+"plate_%s.png",
-        "w": 512,
-        "h": 512
+        "save_as": str(capture_prefix)+"/"+"plate_%s.png",
+        "w": thumnail_size,
+        "h": thumnail_size
     }))
-    assert ret == True
-    # becompre images
-    search_dir = r"C:\Users\118909\Desktop\maorongxiong\Metadata"
-    list1 = find_plate_png_files(search_dir)
-    list2 = find_plate_png_files(str(prefix))
+    # becompre images    
+    list2 = find_plate_png_files(str(capture_prefix))
     matched = match_plate_files(list1, list2)
     similar = True
     if len(matched) == 0:
         similar = False
     for file_pair in matched:
         img1_path, img2_path = file_pair
-        similar = similar and are_contours_similar(img1_path, img2_path, "D:/t1.png", "D:/t2.png", 0.8, 0.95)
+        similar = similar and are_contours_similar(img1_path, img2_path, None, None, 0.8, 0.95)
     assert similar == reopen_item["expectation"]

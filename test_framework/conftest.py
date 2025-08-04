@@ -86,26 +86,36 @@ def open_cmd_channel():
     client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_address = ('127.0.0.1', 12345)
     client_socket.connect(server_address)
-    def bind_send_cmd(command, params, recvcmd_timeout = None):
-        return send_cmd(client_socket, command, params, recvcmd_timeout)
+    def bind_send_cmd(command, params, recvcmd_timeout = None, band_output = False):
+        return send_cmd(client_socket, command, params, recvcmd_timeout, band_output)
     return client_socket, bind_send_cmd
 
-def send_cmd(client_socket, command, params, recvcmd_timeout):
+def send_cmd(client_socket, command, params, recvcmd_timeout, band_output):
     # 构造消息体：命令;参数
     message_body = f"{command};{params}"
     message_body_bytes = message_body.encode('utf-8')  # 转为字节
     # 发送消息
-    print("send:", len(message_body_bytes), message_body_bytes)
-    client_socket.sendall(message_body_bytes)
+    if not band_output:
+        print("send:", len(message_body_bytes), message_body_bytes)
+
+    try:
+        client_socket.sendall(message_body_bytes)
+    except ConnectionResetError:
+        print("app dead")
+        return False,"lostconnect",""
     # cmd必定是一问一答
     if not recvcmd_timeout is None:
         client_socket.settimeout(recvcmd_timeout)
     try:
         response = client_socket.recv(2048)
-        print("Server response:", response.decode('utf-8'))
+        if not band_output:
+            print("Server response:", response.decode('utf-8'))
     except socket.timeout:
         print("recv timeout!")
         return False,"timeout",""
+    except ConnectionResetError:
+        print("app dead")
+        return False,"lostconnect",""
     if not recvcmd_timeout is None:
         client_socket.settimeout(None)
     return True,"ok",response
@@ -173,7 +183,7 @@ def read_new_log_lines(log_path):
 
     return new_content
 
-def app_respone(m, f, c, timeout=-1):
+def app_respone(m, f, c, timeout=-1, itercallback=None):
     def ret(code, error, match_content):
         return {
             "code": code,
@@ -183,7 +193,7 @@ def app_respone(m, f, c, timeout=-1):
     
     def match_keyword(m, f, c):
         return f"{m}_{f}_{c}"
-        
+
     start_time = time.perf_counter()
     while True:
         try:
@@ -194,7 +204,11 @@ def app_respone(m, f, c, timeout=-1):
                         return ret(0, None, line.strip())
         except FileNotFoundError as e:
             pass
-            
+
+        if not itercallback is None:
+            if itercallback(time.perf_counter() - start_time) == False:
+                return ret(2, "itercallback False", None)
+
         if timeout != -1:
             if (time.perf_counter() - start_time) >= timeout:
                 return ret(1, "timeout", None)
