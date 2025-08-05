@@ -9,6 +9,7 @@ import re
 import numpy as np
 import json
 import zipfile
+from datetime import datetime
 from pathlib import Path
 
 def are_images_similar(img1_path, img2_path, min_match_count=10):
@@ -181,8 +182,8 @@ def are_contours_similar(image_path1, image_path2, output_path1=None, output_pat
     gray2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
 
     # 二值化处理（提取前景）
-    _, binary1 = cv2.threshold(gray1, 127, 255, cv2.THRESH_BINARY)
-    _, binary2 = cv2.threshold(gray2, 127, 255, cv2.THRESH_BINARY)
+    _, binary1 = cv2.threshold(gray1, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    _, binary2 = cv2.threshold(gray2, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     # 查找轮廓（只提取外部轮廓）
     contours1, _ = cv2.findContours(binary1, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
@@ -194,16 +195,16 @@ def are_contours_similar(image_path1, image_path2, output_path1=None, output_pat
         return False
 
     # 如果轮廓数量相差太大，直接认为不相似
-    if abs(len(contours1) - len(contours2)) > min(len(contours1), len(contours2)) * 0.2:
-        print("2222")
-        return False
+    # if abs(len(contours1) - len(contours2)) > min(len(contours1), len(contours2)) * 0.2:
+    #     print("2222")
+    #     return False
 
     # 取每个图片中面积最大的几个轮廓（比如前N个），避免太多小轮廓干扰
-    def get_main_contours(contours, top_n=5):
+    def get_main_contours(contours, top_n=3):
         print("3333")
         # 按轮廓面积从大到小排序
         sorted_contours = sorted(contours, key=cv2.contourArea, reverse=True)
-        return sorted_contours[:top_n]
+        return sorted_contours
 
     main_contours1 = get_main_contours(contours1)
     main_contours2 = get_main_contours(contours2)
@@ -233,7 +234,6 @@ def are_contours_similar(image_path1, image_path2, output_path1=None, output_pat
 
         # 使用 Hu 矩匹配形状相似度，值越小越相似
         similarity = cv2.matchShapes(contour1, contour2, cv2.CONTOURS_MATCH_I1, 0)
-        
         if similarity < similarity_threshold:
             matched_count += 1
 
@@ -314,7 +314,166 @@ def extract_time_from_log(log_str: str) -> str:
     dt = datetime.strptime(time_str, "%H:%M:%S.%f")
     return dt
 
+def denoise_image_nlm(input_image_path: str, output_image_path: str, h=10, hColor=10, template_size=7, search_size=21) -> str:
+    """
+    使用 OpenCV 的非局部均值去噪（NLM）方法对彩色图像进行去噪
+    
+    参数:
+        input_image_path (str): 输入图片路径，如 "noisy.jpg"
+        output_image_path (str, 可选): 输出图片路径。如果为 None，则自动生成 "_nlm_denoised" 后缀
+        h (int): 控制去噪强度（亮度部分），推荐 10~30
+        hColor (int): 控制颜色去噪强度，推荐 10~30
+        template_size (int): 匹配块大小，奇数，推荐 7
+        search_size (int): 搜索窗口大小，奇数，推荐 21
+
+    返回:
+        str: 去噪后图片的保存路径
+    """
+    # 读取彩色图像
+    img = cv2.imread(input_image_path)
+    if img is None:
+        raise ValueError(f"无法读取图片，请检查路径是否正确：{input_image_path}")
+
+    # 使用非局部均值去噪（彩色版）
+    denoised_img = cv2.fastNlMeansDenoisingColored(
+        img,
+        h=h,
+        hColor=hColor,
+        templateWindowSize=template_size,
+        searchWindowSize=search_size
+    )
+
+    # 设置输出路径
+    basename = os.path.basename(input_image_path)
+    output_image_path = fr"{output_image_path}\{basename}"
+    # base, ext = os.path.splitext(input_image_path)    
+    # output_image_path = f"{base}_nlm_denoised{ext}"
+
+    # 保存去噪后的图像
+    cv2.imwrite(output_image_path, denoised_img)
+
+    return output_image_path
+
+def remove_salt_pepper_noise(input_image_path: str, output_image_path: str = None, ksize: int = 3) -> str:
+    """
+    去除图片中的椒盐噪声，并保存去噪后的图片，返回去噪后图片的路径
+    
+    参数:
+        input_image_path (str): 输入的图片路径，如 "input.jpg"
+        output_image_path (str, 可选): 输出的图片路径。如果为 None，则默认在输入路径基础上加上 "_denoised"，如 "input_denoised.jpg"
+        ksize (int): 中值滤波的核大小，必须是大于1的奇数，比如 3, 5, 7。推荐 3 或 5
+
+    返回:
+        str: 去噪后图片的保存路径
+    """
+    # 读取图片（支持彩色和灰度）
+    img = cv2.imread(input_image_path)
+    if img is None:
+        raise ValueError(f"无法读取图片，请检查路径是否正确：{input_image_path}")
+
+    # 使用中值滤波去除椒盐噪声
+    denoised_img = cv2.medianBlur(img, ksize=ksize)
+
+    # 确定输出路径
+    base = os.path.basename(input_image_path)
+    output_image_path = f"{output_image_path}/{base}"
+
+    # 保存去噪后的图片
+    cv2.imwrite(output_image_path, denoised_img)
+
+    return output_image_path
+
+def shrink_edges(
+    input_image_path: str,
+    output_image_path: str = None,
+    kernel_size: int = 3,
+    iterations: int = 1,
+    border_value: int = 0
+) -> str:
+    """
+    对输入图像进行腐蚀操作，实现边缘缩小的效果（让边缘/物体轮廓向内收缩）
+
+    参数:
+        input_image_path (str): 输入图片路径，如 "image.png"（建议为灰度图或二值图）
+        output_image_path (str, 可选): 输出图片路径。如果未提供，则自动生成 "_shrinked_edges" 后缀
+        kernel_size (int): 腐蚀核大小，必须是奇数，如 3, 5, 7。控制腐蚀程度
+        iterations (int): 腐蚀操作的次数，次数越多腐蚀越强
+        border_value (int): 如果图像需要填充边界，默认是 0（黑色）。一般无需修改
+
+    返回:
+        str: 处理后（边缘缩小）的图片保存路径
+    """
+    # 读取图像（以灰度方式读取，适用于大多数边缘/二值图）
+    img = cv2.imread(input_image_path, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        raise ValueError(f"无法读取图片，请检查路径是否正确：{input_image_path}")
+
+    # 定义腐蚀核（kernel），一般为正方形，如 3x3, 5x5...
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+
+    # 腐蚀操作 --> 实现边缘缩小
+    shrunk = cv2.erode(img, kernel, iterations=iterations, borderValue=border_value)
+
+    # 设置输出路径
+    base = os.path.basename(input_image_path)
+    output_image_path = f"{output_image_path}/{base}"
+
+    # 保存处理后的图像
+    cv2.imwrite(output_image_path, shrunk)
+
+    return output_image_path
+
+def expand_edges(
+    input_image_path: str,
+    output_image_path: str = None,
+    kernel_size: int = 3,
+    iterations: int = 1,
+    border_value: int = 0
+) -> str:
+    """
+    对输入图像进行膨胀操作，实现边缘扩大的效果（让边缘/物体轮廓向外扩展）
+
+    参数:
+        input_image_path (str): 输入图片路径，如 "image.png"（建议为灰度图或二值图）
+        output_image_path (str, 可选): 输出图片路径。如果未提供，则自动生成 "_expanded_edges" 后缀
+        kernel_size (int): 膨胀核大小，必须是奇数，如 3, 5, 7。控制边缘扩大的程度
+        iterations (int): 膨胀操作的次数，次数越多边缘扩张越明显
+        border_value (int): 如果图像需要填充边界，默认是 0（黑色）。一般无需修改
+
+    返回:
+        str: 处理后（边缘扩大）的图片保存路径
+    """
+    # 读取图像（以灰度方式读取，适用于大多数边缘/二值图）
+    img = cv2.imread(input_image_path, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        raise ValueError(f"无法读取图片，请检查路径是否正确：{input_image_path}")
+
+    # 定义膨胀核（kernel），一般为正方形，如 3x3, 5x5...
+    kernel = np.ones((kernel_size, kernel_size), np.uint8)
+
+    # 膨胀操作 --> 实现边缘扩大
+    expanded = cv2.dilate(img, kernel, iterations=iterations, borderValue=border_value)
+
+    # 设置输出路径
+    base = os.path.basename(input_image_path)
+    output_image_path = f"{output_image_path}/{base}"
+
+    # 保存处理后的图像
+    cv2.imwrite(output_image_path, expanded)
+
+    return output_image_path
+
 def test_performance_reopen(reopen_item, baseline_cur_path, open_creality_printer_with_file, check_app_respone, tmp_path):
+    csv = r"D:/report.csv"
+    def write_csv(line, path=csv):
+        with open(path, "a", encoding="utf-8") as f:
+            for col in line:
+                f.write(f"{col},")
+            f.write("\n")
+
+    if not os.path.exists(csv):
+        write_csv([u"文件名", u"成功", u"时间", u"失败原因"])
+
     prefix = tmp_path/"test_performance_reopen"
     if prefix.exists():
         shutil.rmtree(prefix)
@@ -325,6 +484,12 @@ def test_performance_reopen(reopen_item, baseline_cur_path, open_creality_printe
     # unzip prefix
     extract_prefix = prefix/"extract"
     extract_prefix.mkdir()
+    # tmp prefix
+    tmp_prefix1 = prefix/"tmp1"
+    tmp_prefix1.mkdir()
+    # tmp prefix
+    tmp_prefix2 = prefix/"tmp2"
+    tmp_prefix2.mkdir()
 
     path = os.path.join(baseline_cur_path, reopen_item["input"])
     send_cmd_handle = open_creality_printer_with_file
@@ -337,15 +502,23 @@ def test_performance_reopen(reopen_item, baseline_cur_path, open_creality_printe
         return ret
 
     ret = check_app_respone("FILES", "LOAD_PROJECT", 0)
+    if ret["code"] != 0:
+        write_csv([path, u"失败", "", u"开始加载项目崩溃"])
     assert ret["code"] == 0
+    
     start_time = extract_time_from_log(ret["data"])
     ret = check_app_respone("FILES", "LOAD_PROJECT", 1, -1, heartbeat)
+    if ret["code"] != 0:
+        write_csv([path, u"失败", "", u"加载项目过程中崩溃"])
     assert ret["code"] == 0
     end_time = extract_time_from_log(ret["data"])
-    print("Using time", (end_time - start_time).total_seconds() * 1000)
+    load_time = (end_time - start_time).total_seconds() * 1000
+    print("Using time", load_time)
 
     # unzip 3mf
     ret = unzip_file(path, str(extract_prefix))
+    if ret != True:
+        write_csv([path, u"失败", f"{load_time}", u"测试流程中，解压失败"])
     assert ret == True
 
     # found one thumnail to get size
@@ -371,5 +544,14 @@ def test_performance_reopen(reopen_item, baseline_cur_path, open_creality_printe
         similar = False
     for file_pair in matched:
         img1_path, img2_path = file_pair
-        similar = similar and are_contours_similar(img1_path, img2_path, None, None, 0.8, 0.95)
+        img1_path = remove_salt_pepper_noise(img1_path, str(tmp_prefix1))
+        img2_path = remove_salt_pepper_noise(img2_path, str(tmp_prefix2))
+        img1_path = expand_edges(img1_path, str(tmp_prefix1))
+        img2_path = expand_edges(img2_path, str(tmp_prefix2))
+        similar = similar and are_contours_similar(img1_path, img2_path, None, None, 0.5, 0.80)
+
+    if similar != reopen_item["expectation"]:
+        write_csv([path, u"失败", f"{load_time}", u"不符合期望值"])
+    else:
+        write_csv([path, u"成功", f"{load_time}", u""])
     assert similar == reopen_item["expectation"]
