@@ -293,6 +293,27 @@ def unzip_file(zip_file_path: str, extract_to_path: str) -> bool:
 
     return False
 
+def extract_time_from_log(log_str: str) -> str:
+    """
+    从输入的日志字符串中提取第二列的时分秒及毫秒（格式如：14:25:23.952322）
+
+    参数:
+        log_str (str): 输入的日志字符串，例如：
+                       '2025-08-04 14:25:23.952322[head]:APP_READY_0[body]:'
+
+    返回:
+        str: 时间部分，例如 '14:25:23.952322'
+    """
+    # 按空格分割字符串
+    parts = log_str.split()
+
+    # 第二列就是时间（索引为 1，因为索引从 0 开始）
+    time_part = parts[1]
+    time_part = time_part.split("[")
+    time_str = time_part[0]
+    dt = datetime.strptime(time_str, "%H:%M:%S.%f")
+    return dt
+
 def test_performance_reopen(reopen_item, baseline_cur_path, open_creality_printer_with_file, check_app_respone, tmp_path):
     prefix = tmp_path/"test_performance_reopen"
     if prefix.exists():
@@ -315,9 +336,13 @@ def test_performance_reopen(reopen_item, baseline_cur_path, open_creality_printe
         ret,_,_ = send_cmd_handle("ping", json.dumps({}), 30, True)
         return ret
 
-    check_app_respone("FILES", "LOAD_PROJECT", 0)
+    ret = check_app_respone("FILES", "LOAD_PROJECT", 0)
+    assert ret["code"] == 0
+    start_time = extract_time_from_log(ret["data"])
     ret = check_app_respone("FILES", "LOAD_PROJECT", 1, -1, heartbeat)
     assert ret["code"] == 0
+    end_time = extract_time_from_log(ret["data"])
+    print("Using time", (end_time - start_time).total_seconds() * 1000)
 
     # unzip 3mf
     ret = unzip_file(path, str(extract_prefix))
