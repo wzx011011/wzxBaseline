@@ -1,0 +1,12 @@
+{
+  "name": "gen-polygon-by-offset-001", 
+  "config_file": "configs/empty.ini",
+  "points": [
+      [0, 0],
+      [10, 0],
+      [20, 0]
+  ],
+  "offset_len":5,
+  "expected_aera":200,
+  "tags": ["gen_polygon_by_offset"]
+}

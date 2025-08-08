@@ -1,7 +1,12 @@
 test_engine_framework/.pytest_cache
-test_engine_framework/Engine
+test_engine_framework/engine/*
 test_engine_framework/output/report/*
 test_engine_framework/runner/__pycache__/*
 test_engine_framework/runner/__pycache__/*
+test_engine_framework/.idea/
+test_engine_framework/.pytest_cache/
+test_engine_framework/FIXME/
+test_engine_framework/output/
+output/
 .pytest_cache
 __pycache__

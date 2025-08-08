@@ -1,0 +1,12 @@
+{
+  "name": "2D-polygon-simplify-001",
+  "config_file": "configs/empty.ini",
+  "polygon": [
+    [16000170,26257364],
+    [714223,461012],
+    [31286371,461008]
+  ],
+  "tolerance":250000,
+  "expected_bool": true,
+  "tags": ["2D_polygon_simplify"]
+}

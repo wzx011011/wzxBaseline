@@ -1,0 +1,15 @@
+{
+  "name": "polygon-split-at-index-001",
+  "config_file": "configs/empty.ini",
+  "aera":10000,
+  "polygon": [
+      [100, 100],
+      [200, 100],
+      [200, 200],
+      [100,200]
+  ],
+  "centroid":[
+    [150,150]
+  ],
+  "tags": ["create_ccw_polygon"]
+}

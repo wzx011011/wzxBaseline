@@ -1,0 +1,8 @@
+{
+  "name": "import-ASCII_monkey-stl",
+  "model_file": "models/ASCII_monkey.stl",
+  "config_file": "configs/empty.ini",
+  "bounding_box":[17.0312,27.3438,19.6875],
+  "expected_true": true,
+  "tags": ["import_stl"]
+}

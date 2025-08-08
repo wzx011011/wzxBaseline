@@ -1,0 +1,7 @@
+{
+  "name": "its-quadric-edge-collapse-001",
+  "config_file": "configs/empty.ini",
+  "model_file": "models/unicorn.stl",
+  "wanted_count": 0,
+  "tags": ["its_quadric_edge_collapse"]
+}

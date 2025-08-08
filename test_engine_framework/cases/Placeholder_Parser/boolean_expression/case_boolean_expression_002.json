@@ -1,0 +1,7 @@
+{
+  "name": "boolean-expression-002",
+  "config_file": "configs/empty.ini",
+  "expression":"\"has some PATTERN embedded\" =~ /.*PTRN.*/",
+  "expected_true":false,
+  "tags": ["boolean_expression"]
+}

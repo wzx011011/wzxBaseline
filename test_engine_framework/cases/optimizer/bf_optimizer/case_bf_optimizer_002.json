@@ -1,0 +1,22 @@
+{
+  "name": "bf-optimizer-002",
+  "config_file": "configs/empty.ini",
+  "extremum":"min",
+  "variables": [
+    "x",
+    "y"
+  ],
+  "function":"x*x+y*y+1",
+  "initvals":[
+    [0.6],
+    [-0.2]
+  ],
+  "bounds":[
+    [-1, 1],
+    [-1, 1]
+  ],
+  "ref":1,
+  "abs_err":1e-2,
+  "rel_err":1e-4,
+  "tags": ["bf_optimizer"]
+}

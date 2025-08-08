@@ -1,0 +1,7 @@
+{
+  "name": "set-perimeter-extrusion-width_base-250percent",
+  "config_file": "configs/empty.ini",
+  "ratio_percentage":250,
+  "expected_multiple_valid": true,
+  "tags": ["set_perimeter_extrusion_width"]
+}

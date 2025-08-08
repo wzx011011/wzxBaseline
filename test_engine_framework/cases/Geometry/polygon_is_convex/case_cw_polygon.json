@@ -1,0 +1,12 @@
+{
+  "name": "cw-polygon",
+  "config_file": "configs/empty.ini",
+  "points": [
+    [0, 0],
+    [0, 10],
+    [10, 10],
+    [10, 0]
+  ],
+  "expected_convex": false,
+  "tags": ["polygon_is_convex"]
+}

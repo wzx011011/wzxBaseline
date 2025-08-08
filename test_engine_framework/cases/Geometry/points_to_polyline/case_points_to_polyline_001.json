@@ -1,0 +1,10 @@
+{
+  "name": "points-to-polyline-001", 
+  "config_file": "configs/empty.ini",
+  "polyline": [
+      [0, 0],
+      [10, 0],
+      [20, 0]
+  ],
+  "tags": ["points_to_polyline"]
+}

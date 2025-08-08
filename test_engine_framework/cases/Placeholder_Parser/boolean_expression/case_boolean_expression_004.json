@@ -1,0 +1,10 @@
+{
+  "name": "boolean-expression-004",
+  "config_file": "configs/empty.ini",
+  "variables": [
+    { "name": "num_extruders", "type": "int", "value": 4 }
+  ],
+  "expression":"printer_notes=~/.*PRINTER_VENDOR_PRUSA3D.*/ and printer_notes=~/.*PRINTER_MODEL_MK2.*/ and nozzle_diameter[0]==0.6 and num_extruders>1",
+  "expected_true":true,
+  "tags": ["boolean_expression"]
+}

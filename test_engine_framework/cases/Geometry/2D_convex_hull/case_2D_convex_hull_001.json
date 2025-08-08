@@ -1,0 +1,12 @@
+{
+  "name": "2D-convex-hull-001",
+  "config_file": "configs/empty.ini",
+  "polygon": [
+    [100, 200],
+    [200, 200],
+    [200, 100],
+    [150, 150]
+  ],
+  "expected_points_num": 3,
+  "tags": ["2D_convex_hull"]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "-1mm-clipper-offset",
+  "config_file": "configs/empty.ini",
+  "points": [
+    [0, 0],
+    [18, 0],
+    [18, 18],
+    [0, 18]
+  ],
+  "offset_mm": -1,
+  "expected_aera": 256e12,
+  "tags": ["clipper_offset"]
+}

@@ -1,0 +1,13 @@
+{
+  "name": "ccw-polygon",
+  "config_file": "configs/empty.ini",
+  "points": [
+    [0, 0],
+    [10, 0],
+    [10, 10],
+    [0, 10]
+  ],
+  "expected_convex": true,
+  "tags": ["polygon_is_convex"]
+}
+

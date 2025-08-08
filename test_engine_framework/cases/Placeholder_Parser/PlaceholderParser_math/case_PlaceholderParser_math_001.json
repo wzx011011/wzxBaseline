@@ -1,0 +1,12 @@
+{
+  "name": "PlaceholderParser-math-001",
+  "config_file": "configs/empty.ini",
+  "variables": [
+    { "name": "bar", "type": "int", "value": 2 }
+  ],
+  "expression":"{2*bar*(3-12)}",
+  "result": "-36",
+  "use_Approx":false,
+  "expected_true":true,
+  "tags": ["PlaceholderParser_math"]
+}

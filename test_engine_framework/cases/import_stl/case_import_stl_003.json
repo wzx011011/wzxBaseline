@@ -1,0 +1,8 @@
+{
+  "name": "import-20mmbox-čřšřěá-stl",
+  "model_file": "models/20mmbox-čřšřěá.stl",
+  "config_file": "configs/empty.ini",
+  "bounding_box":[20,20,20],
+  "expected_load": true,
+  "tags": ["import_stl"]
+}

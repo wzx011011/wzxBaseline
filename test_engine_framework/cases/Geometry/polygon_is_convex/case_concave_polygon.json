@@ -1,0 +1,16 @@
+{
+  "name": "concave-polygon",
+  "config_file": "configs/empty.ini",
+  "points": [
+    [0, 0],
+    [10, 0],
+    [10, 10],
+    [0, 10],
+    [0, 6],
+    [4, 6],
+    [4, 4],
+    [0, 4]
+  ],
+  "expected_convex": false,
+  "tags": ["polygon_is_convex"]
+}

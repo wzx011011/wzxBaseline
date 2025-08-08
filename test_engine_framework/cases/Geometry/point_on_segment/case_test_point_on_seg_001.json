@@ -1,0 +1,13 @@
+{
+  "name": "point-on-segment-001",
+  "config_file": "configs/empty.ini",
+  "lines": [
+    [100000, 100],
+    [0, 0]
+  ],
+  "point": [
+    [0, 0]
+  ],
+  "expected_on": true,
+  "tags": ["point_on_segment"]
+}

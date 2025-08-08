@@ -3,44 +3,59 @@ import json
 import subprocess
 import os
 from pathlib import Path
+from typing import List
+from ruamel.yaml import YAML
+from ruamel.yaml.comments import CommentedMap
 
-# 根目录，例如 test_framework/
+from utils import *
+
+# 忽略这些键，不处理为环境变量
+# IGNORE_KEYS = {"tags", "name"}
+IGNORE_KEYS = {}
+
+yaml_parser = YAML()
+yaml_parser.preserve_quotes = True  # 保留引号和格式
+
+DEV = True
 ROOT = Path(__file__).resolve().parent.parent
+EXE = ROOT / "engine" / "Debug" / "engine_tests"
+ENV_YAML_PATH = ROOT / "runner" / "envs.yaml"
 
-# C++ Catch2 测试可执行文件路径
-EXE = ROOT / "Engine" /"Debug"/ "Engine_tests"
+if DEV:
+    ENV_YAML = load_env_yaml(yaml_parser, ENV_YAML_PATH) or CommentedMap()
+    ENV_YAML.setdefault("tags", CommentedMap())
 
-# 遍历所有 cases/*/*.json 文件
-CASES = list(ROOT.glob("cases/*/*.json"))
 
-def get_catch_tag(case_path: Path) -> str:
-    """从路径推导 Catch2 测试 tag，例如 'cases/infill/case001.json' -> '[infill]'"""
-    return f"[{case_path.parent.name}]"
-
-@pytest.mark.parametrize("case_path", CASES, ids=lambda p: f"{p.parent.name}/{p.stem}")
 def test_case(case_path: Path):
-    """每个 case 文件执行一次 C++ 测试程序"""
+    # # 直接跳过被过滤的标签，不在终端中显示
+    # if case_path is None:
+    #     return None
+
     case = json.loads(case_path.read_text())
     env = os.environ.copy()
-
-    # 基本环境变量
-    env["MODEL_PATH"] = str(ROOT / case["model_file"])
-    env["CONFIG_PATH"] = str(ROOT / case["config_file"])
-
-    # 注入所有 expected_XXX 变量
-    for key, value in case.items():
-        if key.startswith("expected_"):
-            env[key.upper()] = str(value).lower()
-
+    populate_env_from_case(env, case, IGNORE_KEYS, ROOT)
     tag = get_catch_tag(case_path)
+    tag_name = case_path.parent.stem
 
-    # 执行 C++ 可执行测试程序，并传入 tag 过滤器
-    print(f"\n▶ Running case: {case_path.name} (tag: {tag})")
-    result = subprocess.run([str(EXE), tag], env=env, capture_output=True, text=True)
+    if DEV:
+        changed = False
+        case_keys = {k for k in case if k not in IGNORE_KEYS}
+        tags = ENV_YAML.setdefault("tags", CommentedMap())
+        for k in case_keys:
+            if k not in tags.setdefault(tag_name, []):
+                tags[tag_name].append(k)
+                changed = True
+        unused_keys = set(tags[tag_name]) - case_keys
+        for k in unused_keys:
+            tags[tag_name].remove(k)
+            changed = True
+        if changed:
+            save_env_yaml(yaml_parser, ENV_YAML_PATH, ENV_YAML)
+            print("\n同步更新 envs.yaml 中的 tags 字段。")
 
+    print(f"\nRunning case: {case_path.name} (tag: {tag})")
+    result = subprocess.run([str(EXE), tag], env=env, capture_output=True, text=True, encoding='utf-8')
     print(result.stdout)
     if result.stderr:
         print("stderr:", result.stderr)
-
-    # 判断是否成功
     assert result.returncode == 0, f"Test failed: {case_path.name}"

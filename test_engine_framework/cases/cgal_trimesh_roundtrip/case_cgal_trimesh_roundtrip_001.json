@@ -1,0 +1,7 @@
+{
+  "name": "cgal-trimesh-roundtrip-001",
+  "config_file": "configs/empty.ini",
+  "model_file": "models/cube.stl",
+  "self_intersect":false,
+  "tags": ["cgal_trimesh_roundtrip"]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "2D-convex-hull-002",
+  "config_file": "configs/empty.ini",
+  "polygon_a": [
+	  [0, 0],
+    [10, 0],
+    [10, 10],
+    [0, 10]
+  ],
+  "polygon_b": [
+    [0, 0],
+    [10, 0],
+    [10, 10],
+    [0, 10]
+  ],
+  "expected_intersect": true,
+  "svg_name":"2D-convex-hull-005.svg",
+  "tags": ["2D_convex_polygons_intersect"]
+}
