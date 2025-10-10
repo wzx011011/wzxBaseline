@@ -11,7 +11,7 @@ from utils import *
 
 # 忽略这些键，不处理为环境变量
 # IGNORE_KEYS = {"tags", "name"}
-IGNORE_KEYS = {}
+IGNORE_KEYS = set({})
 
 yaml_parser = YAML()
 yaml_parser.preserve_quotes = True  # 保留引号和格式
@@ -25,7 +25,9 @@ if DEV:
     ENV_YAML = load_env_yaml(yaml_parser, ENV_YAML_PATH) or CommentedMap()
     ENV_YAML.setdefault("tags", CommentedMap())
 
-
+# 框架会自动发现并执行这些函数
+# 必须是 以 test_ 开头 的函数名
+# 或者是 以 Test 开头的类，类里同样以 test_ 开头的方法：
 def test_case(case_path: Path):
     # # 直接跳过被过滤的标签，不在终端中显示
     # if case_path is None:

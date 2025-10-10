@@ -1,0 +1,9 @@
+{
+  "name": "config-validation-003",
+  "config_file": "empty.ini",
+  "option": {
+    "perimeters": -10
+  },
+  "expected_valid":false,
+  "tags": ["config_validation"]
+}

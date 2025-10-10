@@ -1,0 +1,13 @@
+{
+  "name": "tiny-contour-efc-001",
+  "tags": ["tiny_contour_efc"],
+  "svg_file":"output/tiny-contour-efc-001.svg",
+  "flow": {
+    "width": 0.419999987,
+    "height": 0.2,
+    "nozzle_diameter": 0.4
+  },
+  "compensation": 0.2,
+  "expolygon": "configs/data/elephant_foot_compensation/tiny_contour/efc_002.json",
+  "expected_equal": true
+}

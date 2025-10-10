@@ -1,0 +1,12 @@
+{
+  "name": "elephant-foot-compensation-001",
+  "tags": ["elephant_foot_compensation"],
+  "svg_file":"output/elephant-foot-compensation-001.svg",
+  "flow": {
+    "width": 0.419999987,
+    "height": 0.2,
+    "nozzle_diameter": 0.4
+  },
+  "compensation": 0.2,
+  "expolygon": "configs/data/elephant_foot_compensation/elephant_foot_compensation/efc_001.json"
+}

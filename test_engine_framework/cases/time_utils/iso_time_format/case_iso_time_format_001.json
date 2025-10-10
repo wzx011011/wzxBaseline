@@ -1,0 +1,7 @@
+{
+  "name": "iso-to-timestamp-001",
+  "config_file": "configs/empty.ini",
+  "iso_string":"20190710T085000Z",
+  "expected_result":true,
+  "tags": ["iso_time_format"]
+}

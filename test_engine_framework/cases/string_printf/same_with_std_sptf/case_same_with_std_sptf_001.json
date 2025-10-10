@@ -1,0 +1,11 @@
+{
+  "name": "same-with-std-sptf-001",
+  "config_file": "configs/empty.ini",
+  "input": {
+    "int": 10,
+    "float": 11.4,
+    "string": " This is a string"
+  },
+  "expected_equal":true,
+  "tags": ["same_with_std_sptf"]
+}

@@ -1,9 +1,0 @@
-{
-  "name": "PlaceholderParser-template-var-001",
-  "config_file": "configs/empty.ini",
-  "template_var_id":0,
-  "result": "0.67500001192092896",
-  "use_Approx":false,
-  "expected_true":true,
-  "tags": ["PlaceholderParser_template_var"]
-}

@@ -1,0 +1,17 @@
+{
+  "name": "smooth-outward-002",
+  "tags": ["smooth_outward"],
+  "polygons": [
+    [
+      [0, 0],
+      [0, 5],
+      [10, 0]
+    ]
+  ],
+  "clip_dist_raw": 10.0,
+  "expected_result": {
+    "type": "removed",
+    "result": null,
+    "expected_equal": true
+  }
+}

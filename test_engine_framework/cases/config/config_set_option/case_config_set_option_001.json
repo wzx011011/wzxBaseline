@@ -1,0 +1,9 @@
+{
+  "name": "load-config-001",
+  "config_file": "new_from_ini.ini",
+  "options": {
+    "filament_colour": "#ABCD"
+  },
+  "expected_equal":true,
+  "tags": ["load_config"]
+}

@@ -34,8 +34,7 @@ def matrix_to_env_string(matrix):
 
 def tensor_to_env_string(matrix):
     """
-    将三维矩阵（多个 polyline
-    e）转为字符串格式，适合用作环境变量：
+    将三维矩阵（多个 polyline）转为字符串格式，适合用作环境变量：
     [[x1,y1;x2,y2]; [x3,y3,x3z;x4,y4,z4]; ...]
     """
     polyline_strings = []
@@ -74,10 +73,10 @@ def populate_env_from_case(env: dict,
 
         # ---------- 文件路径 ----------
         if k.endswith("_file"):
-            env[k.upper()] = str(test_root / v)
+            env[k.upper()] = str(v)
 
         elif k.endswith("_files"):
-            new_v = [str(test_root / file) for file in v]
+            new_v = [str(file) for file in v]
             env[k.upper()] = array_to_env_string(new_v)
 
         # ---------- 纯 dict ----------
@@ -89,7 +88,6 @@ def populate_env_from_case(env: dict,
             # 如果列表中含有 dict，则整体按 JSON 字符串处理
             if any(isinstance(item, dict) for item in v):
                 env[k.upper()] = json.dumps(v, ensure_ascii=False)
-
             # 三维张量
             elif all(isinstance(item, list) and
                      all(isinstance(subitem, list) for subitem in item)
