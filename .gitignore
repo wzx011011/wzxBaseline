@@ -7,6 +7,10 @@ test_engine_framework/.idea/
 test_engine_framework/.pytest_cache/
 test_engine_framework/FIXME/
 test_engine_framework/output/
-output/
-.pytest_cache
-__pycache__
+**/output/
+test_engine_params/
+**/.pytest_cache/
+**/.idea/
+**/__pycache__/
+
+AGENTS.md

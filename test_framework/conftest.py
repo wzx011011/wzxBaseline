@@ -7,6 +7,9 @@ import json
 import socket
 from pathlib import Path
 
+# 将项目根目录添加到Python路径，以便测试可以正确导入模块
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import git
 import pytest
 import pyautogui
@@ -44,7 +47,7 @@ def test_resources_path(pytestconfig):
     rootdir = pytestconfig.rootdir
     return os.path.join(rootdir, "_resources_")
 
-############ Creality Printer操作 #########
+############ Creality Printer 操作 #########
 @pytest.fixture(scope="session")
 def open_creality_printer():
     """Open and close creality printer.
