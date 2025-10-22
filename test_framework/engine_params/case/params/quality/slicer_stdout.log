@@ -3101,3 +3101,1980 @@ done
 Request received: GET /homepage/images/Community/common/vip.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Models.svg
 done
 Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+[2025-10-22 10:31:08.611237] [0x00007cf0] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 10:31:08.618237] [0x00007cf0] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761100269&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761100269&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgdone
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgdone
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgrequest for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgdone
+done
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/coin.svgdone
+request for resource: /homepage/images/Community/common/buy.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgdone
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgdone
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/images/Community/common/vip.svgdone
+done
+[2025-10-22 10:31:46.101284] [0x00000de8] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 10:31:46.107284] [0x00000de8] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761100307&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761100307&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgdone
+done
+done
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+done
+request for resource: /homepage/assets/empty-883cd8e5.png
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+done
+Request received: GET /homepage/assets/empty-883cd8e5.pngdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgrequest for resource: /homepage/images/Community/common/coin.svg
+request for resource: /homepage/images/Community/common/buy.svg
+done
+Request received: GET /homepage/images/Community/common/coin.svgRequest received: GET /homepage/images/Community/common/buy.svgdone
+done
+request for resource: /homepage/images/Community/common/vip.svg
+Request received: GET /homepage/images/Community/common/vip.svgdone
+[2025-10-22 10:32:30.792233] [0x000086b4] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 10:32:30.798235] [0x000086b4] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761100352&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761100352&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgrequest for resource: /homepage/images/Community/common/buy.svg
+done
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/buy.svgdone
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Presets.svgdone
+done
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/images/Community/common/vip.svgdone
+done
+[2025-10-22 10:34:56.028797] [0x00008f64] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 10:34:56.035797] [0x00008f64] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761100497&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761100497&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/common/buy.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/common/buy.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Presets.svgdone
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+done
+request for resource: /homepage/images/Community/common/vip.svg
+Request received: GET /homepage/assets/empty-883cd8e5.pngdone
+Request received: GET /homepage/images/Community/common/vip.svgdone
+[2025-10-22 11:19:53.478231] [0x00008a60] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 11:19:53.486228] [0x00008a60] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761103194&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761103194&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgdone
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+done
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-clock.svgrequest for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+done
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgdone
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgdone
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+request for resource: /homepage/assets/empty-883cd8e5.png
+Request received: GET /homepage/assets/empty-883cd8e5.pngrequest for resource: /homepage/images/Community/common/vip.svg
+done
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/vip.svgdone
+Request received: GET /homepage/images/Community/common/coin.svgdone
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 11:29:25.164504] [0x00009754] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 11:29:25.176504] [0x00009754] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761103767&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761103767&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+done
+Request received: GET /homepage/assets/empty-cc80a44e.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgrequest for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgRequest received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Presets.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+done
+done
+done
+done
+request for resource: /homepage/images/Community/common/vip.svg
+request for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/coin.svg
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/vip.svgRequest received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/images/Community/common/coin.svgRequest received: GET /homepage/images/Community/common/buy.svgdone
+done
+done
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+Download completed: C:\Users\118388\AppData\Local\Temp\K1_CFS-C-0.4.zip
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+[2025-10-22 14:08:59.071092] [0x00009ccc] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 14:08:59.077093] [0x00009ccc] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761113340&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761113340&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsFunction took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+done
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+done
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+Request received: GET /homepage/assets/empty-cc80a44e.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+done
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/coin.svg
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/common/buy.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgdone
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+done
+request for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/vip.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+Request received: GET /homepage/assets/empty-883cd8e5.pngdone
+Request received: GET /homepage/images/Community/common/vip.svgdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 14:55:31.109363] [0x00004b7c] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 14:55:31.114363] [0x00004b7c] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116132&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116132&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgdone
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/assets/empty-cc80a44e.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgrequest for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+Request received: GET /homepage/assets/empty-cc80a44e.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+done
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/common/coin.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+done
+Request received: GET /homepage/images/Community/common/coin.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgrequest for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+done
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgRequest received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+done
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/assets/empty-883cd8e5.png
+Request received: GET /homepage/assets/empty-883cd8e5.pngrequest for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/images/Community/common/vip.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+done
+Request received: GET /homepage/images/Community/common/vip.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+done
+[2025-10-22 14:57:05.163303] [0x0000b3b4] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 14:57:05.169303] [0x0000b3b4] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116226&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116226&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgdone
+request for resource: /homepage/assets/empty-cc80a44e.svg
+Request received: GET /homepage/assets/empty-cc80a44e.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+done
+done
+done
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgdone
+request for resource: /homepage/images/Community/common/buy.svg
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+done
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/images/Community/common/vip.svgdone
+done
+[2025-10-22 14:57:56.424819] [0x000037ec] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 14:57:56.430819] [0x000037ec] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116277&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116277&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+Request received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+done
+done
+done
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgdone
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/common/coin.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+done
+Request received: GET /homepage/images/Community/common/coin.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+done
+done
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgdone
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+request for resource: /homepage/assets/empty-883cd8e5.png
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/assets/empty-883cd8e5.pngdone
+Request received: GET /homepage/images/Community/common/vip.svgdone
+[2025-10-22 14:59:22.648870] [0x00005b84] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 14:59:22.655870] [0x00005b84] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116364&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116364&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsFunction took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+done
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+done
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+Request received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgdone
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/common/coin.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/common/coin.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgdone
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgdone
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+Request received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/images/Community/common/vip.svgdone
+done
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 14:59:48.507765] [0x00008bb4] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 14:59:48.513761] [0x00008bb4] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116390&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116390&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+done
+request for resource: /homepage/assets/empty-cc80a44e.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgdone
+Request received: GET /homepage/assets/empty-cc80a44e.svgdone
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgdone
+done
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/common/buy.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+Request received: GET /homepage/images/Community/common/buy.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgdone
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgdone
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+request for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgRequest received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/images/Community/common/vip.svgdone
+done
+done
+Closed sockets
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 15:00:47.210492] [0x00006de8] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:00:47.216495] [0x00006de8] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116448&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116448&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgdone
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+Request received: GET /homepage/assets/empty-cc80a44e.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/common/coin.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+Request received: GET /homepage/images/Community/common/coin.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgrequest for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/vip.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+done
+Request received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/images/Community/common/vip.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Presets.svgdone
+done
+done
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 15:02:41.923444] [0x00004db4] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:02:41.929444] [0x00004db4] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116563&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116563&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+done
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgrequest for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/common/coin.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+done
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/common/coin.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgRequest received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgdone
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgdone
+done
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/images/Community/common/vip.svgdone
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 15:03:05.993100] [0x00007d60] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:03:05.999099] [0x00007d60] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116587&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116587&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgdone
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+Request received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+done
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgdone
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgdone
+done
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgdone
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+done
+request for resource: /homepage/images/Community/common/vip.svg
+Request received: GET /homepage/assets/empty-883cd8e5.pngdone
+Request received: GET /homepage/images/Community/common/vip.svgdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 15:07:10.637693] [0x00008de0] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:07:10.643693] [0x00008de0] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116832&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761116832&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+Request received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-clock.svgrequest for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+done
+done
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgdone
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+request for resource: /homepage/images/Community/common/coin.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgRequest received: GET /homepage/images/Community/common/coin.svgdone
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgdone
+request for resource: /homepage/assets/empty-883cd8e5.png
+Request received: GET /homepage/assets/empty-883cd8e5.pngdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgrequest for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/common/vip.svgdone
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgdone
+Download completed: C:\Users\118388\AppData\Local\Temp\F025-0.6.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F012-0.6.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\3DPrintMill-0.4.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F021-0.6.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F009-0.6.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F016-0.8.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F016-0.6.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F012-0.8.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F021-0.8.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F009-0.8.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F025-0.8.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F004-0.8.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F004-0.6.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F028-0.2.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F016-0.4.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F009-0.4.zip
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Download completed: C:\Users\118388\AppData\Local\Temp\F028-0.6.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F022-0.4.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F025-0.4.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F027-0.4.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F026-0.4.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\K1 SE_CFS-C-0.4.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F028-0.8.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\K1_CFS-C-0.4.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\K1C_CFS-C-0.4.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\K1C 2025_CFS-C-0.4.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\K1 Max 2025_CFS-C-0.4.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\K1 Max_CFS-C-0.4.zip
+Download completed: C:\Users\118388\AppData\Local\Temp\F028-0.4.zip
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 15:12:59.503633] [0x000062b8] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:12:59.509636] [0x000062b8] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117181&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117181&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+done
+request for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+done
+Request received: GET /homepage/assets/empty-cc80a44e.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/common/coin.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgRequest received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+done
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/assets/empty-883cd8e5.pngdone
+Request received: GET /homepage/images/Community/common/vip.svgdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 15:13:27.582583] [0x000003bc] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:13:27.588583] [0x000003bc] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117209&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117209&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+Request received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgdone
+done
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/common/coin.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/common/coin.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgdone
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+Request received: GET /homepage/assets/empty-883cd8e5.pngrequest for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/images/Community/common/vip.svgdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 15:16:28.017100] [0x000052b0] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:16:28.024100] [0x000052b0] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117389&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117389&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+done
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgdone
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+done
+done
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/common/coin.svg
+done
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgRequest received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Presets.svgdone
+done
+done
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/images/Community/common/vip.svgdone
+done
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 15:16:53.599193] [0x00005f7c] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:16:53.605193] [0x00005f7c] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117415&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117415&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgdone
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+done
+Request received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgrequest for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgdone
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+request for resource: /homepage/assets/empty-883cd8e5.png
+Request received: GET /homepage/assets/empty-883cd8e5.pngrequest for resource: /homepage/images/Community/common/vip.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+done
+Request received: GET /homepage/images/Community/common/vip.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Presets.svgdone
+done
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 15:18:11.506028] [0x00002ce8] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:18:11.513028] [0x00002ce8] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117493&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117493&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+Request received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+done
+done
+done
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgdone
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgrequest for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+done
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+done
+request for resource: /homepage/assets/empty-883cd8e5.png
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/assets/empty-883cd8e5.pngdone
+Request received: GET /homepage/images/Community/common/vip.svgdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 15:20:03.930778] [0x000096f4] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:20:03.936782] [0x000096f4] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117605&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117605&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+done
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+Request received: GET /homepage/assets/empty-cc80a44e.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+done
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/common/buy.svg
+done
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgdone
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgdone
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+request for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgRequest received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/images/Community/common/vip.svgdone
+done
+done
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+30
+[2025-10-22 15:20:51.630889] [0x00006df8] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:20:51.636889] [0x00006df8] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117653&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117653&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+done
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/coin.svg
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+done
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgRequest received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+done
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+request for resource: /homepage/assets/empty-883cd8e5.png
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+request for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/assets/empty-883cd8e5.pngdone
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgRequest received: GET /homepage/images/Community/common/vip.svgdone
+done
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 15:25:10.923851] [0x00008648] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:25:10.929847] [0x00008648] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117912&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117912&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+done
+done
+done
+done
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgrequest for resource: /homepage/images/Community/common/coin.svg
+request for resource: /homepage/images/Community/common/buy.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgdone
+Request received: GET /homepage/images/Community/common/coin.svgRequest received: GET /homepage/images/Community/common/buy.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Presets.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+done
+done
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/common/vip.svgdone
+done
+done
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 15:26:11.494626] [0x00005380] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:26:11.501626] [0x00005380] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117973&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761117973&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+Request received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+done
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgdone
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgrequest for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+request for resource: /homepage/assets/empty-883cd8e5.png
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgRequest received: GET /homepage/assets/empty-883cd8e5.pngrequest for resource: /homepage/images/Community/common/vip.svg
+done
+done
+Request received: GET /homepage/images/Community/common/vip.svgdone
+[2025-10-22 15:26:39.384985] [0x000064c0] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:26:39.390988] [0x000064c0] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761118001&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761118001&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsFunction took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+done
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+Request received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+done
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+done
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgrequest for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+done
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgRequest received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+done
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/assets/empty-883cd8e5.png
+Request received: GET /homepage/assets/empty-883cd8e5.pngrequest for resource: /homepage/images/Community/common/vip.svg
+request for resource: /homepage/images/Community/common/coin.svg
+done
+Request received: GET /homepage/images/Community/common/vip.svgRequest received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/common/buy.svg
+done
+done
+Request received: GET /homepage/images/Community/common/buy.svgdone
+[2025-10-22 15:32:19.909783] [0x0000a00c] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:32:19.915784] [0x0000a00c] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761118341&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761118341&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/assets/empty-cc80a44e.svg
+done
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/assets/empty-cc80a44e.svgrequest for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgdone
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/common/buy.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+Request received: GET /homepage/images/Community/common/buy.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgRequest received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+done
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+done
+request for resource: /homepage/assets/empty-883cd8e5.png
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+request for resource: /homepage/images/Community/common/vip.svg
+Request received: GET /homepage/assets/empty-883cd8e5.pngdone
+Request received: GET /homepage/images/Community/common/vip.svgdone
+[2025-10-22 15:38:18.218020] [0x0000b188] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 15:38:18.224673] [0x0000b188] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761118699&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761118699&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgdone
+request for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgrequest for resource: /homepage/assets/empty-cc80a44e.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+Request received: GET /homepage/assets/empty-cc80a44e.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgrequest for resource: /homepage/images/Community/common/coin.svg
+done
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgRequest received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+done
+done
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+request for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgRequest received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/images/Community/common/vip.svgdone
+done
+done
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+[2025-10-22 16:27:14.219469] [0x000063a8] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 16:27:14.226469] [0x000063a8] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761121636&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761121636&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgdone
+request for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgdone
+request for resource: /homepage/assets/empty-cc80a44e.svg
+Request received: GET /homepage/assets/empty-cc80a44e.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+done
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgdone
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgrequest for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Home%20Page.svgdone
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/buy.svg
+Request received: GET /homepage/images/Community/common/buy.svgdone
+request for resource: /homepage/images/Community/common/coin.svg
+Request received: GET /homepage/images/Community/common/coin.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+Request received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgrequest for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+Request received: GET /homepage/images/Community/dark/layout/Online%20Params.svgRequest received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgdone
+done
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgdone
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+Request received: GET /homepage/images/Community/dark/layout/My%20Presets.svgrequest for resource: /homepage/assets/empty-883cd8e5.png
+request for resource: /homepage/images/Community/common/vip.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+Request received: GET /homepage/assets/empty-883cd8e5.pngRequest received: GET /homepage/images/Community/common/vip.svgdone
+done
+[2025-10-22 17:36:48.348222] [0x00009fd0] [trace]   Initializing StaticPrintConfigs
+[2025-10-22 17:36:48.354222] [0x00009fd0] [error]   crealityprint_main start
+add font of HarmonyOS_Sans_SC_Bold returns 1
+add font of HarmonyOS_Sans_SC_Regular returns 1
+add font of NanumGothic-Regular returns 1
+add font of NanumGothic-Bold returns 1
+config_pathD:\C3D_Automation\C3DSlicer\build_Release\src\Release\resources\images\process\ProcessConfig.json
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761125810&privacy=0
+Request received: GET /homepage/index.html?lang=zh_CN&version=6.0.0&type=Alpha&region=China&use_inches=0&debug=false&ai=true&time=1761125810&privacy=0done
+request for resource: /homepage/config.js
+Request received: GET /homepage/config.jsdone
+request for resource: /homepage/assets/index-8177ddd2.css
+Request received: GET /homepage/assets/index-8177ddd2.cssdone
+request for resource: /homepage/assets/index-f35ca8cf.js
+Request received: GET /homepage/assets/index-f35ca8cf.jsdone
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+request for resource: /homepage/images/Community/common/HomePage/icon-cxy.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-cxy.svgdone
+request for resource: /homepage/images/Community/dark/layout/AI%20Modeling.svg
+Request received: GET /homepage/images/Community/dark/layout/AI%20Modeling.svgrequest for resource: /homepage/images/Community/common/HomePage/icon-clock.svg
+request for resource: /homepage/assets/empty-cc80a44e.svg
+request for resource: /homepage/images/Community/dark/layout/Home%20Page.svg
+request for resource: /homepage/images/Community/dark/layout/Online%20Resource.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Models.svg
+Request received: GET /homepage/images/Community/common/HomePage/icon-clock.svgRequest received: GET /homepage/assets/empty-cc80a44e.svgRequest received: GET /homepage/images/Community/dark/layout/Home%20Page.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Resource.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Models.svgdone
+done
+done
+done
+done
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test
+request for resource: /homepage/images/Community/dark/layout/Guide%20Forum.svg
+Request received: GET /homepage/images/Community/dark/layout/Guide%20Forum.svgrequest for resource: /homepage/images/Community/dark/layout/Personal%20Center.svg
+request for resource: /homepage/images/Community/dark/layout/My%20Presets.svg
+done
+request for resource: /homepage/images/Community/dark/layout/Online%20Params.svg
+Request received: GET /homepage/images/Community/dark/layout/Personal%20Center.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Presets.svgRequest received: GET /homepage/images/Community/dark/layout/Online%20Params.svgdone
+request for resource: /homepage/images/Community/dark/layout/My%20Models.svg
+done
+request for resource: /homepage/images/Community/dark/layout/My%20Downloads.svg
+done
+Request received: GET /homepage/images/Community/dark/layout/My%20Models.svgRequest received: GET /homepage/images/Community/dark/layout/My%20Downloads.svgdone
+done
+Function took 0 seconds to execute.
+Local IPv4 address: 172.21.20.150
+Local IPv4 address: 192.168.153.1
+Local IPv4 address: 192.168.164.1
+Opened 3 sockets for DNS-SD
+Sending DNS-SD discovery
+Reading DNS-SD replies
+request for resource: /homepage/assets/empty-883cd8e5.png
+Request received: GET /homepage/assets/empty-883cd8e5.pngrequest for resource: /homepage/images/Community/common/vip.svg
+request for resource: /homepage/images/Community/common/coin.svg
+request for resource: /homepage/images/Community/common/buy.svg
+done
+Request received: GET /homepage/images/Community/common/vip.svgRequest received: GET /homepage/images/Community/common/coin.svgRequest received: GET /homepage/images/Community/common/buy.svgdone
+done
+done
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+Function took 0 seconds to execute.
+slice2 Current working directory: C:\Users\118388\AppData\Roaming\Creality\Creality Print\6.0 Alpha\log
+generate_dump.txt not found, skipping crash test

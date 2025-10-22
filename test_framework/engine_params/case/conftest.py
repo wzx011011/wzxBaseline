@@ -6,7 +6,7 @@ import pytest
 
 # 动态参数化配置
 def pytest_generate_tests(metafunc):
-    from test_framework.conftest import parametrize
+    from ...conftest import parametrize
     parametrize(
     metafunc,
     {

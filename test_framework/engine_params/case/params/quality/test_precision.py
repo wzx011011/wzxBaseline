@@ -81,7 +81,7 @@ params = [
 @pytest.mark.parametrize(
     "slice_and_export, baseline_gcode, expected_comp, tol, efc_layers",
     params,
-    indirect=["slice_and_export"],   # 只把第一个参数（切片用的 dict）传给夹具
+    indirect=["slice_and_export"],  # 只把第一个参数（切片用的 dict）传给夹具
 )
 def test_elefant_foot_compensation_layers(
     slice_and_export: Path,

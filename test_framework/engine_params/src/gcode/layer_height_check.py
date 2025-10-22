@@ -1,7 +1,8 @@
 from pathlib import Path
 from typing import Optional
 
-from .GCodeParser import GCodeParser
+from engine_params.src.gcode.GCodeParser import GCodeParser
+
 
 def parse_layer_height(gcode_path: str | Path, *, workers: int = 0) -> dict[str, object]:
     """
@@ -19,6 +20,7 @@ def parse_layer_height(gcode_path: str | Path, *, workers: int = 0) -> dict[str,
         "layers": layers,
     }
 
+
 def parse_initial_layer_print_height(gcode_path: str | Path) -> dict[str, Optional[float]]:
     """
     返回：
@@ -30,9 +32,15 @@ def parse_initial_layer_print_height(gcode_path: str | Path) -> dict[str, Option
     """
     parser = GCodeParser(gcode_path)
     cfg = parser.load_config()
-    z, h = parser.extract_layers()
+    layers = parser.extract_layers()
+    z, h = layers[0]
     return {
         "config_initial_layer_print_height": cfg.get("initial_layer_print_height"),
         "first_layer_z": z,
         "first_layer_height": h,
     }
+
+if __name__ == "__main__":
+    import math
+    assert math.isclose(0.240001,0.24,rel_tol=1e-3)
+    # parse_layer_height()

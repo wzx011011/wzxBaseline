@@ -76,7 +76,7 @@ def engine_session(pytestconfig):
         )
 
     # TODO，先写死，不知道为什么命令行参数注册不了
-    # exe_path = r"D:\C3DSlicer\build_Release\src\Release\CrealityPrint.exe"
+    exe_path = r"D:\C3D_Automation\C3DSlicer\build_Release\src\Release\CrealityPrint.exe"
     session = EngineSession(
         exe_path=exe_path,
         log_path=pytestconfig.getoption("--slicer-log"),
@@ -194,8 +194,8 @@ def gcode_path_factory(request, gcode_dir):
 # slice_and_export: 强制通过 request.param 提供运行参数
 # request.param 必须为 dict，必要键：
 #   - "input_3mf": str (必须存在)
-#   - "output_gcode": str (目标路径)
 # 可选键：
+#     - "output_gcode": str(目标路径)
 #   - "slice_btn_id": int  (如果不提供，使用 9000)
 #   - "timeouts": dict with {"load": int, "export": int, "slice": int}
 #
@@ -233,13 +233,13 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     output_gcode.parent.mkdir(parents=True, exist_ok=True)
 
     # ---- 1) reset_project ----
-    fut = engine_injector.submit("reset_project", {
+    reset_fut = engine_injector.submit("reset_project", {
         "skip_confirm": True,
         "silent": True,
         "project_name": params.get("project_name", "pytest_case_project"),
     })
-    resp = fut.result(timeout=30)
-    assert resp.get("code") == 0, f"reset_project 失败：{resp}"
+    reset_result = reset_fut.result(timeout=30)
+    assert reset_result.get("code") == 0, f"reset_project 失败：{reset_result}"
 
     # ---- 2) trigger_load_project ----
     load_fut = engine_injector.submit("trigger_load_project2",

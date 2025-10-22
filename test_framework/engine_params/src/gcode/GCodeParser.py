@@ -4,7 +4,7 @@ import mmap
 import re
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, List, Dict
+from typing import Optional, Tuple, List, Dict, Literal
 from concurrent.futures import ThreadPoolExecutor
 
 # ===================== 顶层 BLOCK 常量（字节级；大小写敏感） =====================
@@ -47,6 +47,12 @@ class Technology:
     parent_extrusion: Optional[str]
     data: bytes | str | None = field(default=None)
 
+WallStyle = Literal[
+    "inner wall/outer wall",
+    "outer wall/inner wall",
+    "inner-outer-inner wall",
+    "unknown",
+]
 
 # ===================== 工具 =====================
 
@@ -210,22 +216,27 @@ class GCodeParser:
 
     # ---------- (Z, HEIGHT) ----------
     @staticmethod
+    # 注意：目前是找到第一个;Z和第一个;HEIGHT就停止了 TODO
     def _parse_one_layer_blob(blob: bytes) -> Tuple[Optional[float], Optional[float]]:
         z = h = None
         for line in blob.decode("utf-8", errors="ignore").splitlines():
-            mz = Z_RE.match(line)
-            if mz:
-                try:
-                    z = float(mz.group(1))
-                except ValueError:
-                    pass
-                continue
-            mh = H_RE.match(line)
-            if mh:
-                try:
-                    h = float(mh.group(1))
-                except ValueError:
-                    pass
+            if z is None:
+                mz = Z_RE.match(line)
+                if mz:
+                    try:
+                        z = float(mz.group(1))
+                    except ValueError:
+                        pass
+            if h is None:
+                mh = H_RE.match(line)
+                if mh:
+                    try:
+                        h = float(mh.group(1))
+                    except ValueError:
+                        pass
+            # 关键：两者都找到就退出，避免被后续（如 WIPE 段）里的 ;HEIGHT 覆盖
+            if z is not None and h is not None:
+                break
         return z, h
 
     # ---------- 层内扫描 ----------
@@ -360,8 +371,107 @@ class GCodeParser:
                 out.append(z_h)
         return out
 
+    # ---------- APIs 一些场景化的便捷小方法 ----------
+    def validate_wall_sequence(self) -> Tuple[bool, WallStyle, List[Tuple[int, WallStyle, List[str]]]]:
+        """
+        校验所有非首层的墙顺序是否一致（每层以前三个 Inner/Outer 判定）。
+        规则更新：若该层内存在 `;TYPE:Top surface`，则**跳过**该层（不参与期望推断与一致性校验）。
+        返回:
+            ok: 是否全部一致
+            expected_style: 期望风格（来自第一个可判定层）
+            bad_layers: [(layer_idx, parsed_style, seq3)]
+                        ——仅记录“参与校验且判定结果≠期望”的层；被跳过的层不在其中。
+        """
+        wins = self.layer_windows()
+        if not wins or len(wins) <= 1:
+            return False, "unknown", []
 
-# ===================== 简单自检（可选） =====================
+        def judge_triplet(seq3: List[str]) -> WallStyle:
+            if len(seq3) != 3:
+                return "unknown"
+            a, b, c = seq3
+            if a == "Inner wall" and b == "Inner wall" and c == "Outer wall":
+                return "inner wall/outer wall"
+            elif a == "Outer wall" and b == "Inner wall" and c == "Inner wall":
+                return "outer wall/inner wall"
+            elif a == "Inner wall" and b == "Outer wall" and c == "Inner wall":
+                return "inner-outer-inner wall"
+            else:
+                return "unknown"
+
+        expected: WallStyle = "unknown"
+        bad_layers: List[Tuple[int, WallStyle, List[str]]] = []
+
+        import mmap
+        with self.path.open("rb") as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
+
+            # —— 先确定期望风格：第一个可判定（非首层、无 Top surface、恰好 3 次 Inner/Outer）
+            for layer_idx, (s, e) in enumerate(wins):
+                if layer_idx == 0:
+                    continue
+
+                # 先粗扫一遍 TYPE，检测是否包含 Top surface，同时收集前三个 Inner/Outer
+                has_top = False
+                seq: List[str] = []
+                for tp in _find_all(mm, TYPE_PREFIX, s, e):
+                    name = _parse_type_name_at(mm, tp, e)
+                    if name == "Top surface":
+                        has_top = True
+                        # 仍然继续收集 inner/outer？不需要；此层将被跳过
+                        # 但为效率可以直接跳出
+                        break
+                    if name in ("Inner wall", "Outer wall"):
+                        seq.append(name)
+                        if len(seq) == 3:
+                            # 即使恰好 3 次，也可能后面有 Top surface；但我们已提前检测并可在出现时 break
+                            # 这里就先停
+                            pass
+
+                if has_top:
+                    continue  # 顶层或带顶面收尾的层：跳过
+
+                if len(seq) != 3:
+                    continue  # 墙数不足/不规则：跳过
+
+                st = judge_triplet(seq)
+                if st != "unknown":
+                    expected = st
+                    break
+
+            if expected == "unknown":
+                # 没有任何层可用于推断期望
+                return False, "unknown", []
+
+            # —— 校验阶段：同样跳过含 Top surface 的层，以及不足 3 次的层
+            for layer_idx, (s, e) in enumerate(wins):
+                if layer_idx == 0:
+                    continue
+
+                has_top = False
+                seq: List[str] = []
+                for tp in _find_all(mm, TYPE_PREFIX, s, e):
+                    name = _parse_type_name_at(mm, tp, e)
+                    if name == "Top surface":
+                        has_top = True
+                        break
+                    if name in ("Inner wall", "Outer wall"):
+                        seq.append(name)
+                        if len(seq) == 3:
+                            # 已够 3 次，继续看看是否后续会出现 Top surface？TODO，场景化后续可以修改
+                            # 由于规则是“层内出现 Top surface 即跳过”。
+                            break
+
+                if has_top or len(seq) != 3:
+                    continue  # 跳过该层，不计入 bad
+
+                st = judge_triplet(seq)
+                if st != expected:
+                    bad_layers.append((layer_idx, st, seq))
+
+        ok = (len(bad_layers) == 0)
+        return ok, expected, bad_layers
+
+# ===================== 简单自检 =====================
 if __name__ == "__main__":
     demo_path = Path(r"C:\Users\118388\Desktop\automation\test.gcode")
     p = GCodeParser(demo_path)
