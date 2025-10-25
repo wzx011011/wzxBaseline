@@ -43,6 +43,15 @@ Z_RE = re.compile(r"^\s*;Z\s*:\s*([+-]?\d+(?:\.\d+)?)\s*$")
 H_RE = re.compile(r"^\s*;HEIGHT\s*:\s*([+-]?\d+(?:\.\d+)?)\s*$")
 
 
+# ===================== 指令解析：仅看分号 ';' 之前的“指令体” =====================
+_NUM_B = rb"([+-]?(?:\d+(?:\.\d*)?|\.\d+))"
+_G1_RE_B = re.compile(rb"^\s*G1\b", re.IGNORECASE)
+_X_RE_B  = re.compile(rb"\bX" + _NUM_B + rb"\b", re.IGNORECASE)
+_Y_RE_B  = re.compile(rb"\bY" + _NUM_B + rb"\b", re.IGNORECASE)
+_E_RE_B  = re.compile(rb"\bE" + _NUM_B + rb"\b", re.IGNORECASE)
+_Z_RE_B  = re.compile(rb"\bZ" + _NUM_B + rb"\b", re.IGNORECASE)
+_F_RE_B  = re.compile(rb"\bF" + _NUM_B + rb"\b", re.IGNORECASE)
+
 # ===================== 数据类 =====================
 
 @dataclass(frozen=True)
@@ -62,6 +71,14 @@ class Technology:
     parent_extrusion: Optional[str]
     data: bytes | str | None = field(default=None)
 
+@dataclass(frozen=True)
+class Point:
+    x: float
+    y: float
+    kind: Literal["extrude", "toolchange"]   # "extrude"=挤出点；"toolchange"=换刀点
+    has_z: bool = False
+    has_f: bool = False
+    offset: Optional[int] = None             # 该点所在行（分号前指令体）的起始字节偏移
 
 # ===================== 工具 =====================
 
@@ -568,81 +585,107 @@ class GCodeParser:
         return out
 
     # ---------- API 4：按printing object获取所有层的轮廓点 ----------
+    @staticmethod
+    def _pre_comment(line: bytes) -> bytes:
+        """返回分号 ';' 之前的指令体（去掉 CR）。整行注释则返回空。"""
+        line = line.rstrip(b"\r")
+        i = line.find(b";")
+        return line if i == -1 else line[:i]
 
-    # ---------- 辅助：匹配 G1 带 X/Y 的行（起点查找）/ 带 X/Y/E 的行（块内点） ----------
-    _NUM_B = rb"([+-]?(?:\d+(?:\.\d*)?|\.\d+))"
-    _G1_XY_LINE_RE_B = re.compile(
-        rb"^\s*G1\b(?=[^;]*\bX" + _NUM_B + rb"\b)(?=[^;]*\bY" + _NUM_B + rb"\b)[^;]*$",
-        re.IGNORECASE
-    )
-    _G1_XYE_LINE_RE_B = re.compile(
-        rb"^\s*G1\b(?=[^;]*\bX" + _NUM_B + rb"\b)(?=[^;]*\bY" + _NUM_B + rb"\b)(?=[^;]*\bE" + _NUM_B + rb"\b)[^;]*$",
-        re.IGNORECASE
-    )
-    _X_RE_B = re.compile(rb"\bX" + _NUM_B + rb"\b", re.IGNORECASE)
-    _Y_RE_B = re.compile(rb"\bY" + _NUM_B + rb"\b", re.IGNORECASE)
+    def _cmd_is_g1(self, body: bytes) -> bool:
+        return bool(_G1_RE_B.match(body))
 
-    def _parse_xy_from_line(self, line: bytes) -> Optional[Tuple[float, float]]:
-        """从一行 bytes 中解析 X/Y，失败返回 None。"""
-        mX = self._X_RE_B.search(line)
+    def _has_xy(self, body: bytes) -> bool:
+        return bool(_X_RE_B.search(body) and _Y_RE_B.search(body))
+
+    def _has_e(self, body: bytes) -> bool:
+        return bool(_E_RE_B.search(body))
+
+    def _has_z(self, body: bytes) -> bool:
+        return bool(_Z_RE_B.search(body))
+
+    def _has_f(self, body: bytes) -> bool:
+        return bool(_F_RE_B.search(body))
+
+    def _parse_xy_from_body(self, body: bytes) -> Optional[Tuple[float, float]]:
+        """仅在 body（分号前指令体）中解析 X/Y。失败返回 None。"""
+        mX = _X_RE_B.search(body)
         if not mX:
             return None
-        mY = self._Y_RE_B.search(line)
+        mY = _Y_RE_B.search(body)
         if not mY:
             return None
         try:
-            x = float(mX.group(1).decode('ascii', errors='ignore'))
-            y = float(mY.group(1).decode('ascii', errors='ignore'))
+            x = float(mX.group(1).decode("ascii", errors="ignore"))
+            y = float(mY.group(1).decode("ascii", errors="ignore"))
             return (x, y)
         except Exception:
             return None
 
-    def _find_upward_start_xy(self, mm: mmap.mmap, seg_start: int, block_start: int) -> Optional[Tuple[float, float]]:
+    def _find_upward_start_toolchange(
+            self, mm: mmap.mmap, seg_start: int, block_start: int
+    ) -> Optional[Tuple[float, float]]:
         """
-        在同一物体片段 [seg_start, block_start) 内，向上寻找最近的 G1 且同时带 X/Y 的行。
-        找到则返回 (x, y)，否则 None。
+        在同一物体片段 [seg_start, block_start) 内，自下而上寻找最近的“换刀点”（G1 且含 X/Y 且不含 E）。
+        返回 (x, y) 或 None。
         """
         if block_start <= seg_start:
             return None
         blob = mm[seg_start:block_start]
-        # 逐行倒序查找（bytes）
+        pos = 0
+        # 倒序扫描：逐行定位
         lines = blob.split(b"\n")
         for i in range(len(lines) - 1, -1, -1):
-            line = lines[i].rstrip(b"\r")
-            if self._G1_XY_LINE_RE_B.match(line):
-                xy = self._parse_xy_from_line(line)
+            raw = lines[i]
+            body = self._pre_comment(raw)
+            if not body:
+                continue
+            if self._cmd_is_g1(body) and self._has_xy(body) and (not self._has_e(body)):
+                xy = self._parse_xy_from_body(body)
                 if xy is not None:
                     return xy
         return None
 
     def get_type_contours_per_layer(
-            self,
-            *,
-            types: Optional[List[str]] = None,
-            workers: int = 0,
-    ) -> List[Dict[int, Dict[str, List[List[Tuple[float, float]]]]]]:
+        self,
+        *,
+        types: Optional[List[str]] = None,
+        workers: int = 0,
+    ) -> List[Dict[int, Dict[str, List[List[Point]]]]]:
         """
-        layers[L] -> { object_id: { type_name: [ polyline_points_of_each_block, ... ] } }
+        返回：layers[L] -> { object_id: { type_name: [ polyline(Point)[], ... ] } }
+
+        点类型：
+          - 挤出点("extrude"):   G1 且含 X/Y/E
+          - 换刀点("toolchange"):G1 含 X/Y，且不含 E（可含/不含 F/Z）
         规则：
-          - 起点：从块起点向上，在“同一 object 段”内找最近的 G1(含 X/Y) 行（无需 E）。
-          - 块内点：仅采集 G1(含 X/Y/E) 的行。
-          - 若块内没有任何带 E 的点，则该块跳过。
-        types=None 表示收集所有 ;TYPE:，否则仅收集给定类型名集合（大小写敏感度与原始解析一致）。
+          - 第一个挤出块的起点：在块起点向上（同 object 段内）寻找最近的换刀点作为起点（若有）。
+          - 块内遇到“无E的 G1 XY”（换刀点）时：
+              * 若当前有正在积累的 polyline，则先收尾该 polyline（不把该换刀点加入末尾）；
+              * 记录该换刀点为下一条 polyline 的起点候选（pending）。
+          - 下一次遇到挤出点（G1 XYE）开始新 polyline：
+              * 起点优先取 pending 的换刀点（Point(kind='toolchange')），否则用“向上起点”（若存在）。
+              * 然后把当前挤出点作为 Point(kind='extrude') 追加。
+          - 层末/片段末：丢弃未被使用的最后一个换刀点（pending）。
+
+        每个 Point 额外记录：
+          - has_z / has_f：该行是否含 Z / F 参数
+          - offset：该点所在“分号前指令体”的行起始字节偏移
         """
         flat_wins = self._layer_windows_flat()
         if not flat_wins:
             return []
 
-        def _one(args: Tuple[int, Tuple[int, int]]) -> Dict[int, Dict[str, List[List[Tuple[float, float]]]]]:
+        def _one(args: Tuple[int, Tuple[int, int]]) -> Dict[int, Dict[str, List[List[Point]]]]:
             layer_idx, (s, e) = args
-            out_layer: Dict[int, Dict[str, List[List[Tuple[float, float]]]]] = {}
+            out_layer: Dict[int, Dict[str, List[List[Point]]]] = {}
             with self.path.open("rb") as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
-                # 同层物体窗口（一个物体可能多段）
-                obj_map = _object_windows_in_layer(mm, s, e)  # {oid: [(os, oe), ...]}
+                # 本层物体窗口
+                obj_map = _object_windows_in_layer(mm, s, e)
                 if not obj_map:
                     return out_layer
 
-                # 本层挤出类型窗口和 WIPE 片段（基于整层）
+                # 本层挤出类型窗口 / WIPE
                 extrusions, wipes = self._scan_extrusions_and_wipes_in_layer(mm, s, e)
 
                 # 过滤类型
@@ -650,11 +693,9 @@ class GCodeParser:
                 if not ex_targets:
                     return out_layer
 
-                # 遍历每个 TYPE 窗口
                 for ex in ex_targets:
                     ex_span = (ex.start, ex.end)
 
-                    # 分配到每个物体：与其物体段求交集，再剪掉 WIPE，得到 piece 列表（按顺序）
                     for oid, segs in obj_map.items():
                         for (seg_s, seg_e) in segs:
                             inter = _interval_intersect(ex_span, (seg_s, seg_e))
@@ -662,45 +703,81 @@ class GCodeParser:
                                 continue
                             bs, be = inter
 
-                            # 剪掉 WIPE（整层的 WIPE 已经扩展到了行尾，所以这里切分是对齐行的）
+                            # 剪掉 WIPE，得到若干 piece
                             pieces = _interval_subtract((bs, be), wipes)
                             if not pieces:
                                 continue
 
-                            # 先查起点（在当前物体段内，向上找最近 G1 X/Y）
-                            start_xy = self._find_upward_start_xy(mm, seg_s, bs)
+                            # “块级兜底起点”：向上找最近换刀点
+                            upward_tc = self._find_upward_start_toolchange(mm, seg_s, bs)
 
-                            # 再收集块内点（仅 E-挤出行），顺序遍历每个 piece 的每一行
-                            poly: List[Tuple[float, float]] = []
-                            if start_xy is not None:
-                                poly.append(start_xy)
+                            polylines: List[List[Point]] = []
+                            current_poly: List[Point] | None = None
+                            pending_start_xy: Optional[Tuple[float, float]] = None  # 换刀点候选（仅 XY）
 
                             for (ps, pe) in pieces:
-                                chunk = mm[ps:pe]
-                                for raw in chunk.split(b"\n"):
-                                    line = raw.rstrip(b"\r")
-                                    if not line:
-                                        continue
-                                    if self._G1_XYE_LINE_RE_B.match(line):
-                                        xy = self._parse_xy_from_line(line)
-                                        if xy is not None:
-                                            poly.append(xy)
+                                # 行迭代（带字节偏移）
+                                pos = ps
+                                while pos < pe:
+                                    nl = mm.find(b"\n", pos, pe)
+                                    line_end = nl if nl != -1 else pe
+                                    raw = mm[pos:line_end]  # 不含 '\n'
+                                    body = self._pre_comment(raw)
+                                    # 记录本行的“指令体起始偏移”（去掉前导空白后更贴近命令起始，你也可以保留原 pos）
+                                    # 这里选择：保留原 pos，方便回放原始行
+                                    offset = pos
 
-                            # 如果块内没有任何带 E 的点，跳过（不满足“结束点在块内”的约束）
-                            # 即便有起点，也不返回，以免产生空挤出折线
-                            inblock_count = len(poly)
-                            if start_xy is not None:
-                                inblock_count -= 1
-                            has_inblock_e_point = inblock_count >= 1
-                            if not has_inblock_e_point:
-                                continue
+                                    if body:
+                                        if self._cmd_is_g1(body) and self._has_xy(body):
+                                            xy = self._parse_xy_from_body(body)
+                                            if xy is not None:
+                                                has_z = self._has_z(body)
+                                                has_f = self._has_f(body)
+                                                if self._has_e(body):
+                                                    # 挤出点
+                                                    if current_poly is None:
+                                                        # 开新 polyline：起点优先用 pending 换刀点，否则用向上兜底
+                                                        current_poly = []
+                                                        start_xy = pending_start_xy if pending_start_xy is not None else upward_tc
+                                                        if start_xy is not None:
+                                                            current_poly.append(Point(
+                                                                start_xy[0], start_xy[1],
+                                                                "toolchange",
+                                                                has_z=False, has_f=False,
+                                                                offset=None  # 上溯起点没有行位置信息
+                                                            ))
+                                                        current_poly.append(Point(
+                                                            xy[0], xy[1], "extrude",
+                                                            has_z=has_z, has_f=has_f, offset=offset
+                                                        ))
+                                                    else:
+                                                        # 持续挤出
+                                                        current_poly.append(Point(
+                                                            xy[0], xy[1], "extrude",
+                                                            has_z=has_z, has_f=has_f, offset=offset
+                                                        ))
+                                                    # 消费 pending
+                                                    pending_start_xy = None
+                                                else:
+                                                    # 换刀点：收尾当前 polyline，并把该点作为下一段起点候选（不立即加入 polyline）
+                                                    if current_poly is not None:
+                                                        polylines.append(current_poly)
+                                                        current_poly = None
+                                                    pending_start_xy = xy
+                                    # 前进
+                                    pos = (line_end + 1) if nl != -1 else pe
 
-                            # 记入 out_layer
-                            out_layer.setdefault(oid, {}).setdefault(ex.name, []).append(poly)
+                            # piece 结束：若仍有进行中的 polyline，则收尾
+                            if current_poly is not None:
+                                polylines.append(current_poly)
+                                current_poly = None
+                            # 注意：末尾 pending_start_xy 不输出（只作为下一块起点）
+
+                            # 若本交集片段确实产生了挤出 polyline，则记入
+                            if polylines:
+                                out_layer.setdefault(oid, {}).setdefault(ex.name, []).extend(polylines)
 
             return out_layer
-
-            # END _one
 
         args = list(enumerate(flat_wins))
         if workers and workers > 1:
@@ -710,9 +787,10 @@ class GCodeParser:
             return [_one(a) for a in args]
 
 
+
 # ===================== 简单自检 =====================
 if __name__ == "__main__":
-    demo_path = Path(r"C:\Users\118388\Desktop\for printing object\2.gcode")
+    demo_path = Path(r"C:\Users\118388\Desktop\test_only_one_wall_top_slice_and_export1-False__1.gcode")
     p = GCodeParser(demo_path)
 
     # 1) 层→物体窗口统计

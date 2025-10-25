@@ -74,7 +74,7 @@ def engine_session(pytestconfig):
         )
 
     # TODO，先写死，不知道为什么命令行参数注册不了
-    exe_path = r"D:\C3D_Automation\C3DSlicer\build_Release\src\Release\CrealityPrint.exe"
+    # exe_path = r"D:\C3D_Automation\C3DSlicer\build_Release\src\Release\CrealityPrint.exe"
     session = EngineSession(
         exe_path=exe_path,
         log_path=pytestconfig.getoption("--slicer-log"),

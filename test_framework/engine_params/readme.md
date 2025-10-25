@@ -13,3 +13,5 @@ data/case_input：TODO，日后复用metafunc的输入规则，存放metadata.js
 data/models按测试组类别存放用于测试的.3mf文件和.gcode文件
 ####
 output文件夹默认是由夹具自动管理的输出gcode文件，可用命令行--clean-gcode自动清理
+####
+在项目根目录使用python -m pytest -m engine_params --slicer-exe="D:\C3D_Automation\C3DSlicer\build_Release\src\Release\CrealityPrint.exe"类似的命令即刻启动测试

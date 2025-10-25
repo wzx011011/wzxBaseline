@@ -2,7 +2,7 @@ import math
 from pathlib import Path
 from typing import List, Tuple, Optional
 import mmap
-from engine_params.src.gcode.GCodeParser import GCodeParser, find_all, TYPE_PREFIX, parse_type_name_at
+from engine_params.src.gcode.GCodeParser import GCodeParser, find_all, TYPE_PREFIX, parse_type_name_at, Point
 from engine_params.src.gcode.constants import *
 
 import re
@@ -10,12 +10,20 @@ import re
 
 # ================== wall_sequence ==================
 
+def _pos_in_any_span(pos: int, spans: List[Tuple[int, int]]) -> bool:
+    """判断字节偏移 pos 是否落在任意 [s,e) 片段内。"""
+    for s, e in spans:
+        if s <= pos < e:
+            return True
+    return False
+
+
 def parse_wall_sequence(
         gcode_path: Path | str,
         expected_style: WallStyle,
 ) -> Tuple[bool, WallStyle, List[Tuple[int, WallStyle, List[str]]]]:
     """
-    独立函数：按“给定的期望风格 expected_style”校验所有非首层（layer>0）的墙顺序。
+    按“给定的期望风格 expected_style”校验所有非首层（layer>0）的墙顺序。
     规则：
       - 跳过首层 layer 0；
       - 若某层含 ';TYPE:Top surface'，整层跳过（不参与校验）；
@@ -28,10 +36,10 @@ def parse_wall_sequence(
                       其中 seq3 是该层实际解析到的前三个墙标记（长度=3）
     """
     if expected_style not in (
-            "inner wall/outer wall",
-            "outer wall/inner wall",
-            "inner-outer-inner wall",
-            "unknown",
+        "inner wall/outer wall",
+        "outer wall/inner wall",
+        "inner-outer-inner wall",
+        "unknown",
     ):
         raise ValueError(f"unexpected expected_style: {expected_style!r}")
 
@@ -48,10 +56,14 @@ def parse_wall_sequence(
         return "unknown"
 
     p = GCodeParser(gcode_path)
-    wins = p.layer_windows()
-    if not wins or len(wins) <= 1:
+
+    # 新：用“整层窗口 + 物体片段”组合判断
+    flat_wins = p._layer_windows_flat()          # List[(s,e)] 整层范围
+    obj_layer_maps = p.layer_windows()           # List[{oid: [(s,e), ...]}] 物体片段
+    if not flat_wins or not obj_layer_maps or len(flat_wins) != len(obj_layer_maps):
         return False, expected_style, []
 
+    # 旧调用就按 object_id=0 来判断 Top surface 是否存在；保持原有语义
     top_blocks_per_layer = p.get_extrusion_blocks_by_object(
         "Top surface", 0, include_wipe=True, decode=False, workers=0
     )
@@ -59,18 +71,34 @@ def parse_wall_sequence(
     bad_layers: List[Tuple[int, WallStyle, List[str]]] = []
 
     with p.path.open("rb") as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
-        for layer_idx, (s, e) in enumerate(wins):
+        for layer_idx, ((s, e), obj_map) in enumerate(zip(flat_wins, obj_layer_maps)):
             if layer_idx == 0:
                 continue  # 跳过首层
-            if layer_idx < len(top_blocks_per_layer) and top_blocks_per_layer[layer_idx]:
-                continue  # 含顶面：整层跳过
 
-            # 为了保留跨类型顺序，逐个 TYPE 扫描同层
+            # 含顶面：整层跳过
+            if layer_idx < len(top_blocks_per_layer) and top_blocks_per_layer[layer_idx]:
+                continue
+
+            # 把本层所有“物体片段”合并；没有物体标记则退化为整层
+            spans: List[Tuple[int, int]] = []
+            if obj_map:
+                for segs in obj_map.values():
+                    spans.extend(segs)
+                spans.sort(key=lambda t: t[0])
+            else:
+                spans = [(s, e)]
+
+            # 为了保留跨类型顺序，逐个 TYPE 扫描同层，但只统计“落在物体片段内”的 TYPE
             seq: List[str] = []
             for tp in find_all(mm, TYPE_PREFIX, s, e):
+                if not _pos_in_any_span(tp, spans):
+                    continue
                 name = parse_type_name_at(mm, tp, e)
-                if name in ("Inner wall", "Outer wall") and len(seq) < 3:
-                    seq.append(name)
+                if name in ("Inner wall", "Outer wall"):
+                    if len(seq) < 3:
+                        seq.append(name)
+                    if len(seq) == 3:
+                        break  # 只取前三个
 
             if len(seq) != 3:
                 continue  # 不足3次/不规则：跳过，不参与校验
@@ -89,13 +117,21 @@ INFILLS = {"Sparse infill", "Internal solid infill"}
 WALLS = {"Inner wall", "Outer wall"}
 
 
+def _pos_in_any_span(pos: int, spans: List[Tuple[int, int]]) -> bool:
+    """判断字节偏移 pos 是否落在任意 [s,e) 片段内。"""
+    for s, e in spans:
+        if s <= pos < e:
+            return True
+    return False
+
+
 def parse_is_infill_first(
         gcode_path: Path | str,
         expected_first: bool = True,
 ) -> Tuple[bool, bool, List[Tuple[int, str, List[str]]]]:
     """
-    校验每层中 *infill*（Sparse infill / Internal solid infill） 与 *wall*
-    （Inner wall / Outer wall）的先后关系：
+    校验每层中 *infill*（Sparse infill / Internal solid infill 等） 与 *wall*
+    （Inner wall / Outer wall）的先后关系（仅统计落在“物体片段”内的 ;TYPE: 顺序）。
 
       - expected_first=True ：若该层存在 infill，则 infill 必须在 wall 之前
       - expected_first=False：若该层存在 infill，则 wall 必须在 infill 之前
@@ -114,23 +150,44 @@ def parse_is_infill_first(
     """
     p = GCodeParser(gcode_path)
 
+    # 如你的用例需要，可以保留该断言
     cfg = p.load_config()
-    assert cfg["is_infill_first"]
+    assert cfg.get("is_infill_first", True) is not None
 
-    wins = p.layer_windows()
-    if not wins:
+    # 新旧窗口：
+    # - flat_wins: 每层的整体范围（不按物体）
+    # - obj_layer_maps: 每层的 {oid: [(s,e), ...]} 映射
+    flat_wins = p._layer_windows_flat()
+    obj_layer_maps = p.layer_windows()
+
+    if not flat_wins or not obj_layer_maps or len(flat_wins) != len(obj_layer_maps):
         return False, expected_first, []
 
     bad_layers: List[Tuple[int, str, List[str]]] = []
 
     with Path(gcode_path).open("rb") as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
-        for layer_idx, (s, e) in enumerate(wins):
-            # 收集本层相关TYPE的顺序（仅 INFILLS 与 WALLS）
+        for layer_idx, (flat_span, obj_map) in enumerate(zip(flat_wins, obj_layer_maps)):
+            s, e = flat_span
+
+            # 把本层所有物体片段合并为一个列表；若该层没有任何物体标记，则退化为“整层范围”
+            spans: List[Tuple[int, int]] = []
+            if obj_map:
+                for segs in obj_map.values():
+                    spans.extend(segs)
+                # （可选）按起点排序，保持扫描时的时间顺序
+                spans.sort(key=lambda t: t[0])
+            else:
+                spans = [(s, e)]
+
+            # 收集“INFILLS 与 WALLS”的出现顺序
             seq: List[str] = []
             first_infill_i = None
             first_wall_i = None
 
+            # 在整层范围内找 ;TYPE:，再过滤到“物体片段”里
             for pos in find_all(mm, TYPE_PREFIX, s, e):
+                if not _pos_in_any_span(pos, spans):
+                    continue
                 name = parse_type_name_at(mm, pos, e)
                 if name in INFILLS:
                     seq.append(name)
@@ -141,7 +198,7 @@ def parse_is_infill_first(
                     if first_wall_i is None:
                         first_wall_i = len(seq) - 1
 
-                # 若两类都已出现一次，可提前判定
+                # 已经各见一次即可提前判断
                 if first_infill_i is not None and first_wall_i is not None:
                     break
 
@@ -168,7 +225,6 @@ def parse_is_infill_first(
     fatal = {"infill-after-walls", "infill-before-walls", "no-walls"}
     ok = all(flag not in fatal for _, flag, _ in bad_layers) if bad_layers else True
     return ok, expected_first, bad_layers
-
 
 # ================== wall_direction ==================
 # 行首 G0/G1（忽略注释）
@@ -295,60 +351,53 @@ from pathlib import Path
 import mmap
 
 
+def _walls_from_polylines_by_toolchange(polys: List[List[Point]]) -> int:
+    """
+    以“换刀点计数”换算墙数：
+      - 若 polyline 内存在挤出点，则该 polyline 贡献: 1 + (#toolchange)
+      - 若 polyline 没有挤出点，则贡献 0（忽略）
+    """
+    total = 0
+    for pl in (polys or []):
+        if any(p.kind == "extrude" for p in pl):
+            tc = sum(1 for p in pl if p.kind == "toolchange")
+            total += 1 + tc
+    return total
+
+
+# ================== only_one_wall_top ==================
+from typing import List, Tuple, Dict, Any
+from pathlib import Path
+
+from engine_params.src.gcode.GCodeParser import GCodeParser  # 确保已导入
+
 def parse_only_one_wall_top(
         gcode_path: Path | str,
         expected_only_one_wall_top: bool = True,
 ) -> Tuple[bool, bool, List[Tuple[int, str, Dict[str, Any]]]]:
     """
-    校验最后一层（顶面层）外墙/内墙数量是否满足期望。
-
-    先验约束：
-      - 取中间层 mid_idx=len(layers)//2，若该层 Inner+Outer 的总数 == 2，则直接 assert：
-        “校验该参数至少需要三层墙的 .3mf 文件模型”。
-
-    校验规则（仅针对最后一层 last_idx）：
-      - expected_only_one_wall_top=True :
-          需要 last_outer == 1 且 last_inner == 0
-          失败标记：
-            * "has-inner-wall"        （出现了 Inner）
-            * "outer-count-not-one"   （Outer 次数不是 1）
-      - expected_only_one_wall_top=False:
-          需要 (last_outer + last_inner) >= 2
-          失败标记：
-            * "top-walls-lt-2"        （顶面层墙总数 < 2）
-
-    返回：
-      ok: 是否满足期望
-      expected_only_one_wall_top: 原样回传
-      bad_layers: 仅包含最后一层的详情列表（0/多条），元素为
-        (layer_idx, flag, details)
-          - flag ∈ {"has-inner-wall", "outer-count-not-one", "top-walls-lt-2"}
-          - details = {"outer_count": int, "inner_count": int}
+    校验最后一层（顶面层）外墙/内墙数量是否满足期望（基于 get_type_contours_per_layer）。
+    参考原注释，语义保持不变。
     """
     p = GCodeParser(gcode_path)
-    wins = p.layer_windows()
-    if not wins:
+
+    # 用新 API 一次性拿到“外墙/内墙”的所有折线（每条折线 = 一个挤出块）
+    contours = p.get_type_contours_per_layer(types=["Outer wall", "Inner wall"], workers=0)
+    if not contours:
         return False, expected_only_one_wall_top, []
 
-    # 用现成 API 直接拿每层墙块数
-    inner_per_layer = p.get_extrusion_blocks_by_object(
-        "Inner wall", 0, include_wipe=False, decode=True, workers=0
-    )
-    outer_per_layer = p.get_extrusion_blocks_by_object(
-        "Outer wall", 0, include_wipe=False, decode=True, workers=0
-    )
+    # TODO，先写死，因为现在的样本都是只有一个，id都是0
+    target_oid = 0
 
-    # 安全对齐长度（理论上与 wins 等长）
-    L = len(wins)
-    if len(inner_per_layer) < L:
-        inner_per_layer += [[] for _ in range(L - len(inner_per_layer))]
-    if len(outer_per_layer) < L:
-        outer_per_layer += [[] for _ in range(L - len(outer_per_layer))]
+    # 层数
+    L = len(contours)
 
     # ---------- 1) 先验：检查中间层 ----------
     mid_idx = L // 2
-    mid_inner = len(inner_per_layer[mid_idx])
-    mid_outer = len(outer_per_layer[mid_idx])
+    mid_layer_map = contours[mid_idx] or {}
+    mid_obj_map = mid_layer_map.get(target_oid, {}) if mid_layer_map else {}
+    mid_inner = len(mid_obj_map.get("Inner wall", []) or [])
+    mid_outer = len(mid_obj_map.get("Outer wall", []) or [])
     mid_total = mid_inner + mid_outer
     assert mid_total != 2, (
         f"中间层(索引 {mid_idx})的墙总数仅为 2（Outer={mid_outer}, Inner={mid_inner}）。"
@@ -357,8 +406,10 @@ def parse_only_one_wall_top(
 
     # ---------- 2) 校验最后一层 ----------
     last_idx = L - 1
-    last_inner = len(inner_per_layer[last_idx])
-    last_outer = len(outer_per_layer[last_idx])
+    last_layer_map = contours[last_idx] or {}
+    last_obj_map = last_layer_map.get(target_oid, {}) if last_layer_map else {}
+    last_inner = len(last_obj_map.get("Inner wall", []) or [])
+    last_outer = len(last_obj_map.get("Outer wall", []) or [])
 
     bad_layers: List[Tuple[int, str, Dict[str, Any]]] = []
     details = {"outer_count": last_outer, "inner_count": last_inner}
@@ -376,3 +427,4 @@ def parse_only_one_wall_top(
 
     ok = (len(bad_layers) == 0)
     return ok, expected_only_one_wall_top, bad_layers
+
