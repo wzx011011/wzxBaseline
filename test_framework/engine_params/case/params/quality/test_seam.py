@@ -1,4 +1,3 @@
-# test_framework/engine_params/case/params/quality/test_layer_height.py
 from __future__ import annotations
 
 from pathlib import Path
@@ -36,6 +35,6 @@ def test_wipe_speed(slice_and_export):
     gcode_path: Path = slice_and_export  # fixture 返回的值
     assert gcode_path.exists(), "导出的 gcode 文件不存在（fixture 逻辑问题）"
     wipe_cfg:dict[str, object] = check_wipe_speed_by_layer(gcode_path,500)
-    assert wipe_cfg is not None, "未在 G-code 中解析到 layer_height"
+    assert wipe_cfg is not None, "未在 G-code 中解析到 wipe"
     # 断言TODO
     # assert 0.01 < layer_h < 1.0, f"layer_height 看起来不合理: {layer_h}"

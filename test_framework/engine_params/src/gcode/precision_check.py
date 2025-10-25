@@ -16,6 +16,7 @@ _Y_RE = re.compile(rf"\bY{_NUM}", re.IGNORECASE)
 _E_RE = re.compile(rf"\bE{_NUM}", re.IGNORECASE)
 
 
+# TODO,好像有点问题
 def _extract_xy_extrusions(text: str) -> list[tuple[float, float]]:
     """
     从一段 G-code 文本中提取“带 E 的挤出行”的 (X, Y) 点序列。
@@ -110,8 +111,10 @@ def _assert_layer_bbox_shrink(
 
     prefix = f"[layer={layer_index}, wall={wall_kind}]"
     assert abs(dx_min - expected_comp) <= tol, f"{prefix} X-left shrink {dx_min:.4f} != {expected_comp:.4f} (tol={tol})"
-    assert abs(dx_max - expected_comp) <= tol, f"{prefix} X-right shrink {dx_max:.4f} != {expected_comp:.4f} (tol={tol})"
-    assert abs(dy_min - expected_comp) <= tol, f"{prefix} Y-bottom shrink {dy_min:.4f} != {expected_comp:.4f} (tol={tol})"
+    assert abs(
+        dx_max - expected_comp) <= tol, f"{prefix} X-right shrink {dx_max:.4f} != {expected_comp:.4f} (tol={tol})"
+    assert abs(
+        dy_min - expected_comp) <= tol, f"{prefix} Y-bottom shrink {dy_min:.4f} != {expected_comp:.4f} (tol={tol})"
     assert abs(dy_max - expected_comp) <= tol, f"{prefix} Y-top shrink {dy_max:.4f} != {expected_comp:.4f} (tol={tol})"
 
 
@@ -145,11 +148,11 @@ def assert_per_layer(
     tst = GCodeParser(tested)
 
     # 分别取 Outer/Inner 的片段（已剔除 WIPE，并拼接）
-    base_outer = base.get_extrusion_blocks_per_layer("Outer wall", include_wipe=False, decode=True, workers=8)
-    base_inner = base.get_extrusion_blocks_per_layer("Inner wall", include_wipe=False, decode=True, workers=8)
+    base_outer = base.get_extrusion_blocks_by_object("Outer wall", 0, include_wipe=False, decode=True, workers=8)
+    base_inner = base.get_extrusion_blocks_by_object("Inner wall", 0, include_wipe=False, decode=True, workers=8)
 
-    test_outer = tst.get_extrusion_blocks_per_layer("Outer wall", include_wipe=False, decode=True, workers=8)
-    test_inner = tst.get_extrusion_blocks_per_layer("Inner wall", include_wipe=False, decode=True, workers=8)
+    test_outer = tst.get_extrusion_blocks_by_object("Outer wall", 0, include_wipe=False, decode=True, workers=8)
+    test_inner = tst.get_extrusion_blocks_by_object("Inner wall", 0, include_wipe=False, decode=True, workers=8)
 
     # 一致性校验：层数应一致
     assert len(base_outer) == len(base_inner) == len(test_outer) == len(test_inner), \
@@ -187,11 +190,11 @@ def assert_per_layer(
 
 
 def check_elefant_foot_compensation(
-    baseline: Path,
-    tested: Path,
-    expected_comp: float,
-    tol: float,
-    max_layers: int | None = None,
+        baseline: Path,
+        tested: Path,
+        expected_comp: float,
+        tol: float,
+        max_layers: int | None = None,
 ):
     """
     入口封装：

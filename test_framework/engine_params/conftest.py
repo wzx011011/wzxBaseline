@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import os
-import shlex
 import re
 import shutil
 import itertools
-from email.policy import default
-from typing import Optional, List
+from typing import Optional
 from pathlib import Path
 import time
 

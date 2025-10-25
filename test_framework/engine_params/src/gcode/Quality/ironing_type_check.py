@@ -4,7 +4,8 @@ from pathlib import Path
 
 from engine_params.src.gcode.GCodeParser import GCodeParser
 
-def parse_ironing_type(gcode_path: str | Path, *, workers: int = 0) -> bool:
+
+def parse_ironing_type(gcode_path: str | Path, *, workers: int = 0) -> list[dict[int, list[bytes | str]]]:
     '''
         现在只能检查存在性，TODO，类型还不能检查
     '''
@@ -13,4 +14,5 @@ def parse_ironing_type(gcode_path: str | Path, *, workers: int = 0) -> bool:
         "Ironing", include_wipe=True, decode=False, workers=4
     )
     # 只要某一层非空，就说明存在 Ironing 段
-    return any(bool(layer_blocks) for layer_blocks in blocks_per_layer)
+    # return any(bool(layer_blocks) for layer_blocks in blocks_per_layer)
+    return blocks_per_layer

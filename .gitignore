@@ -12,5 +12,5 @@ test_engine_params/
 **/.pytest_cache/
 **/.idea/
 **/__pycache__/
-**/slicer_stdout.log/
+**/slicer_stdout.log
 AGENTS.md
