@@ -234,6 +234,10 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     # 确保父目录存在
     output_gcode.parent.mkdir(parents=True, exist_ok=True)
 
+    # 如果gcode文件已存在，直接返回路径，不重复切片
+    if output_gcode.exists():
+        return output_gcode
+
     # ---- 1) reset_project ----
     reset_fut = engine_injector.submit("reset_project", {
         "skip_confirm": True,
