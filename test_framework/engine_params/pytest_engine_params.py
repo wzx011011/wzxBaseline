@@ -17,7 +17,7 @@ def pytest_addoption(parser):
                   help="一串空格分隔的 CLI 参数，会与 --slicer-arg 合并")
 
     # 自动管理输出的 gcode 目录相关
-    grp.addoption("--gcode-root", default=r"D:\C3DBaseline\test_framework\engine_params\output",
+    grp.addoption("--gcode-root", default=None,
                   help="G-code 输出根目录（默认使用临时目录）")
     grp.addoption("--gcode-scope", choices=["function", "module", "session"], default="module",
                   help="按哪个作用域自动分配输出子目录")

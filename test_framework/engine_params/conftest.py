@@ -216,7 +216,11 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
         raise pytest.UsageError(f"slice_and_export: 'input_3mf' must be provided and exist. Got: {input_3mf}")
 
     # 如果不给该fixture提供output_gcode，那么就由pytest自动根据fixture管理输出目录
-    output_gcode = Path(params.get("output_gcode")) if params.get("output_gcode") else gcode_path_factory()
+    output_gcode_param = params.get("output_gcode")
+    if output_gcode_param:
+        output_gcode = Path(output_gcode_param)
+    else:
+        output_gcode = Path(gcode_path_factory())
     if not output_gcode:
         raise pytest.UsageError(f"slice_and_export: 'output_gcode' must be provided. Got: {output_gcode}")
 
@@ -280,3 +284,136 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     #     #         output_gcode.unlink()
     #     # except Exception:
     #     #     pass
+
+
+# =================                 =================
+#                 批量3mf生成gcode夹具
+# =================                 =================
+
+@pytest.fixture
+def batch_slice_3mf_to_gcode(engine_injector, gcode_path_factory, pytestconfig):
+    """
+    批量将3mf文件转换为gcode文件的夹具。
+    生成的gcode文件名附带3mf文件的修改日期，如果gcode已经存在则跳过不生成。
+    自动遍历data/models目录获取所有3mf文件。
+    执行完后生成一个json文件保存3mf文件名和gcode文件名的映射关系。
+    
+    参数:
+        engine_injector: 引擎注入器
+        gcode_path_factory: gcode路径工厂
+        pytestconfig: pytest配置
+        
+    返回:
+        函数，执行批量切片并返回生成的gcode文件映射
+    """
+    def _slice_all(output_dir=None):
+        """
+        批量切片data/models目录下的所有3mf文件到gcode
+        
+        参数:
+            output_dir: 输出目录，如果为None则使用默认gcode目录
+            
+        返回:
+            3mf文件到gcode文件的映射字典
+        """
+        # 获取data/models目录路径
+        data_root = Path(pytestconfig.rootpath) / "test_framework" / "engine_params" / "data" / "models"
+        if not data_root.exists():
+            raise FileNotFoundError(f"数据目录不存在: {data_root}")
+        
+        # 查找所有3mf文件
+        three_mf_files = list(data_root.rglob("*.3mf"))
+        if not three_mf_files:
+            raise FileNotFoundError(f"在 {data_root} 目录下未找到任何.3mf文件")
+        
+        print(f"找到 {len(three_mf_files)} 个3mf文件")
+        
+        generated_gcode_files = {}
+        
+        for three_mf_path in three_mf_files:
+            three_mf_path = Path(three_mf_path)
+            if not three_mf_path.exists():
+                print(f"警告: 3mf文件不存在: {three_mf_path}")
+                continue
+                
+            # 获取3mf文件的修改时间
+            mtime = three_mf_path.stat().st_mtime
+            mtime_str = time.strftime("%Y%m%d_%H%M%S", time.localtime(mtime))
+            
+            # 构造gcode文件名
+            if output_dir is None:
+                gcode_path = Path(gcode_path_factory(
+                    filename=f"{three_mf_path.stem}_{mtime_str}.gcode"
+                ))
+            else:
+                output_dir = Path(output_dir)
+                output_dir.mkdir(parents=True, exist_ok=True)
+                gcode_path = output_dir / f"{three_mf_path.stem}_{mtime_str}.gcode"
+            
+            # 保存映射关系
+            relative_3mf_path = three_mf_path.relative_to(data_root.parent.parent)
+            generated_gcode_files[str(relative_3mf_path)] = str(gcode_path)
+            
+            # 如果gcode文件已存在，跳过生成
+            if gcode_path.exists():
+                print(f"Gcode文件已存在，跳过生成: {gcode_path}")
+                continue
+                
+            # 重置项目
+            reset_fut = engine_injector.submit("reset_project", {
+                "skip_confirm": True,
+                "silent": True,
+                "project_name": f"batch_slice_project_{three_mf_path.stem}",
+            })
+            reset_result = reset_fut.result(timeout=30)
+            assert reset_result.get("code") == 0, f"reset_project 失败：{reset_result}"
+            
+            # 加载3mf文件
+            load_fut = engine_injector.submit("trigger_load_project2",
+                                              {"file": str(three_mf_path),
+                                               "discard_preset_changes": True},
+                                              timeout=60)
+            load_res = load_fut.result(timeout=90)
+            assert load_res.get("code") == 0, f"加载模型失败：{load_res}"
+            
+            # 点击切片按钮
+            slice_fut = engine_injector.submit("click_button", {"id": SLICE_BTN_ID})
+            slice_res = slice_fut.result(timeout=120)
+            assert slice_res.get("code") == 0, f"切片失败：{slice_res}"
+            
+            # 导出gcode
+            export_fut = engine_injector.submit("export_gcode", {
+                "export_all": False,
+                "output": str(gcode_path)
+            }, timeout=300)
+            export_res = export_fut.result(timeout=360)
+            assert export_res.get("code") == 0, f"导出 G-code 失败：{export_res}"
+            
+            # 等待文件落盘
+            if not gcode_path.exists():
+                end = time.time() + 5.0
+                while time.time() < end:
+                    if gcode_path.exists():
+                        break
+                    time.sleep(0.25)
+            assert gcode_path.exists(), f"G-code 未生成：{gcode_path}"
+            print(f"成功生成: {gcode_path}")
+        
+        # 生成映射关系的JSON文件
+        mapping_file = (output_dir or gcode_path_factory("") / ".." / "3mf_gcode_mapping.json")
+        if isinstance(mapping_file, str):
+            mapping_file = Path(mapping_file)
+        mapping_file = mapping_file.resolve() / "3mf_gcode_mapping.json"
+        
+        # 确保目录存在
+        mapping_file.parent.mkdir(parents=True, exist_ok=True)
+        
+        # 写入JSON文件
+        import json
+        with open(mapping_file, 'w', encoding='utf-8') as f:
+            json.dump(generated_gcode_files, f, indent=2, ensure_ascii=False)
+        
+        print(f"映射关系已保存到: {mapping_file}")
+        return generated_gcode_files
+        
+    return _slice_all
