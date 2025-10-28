@@ -11,13 +11,13 @@ import json
 import time
 import psutil
 import subprocess
+import re
 from typing import Dict, Any, Optional
+from datetime import datetime
 
 import cv2
 from PIL import Image
 import pyautogui
-
-current_app_id = None
 
 def gen_respone(code: int, error: str, payload: Dict[str, Any] = {}) -> Dict[str, Any]:
     """
@@ -227,6 +227,7 @@ def handle_tcp_client_send(arguments: Dict[str, Any]) -> Dict[str, Any]:
 
 def loop_query_status_with_ping(cmd, ping_timeout: int=5):
     interlval = 0
+    status = -1
     while True:
         # 探活
         if (interlval >= ping_timeout):
@@ -239,48 +240,40 @@ def loop_query_status_with_ping(cmd, ping_timeout: int=5):
                     "message": "app宕机了",
                     "response": json.dumps({"code": "-1", "error": "app dead", "payload": {}})
                 }
-
         status = handle_query_cmd_status({"cmd": cmd})
-        if (status == 1):
+        if (status == 1 or status == -1):
             break
         time.sleep(1)
         interlval += 1
+    return 0 if status == 1 else 1 # 0 是正常 1为失败
 
 def handle_load_project(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """处理加载项目请求"""
-    path = arguments.get("path", "")
+    path = arguments.get("path", None)
     
+    if not os.path.exists(path):
+        return {
+            "status": "error",
+            "message": "项目路径不存在",
+            "response": json.dumps(gen_respone("-1", "project path not exists", {}))
+        }
+
     if not path:
         return {
             "status": "error",
             "message": "项目路径不能为空",
-            "response": None
+            "response": json.dumps(gen_respone("-1", "project path is empty", {}))
         }
     
     # 加载项目
     result = send_tcp_command(f"trigger_load_project;{json.dumps({'file': path})}")
-
-    loop_query_status_with_ping("trigger_load_project")
-    # interlval = 0
-    # while True:
-    #     # 探活
-    #     if (interlval >= 5):
-    #         interlval = 0
-    #         ping_result = handle_ping({})
-    #         ping_result = json.loads(ping_result["response"])
-    #         if (ping_result["code"] != 0):
-    #             return {
-    #                 "status": "error",
-    #                 "message": "app宕机了",
-    #                 "response": json.dumps({"code": "-1", "error": "app dead", "payload": {}})
-    #             }
-
-    #     status = handle_query_cmd_status({"cmd": "trigger_load_project"})
-    #     if (status == 1):
-    #         break
-    #     time.sleep(1)
-    #     interlval += 1
-
+    query_res = loop_query_status_with_ping("trigger_load_project")
+    if query_res != 0:
+        return {
+            "status": "error",
+            "message": "加载项目失败",
+            "response": json.dumps(gen_respone("-1", "load project failed", {}))
+        }
     return result
 
 def handle_ping(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -293,22 +286,35 @@ def handle_wait_app_ready(arguments: Dict[str, Any]) -> Dict[str, Any]:
     arg = {
         "type": 0,
     }
-    result = send_tcp_command(f"query_status;{json.dumps(arg)}") 
-    res = json.loads(result["response"])
-    global current_app_id
-    current_app_id = res["payload"]
+    count = 0
+    while True:
+        result = send_tcp_command(f"query_status;{json.dumps(arg)}") 
+        res = json.loads(result["response"])
+        code = int(res["code"])
+        if (code == 0):
+            break
+        time.sleep(0.5)
+        count += 1
+        if (count >= 10):
+            return {
+                "status": "error",
+                "message": "app未就绪",
+                "response": json.dumps({"code": "-1", "error": "app not ready", "payload": {}})
+            }
     return result
 
 def handle_query_cmd_status(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """处理查询命令状态请求"""
     arg = {
         "type": 1,
-        "app_id": current_app_id,
+        "app_id": 0,
         "cmd": arguments.get("cmd", ""),
     }
     result = send_tcp_command(f"query_status;{json.dumps(arg)}") 
     res = json.loads(result["response"])
-    status = json.loads(res["payload"])["status"]
+    status = -1
+    if (int(res["code"]) == 0):
+        status = json.loads(res["payload"])["status"]
     return status
 
 def handle_capture(arguments: Dict[str, Any]) -> Dict[str, Any]:
@@ -337,11 +343,20 @@ def handle_take_screenshot(arguments: Dict[str, Any]) -> Dict[str, Any]:
     try:
         # 查询控件几何信息，确定3D区域并截图
         topbar_geometry = handle_get_widget_geometry({"widget_id": 1})
+        topbar_geometry = json.loads(topbar_geometry["response"])
         canvas_geometry = handle_get_widget_geometry({"widget_id": 2})
-        topbar_geometry = json.loads(topbar_geometry["response"])["payload"]
+        canvas_geometry = json.loads(canvas_geometry["response"])
+        if topbar_geometry["code"] != 0 or canvas_geometry["code"] != 0:
+            return {
+                "status": "error",
+                "message": "获取控件几何信息失败",
+                "response": json.dumps({"code": "-1", "error": "get widget geometry failed", "payload": {}})
+            }
+        topbar_geometry = topbar_geometry["payload"]
         topbar_geometry = json.loads(topbar_geometry)
-        canvas_geometry = json.loads(canvas_geometry["response"])["payload"]
+        canvas_geometry = canvas_geometry["payload"]
         canvas_geometry = json.loads(canvas_geometry)
+
         region = (0, topbar_geometry["h"], canvas_geometry["w"], canvas_geometry["h"])
         # 启用截图模式
         handle_set_capture_mode({"enable": 1})
@@ -385,6 +400,11 @@ def contours_similar(image_path1, image_path2, output_path1=None, output_path2=N
     # 读取图片
     img1 = cv2.imread(image_path1)
     img2 = cv2.imread(image_path2)
+
+    if len(output_path1) == 0:
+        output_path1 = None
+    if len(output_path2) == 0:
+        output_path2 = None
 
     if img1 is None or img2 is None:
         raise ValueError("无法读取图片，请检查路径是否正确")
@@ -493,6 +513,14 @@ def handle_contours_similar(arguments: Dict[str, Any]) -> Dict[str, Any]:
     output_path2 = arguments.get("output_path2", None)
     similarity_threshold = arguments.get("similarity_threshold", 0.5)
     match_ratio_threshold = arguments.get("match_ratio_threshold", 0.8)
+
+    if (not os.path.exists(image_path1)) or (not os.path.exists(image_path2)):
+        return {
+            "status": "error",
+            "message": f"图像路径不存在: {image_path1}",
+            "response": json.dumps(gen_respone(-1, "image path1 or path2 not exists", {}))
+        }
+
     equal = contours_similar(image_path1, image_path2, output_path1, output_path2, similarity_threshold, match_ratio_threshold)
 
     if (equal):
@@ -507,12 +535,28 @@ def handle_contours_similar(arguments: Dict[str, Any]) -> Dict[str, Any]:
     
 def handle_trigger_slice(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """触发切片"""
-    result = send_tcp_command(f"trigger_slice;{json.dumps({})}") 
-    loop_query_status_with_ping("trigger_slice")
+    result = send_tcp_command(f"trigger_slice;{json.dumps({})}", timeout = 3)
+    resp = json.loads(result["response"])
+    if resp["code"] != 0:
+        resp = gen_respone(-1, "", {"result": "触发切片失败"})
+        result["response"] = json.dumps(resp)
+        return result
+    query_res = loop_query_status_with_ping("trigger_slice")
+    if query_res != 0:
+        return {
+            "status": "error",
+            "message": "触发切片失败",
+            "response": json.dumps(gen_respone("-1", "trigger slice failed", {}))
+        }
     return result
 
+def read_file(path):
+    if not os.path.exists(path):
+        return None
+    with open(path, "r", encoding="utf-8") as f:
+        return f.read()
+
 def handle_execute_terminal_command(arguments: Dict[str, Any]) -> Dict[str, Any]:
-# def execute_terminal_command(command, timeout=30, cwd=None):
     """
     安全地执行终端命令
 
@@ -527,23 +571,52 @@ def handle_execute_terminal_command(arguments: Dict[str, Any]) -> Dict[str, Any]
     command = arguments["command"]
     timeout = arguments.get("timeout", 30)
     cwd = arguments.get("cwd", None)
+    sync = arguments.get("sync", True)
+
     try:
         # 安全检查：可以在这里添加命令白名单或黑名单
         if isinstance(command, str):
             cmd = command.split()
-        else:
-            cmd = command
+            if sync == False:
+                if cmd[0] != "start":
+                    command = f"start {command}"
+
+        # type 命令夺舍
+        if command.startswith("type"):
+            out = ""
+            err = ""
+            return_code = 0
+            file_path = command.split(" ")[1]
+            file_content = read_file(file_path)
+            if file_content is None:
+                out = "error"
+                err =  f"文件路径不存在: {file_path}"
+                return_code = -1
+            else:
+                out = file_content
+                err =  ""
+                return_code = 0
+
+            resp = gen_respone(
+                0, 
+                "命令执行成功", 
+                {"stdout": out, "stderr": err, "return_code": return_code}
+            )
+            return {
+                "status": "success",
+                "message": f"",
+                "response": json.dumps(resp)
+            }
 
         result = subprocess.run(
-            cmd,
-            capture_output=True,
+            command,
+            capture_output=sync,
             text=True,
             timeout=timeout,
             cwd=cwd,
             shell=isinstance(command, str)
         )
 
-        
         resp = gen_respone(
             0, 
             "命令执行成功", 
@@ -560,7 +633,7 @@ def handle_execute_terminal_command(arguments: Dict[str, Any]) -> Dict[str, Any]
         resp = gen_respone(
             -1, 
             "Command timed out", 
-            {"stdout": result.stdout, "stderr": result.stderr, "return_code": -1}
+            {"stdout": "", "stderr": "", "return_code": -1}
         )
         return {
             "status": "success",
@@ -571,13 +644,174 @@ def handle_execute_terminal_command(arguments: Dict[str, Any]) -> Dict[str, Any]
         resp = gen_respone(
             -1, 
             str(e), 
-            {"stdout": result.stdout, "stderr": result.stderr, "return_code": -1}
+            {"stdout": "", "stderr": "", "return_code": -1}
         )
         return {
             "status": "success",
             "message": f"",
             "response": json.dumps(resp)
         }
+
+def handle_define_batch_task(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """定义批量任务"""
+    tasks = arguments["tasks"]
+    path = arguments["path"]
+    save_steps_res = arguments["save_steps_res"]
+    res = {
+        "tasks": [],
+        "save_steps_res": save_steps_res
+    }
+    
+    if len(tasks) == 0:
+        return {
+            "status": "success",
+            "message": f"",
+            "response": json.dumps(gen_respone(-1, "批量任务列表为空"))
+        }
+    # 尝试兼容不同聚合MCP程序预定义的json键值
+    if "arguments" not in tasks[0].keys():
+        return {
+            "status": "success",
+            "message": f"",
+            "response": json.dumps(gen_respone(-1, f"传入任务参数时, 你必须严格按照mcp工具定义的json格式"))
+        }
+    cmd_key_name = "cmd"
+    for key in tasks[0].keys():
+        if key != "arguments":
+            cmd_key_name = key
+
+    for task in tasks:
+        cmd = task[cmd_key_name]
+        for handler in TCP_CLIENT_HANDLERS.keys():
+            if handler in cmd:
+                cmd = handler
+                break
+        if not cmd in TCP_CLIENT_HANDLERS.keys():
+            continue
+        if isinstance(task["arguments"], str):
+            arg = json.loads(task["arguments"])
+        else:
+            arg = task["arguments"]
+        res["tasks"].append({
+            "cmd": cmd,
+            "arguments": arg
+        })
+        print(f"========>{cmd}{arg}")
+
+    if len(res["tasks"]) != 0:
+        open(path, "w+", encoding="utf-8").write(json.dumps(res, indent=4, ensure_ascii=False) + "\n")
+    return {
+        "status": "success",
+        "message": f"",
+        "response": json.dumps(gen_respone(0, "定义批量任务成功"))
+    }
+
+def handle_exec_batch_task(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """执行批量任务"""
+    path = arguments["path"]
+    task_input_arg = arguments["task_input_arg"]
+    restult_save_path = arguments.get("restult_save_path", "D:\\report.log")
+
+    # 尝试预处理windows的路径参数(将\\替换为\\\\)
+    def looks_like_path(s: str) -> bool:
+        # 启发式规则：包含盘符、分隔符等
+        path_pattern = r'([a-zA-Z]:\\|\\\\|[/\\].*[/\\]|^[\\/])'
+        return bool(re.search(path_pattern, s))
+
+    for i, arg in enumerate(task_input_arg):
+        if looks_like_path(arg):
+            task_input_arg[i] = arg.replace("\\", "\\\\")
+
+    if not os.path.exists(path):
+        return {
+            "status": "success",
+            "message": f"",
+            "response": json.dumps(gen_respone(-1, "批量任务文件不存在"))
+        }
+    # parser json
+    batch_task_defeine = None
+    try:
+        batch_task_defeine = json.loads(open(path, "r", encoding="utf-8").read())
+    except:
+        return {
+            "status": "success",
+            "message": f"",
+            "response": json.dumps(gen_respone(-1, "批量任务文件格式错误"))
+        }
+    # exec tasks
+    write_res = {
+        "tasks": []
+    }
+    if os.path.exists(restult_save_path):
+        result_content = open(restult_save_path, "r", encoding="utf-8").read()
+        if len(result_content) != 0:
+            try:
+                write_res = json.loads(result_content)
+            except:
+                return {
+                    "status": "success",
+                    "message": f"",
+                    "response": json.dumps(gen_respone(-1, "批量任务结果文件格式错误", f"{restult_save_path}内容为非法json"))
+                }
+    this_task_res = {
+        "task_paht": path,
+        "start_timestamp": datetime.now().timestamp(),
+        "used_time": -1,
+        "result": []
+    }
+    save_steps_res = batch_task_defeine["save_steps_res"]
+    for i, task in enumerate(batch_task_defeine["tasks"]):
+        cmd = task["cmd"]
+        if not cmd in TCP_CLIENT_HANDLERS.keys():
+            return {
+                "status": "success",
+                "message": f"",
+                "response": json.dumps(gen_respone(-1, f"批量任务命令{cmd}不存在"))
+            }
+        arg = task["arguments"]      
+        arg = json.dumps(arg)
+        matches = re.findall(r'%(\d+)%', arg)
+        for match in matches:
+            arg_index = int(match)
+            if len(task_input_arg) < arg_index:
+                return {
+                    "status": "success",
+                    "message": f"",
+                    "response": json.dumps(gen_respone(-1, f"批量任务参数{arg}不存在"))
+                }
+            arg = arg.replace(f"%{arg_index}%", task_input_arg[arg_index-1])
+
+        arg = json.loads(arg)
+        res = TCP_CLIENT_HANDLERS[cmd](arg)
+        if i+1 in save_steps_res:
+            this_task_res["result"].append({
+                "cmd": cmd,
+                "arguments": arg,
+                "res": json.loads(res["response"])
+            })
+    this_task_res["used_time"] = datetime.now().timestamp() - this_task_res["start_timestamp"]
+    write_res["tasks"].append(this_task_res)
+    open(restult_save_path, "w+", encoding="utf-8").write(json.dumps(write_res, indent=4, ensure_ascii=False) + "\n")
+
+    return {
+        "status": "success",
+        "message": f"",
+        "response": json.dumps(gen_respone(0, "批量任务执行成功"))
+    }
+
+# def handle_start_app(arguments: Dict[str, Any]) -> Dict[str, Any]:
+#     """
+#     启动应用
+
+#     Args:
+#         app_path: app 路径
+
+#     Returns:
+#         dict: 包含执行结果的字典
+#     """
+#     app_path = arguments["app_path"]
+#     app_arg = arguments.get("app_arg", "")  
+#     return handle_execute_terminal_command({"command": fr"start {app_path} {app_arg}", "sync": False})
 
 # MCP工具处理映射
 TCP_CLIENT_HANDLERS = {
@@ -590,6 +824,9 @@ TCP_CLIENT_HANDLERS = {
     "contours_similar": handle_contours_similar,
     "trigger_slice": handle_trigger_slice,
     "execute_terminal_command": handle_execute_terminal_command,
+    "define_batch_task": handle_define_batch_task,
+    "exec_batch_task": handle_exec_batch_task,
+    # "start_app": handle_start_app,
 }
 
 # MCP工具定义
@@ -709,11 +946,101 @@ TCP_CLIENT_TOOLS = {
                 "cwd": {
                     "type": "string",
                     "description": "工作目录"
+                },
+                "sync": {
+                    "type": "boolean",
+                    "description": "阻塞形式或非后台形式"
                 }
             },
             "required": ["command"]
         }
     },
+    "define_batch_task": {
+        "name": "define_batch_task",
+        "description": "定义批量任务",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "保存路径"
+                },
+                "tasks": {
+                    "type": "array",
+                    "description": "任务列表",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "cmd": {
+                                "type": "string",
+                                "description": "命令"
+                            },
+                            "arguments": {
+                                "type": "string",
+                                "description": "参数"
+                            }
+                        },
+                        "required": ["cmd", "arguments"]
+                    }
+                },
+                "save_steps_res": {
+                    "type": "array",
+                    "description": "保存哪个步骤的结果",
+                    "items": {
+                        "type": "integer",
+                        "description": "步骤索引"
+                    }
+                }
+            },
+            "required": ["tasks", "save_steps_res"]
+        }
+    },
+    "exec_batch_task": {
+        "name": "exec_batch_task",
+        "description": "执行批量任务",
+        "inputSchema": {
+            "type": "object",
+            "properties": {
+                "path": {
+                    "type": "string",
+                    "description": "批量任务文件的路径"
+                },
+                "task_input_arg": {
+                    "type": "array",
+                    "description": "任务输入参数列表",
+                    "items": {
+                        "type": "string",
+                        "description": "任务输入参数"
+                    }
+                },
+                "restult_save_path": {
+                    "type": "string",
+                    "description": "结果保存路径"
+                }
+            },
+            "required": ["path", "task_input_arg"]
+        }
+    },
+    # "start_app": {
+    #     "name": "start_app",
+    #     "description": "启动应用",
+    #     "inputSchema": {
+    #         "type": "object",
+    #         "properties": {
+    #             "app_path": {
+    #                 "type": "string",
+    #                 "description": "应用路径"
+    #             }
+    #         },
+    #         "properties": {
+    #             "app_arg": {
+    #                 "type": "string",
+    #                 "description": "应用启动参数"
+    #             }
+    #         },
+    #         "required": ["app_path", "app_arg"]
+    #     }
+    # },
 }
 
 # MCP服务器标准接口

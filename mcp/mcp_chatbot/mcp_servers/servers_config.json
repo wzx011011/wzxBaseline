@@ -1,0 +1,13 @@
+{
+    "mcpServers": {
+        "cp_server": {
+            "command": "E:\\py310\\Scripts\\uv.exe",
+            "args": [
+                "--directory",
+                "F:\\mcp_chatbot\\mcp_servers",
+                "run",
+                "tcp_client_mcp.py"
+            ]
+        }
+    }
+}

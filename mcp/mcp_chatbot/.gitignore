@@ -1,0 +1,5 @@
+# Local environment variables
+.env
+__pycache__
+.venv
+.gitai/pr_docs
