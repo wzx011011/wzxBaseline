@@ -18,7 +18,7 @@ cases = [
         "timeouts": {"load": 120, "slice": 240, "export": 600}
     },
     {
-        "input_3mf": r"C:\Users\118388\Desktop\automation\3DBenchy.3mf",
+        "input_3mf": r"D:\C3DBaseline\test_framework\engine_params\data\models\quality\wipe_speed_001.3mf",
         # "output_gcode": r"C:\Users\118388\Desktop\automation\plate2.gcode",
         "project_name": "test_layer_height_case2",
         "timeouts": {"load": 120, "slice": 240, "export": 600}

@@ -7,10 +7,22 @@ import itertools
 from typing import Optional
 from pathlib import Path
 import time
+import threading
 
 import pytest
 from .src.slicerctl.session import EngineSession
 from .src.slicerctl.constants import SLICE_BTN_ID
+
+# ========== watchdog 依赖 ==========
+try:
+    from watchdog.observers import Observer
+    from watchdog.events import FileSystemEventHandler, FileSystemEvent
+except Exception as _e_watchdog:
+    Observer = None
+    FileSystemEventHandler = object  # 兜底占位
+    _WATCHDOG_IMPORT_ERROR = _e_watchdog
+else:
+    _WATCHDOG_IMPORT_ERROR = None
 
 
 # 为engine_param_item提供默认参数
@@ -36,24 +48,21 @@ def _get_exe_path_from_cli_or_env(config: "pytest.Config") -> Optional[str]:
     优先命令行 --slicer-exe；否则读取环境变量 CREALITY_PRINTER_PATH。
     两者都没有则返回 None。若显式提供了路径但文件不存在，抛 UsageError。
     """
-    # 1) 读 CLI（选项不存在时 getoption 可能抛 ValueError；不同 pytest 版本略有差异）
     try:
-        cli_val = config.getoption("--slicer-exe")  # 有的版本可加 default=None
+        cli_val = config.getoption("--slicer-exe")
     except ValueError:
-        cli_val = None  # 选项未注册就当作没给
+        cli_val = None
 
-    exe = (cli_val or os.getenv("CREALITY_PRINTER_PATH") or "").strip()
+    exe = (cli_val or os.getenv(ENV_KEY) or "").strip()
     if not exe:
-        return None  # 都没提供就按你的约定返回 None
+        return None
 
     p = Path(exe).expanduser()
     if not (p.exists() and p.is_file()):
-        # 显式提供了，但不存在 -> 清晰报错给用户
         raise pytest.UsageError(
             f"指定的切片器路径不存在或不是文件: {p}。"
             " 请用 --slicer-exe <path> 或设置环境变量 CREALITY_PRINTER_PATH。"
         )
-
     return str(p)
 
 
@@ -73,8 +82,6 @@ def engine_session(pytestconfig):
             f"{ENV_KEY}；跳过依赖引擎的测试会话"
         )
 
-    # TODO，先写死，不知道为什么命令行参数注册不了
-    # exe_path = r"D:\C3D_Automation\C3DSlicer\build_Release\src\Release\CrealityPrint.exe"
     session = EngineSession(
         exe_path=exe_path,
         log_path=pytestconfig.getoption("--slicer-log"),
@@ -87,10 +94,8 @@ def engine_session(pytestconfig):
         backoff=pytestconfig.getoption("--slicer-backoff"),
     )
 
-    # 进入上下文，拿到 (client, injector)
     client, injector = session.__enter__()
     try:
-        # 连通性自检：等待后台工作线程往返
         fut = injector.submit("ping", {})
         resp = fut.result(timeout=10)
         assert resp.get("code") == 0, f"ping 失败：{resp}"
@@ -99,7 +104,7 @@ def engine_session(pytestconfig):
         session.__exit__(None, None, None)
 
 
-# 便捷别名（可选）：需要谁就注入谁
+# 便捷别名
 @pytest.fixture(scope="session")
 def engine_client(engine_session):
     client, _ = engine_session
@@ -112,12 +117,11 @@ def engine_injector(engine_session):
     return injector
 
 
-# 可选：按标记自动启用（只在带标记的用例中自动“触发”会话资源）
+# 可选：按标记自动启用
 @pytest.fixture(autouse=True)
 def _maybe_start_engine(request, engine_session):
     if request.node.get_closest_marker("functional") or \
             request.node.get_closest_marker("engine_params"):
-        # 引用即可确保 session 已启动
         _ = engine_session
 
 
@@ -147,7 +151,6 @@ def gcode_dir(request, pytestconfig, gcode_root):
     if scope == "session":
         d = gcode_root / "session"
         d.mkdir(exist_ok=True)
-        # 会话级通常不自动清理；如需清理，可在 session 收尾手动处理
         if clean:
             request.addfinalizer(lambda: shutil.rmtree(d, ignore_errors=True))
         return d
@@ -160,7 +163,6 @@ def gcode_dir(request, pytestconfig, gcode_root):
             request.addfinalizer(lambda: shutil.rmtree(d, ignore_errors=True))
         return d
 
-    # function（默认）
     nodeid = _sanitize(request.node.nodeid)
     d = gcode_root / f"case_{nodeid}"
     d.mkdir(exist_ok=True)
@@ -185,6 +187,174 @@ def gcode_path_factory(request, gcode_dir):
     return make
 
 
+# =========================
+# watchdog: 等待目标文件写入完成
+# =========================
+
+class _WaitForFileHandler(FileSystemEventHandler):
+    """
+    监听目标目录中与目标文件同名（或被移动成该名）的事件。
+    检测到后做“稳定期”判断：大小/mtime 在一段时间内不变，且可读打开，即视为写入完成。
+    """
+    def __init__(self, target: Path, ready_evt: threading.Event, settle_time: float = 1.0):
+        self.target = target.resolve()
+        self.ready_evt = ready_evt
+        self.settle_time = max(0.1, settle_time)
+        self._lock = threading.Lock()
+        self._last_size = None
+        self._last_mtime = None
+        self._last_check_ts = 0.0
+
+    # 只要有可能影响目标文件状态的事件，都尝试检查
+    def on_created(self, event: FileSystemEvent):
+        self._maybe_check(event)
+
+    def on_modified(self, event: FileSystemEvent):
+        self._maybe_check(event)
+
+    def on_moved(self, event: FileSystemEvent):
+        # moved 到目标名时也可能完成
+        self._maybe_check(event)
+
+    def _maybe_check(self, event: FileSystemEvent):
+        if self.ready_evt.is_set():
+            return
+        # 只关心目录内的目标文件（同路径或 basename 匹配）
+        try:
+            p = Path(getattr(event, "dest_path", getattr(event, "src_path", "")) or "")
+        except Exception:
+            return
+
+        if not p:
+            return
+
+        # 事件可能来自同目录内的临时名 -> 正式名（rename），也可能直接是目标名修改
+        if p.name != self.target.name and getattr(event, "src_path", None):
+            # 还可以检查 src_path 是否就是 target（反向移动）
+            try:
+                src = Path(event.src_path)
+                if src.name != self.target.name:
+                    return
+            except Exception:
+                return
+        elif p.name != self.target.name:
+            return
+
+        # 尝试进行“稳定期”判断
+        self._check_stable()
+
+    def _check_stable(self):
+        with self._lock:
+            now = time.time()
+            # 为了避免极端高频事件，限制检查频率
+            if now - self._last_check_ts < 0.05:
+                return
+            self._last_check_ts = now
+
+            if not self.target.exists() or not self.target.is_file():
+                return
+
+            try:
+                stat = self.target.stat()
+                size = stat.st_size
+                mtime = stat.st_mtime
+            except FileNotFoundError:
+                return
+
+            # 第一次记录
+            if self._last_size is None:
+                self._last_size = size
+                self._last_mtime = mtime
+                return
+
+            # 若 size/mtime 有变化，更新观察起点
+            if size != self._last_size or mtime != self._last_mtime:
+                self._last_size = size
+                self._last_mtime = mtime
+                self._first_stable_ts = time.time()
+                return
+
+            # size/mtime 未变化，判断是否达到稳定期
+            first_stable_ts = getattr(self, "_first_stable_ts", None)
+            if first_stable_ts is None:
+                self._first_stable_ts = time.time()
+                return
+
+            if time.time() - self._first_stable_ts < self.settle_time:
+                return
+
+            # 尝试可读打开（Windows 下可检测写锁释放）
+            try:
+                with open(self.target, "rb"):
+                    pass
+            except Exception:
+                return
+
+            # 稳定且可读
+            self.ready_evt.set()
+
+
+def wait_for_file_written(target: Path, timeout: float = 60.0, settle_time: float = 1.0) -> None:
+    """
+    使用 watchdog 事件监听等待 target 写入完成：
+    - 文件存在
+    - 大小/mtime 在 settle_time 内保持不变
+    - 能以二进制只读方式打开（Windows 下避免写锁）
+
+    :raises pytest.UsageError: 未安装 watchdog
+    :raises TimeoutError: 超时仍未满足条件
+    """
+    if Observer is None:
+        raise pytest.UsageError(
+            "需要安装 'watchdog' 才能使用事件驱动等待文件落盘：\n"
+            "    pip install watchdog\n"
+            f"具体错误：{_WATCHDOG_IMPORT_ERROR}"
+        )
+
+    target = Path(target).resolve()
+    parent = target.parent
+    parent.mkdir(parents=True, exist_ok=True)
+
+    # 先做一次“已存在且稳定”的快速路径
+    quick_start = time.time()
+    while time.time() - quick_start < min(0.5, settle_time):
+        if target.exists() and target.is_file():
+            try:
+                # 读两次 stat 判断是否已稳定
+                st1 = target.stat()
+                time.sleep(min(0.2, settle_time))
+                st2 = target.stat()
+                if st1.st_size == st2.st_size and st1.st_mtime == st2.st_mtime:
+                    with open(target, "rb"):
+                        return
+            except Exception:
+                pass
+        time.sleep(0.05)
+
+    ready_evt = threading.Event()
+    handler = _WaitForFileHandler(target, ready_evt, settle_time=settle_time)
+    observer = Observer()
+    observer.schedule(handler, str(parent), recursive=False)
+    observer.daemon = True
+    observer.start()
+    try:
+        # 目标也可能“先存在后稳定”，因此轮询一次
+        start = time.time()
+        while True:
+            if ready_evt.is_set():
+                return
+            # 主动检查一次（防止错过边缘事件）
+            handler._check_stable()
+            if ready_evt.is_set():
+                return
+            if time.time() - start > timeout:
+                raise TimeoutError(f"等待文件写入完成超时（{timeout}s）：{target}")
+            time.sleep(0.05)
+    finally:
+        observer.stop()
+        observer.join(timeout=5)
+
+
 # =================                 =================
 #                    引擎切片固定步骤fixture
 # =================                 =================
@@ -193,12 +363,14 @@ def gcode_path_factory(request, gcode_dir):
 # request.param 必须为 dict，必要键：
 #   - "input_3mf": str (必须存在)
 # 可选键：
-#     - "output_gcode": str(目标路径)
-#   - "slice_btn_id": int  (如果不提供，使用 9000)
-#   - "timeouts": dict with {"load": int, "export": int, "slice": int}
+#   - "output_gcode": str(目标路径)
+#   - "slice_btn_id": int
+#   - "timeouts": dict with {"load": int, "export": int, "slice": int, "settle": float, "wait": float}
 #
-# 用法（示例见 test 文件）:
-# @pytest.mark.parametrize("slice_and_export", [ { ... } ], indirect=True)
+# 示例：
+# @pytest.mark.parametrize("slice_and_export", [
+#     {"input_3mf": r"C:\a.3mf"}
+# ], indirect=True)
 @pytest.fixture
 def slice_and_export(request, engine_injector, gcode_path_factory):
     # ---- 验参（严格：必须提供 request.param） ----
@@ -216,27 +388,22 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
         raise pytest.UsageError(f"slice_and_export: 'input_3mf' must be provided and exist. Got: {input_3mf}")
 
     # 如果不给该fixture提供output_gcode，那么就由pytest自动根据fixture管理输出目录
-    output_gcode_param = params.get("output_gcode")
-    if output_gcode_param:
-        output_gcode = Path(output_gcode_param)
-    else:
-        output_gcode = Path(gcode_path_factory())
+    output_gcode = Path(params.get("output_gcode")) if params.get("output_gcode") else gcode_path_factory()
     if not output_gcode:
         raise pytest.UsageError(f"slice_and_export: 'output_gcode' must be provided. Got: {output_gcode}")
 
     # 可选
     slice_btn_id = int(params.get("slice_btn_id", SLICE_BTN_ID))
     timeouts = params.get("timeouts", {})
-    load_timeout = timeouts.get("load", 90)
-    slice_timeout = timeouts.get("slice", 120)
-    export_timeout = timeouts.get("export", 360)
+    load_timeout = int(timeouts.get("load", 90))
+    slice_timeout = int(timeouts.get("slice", 120))
+    export_timeout = int(timeouts.get("export", 360))
+    # 事件落盘稳定期与整体等待上限（新的两个可选超时）
+    settle_seconds = float(timeouts.get("settle", 1.0))   # 文件大小/mtime 保持不变的时间
+    wait_written   = float(timeouts.get("wait", 60.0))    # 监听等待总时长
 
     # 确保父目录存在
     output_gcode.parent.mkdir(parents=True, exist_ok=True)
-
-    # 如果gcode文件已存在，直接返回路径，不重复切片
-    if output_gcode.exists():
-        return output_gcode
 
     # ---- 1) reset_project ----
     reset_fut = engine_injector.submit("reset_project", {
@@ -268,156 +435,10 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     export_res = export_fut.result(timeout=export_timeout)
     assert export_res.get("code") == 0, f"导出 G-code 失败：{export_res}"
 
-    # 等待文件落盘（短轮询）
-    if not output_gcode.exists():
-        end = time.time() + 5.0
-        while time.time() < end:
-            if output_gcode.exists():
-                break
-            time.sleep(0.25)
+    # ---- 5) watchdog 等待文件真正落盘且写入完成 ----
+    #   - 事件驱动，无需忙等
+    #   - 跨平台：Windows 上也通过“可读打开”探测写锁释放
+    wait_for_file_written(output_gcode, timeout=wait_written, settle_time=settle_seconds)
+
     assert output_gcode.exists(), f"G-code 未生成：{output_gcode}"
     return output_gcode
-
-    # # 返回给测试用例，在测试结束后清理？
-    # try:
-    #     yield output_gcode
-    # finally:
-    #     pass
-    #     # try:
-    #     #     if output_gcode.exists():
-    #     #         output_gcode.unlink()
-    #     # except Exception:
-    #     #     pass
-
-
-# =================                 =================
-#                 批量3mf生成gcode夹具
-# =================                 =================
-
-@pytest.fixture
-def batch_slice_3mf_to_gcode(engine_injector, gcode_path_factory, pytestconfig):
-    """
-    批量将3mf文件转换为gcode文件的夹具。
-    生成的gcode文件名附带3mf文件的修改日期，如果gcode已经存在则跳过不生成。
-    自动遍历data/models目录获取所有3mf文件。
-    执行完后生成一个json文件保存3mf文件名和gcode文件名的映射关系。
-    
-    参数:
-        engine_injector: 引擎注入器
-        gcode_path_factory: gcode路径工厂
-        pytestconfig: pytest配置
-        
-    返回:
-        函数，执行批量切片并返回生成的gcode文件映射
-    """
-    def _slice_all(output_dir=None):
-        """
-        批量切片data/models目录下的所有3mf文件到gcode
-        
-        参数:
-            output_dir: 输出目录，如果为None则使用默认gcode目录
-            
-        返回:
-            3mf文件到gcode文件的映射字典
-        """
-        # 获取data/models目录路径
-        data_root = Path(pytestconfig.rootpath) / "test_framework" / "engine_params" / "data" / "models"
-        if not data_root.exists():
-            raise FileNotFoundError(f"数据目录不存在: {data_root}")
-        
-        # 查找所有3mf文件
-        three_mf_files = list(data_root.rglob("*.3mf"))
-        if not three_mf_files:
-            raise FileNotFoundError(f"在 {data_root} 目录下未找到任何.3mf文件")
-        
-        print(f"找到 {len(three_mf_files)} 个3mf文件")
-        
-        generated_gcode_files = {}
-        
-        for three_mf_path in three_mf_files:
-            three_mf_path = Path(three_mf_path)
-            if not three_mf_path.exists():
-                print(f"警告: 3mf文件不存在: {three_mf_path}")
-                continue
-                
-            # 获取3mf文件的修改时间
-            mtime = three_mf_path.stat().st_mtime
-            mtime_str = time.strftime("%Y%m%d_%H%M%S", time.localtime(mtime))
-            
-            # 构造gcode文件名
-            if output_dir is None:
-                gcode_path = Path(gcode_path_factory(
-                    filename=f"{three_mf_path.stem}_{mtime_str}.gcode"
-                ))
-            else:
-                output_dir = Path(output_dir)
-                output_dir.mkdir(parents=True, exist_ok=True)
-                gcode_path = output_dir / f"{three_mf_path.stem}_{mtime_str}.gcode"
-            
-            # 保存映射关系
-            relative_3mf_path = three_mf_path.relative_to(data_root.parent.parent)
-            generated_gcode_files[str(relative_3mf_path)] = str(gcode_path)
-            
-            # 如果gcode文件已存在，跳过生成
-            if gcode_path.exists():
-                print(f"Gcode文件已存在，跳过生成: {gcode_path}")
-                continue
-                
-            # 重置项目
-            reset_fut = engine_injector.submit("reset_project", {
-                "skip_confirm": True,
-                "silent": True,
-                "project_name": f"batch_slice_project_{three_mf_path.stem}",
-            })
-            reset_result = reset_fut.result(timeout=30)
-            assert reset_result.get("code") == 0, f"reset_project 失败：{reset_result}"
-            
-            # 加载3mf文件
-            load_fut = engine_injector.submit("trigger_load_project2",
-                                              {"file": str(three_mf_path),
-                                               "discard_preset_changes": True},
-                                              timeout=60)
-            load_res = load_fut.result(timeout=90)
-            assert load_res.get("code") == 0, f"加载模型失败：{load_res}"
-            
-            # 点击切片按钮
-            slice_fut = engine_injector.submit("click_button", {"id": SLICE_BTN_ID})
-            slice_res = slice_fut.result(timeout=120)
-            assert slice_res.get("code") == 0, f"切片失败：{slice_res}"
-            
-            # 导出gcode
-            export_fut = engine_injector.submit("export_gcode", {
-                "export_all": False,
-                "output": str(gcode_path)
-            }, timeout=300)
-            export_res = export_fut.result(timeout=360)
-            assert export_res.get("code") == 0, f"导出 G-code 失败：{export_res}"
-            
-            # 等待文件落盘
-            if not gcode_path.exists():
-                end = time.time() + 5.0
-                while time.time() < end:
-                    if gcode_path.exists():
-                        break
-                    time.sleep(0.25)
-            assert gcode_path.exists(), f"G-code 未生成：{gcode_path}"
-            print(f"成功生成: {gcode_path}")
-        
-        # 生成映射关系的JSON文件
-        mapping_file = (output_dir or gcode_path_factory("") / ".." / "3mf_gcode_mapping.json")
-        if isinstance(mapping_file, str):
-            mapping_file = Path(mapping_file)
-        mapping_file = mapping_file.resolve() / "3mf_gcode_mapping.json"
-        
-        # 确保目录存在
-        mapping_file.parent.mkdir(parents=True, exist_ok=True)
-        
-        # 写入JSON文件
-        import json
-        with open(mapping_file, 'w', encoding='utf-8') as f:
-            json.dump(generated_gcode_files, f, indent=2, ensure_ascii=False)
-        
-        print(f"映射关系已保存到: {mapping_file}")
-        return generated_gcode_files
-        
-    return _slice_all

@@ -1,10 +1,14 @@
 # gcode_parser_tokenized.py
+# -*- coding: utf-8 -*-
 from __future__ import annotations
+import math
 import mmap
 import re
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, List, Dict, Literal
+from typing import Optional, Tuple, List, Dict, Literal, Sequence
+
+from engine_params.src.gcode.constants import ExtrusionType
 from concurrent.futures import ThreadPoolExecutor
 import zlib
 
@@ -42,15 +46,20 @@ CFG_LINE_RE = re.compile(r"^\s*;\s*([^=]+?)\s*=\s*(.*?)\s*$")
 Z_RE = re.compile(r"^\s*;Z\s*:\s*([+-]?\d+(?:\.\d+)?)\s*$")
 H_RE = re.compile(r"^\s*;HEIGHT\s*:\s*([+-]?\d+(?:\.\d+)?)\s*$")
 
-
 # ===================== 指令解析：仅看分号 ';' 之前的“指令体” =====================
 _NUM_B = rb"([+-]?(?:\d+(?:\.\d*)?|\.\d+))"
 _G1_RE_B = re.compile(rb"^\s*G1\b", re.IGNORECASE)
-_X_RE_B  = re.compile(rb"\bX" + _NUM_B + rb"\b", re.IGNORECASE)
-_Y_RE_B  = re.compile(rb"\bY" + _NUM_B + rb"\b", re.IGNORECASE)
-_E_RE_B  = re.compile(rb"\bE" + _NUM_B + rb"\b", re.IGNORECASE)
-_Z_RE_B  = re.compile(rb"\bZ" + _NUM_B + rb"\b", re.IGNORECASE)
-_F_RE_B  = re.compile(rb"\bF" + _NUM_B + rb"\b", re.IGNORECASE)
+_G2_RE_B = re.compile(rb"^\s*G2\b", re.IGNORECASE)
+_G3_RE_B = re.compile(rb"^\s*G3\b", re.IGNORECASE)
+_X_RE_B = re.compile(rb"\bX" + _NUM_B + rb"\b", re.IGNORECASE)
+_Y_RE_B = re.compile(rb"\bY" + _NUM_B + rb"\b", re.IGNORECASE)
+_E_RE_B = re.compile(rb"\bE" + _NUM_B + rb"\b", re.IGNORECASE)
+_Z_RE_B = re.compile(rb"\bZ" + _NUM_B + rb"\b", re.IGNORECASE)
+_F_RE_B = re.compile(rb"\bF" + _NUM_B + rb"\b", re.IGNORECASE)
+_I_RE_B = re.compile(rb"\bI" + _NUM_B + rb"\b", re.IGNORECASE)
+_J_RE_B = re.compile(rb"\bJ" + _NUM_B + rb"\b", re.IGNORECASE)
+_R_RE_B = re.compile(rb"\bR" + _NUM_B + rb"\b", re.IGNORECASE)
+
 
 # ===================== 数据类 =====================
 
@@ -71,14 +80,23 @@ class Technology:
     parent_extrusion: Optional[str]
     data: bytes | str | None = field(default=None)
 
+
 @dataclass(frozen=True)
 class Point:
     x: float
     y: float
-    kind: Literal["extrude", "toolchange"]   # "extrude"=挤出点；"toolchange"=换刀点
+    kind: Literal["extrude", "toolchange"]  # "extrude"=挤出点；"toolchange"=换刀点
     has_z: bool = False
     has_f: bool = False
-    offset: Optional[int] = None             # 该点所在行（分号前指令体）的起始字节偏移
+    has_e: bool = False
+    offset: Optional[int] = None  # 该点所在行（分号前指令体）的起始字节偏移
+    e: Optional[float] = None  # 当前行解析得到的 G1 E 值（绝对或相对，依据 G-code 模式）
+    arc_direction: Optional[Literal["cw", "ccw"]] = None
+    arc_center_offset: Optional[Tuple[float, float]] = None
+    arc_center: Optional[Tuple[float, float]] = None
+    arc_radius: Optional[float] = None
+    arc_radius_deviation: Optional[float] = None
+
 
 # ===================== 工具 =====================
 
@@ -210,7 +228,7 @@ def _oid_from_name_bytes(name_b: bytes) -> int:
 
 
 def _interval_intersect(a: Tuple[int, int], b: Tuple[int, int]) -> Optional[Tuple[int, int]]:
-    s = max(a[0], b[0]);
+    s = max(a[0], b[0])
     e = min(a[1], b[1])
     return (s, e) if e > s else None
 
@@ -371,7 +389,7 @@ class GCodeParser:
     # ---------- API 1：指定挤出类型，按层/物体返回 ----------
     def get_extrusion_blocks_per_layer(
             self,
-            entity_name: str,
+            entity_name: ExtrusionType | str,
             *,
             include_wipe: bool = False,
             decode: bool = False,
@@ -385,6 +403,7 @@ class GCodeParser:
         - 若某层没有物体标记，则该层返回空 dict（你可选择把整层视为“未标注物体”再后处理）。
         """
         flat_wins = self._layer_windows_flat()
+        # 预先展开每层的原始字节窗口，后续逐个任务分发
         if not flat_wins:
             return []
 
@@ -400,7 +419,8 @@ class GCodeParser:
                 extrusions, wipes = self._scan_extrusions_and_wipes_in_layer(mm, s, e)
 
                 # 目标 TYPE
-                targets = [ex for ex in extrusions if ex.name == entity_name]
+                target_name = entity_name.value if isinstance(entity_name, ExtrusionType) else entity_name
+                targets = [ex for ex in extrusions if ex.name == target_name]
                 if not targets:
                     return {}
 
@@ -451,10 +471,135 @@ class GCodeParser:
         else:
             return [_one(a) for a in args]
 
+    def get_extrusions_blocks_per_layer(
+            self,
+            entity_names: Sequence["ExtrusionType | str | bytes"],
+            *,
+            include_wipe: bool = False,
+            decode: bool = False,
+            workers: int = 0,
+    ) -> List[Dict[int, Dict[str, List[bytes | str]]]]:
+        """
+        单次扫描多类型版（上面的get_extrusion_blocks_per_layer是老API，不动了）：
+          返回 layers[L] -> { object_id: { type_name: [block, ...] } }
+
+        说明
+        - `entity_names` 支持 ExtrusionType/str/bytes，内部用 ExtrusionType.as_filter 归一化，
+          自动处理大小写/空白/连字符与常见别名（如 'top skin' → 'Top surface'）。
+        - include_wipe=False：对 (TYPE ∩ object) 的交集片段剪掉所有 WIPE，再把同一 TYPE
+          在同一 object 的所有片段**拼接为单个 block** 后追加。
+        - include_wipe=True ：不剪 WIPE；每个交集片段各自作为一个 block 追加。
+        - decode=True 产出 str；否则产出 bytes。
+        """
+        # —— 归一化目标类型白名单
+        type_whitelist: set[str] = ExtrusionType.as_filter(entity_names)  # 规范的 value 字符串集合
+        if not type_whitelist:
+            return []
+
+        flat_wins = self._layer_windows_flat()
+        if not flat_wins:
+            return []
+
+        def _one(args: tuple[int, tuple[int, int]]) -> Dict[int, Dict[str, List[bytes | str]]]:
+            layer_idx, (s, e) = args
+            out_layer: Dict[int, Dict[str, List[bytes | str]]] = {}
+            with self.path.open("rb") as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
+                # 该层的物体窗口
+                obj_map = _object_windows_in_layer(mm, s, e)
+                if not obj_map:
+                    return out_layer
+
+                # 该层的 TYPE 与 WIPE（全局到层）
+                extrusions, wipes = self._scan_extrusions_and_wipes_in_layer(mm, s, e)
+
+                # 仅保留关注的 TYPE
+                ex_targets = [ex for ex in extrusions if ex.name in type_whitelist]
+                if not ex_targets:
+                    return out_layer
+
+                for ex in ex_targets:
+                    ex_span = (ex.start, ex.end)
+                    tname = ex.name  # 使用 ;TYPE: 行里的原始 value（已由 whitelist 规范化对齐）
+
+                    for oid, segs in obj_map.items():
+                        # 与该 object 的窗口求交集
+                        intersected: List[tuple[int, int]] = []
+                        for seg in segs:
+                            inter = _interval_intersect(ex_span, seg)
+                            if inter:
+                                intersected.append(inter)
+                        if not intersected:
+                            continue
+
+                        if include_wipe:
+                            # 直接按交集片段切块
+                            for (bs, be) in intersected:
+                                payload = mm[bs:be]
+                                out_layer.setdefault(oid, {}).setdefault(tname, []).append(
+                                    payload.decode("utf-8", errors="ignore") if decode else payload
+                                )
+                        else:
+                            # 剪掉 WIPE，再把所有片段拼接为单个 block
+                            holes = [(wb, we) for (wb, we) in wipes]
+                            pieces_all: List[tuple[int, int]] = []
+                            for (bs, be) in intersected:
+                                pieces_all.extend(_interval_subtract((bs, be), holes))
+                            if not pieces_all:
+                                continue
+
+                            if decode:
+                                joined = "".join(mm[ps:pe].decode("utf-8", errors="ignore") for (ps, pe) in pieces_all)
+                            else:
+                                joined = b"".join(mm[ps:pe] for (ps, pe) in pieces_all)
+                            out_layer.setdefault(oid, {}).setdefault(tname, []).append(joined)
+
+            return out_layer
+
+        args = list(enumerate(flat_wins))
+        if workers and workers > 1:
+            with ThreadPoolExecutor(max_workers=workers) as ex:
+                return list(ex.map(_one, args, chunksize=32))
+        else:
+            return [_one(a) for a in args]
+
+    def get_extrusions_blocks_by_object(
+            self,
+            entity_names: Sequence["ExtrusionType | str | bytes"],
+            object_id: int,
+            *,
+            include_wipe: bool = False,
+            decode: bool = False,
+            workers: int = 0,
+    ) -> List[Dict[str, List[bytes | str]]]:
+        """
+        多类型封装（按 object_id 提取，保持层序对齐）：
+          返回：layers[L] -> { type_name: [block, ...] }，只包含指定 object_id。
+
+        - entity_names: 支持 ExtrusionType/str/bytes，内部已由 get_extrusions_blocks_per_layer 使用
+          ExtrusionType.as_filter 归一化（大小写/连字符/别名统一，忽略 MULTIPLE）。
+        - include_wipe / decode / workers 语义与 per-layer 版本一致。
+        """
+        # 直接复用高效的“单次扫描多类型/逐层输出”实现
+        per_layer = self.get_extrusions_blocks_per_layer(
+            entity_names,
+            include_wipe=include_wipe,
+            decode=decode,
+            workers=workers,
+        )
+
+        # 抽取指定 object_id；保持层对齐，每层给一个 dict（可能为空）
+        out: List[Dict[str, List[bytes | str]]] = []
+        for layer_map in per_layer:
+            # layer_map: { oid: { type_name: [block, ...] } }
+            type_map = layer_map.get(object_id, {})
+            # 做一次浅拷贝，避免外部对返回列表的修改影响内部缓存
+            out.append({t: list(blocks) for t, blocks in type_map.items()})
+        return out
+
     # ---------- Helper：指定 TYPE，按 object_id 返回 List[List[bytes|str]]（外层=层；内层=该层的块） ----------
     def get_extrusion_blocks_by_object(
             self,
-            entity_name: str,
+            entity_name: ExtrusionType | str,
             object_id: int,
             *,
             include_wipe: bool = False,
@@ -622,6 +767,83 @@ class GCodeParser:
         except Exception:
             return None
 
+    def _parse_e_from_body(self, body: bytes) -> Optional[float]:
+        """解析 G1 行中的 E 值，若不存在则返回 None。"""
+        mE = _E_RE_B.search(body)
+        if not mE:
+            return None
+        try:
+            return float(mE.group(1).decode("ascii", errors="ignore"))
+        except Exception:
+            return None
+
+    def _arc_mode(self, body: bytes) -> Optional[Literal["cw", "ccw"]]:
+        if _G2_RE_B.match(body):
+            return "cw"
+        if _G3_RE_B.match(body):
+            return "ccw"
+        return None
+
+    def _parse_ij_from_body(self, body: bytes) -> Optional[Tuple[float, float]]:
+        """解析 G2/G3 指令中的 I、J 偏移量，缺失任一项则返回 None。"""
+        mI = _I_RE_B.search(body)
+        mJ = _J_RE_B.search(body)
+        if not (mI and mJ):
+            return None
+        try:
+            i_val = float(mI.group(1).decode("ascii", errors="ignore"))
+            j_val = float(mJ.group(1).decode("ascii", errors="ignore"))
+            return (i_val, j_val)
+        except Exception:
+            return None
+
+    def _parse_r_from_body(self, body: bytes) -> Optional[float]:
+        """解析 G2/G3 指令中的 R 半径，若未指定则返回 None。"""
+        mR = _R_RE_B.search(body)
+        if not mR:
+            return None
+        try:
+            return float(mR.group(1).decode("ascii", errors="ignore"))
+        except Exception:
+            return None
+
+    def _build_arc_metadata(
+            self,
+            body: bytes,
+            start_xy: Optional[Tuple[float, float]],
+            end_xy: Tuple[float, float],
+    ) -> Tuple[
+        Optional[Literal["cw", "ccw"]], Optional[Tuple[float, float]], Optional[Tuple[float, float]], Optional[float],
+        Optional[float]]:
+        """组合圆弧相关元数据，无法计算时返回 None。"""
+        direction = self._arc_mode(body)
+        center_offset: Optional[Tuple[float, float]] = None
+        center: Optional[Tuple[float, float]] = None
+        radius: Optional[float] = None
+        radius_dev: Optional[float] = None
+
+        if direction is None:
+            return direction, center_offset, center, radius, radius_dev
+        if start_xy is None:
+            return direction, center_offset, center, radius, radius_dev
+
+        ij = self._parse_ij_from_body(body)
+        if ij is not None:
+            center_offset = ij
+            cx = start_xy[0] + ij[0]
+            cy = start_xy[1] + ij[1]
+            center = (cx, cy)
+            expected_radius = math.hypot(ij[0], ij[1])
+            radius = math.hypot(end_xy[0] - cx, end_xy[1] - cy)
+            radius_dev = radius - expected_radius
+        else:
+            r_val = self._parse_r_from_body(body)
+            if r_val is not None:
+                radius = abs(r_val)
+                radius_dev = None
+
+        return direction, center_offset, center, radius, radius_dev
+
     def _find_upward_start_toolchange(
             self, mm: mmap.mmap, seg_start: int, block_start: int
     ) -> Optional[Tuple[float, float]]:
@@ -647,34 +869,48 @@ class GCodeParser:
         return None
 
     def get_type_contours_per_layer(
-        self,
-        *,
-        types: Optional[List[str]] = None,
-        workers: int = 0,
+            self,
+            *,
+            types: Optional[Sequence["ExtrusionType | str | bytes"]] = None,
+            workers: int = 0,
     ) -> List[Dict[int, Dict[str, List[List[Point]]]]]:
         """
         返回：layers[L] -> { object_id: { type_name: [ polyline(Point)[], ... ] } }
 
         点类型：
-          - 挤出点("extrude"):   G1 且含 X/Y/E
-          - 换刀点("toolchange"):G1 含 X/Y，且不含 E（可含/不含 F/Z）
-        规则：
-          - 第一个挤出块的起点：在块起点向上（同 object 段内）寻找最近的换刀点作为起点（若有）。
-          - 块内遇到“无E的 G1 XY”（换刀点）时：
-              * 若当前有正在积累的 polyline，则先收尾该 polyline（不把该换刀点加入末尾）；
-              * 记录该换刀点为下一条 polyline 的起点候选（pending）。
-          - 下一次遇到挤出点（G1 XYE）开始新 polyline：
-              * 起点优先取 pending 的换刀点（Point(kind='toolchange')），否则用“向上起点”（若存在）。
+          - 挤出点("extrude"):   G1/G2/G3 带 X/Y/E
+          - 换刀点("toolchange"):G1/G2/G3 带 X/Y但不带 E，可带/不带 F/Z
+        逻辑
+          - 若遇到换刀候选点：在可挤出的段内，同 object 范围，寻找最近的换刀点作为起点（如有）。
+          - 遇到无挤出量的 G1/G2/G3 XY（旅行/换刀点）时：
+              * 若当前已经在构建 polyline，则将当前 polyline 结束（point 列表追加到结果中）。
+              * 记录该换刀点作为下一条 polyline 的候选（pending）。
+          - 遇到带挤出量的点（G1/G2/G3 XYE）开始新的 polyline：
+              * 优先取 pending 的换刀点（Point(kind='toolchange')），否则用“向上起点”（若存在）。
               * 然后把当前挤出点作为 Point(kind='extrude') 追加。
-          - 层末/片段末：丢弃未被使用的最后一个换刀点（pending）。
+          - 在段末/片段末若还有未使用的最后一个换刀候选（pending）不输出。
 
         每个 Point 额外记录：
-          - has_z / has_f：该行是否含 Z / F 参数
-          - offset：该点所在“分号前指令体”的行起始字节偏移
+          - has_z / has_f：是否有 Z / F 字段
+          - offset：该点所在“分号前指令体”的起始字节偏移
         """
         flat_wins = self._layer_windows_flat()
         if not flat_wins:
             return []
+
+        # --- 白名单归一化（保持与其它 API 一致）
+        # 如果传进来 None 之后，那么就默认抓取所有类型的挤出
+        if types is None:
+            type_whitelist: Optional[set[str]] = None
+        else:
+            type_whitelist = ExtrusionType.as_filter(types)  # -> set[str] 规范名集合
+            if not type_whitelist:
+                return []
+
+        # --- 辅助：把 ;TYPE: 原始值归一化到规范名（若失败直接报错，因为不在标准的挤出类型之内）
+        def _canon(name_raw: str) -> str:
+            s = ExtrusionType.as_filter([name_raw])
+            return next(iter(s)) if s else name_raw.strip()
 
         def _one(args: Tuple[int, Tuple[int, int]]) -> Dict[int, Dict[str, List[List[Point]]]]:
             layer_idx, (s, e) = args
@@ -685,15 +921,19 @@ class GCodeParser:
                 if not obj_map:
                     return out_layer
 
-                # 本层挤出类型窗口 / WIPE
+                # 本层 TYPE / WIPE
                 extrusions, wipes = self._scan_extrusions_and_wipes_in_layer(mm, s, e)
 
-                # 过滤类型
-                ex_targets = [ex for ex in extrusions if (types is None or ex.name in types)]
+                # 仅保留目标类型（先把 ;TYPE: 原始名转为规范名再过滤）
+                ex_targets: List[Tuple[ExtrusionEntity, str]] = []
+                for ex in extrusions:
+                    tname_canon = _canon(ex.name)
+                    if (type_whitelist is None) or (tname_canon in type_whitelist):
+                        ex_targets.append((ex, tname_canon))
                 if not ex_targets:
                     return out_layer
 
-                for ex in ex_targets:
+                for ex, tname_canon in ex_targets:
                     ex_span = (ex.start, ex.end)
 
                     for oid, segs in obj_map.items():
@@ -703,79 +943,94 @@ class GCodeParser:
                                 continue
                             bs, be = inter
 
-                            # 剪掉 WIPE，得到若干 piece
+                            # 剪掉 WIPE 段，保留纯挤出片段
                             pieces = _interval_subtract((bs, be), wipes)
                             if not pieces:
                                 continue
 
-                            # “块级兜底起点”：向上找最近换刀点
+                            # 回溯寻找段起点上的换刀锚点
                             upward_tc = self._find_upward_start_toolchange(mm, seg_s, bs)
 
                             polylines: List[List[Point]] = []
                             current_poly: List[Point] | None = None
-                            pending_start_xy: Optional[Tuple[float, float]] = None  # 换刀点候选（仅 XY）
+                            pending_start_xy: Optional[Tuple[float, float]] = None
+                            last_xy: Optional[Tuple[float, float]] = upward_tc
+
+                            def _ensure_polyline() -> None:
+                                nonlocal current_poly, pending_start_xy
+                                if current_poly is not None:
+                                    return
+                                current_poly = []
+                                anchor = pending_start_xy if pending_start_xy is not None else upward_tc
+                                if anchor is not None:
+                                    current_poly.append(Point(
+                                        anchor[0], anchor[1],
+                                        "toolchange",
+                                        has_z=False,
+                                        has_f=False,
+                                        has_e=False,
+                                        offset=None,
+                                        e=None,
+                                    ))
+                                pending_start_xy = None
 
                             for (ps, pe) in pieces:
-                                # 行迭代（带字节偏移）
                                 pos = ps
                                 while pos < pe:
                                     nl = mm.find(b"\n", pos, pe)
                                     line_end = nl if nl != -1 else pe
-                                    raw = mm[pos:line_end]  # 不含 '\n'
+                                    raw = mm[pos:line_end]
                                     body = self._pre_comment(raw)
-                                    # 记录本行的“指令体起始偏移”（去掉前导空白后更贴近命令起始，你也可以保留原 pos）
-                                    # 这里选择：保留原 pos，方便回放原始行
                                     offset = pos
 
                                     if body:
-                                        if self._cmd_is_g1(body) and self._has_xy(body):
+                                        arc_mode = self._arc_mode(body)
+                                        is_move = bool(self._cmd_is_g1(body) or arc_mode is not None)
+                                        has_xy = self._has_xy(body)
+                                        if is_move and has_xy:
                                             xy = self._parse_xy_from_body(body)
                                             if xy is not None:
+                                                has_e = self._has_e(body)
+                                                e_val = self._parse_e_from_body(body) if has_e else None
                                                 has_z = self._has_z(body)
                                                 has_f = self._has_f(body)
-                                                if self._has_e(body):
-                                                    # 挤出点
-                                                    if current_poly is None:
-                                                        # 开新 polyline：起点优先用 pending 换刀点，否则用向上兜底
-                                                        current_poly = []
-                                                        start_xy = pending_start_xy if pending_start_xy is not None else upward_tc
-                                                        if start_xy is not None:
-                                                            current_poly.append(Point(
-                                                                start_xy[0], start_xy[1],
-                                                                "toolchange",
-                                                                has_z=False, has_f=False,
-                                                                offset=None  # 上溯起点没有行位置信息
-                                                            ))
-                                                        current_poly.append(Point(
-                                                            xy[0], xy[1], "extrude",
-                                                            has_z=has_z, has_f=has_f, offset=offset
-                                                        ))
-                                                    else:
-                                                        # 持续挤出
-                                                        current_poly.append(Point(
-                                                            xy[0], xy[1], "extrude",
-                                                            has_z=has_z, has_f=has_f, offset=offset
-                                                        ))
-                                                    # 消费 pending
+                                                start_xy_for_arc = last_xy
+
+                                                if has_e and e_val is not None:
+                                                    _ensure_polyline()
+                                                    arc_direction, arc_center_offset, arc_center, arc_radius, arc_radius_dev = self._build_arc_metadata(
+                                                        body, start_xy_for_arc, xy
+                                                    )
+                                                    current_poly.append(Point(
+                                                        xy[0], xy[1],
+                                                        "extrude",
+                                                        has_z=has_z,
+                                                        has_f=has_f,
+                                                        has_e=True,
+                                                        offset=offset,
+                                                        e=e_val,
+                                                        arc_direction=arc_direction,
+                                                        arc_center_offset=arc_center_offset,
+                                                        arc_center=arc_center,
+                                                        arc_radius=arc_radius,
+                                                        arc_radius_deviation=arc_radius_dev,
+                                                    ))
                                                     pending_start_xy = None
                                                 else:
-                                                    # 换刀点：收尾当前 polyline，并把该点作为下一段起点候选（不立即加入 polyline）
                                                     if current_poly is not None:
                                                         polylines.append(current_poly)
                                                         current_poly = None
                                                     pending_start_xy = xy
-                                    # 前进
+
+                                                last_xy = xy
                                     pos = (line_end + 1) if nl != -1 else pe
 
-                            # piece 结束：若仍有进行中的 polyline，则收尾
                             if current_poly is not None:
                                 polylines.append(current_poly)
                                 current_poly = None
-                            # 注意：末尾 pending_start_xy 不输出（只作为下一块起点）
 
-                            # 若本交集片段确实产生了挤出 polyline，则记入
                             if polylines:
-                                out_layer.setdefault(oid, {}).setdefault(ex.name, []).extend(polylines)
+                                out_layer.setdefault(oid, {}).setdefault(tname_canon, []).extend(polylines)
 
             return out_layer
 
@@ -786,11 +1041,36 @@ class GCodeParser:
         else:
             return [_one(a) for a in args]
 
+    def get_type_contours_per_layer_by_object(
+            self,
+            object_id: int,
+            *,
+            types: Optional[Sequence["ExtrusionType | str | bytes"]] = None,
+            workers: int = 0,
+    ) -> List[Dict[str, List[List[Point]]]]:
+        """
+        轻量包装:
+          输入: object_id
+          输出: layers[L] -> { type_name: [ polyline(Point)[], ... ] }
+
+        说明:
+          - 直接调用原始 get_type_contours_per_layer，并从每层结果中选择指定 object_id。
+          - 若某层该 object_id 没有数据，则该层返回 {}，保持层数对齐。
+        """
+        all_layers = self.get_type_contours_per_layer(types=types, workers=workers)
+        if not all_layers:
+            return []
+
+        out: List[Dict[str, List[List[Point]]]] = []
+        for layer_map in all_layers:
+            obj_map = layer_map.get(object_id)  # Dict[str, List[List[Point]]] or None
+            out.append(obj_map if obj_map is not None else {})
+        return out
 
 
 # ===================== 简单自检 =====================
 if __name__ == "__main__":
-    demo_path = Path(r"C:\Users\118388\Desktop\test_only_one_wall_top_slice_and_export1-False__1.gcode")
+    demo_path = Path(r"D:\C3DBaseline\test_framework\engine_params\data\models\strength\baseline_25%_noai_lightning.gcode")
     p = GCodeParser(demo_path)
 
     # 1) 层→物体窗口统计
@@ -800,13 +1080,14 @@ if __name__ == "__main__":
         print("[LWIN] L0 object ids:", list(layer_obj_windows[0].keys()))
 
     # 2) 指定 TYPE 的块（例如 Inner wall），按层/物体
-    entity = "Inner wall"
+    entity = ExtrusionType.TOP_SURFACE.value
     per_layer_ex = p.get_extrusion_blocks_per_layer(entity, include_wipe=False, decode=True, workers=8)
     if per_layer_ex:
-        first_layer = per_layer_ex[0]
-        if first_layer:
-            some_oid = next(iter(first_layer.keys()))
-            print(f"[EX-PL] L0 oid={some_oid} '{entity}' blocks(no wipe):", len(first_layer[some_oid]))
+        for layer_idx, layer_map in enumerate(per_layer_ex):
+            if layer_map:
+                some_oid = next(iter(layer_map.keys()))
+                print(f"[EX-PL] L{layer_idx} oid={some_oid} '{entity}' blocks(no wipe):", len(layer_map[some_oid]))
+                break
     print(f"[EX-PL] Layers returned: {len(per_layer_ex)}")
 
     # 3) 指定 object_id
@@ -825,13 +1106,13 @@ if __name__ == "__main__":
             print(f"[WP-PL] L0 oid={some_oid2} wipe segments:", len(first_layer[some_oid2]))
     print(f"[WP-PL] Layers returned: {len(per_layer_wipes)}")
 
-    # 5) 新增：WIPE 一站式（按 object_id，保持层对齐）
+    # 5) 新增：WIPE（按 object_id，保持层对齐）
     wipes_by_oid = p.get_wipe_blocks_by_object(target_oid, decode=True, workers=8)
     print(f"[WP-OID] object_id={target_oid} -> layers={len(wipes_by_oid)}")
     if wipes_by_oid:
         print(f"[WP-OID] L0 wipe segments:", len(wipes_by_oid[0]))
 
-    # 6) 填缝挤出字段（示例：Gap infill），演示一站式
+    # 6) 填缝挤出字段（示例：Gap infill）
     entity2 = "Gap infill"
     gap_infill_by_oid = p.get_extrusion_blocks_by_object(entity2, target_oid, include_wipe=False, decode=True,
                                                          workers=8)
@@ -842,7 +1123,8 @@ if __name__ == "__main__":
     # 7) 轮廓点 API 验证（全 TYPE / 指定 TYPE）
     contours_all = p.get_type_contours_per_layer(workers=8)
     print(f"[CTRS] layers(contours_all): {len(contours_all)}")
-    contours_ow_iw = p.get_type_contours_per_layer(types=["Outer wall", "Inner wall"], workers=8)
+    contours_ow_iw = p.get_type_contours_per_layer(
+        types=[ExtrusionType.OUTER_WALL.value, ExtrusionType.INNER_WALL.value], workers=8)
     print(f"[CTRS] layers(contours_ow_iw): {len(contours_ow_iw)}")
     if contours_ow_iw and contours_ow_iw[0]:
         any_oid = next(iter(contours_ow_iw[0].keys()))
@@ -856,4 +1138,17 @@ if __name__ == "__main__":
 
     print("Self-check done.")
 
+    # 9)
+    entity3 = [ExtrusionType.SPARSE_INFILL]
+    sparse_infill_contour = p.get_type_contours_per_layer(types=entity3)
+    print(f"[EX-OID] '{entity3}' object_id={target_oid} -> layers={len(sparse_infill_contour)}")
+    if sparse_infill_contour:
+        print(f"[EX-OID] L0 blocks count:", len(sparse_infill_contour[0]))
+
+    # 10)
+    sparse_infill_contour2 = p.get_type_contours_per_layer_by_object(0, types=entity3)
+
+    p2 = GCodeParser(r"D:\C3DBaseline\test_framework\engine_params\output\mod_test_fill\test_sparse_infill_pattern_sparse_infill_pattern_lightning__1.gcode")
+
+    slice_gcode_contour = p2.get_type_contours_per_layer_by_object(0, types=entity3)
     pass

@@ -1,10 +1,9 @@
-import math
-from pathlib import Path
-from typing import List, Tuple, Optional
-import mmap
-from engine_params.src.gcode.GCodeParser import GCodeParser, find_all, TYPE_PREFIX, parse_type_name_at, Point
+from engine_params.src.gcode.GCodeParser import find_all, TYPE_PREFIX, parse_type_name_at, Point
 from engine_params.src.gcode.constants import *
-
+from typing import List, Tuple, Dict, Any, Optional
+from pathlib import Path
+import math
+import mmap
 import re
 
 
@@ -47,11 +46,11 @@ def parse_wall_sequence(
         if len(seq3) != 3:
             return "unknown"
         a, b, c = seq3
-        if a == "Inner wall" and b == "Inner wall" and c == "Outer wall":
+        if a == ExtrusionType.INNER_WALL.value and b == ExtrusionType.INNER_WALL.value and c == ExtrusionType.OUTER_WALL.value:
             return "inner wall/outer wall"
-        if a == "Outer wall" and b == "Inner wall" and c == "Inner wall":
+        if a == ExtrusionType.OUTER_WALL.value and b == ExtrusionType.INNER_WALL.value and c == ExtrusionType.INNER_WALL.value:
             return "outer wall/inner wall"
-        if a == "Inner wall" and b == "Outer wall" and c == "Inner wall":
+        if a == ExtrusionType.INNER_WALL.value and b == ExtrusionType.OUTER_WALL.value and c == ExtrusionType.INNER_WALL.value:
             return "inner-outer-inner wall"
         return "unknown"
 
@@ -65,7 +64,7 @@ def parse_wall_sequence(
 
     # 旧调用就按 object_id=0 来判断 Top surface 是否存在；保持原有语义
     top_blocks_per_layer = p.get_extrusion_blocks_by_object(
-        "Top surface", 0, include_wipe=True, decode=False, workers=0
+        ExtrusionType.TOP_SURFACE.value, 0, include_wipe=True, decode=False, workers=0
     )
 
     bad_layers: List[Tuple[int, WallStyle, List[str]]] = []
@@ -94,7 +93,7 @@ def parse_wall_sequence(
                 if not _pos_in_any_span(tp, spans):
                     continue
                 name = parse_type_name_at(mm, tp, e)
-                if name in ("Inner wall", "Outer wall"):
+                if name in (ExtrusionType.INNER_WALL.value, ExtrusionType.OUTER_WALL.value):
                     if len(seq) < 3:
                         seq.append(name)
                     if len(seq) == 3:
@@ -113,8 +112,8 @@ def parse_wall_sequence(
 
 # ================== is_infill_first ==================
 
-INFILLS = {"Sparse infill", "Internal solid infill"}
-WALLS = {"Inner wall", "Outer wall"}
+INFILLS = {ExtrusionType.SPARSE_INFILL.value, ExtrusionType.INTERNAL_SOLID_INFILL.value}
+WALLS = {ExtrusionType.INNER_WALL.value, ExtrusionType.OUTER_WALL.value}
 
 
 def _pos_in_any_span(pos: int, spans: List[Tuple[int, int]]) -> bool:
@@ -318,10 +317,10 @@ def parse_wall_directions(
 
     p = GCodeParser(gcode_path)
     inner_blocks_per_layer = p.get_extrusion_blocks_by_object(
-        "Inner wall", 0, include_wipe=False, decode=True, workers=0
+        ExtrusionType.INNER_WALL.value, 0, include_wipe=False, decode=True, workers=0
     )
     outer_blocks_per_layer = p.get_extrusion_blocks_by_object(
-        "Outer wall", 0, include_wipe=False, decode=True, workers=0
+        ExtrusionType.OUTER_WALL.value, 0, include_wipe=False, decode=True, workers=0
     )
 
     L = max(len(inner_blocks_per_layer), len(outer_blocks_per_layer))
@@ -333,23 +332,19 @@ def parse_wall_directions(
             for k, block in enumerate(inner_blocks_per_layer[layer_idx]):
                 parsed = _direction_from_block(block)
                 if parsed != expected_dir:
-                    bad.append((layer_idx, "Inner wall", k, parsed))
+                    bad.append((layer_idx, ExtrusionType.INNER_WALL.value, k, parsed))
         # 校验所有 Outer wall 块
         if layer_idx < len(outer_blocks_per_layer):
             for k, block in enumerate(outer_blocks_per_layer[layer_idx]):
                 parsed = _direction_from_block(block)
                 if parsed != expected_dir:
-                    bad.append((layer_idx, "Outer wall", k, parsed))
+                    bad.append((layer_idx, ExtrusionType.OUTER_WALL.value, k, parsed))
 
     ok = (len(bad) == 0)
     return ok, expected_dir, bad
 
 
 # ================== only_one_wall_top ==================
-from typing import List, Tuple, Dict, Any
-from pathlib import Path
-import mmap
-
 
 def _walls_from_polylines_by_toolchange(polys: List[List[Point]]) -> int:
     """
@@ -382,7 +377,7 @@ def parse_only_one_wall_top(
     p = GCodeParser(gcode_path)
 
     # 用新 API 一次性拿到“外墙/内墙”的所有折线（每条折线 = 一个挤出块）
-    contours = p.get_type_contours_per_layer(types=["Outer wall", "Inner wall"], workers=0)
+    contours = p.get_type_contours_per_layer(types=[ExtrusionType.OUTER_WALL.value, ExtrusionType.INNER_WALL.value], workers=0)
     if not contours:
         return False, expected_only_one_wall_top, []
 
@@ -396,8 +391,8 @@ def parse_only_one_wall_top(
     mid_idx = L // 2
     mid_layer_map = contours[mid_idx] or {}
     mid_obj_map = mid_layer_map.get(target_oid, {}) if mid_layer_map else {}
-    mid_inner = len(mid_obj_map.get("Inner wall", []) or [])
-    mid_outer = len(mid_obj_map.get("Outer wall", []) or [])
+    mid_inner = len(mid_obj_map.get(ExtrusionType.INNER_WALL.value, []) or [])
+    mid_outer = len(mid_obj_map.get(ExtrusionType.OUTER_WALL.value, []) or [])
     mid_total = mid_inner + mid_outer
     assert mid_total != 2, (
         f"中间层(索引 {mid_idx})的墙总数仅为 2（Outer={mid_outer}, Inner={mid_inner}）。"
@@ -408,8 +403,8 @@ def parse_only_one_wall_top(
     last_idx = L - 1
     last_layer_map = contours[last_idx] or {}
     last_obj_map = last_layer_map.get(target_oid, {}) if last_layer_map else {}
-    last_inner = len(last_obj_map.get("Inner wall", []) or [])
-    last_outer = len(last_obj_map.get("Outer wall", []) or [])
+    last_inner = len(last_obj_map.get(ExtrusionType.INNER_WALL.value, []) or [])
+    last_outer = len(last_obj_map.get(ExtrusionType.OUTER_WALL.value, []) or [])
 
     bad_layers: List[Tuple[int, str, Dict[str, Any]]] = []
     details = {"outer_count": last_outer, "inner_count": last_inner}
@@ -428,3 +423,143 @@ def parse_only_one_wall_top(
     ok = (len(bad_layers) == 0)
     return ok, expected_only_one_wall_top, bad_layers
 
+
+def parse_one_wall_first_layer(
+        gcode_path: Path | str,
+        expected_one_wall_first_layer: bool = True,
+) -> Tuple[bool, bool, List[Tuple[int, str, Dict[str, Any]]]]:
+    """
+    校验首层（layer 0）是否只打印单壁。
+    约定：
+      - 期望开启时：Outer wall 数量应为 1，Inner wall 数量应为 0。
+      - 期望关闭时：总墙数（Inner + Outer）应不少于 2。
+    """
+    p = GCodeParser(gcode_path)
+
+    contours = p.get_type_contours_per_layer(types=[ExtrusionType.OUTER_WALL.value, ExtrusionType.INNER_WALL.value], workers=0)
+    if not contours:
+        return False, expected_one_wall_first_layer, []
+
+    target_oid = 0
+
+    first_idx = 0
+    first_layer_map = contours[first_idx] or {}
+    first_obj_map = first_layer_map.get(target_oid, {}) if first_layer_map else {}
+    first_inner = len(first_obj_map.get(ExtrusionType.INNER_WALL.value, []) or [])
+    first_outer = len(first_obj_map.get(ExtrusionType.OUTER_WALL.value, []) or [])
+
+    bad_layers: List[Tuple[int, str, Dict[str, Any]]] = []
+    details = {"outer_count": first_outer, "inner_count": first_inner}
+
+    if expected_one_wall_first_layer:
+        if first_inner > 0:
+            bad_layers.append((first_idx, "has-inner-wall", details))
+        if first_outer != 1:
+            bad_layers.append((first_idx, "outer-count-not-one", details))
+    else:
+        if (first_outer + first_inner) < 2:
+            bad_layers.append((first_idx, "first-layer-walls-lt-2", details))
+
+    ok = (len(bad_layers) == 0)
+    return ok, expected_one_wall_first_layer, bad_layers
+
+
+def _extract_last_extrude_e(parser: GCodeParser, type_value: str) -> Optional[float]:
+    """Return the last extrude E value for the specified TYPE across all layers."""
+    contours = parser.get_type_contours_per_layer(
+        types=[type_value],
+        workers=0,
+    )
+    if not contours:
+        return None
+
+    last_e: Optional[float] = None
+    for layer_map in contours:
+        if not layer_map:
+            continue
+        for oid in sorted(layer_map.keys()):
+            type_map = layer_map.get(oid) or {}
+            polylines = type_map.get(type_value) or []
+            for poly in polylines or []:
+                for pt in poly:
+                    if pt.kind == "extrude" and pt.e is not None:
+                        last_e = pt.e
+    return last_e
+
+
+def parse_top_solid_infill_flow_ratio(
+        tested_gcode: Path | str,
+        baseline_gcode: Path | str,
+        expected_ratio: float,
+        *,
+        tol: float = 1e-3,
+) -> Tuple[bool, Optional[float], Dict[str, object]]:
+    """
+    Compare the last top-surface extrude E between tested and baseline G-code.
+    """
+    tested_path = Path(tested_gcode)
+    baseline_path = Path(baseline_gcode)
+
+    tested_parser = GCodeParser(tested_path)
+    baseline_parser = GCodeParser(baseline_path)
+
+    tested_e = _extract_last_extrude_e(tested_parser, ExtrusionType.TOP_SURFACE.value)
+    baseline_e = _extract_last_extrude_e(baseline_parser, ExtrusionType.TOP_SURFACE.value)
+
+    ratio: Optional[float] = None
+    ok = False
+
+    if tested_e is not None and baseline_e is not None and abs(baseline_e) > 1e-9:
+        ratio = tested_e / baseline_e
+        ok = math.isclose(ratio, expected_ratio, rel_tol=tol, abs_tol=tol)
+
+    details: Dict[str, object] = {
+        "tested_gcode": str(tested_path),
+        "baseline_gcode": str(baseline_path),
+        "tested_e": tested_e,
+        "baseline_e": baseline_e,
+        "ratio": ratio,
+        "expected_ratio": expected_ratio,
+        "tolerance": tol,
+    }
+
+    return ok, ratio, details
+
+
+def parse_bottom_solid_infill_flow_ratio(
+        tested_gcode: Path | str,
+        baseline_gcode: Path | str,
+        expected_ratio: float,
+        *,
+        tol: float = 1e-3,
+) -> Tuple[bool, Optional[float], Dict[str, object]]:
+    """
+    Compare the last bottom-surface extrude E between tested and baseline G-code.
+    """
+    tested_path = Path(tested_gcode)
+    baseline_path = Path(baseline_gcode)
+
+    tested_parser = GCodeParser(tested_path)
+    baseline_parser = GCodeParser(baseline_path)
+
+    tested_e = _extract_last_extrude_e(tested_parser, ExtrusionType.BOTTOM_SURFACE.value)
+    baseline_e = _extract_last_extrude_e(baseline_parser, ExtrusionType.BOTTOM_SURFACE.value)
+
+    ratio: Optional[float] = None
+    ok = False
+
+    if tested_e is not None and baseline_e is not None and abs(baseline_e) > 1e-9:
+        ratio = tested_e / baseline_e
+        ok = math.isclose(ratio, expected_ratio, rel_tol=tol, abs_tol=tol)
+
+    details: Dict[str, object] = {
+        "tested_gcode": str(tested_path),
+        "baseline_gcode": str(baseline_path),
+        "tested_e": tested_e,
+        "baseline_e": baseline_e,
+        "ratio": ratio,
+        "expected_ratio": expected_ratio,
+        "tolerance": tol,
+    }
+
+    return ok, ratio, details

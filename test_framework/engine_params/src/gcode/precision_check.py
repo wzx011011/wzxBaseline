@@ -1,8 +1,12 @@
 from __future__ import annotations
+
+import math
 from pathlib import Path
 import re
+from typing import Dict, List, Tuple, Optional, Sequence
 
-from engine_params.src.gcode.GCodeParser import GCodeParser  # 使用你最新的解析器
+from engine_params.src.gcode.GCodeParser import GCodeParser, Point
+from engine_params.src.gcode.constants import ExtrusionType
 
 # 行首 G0/G1（忽略注释）
 _GMOVE_RE = re.compile(r"^\s*G(?:0|1)\b([^;]*)", re.IGNORECASE)
@@ -148,11 +152,15 @@ def assert_per_layer(
     tst = GCodeParser(tested)
 
     # 分别取 Outer/Inner 的片段（已剔除 WIPE，并拼接）
-    base_outer = base.get_extrusion_blocks_by_object("Outer wall", 0, include_wipe=False, decode=True, workers=8)
-    base_inner = base.get_extrusion_blocks_by_object("Inner wall", 0, include_wipe=False, decode=True, workers=8)
+    base_outer = base.get_extrusion_blocks_by_object(ExtrusionType.OUTER_WALL.value, 0, include_wipe=False, decode=True,
+                                                     workers=8)
+    base_inner = base.get_extrusion_blocks_by_object(ExtrusionType.INNER_WALL.value, 0, include_wipe=False, decode=True,
+                                                     workers=8)
 
-    test_outer = tst.get_extrusion_blocks_by_object("Outer wall", 0, include_wipe=False, decode=True, workers=8)
-    test_inner = tst.get_extrusion_blocks_by_object("Inner wall", 0, include_wipe=False, decode=True, workers=8)
+    test_outer = tst.get_extrusion_blocks_by_object(ExtrusionType.OUTER_WALL.value, 0, include_wipe=False, decode=True,
+                                                    workers=8)
+    test_inner = tst.get_extrusion_blocks_by_object(ExtrusionType.INNER_WALL.value, 0, include_wipe=False, decode=True,
+                                                    workers=8)
 
     # 一致性校验：层数应一致
     assert len(base_outer) == len(base_inner) == len(test_outer) == len(test_inner), \
@@ -202,6 +210,262 @@ def check_elefant_foot_compensation(
     - 若设定了 max_layers：按照线性递减规则校验（其后层为 0）。
     """
     assert_per_layer(baseline, tested, expected_comp, tol, max_layers=max_layers)
+
+# ================== xy_hole_compensation / xy_contour_compensation ==================
+BBox = Tuple[float, float, float, float]  # (minx, maxx, miny, maxy)
+
+# ---------------------------
+# 小工具：从 polyline 取二维包围盒
+# ---------------------------
+def _poly_bbox(pl: List[Point]) -> Optional[BBox]:
+    if not pl:
+        return None
+    xs = [p.x for p in pl]
+    ys = [p.y for p in pl]
+    return (min(xs), max(xs), min(ys), max(ys))
+
+# Δ边界（tested - baseline）
+def _bbx_delta(t: BBox, b: BBox) -> Tuple[float, float, float, float]:
+    tminx, tmaxx, tminy, tmaxy = t
+    bminx, bmaxx, bminy, bmaxy = b
+    return (tminx - bminx, tmaxx - bmaxx, tminy - bminy, tmaxy - bmaxy)
+
+# 统一判定（Left/Bottom → -expected_offset；Right/Top → +expected_offset）
+def _bbx_ok(delta: Tuple[float, float, float, float], expected_offset: float, tol: float) -> Tuple[bool, str]:
+    dL, dR, dB, dT = delta
+    expL = -expected_offset
+    expR = +expected_offset
+    expB = -expected_offset
+    expT = +expected_offset
+    def ok(a, e): return abs(a - e) <= tol
+    good = ok(dL, expL) and ok(dR, expR) and ok(dB, expB) and ok(dT, expT)
+    msg  = f"ΔL={dL:.4f}(exp {expL:+.4f}), ΔR={dR:.4f}(exp {expR:+.4f}), ΔB={dB:.4f}(exp {expB:+.4f}), ΔT={dT:.4f}(exp {expT:+.4f})"
+    return good, msg
+
+# 读取分层 contours（只取指定 object_id）
+def _contours_per_layer(parser: GCodeParser, object_id: int) -> List[Dict[str, List[List[Point]]]]:
+    layers_raw = parser.get_type_contours_per_layer(
+        types=[ExtrusionType.OUTER_WALL.value, ExtrusionType.INNER_WALL.value],
+        workers=0,
+    )
+    return [layer_map.get(object_id, {}) for layer_map in layers_raw]
+
+def parse_enable_arc_fitting(
+        gcode_path: Path | str,
+        expected_enable: bool,
+        *,
+        object_id: int = 0,
+) -> Tuple[bool, Dict[str, object]]:
+    """
+    说明：读取 CONFIG 中 enable_arc_fitting，并检查指定对象的内/外墙挤出块是否包含 G2/G3 指令。
+    当 expected_value = 0 时，认为关闭圆弧拟合，内/外墙应仅包含 G0/G1。
+    """
+    parser = GCodeParser(Path(gcode_path))
+    cfg = parser.load_config()
+
+    raw_value = cfg.get("enable_arc_fitting")
+    actual_value: Optional[int] = None
+    if raw_value is not None:
+        try:
+            actual_value = int(str(raw_value).strip())
+        except ValueError:
+            actual_value = None
+
+    config_ok = (actual_value == int(expected_enable))
+
+    per_layer = parser.get_extrusions_blocks_by_object(
+        [ExtrusionType.OUTER_WALL, ExtrusionType.INNER_WALL],
+        object_id=object_id,
+        include_wipe=False,
+        decode=True,
+        workers=0,
+    )
+
+    arc_layers: List[int] = []
+    for layer_idx, type_map in enumerate(per_layer):
+        has_arc = False
+        for blocks in type_map.values():
+            for block in blocks or []:
+                for line in block.splitlines():
+                    stripped = line.strip().upper()
+                    if stripped.startswith("G2") or stripped.startswith("G3"):
+                        has_arc = True
+                        break
+                if has_arc:
+                    break
+            if has_arc:
+                arc_layers.append(layer_idx)
+                break
+
+    if not expected_enable:
+        arcs_ok = len(arc_layers) == 0
+    else:
+        arcs_ok = True
+
+    ok = config_ok and arcs_ok
+
+    details: Dict[str, object] = {
+        "expected_enable": expected_enable,
+        "actual_value": actual_value,
+        "config_ok": config_ok,
+        "arc_layers": arc_layers,
+        "arcs_ok": arcs_ok,
+        "checked_layers": len(per_layer),
+    }
+
+    return ok, details
+
+
+# =============================================================================
+#    —— 每层取 “孔洞闭合轮廓”：索引 0（按模型的约定），用 OUTER_WALL 的第 0 条 polyline
+# =============================================================================
+def parse_xy_hole_compensation(
+    *,
+    baseline: str | Path,
+    tested: str | Path,
+    expected_offset: float,
+    tolerance: float,
+    object_id: int = 0,
+) -> Tuple[bool, str]:
+    """
+    假设：
+    - 每层 polyline 列表：索引 0 是孔洞闭合轮廓，索引 1 是外轮廓族闭合轮廓；
+    - 模型两圈墙；
+    - 使用 OUTER_WALL[0] 直接做 BBX 边偏移对比；
+    - BBX 计算使用 polyline 的“所有点”，不区分 kind。
+    """
+    base = GCodeParser(Path(baseline))
+    test = GCodeParser(Path(tested))
+
+    base_layers = _contours_per_layer(base, object_id)
+    test_layers = _contours_per_layer(test, object_id)
+
+    total_layers = min(len(base_layers), len(test_layers))
+    if total_layers == 0:
+        return False, "未解析到任何层数据"
+
+    failures: List[str] = []
+    checked = 0
+
+    for L in range(total_layers):
+        # 不检验最后一层
+        if L == total_layers - 1:
+            break
+        b_type = base_layers[L]
+        t_type = test_layers[L]
+
+        b_list = b_type.get(ExtrusionType.OUTER_WALL.value, [])
+        t_list = t_type.get(ExtrusionType.OUTER_WALL.value, [])
+
+        if len(b_list) < 1 or len(t_list) < 1:
+            failures.append(f"L{L}: OUTER_WALL 缺少孔洞索引0 (baseline_len={len(b_list)}, tested_len={len(t_list)})")
+            continue
+
+        b_bbox = _poly_bbox(b_list[0])
+        t_bbox = _poly_bbox(t_list[0])
+        if b_bbox is None or t_bbox is None:
+            failures.append(f"L{L}: OUTER_WALL[0] BBX 无法计算")
+            continue
+
+        delta = _bbx_delta(t_bbox, b_bbox)
+        ok, msg = _bbx_ok(delta, expected_offset, tolerance)
+        checked += 1
+        if not ok:
+            failures.append(f"L{L} hole@outer_wall[0]: {msg}")
+
+    if checked == 0:
+        return False, "没有任何层对齐到 OUTER_WALL[0] 进行校验"
+
+    if failures:
+        detail = " | ".join(failures[:30])
+        if len(failures) > 30:
+            detail += " | ... 共 {} 处不符合".format(len(failures))
+        return False, detail
+
+    return True, "xy_hole_compensation 达到期望"
+
+# =============================================================================
+#    —— 每层取 “外轮廓族闭合轮廓”：索引 1
+#       * OUTER_WALL[1] → 外轮廓族的外墙
+#       * INNER_WALL[1] → 外轮廓族的内墙
+#    —— BBX 计算使用 polyline 的“所有点”
+# =============================================================================
+def parse_xy_contour_compensation(
+    *,
+    baseline: str | Path,
+    tested: str | Path,
+    expected_offset: float,
+    tolerance: float,
+    object_id: int = 0,
+) -> Tuple[bool, str]:
+    """
+    假设与顺序同上；分别对 OUTER_WALL[1]（外墙）与 INNER_WALL[1]（内墙）做 BBX 边偏移对比。
+    """
+    base = GCodeParser(Path(baseline))
+    test  = GCodeParser(Path(tested))
+
+    base_layers = _contours_per_layer(base, object_id)
+    test_layers = _contours_per_layer(test, object_id)
+
+    total_layers = min(len(base_layers), len(test_layers))
+    if total_layers == 0:
+        return False, "未解析到任何层数据"
+
+    failures: List[str] = []
+    checked = 0
+
+    for L in range(total_layers):
+
+        # 不检验最后一层
+        if L==total_layers-1:
+            break
+        b_type = base_layers[L]
+        t_type = test_layers[L]
+
+        # 外轮廓族 外墙：OUTER_WALL[1]
+        b_ow = b_type.get(ExtrusionType.OUTER_WALL.value, [])
+        t_ow = t_type.get(ExtrusionType.OUTER_WALL.value, [])
+        if len(b_ow) < 2 or len(t_ow) < 2:
+            failures.append(f"L{L}: OUTER_WALL 缺少外轮廓族索引1 (baseline_len={len(b_ow)}, tested_len={len(t_ow)})")
+        else:
+            b_bbox = _poly_bbox(b_ow[1])
+            t_bbox = _poly_bbox(t_ow[1])
+            if b_bbox is None or t_bbox is None:
+                failures.append(f"L{L}: OUTER_WALL[1] BBX 无法计算")
+            else:
+                delta = _bbx_delta(t_bbox, b_bbox)
+                ok, msg = _bbx_ok(delta, expected_offset, tolerance)
+                checked += 1
+                if not ok:
+                    failures.append(f"L{L} outer_contour@outer_wall[1]: {msg}")
+
+        # 外轮廓族 内墙：INNER_WALL[1]
+        b_iw = b_type.get(ExtrusionType.INNER_WALL.value, [])
+        t_iw = t_type.get(ExtrusionType.INNER_WALL.value, [])
+        if len(b_iw) < 2 or len(t_iw) < 2:
+            failures.append(f"L{L}: INNER_WALL 缺少外轮廓族索引1 (baseline_len={len(b_iw)}, tested_len={len(t_iw)})")
+        else:
+            b_bbox = _poly_bbox(b_iw[1])
+            t_bbox = _poly_bbox(t_iw[1])
+            if b_bbox is None or t_bbox is None:
+                failures.append(f"L{L}: INNER_WALL[1] BBX 无法计算")
+            else:
+                delta = _bbx_delta(t_bbox, b_bbox)
+                ok, msg = _bbx_ok(delta, expected_offset, tolerance)
+                checked += 1
+                if not ok:
+                    failures.append(f"L{L} outer_contour@inner_wall[1]: {msg}")
+
+    if checked == 0:
+        return False, "没有任何层对齐到索引1（外轮廓族）进行校验"
+
+    if failures:
+        detail = " | ".join(failures[:30])
+        if len(failures) > 30:
+            detail += " | ... 共 {} 处不符合".format(len(failures))
+        return False, detail
+
+    return True, "xy_contour_compensation 达到期望"
 
 
 if __name__ == "__main__":

@@ -1,16 +1,10 @@
-import os
 from pathlib import Path
 
 import pytest
 from engine_params.src.gcode.Quality.ironing_type_check import parse_ironing_type
 
-# 获取当前文件所在目录
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.join(current_dir, "..", "..", "..", "..", "..")
-data_root = os.path.join(project_root, "test_framework", "engine_params", "data", "models", "quality")
-
 slice_cases = [
-    {"input_3mf": os.path.join(data_root, "ironing_type_cube.3mf")},
+    {"input_3mf": r"D:\C3DBaseline\test_framework\engine_params\data\models\quality\ironing_type_cube.3mf"},
 ]
 expectations = [True, ]  # 期望类型TODO，因为现在只能检查存在性
 params = [

@@ -2,8 +2,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-import os
-from typing import Any
 
 import math
 
@@ -11,18 +9,13 @@ import pytest
 
 from engine_params.src.gcode.layer_height_check import parse_layer_height,parse_initial_layer_print_height
 
-# 获取当前文件所在目录
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.join(current_dir, "..", "..", "..", "..", "..")
-data_root = os.path.join(project_root, "test_framework", "engine_params", "data", "models", "quality")
-
 # ----------- 参数化示例（indirect=True） -----------
 # 说明：
 #  - 把 dict 作为 request.param 传入 slice_and_export fixture（indirect=True）
 #  - 每个 param 会触发一次 fixture 完整流程（reset/load/slice/export）
 
 slice_cases = [
-    {"input_3mf": os.path.join(data_root, "initial_layer_print_height_0.28mm.3mf")},
+    {"input_3mf": r"D:\C3DBaseline\test_framework\engine_params\data\models\quality\initial_layer_print_height_0.28mm.3mf"},
 
 ]
 expectations = [0.28]
@@ -39,7 +32,7 @@ def test_initial_layer_print_height(slice_and_export: Path,
                                     expected_first_layer_height: float):
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
-    layer_cfg = parse_initial_layer_print_height(gcode_path)
+    layer_cfg: dict[str, object] = parse_initial_layer_print_height(gcode_path)
     assert layer_cfg is not None
     first_layer_z = layer_cfg["first_layer_z"]
     assert first_layer_z == expected_first_layer_height
@@ -52,10 +45,10 @@ def test_initial_layer_print_height(slice_and_export: Path,
 # 仅供夹具使用的切片参数
 slice_cases2 = [
     {
-        "input_3mf": os.path.join(data_root, "layer_height_0.24mm.3mf"),
+        "input_3mf": r"D:\C3DBaseline\test_framework\engine_params\data\models\quality\layer_height_0.24mm.3mf",
     },
     {
-        "input_3mf": os.path.join(data_root, "layer_height_0.32mm.3mf"),
+        "input_3mf": r"D:\C3DBaseline\test_framework\engine_params\data\models\quality\layer_height_0.32mm.3mf",
     },
 ]
 
@@ -82,7 +75,7 @@ def test_layer_height(slice_and_export, expected_layer_height: float):
     assert layer_cfg is not None, "未在 G-code 中解析到 layer_height"
     # assert layer_cfg["config_layer_height"] == expected_layer_height
     layers = layer_cfg["layers"]
-    for i,layer in enumerate(layers):  # type: ignore
+    for i,layer in enumerate(layers):
         if i == 0:
             continue
         _,h = layer
