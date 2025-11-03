@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "cw_wall_direction_01",
+      "input_3mf": "cw_wall_direction_01.3mf",
+      "expected_direction": "cw"
+    }
+  ]
+}

@@ -13,21 +13,7 @@ from engine_params.src.gcode.layer_height_check import parse_layer_height,parse_
 # 说明：
 #  - 把 dict 作为 request.param 传入 slice_and_export fixture（indirect=True）
 #  - 每个 param 会触发一次 fixture 完整流程（reset/load/slice/export）
-
-slice_cases = [
-    {"input_3mf": r"D:\C3DBaseline\test_framework\engine_params\data\models\quality\initial_layer_print_height_0.28mm.3mf"},
-
-]
-expectations = [0.28]
-params = [
-    pytest.param(
-        sc, exp
-    )
-    for sc, exp in zip(slice_cases, expectations)
-]
 @pytest.mark.engine_params
-@pytest.mark.parametrize(("slice_and_export", "expected_first_layer_height"), params,
-                         indirect=["slice_and_export"])
 def test_initial_layer_print_height(slice_and_export: Path,
                                     expected_first_layer_height: float):
     gcode_path: Path = slice_and_export
@@ -38,32 +24,9 @@ def test_initial_layer_print_height(slice_and_export: Path,
     assert first_layer_z == expected_first_layer_height
 
 
-
-
 # ================== layer_height ==================
 
-# 仅供夹具使用的切片参数
-slice_cases2 = [
-    {
-        "input_3mf": r"D:\C3DBaseline\test_framework\engine_params\data\models\quality\layer_height_0.24mm.3mf",
-    },
-    {
-        "input_3mf": r"D:\C3DBaseline\test_framework\engine_params\data\models\quality\layer_height_0.32mm.3mf",
-    },
-]
-
-# 与夹具无关、用于断言的期望
-expectation2 = [0.24,0.32]
-
-# 一一对应（而不是笛卡尔积），用 zip 合并：
-params = [
-    pytest.param(sc, exp)
-    for sc, exp in zip(slice_cases2, expectation2)
-]
 @pytest.mark.engine_params
-@pytest.mark.parametrize(("slice_and_export", "expected_layer_height"),
-                         params,
-                         indirect=["slice_and_export"])
 def test_layer_height(slice_and_export, expected_layer_height: float):
     """
     slice_and_export fixture 已完成导出，并返回导出的 gcode Path。

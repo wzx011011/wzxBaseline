@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {
+      "project_name": "test infill_anchor and infill_anchor_max",
+      "input_3mf": "infill_anchor_001.3mf",
+      "expected_point_line": 0,
+      "expected_anchor_line": 2,
+      "threshold": 18.216
+    }
+  ]
+}

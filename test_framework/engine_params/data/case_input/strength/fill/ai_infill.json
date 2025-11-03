@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "project_name": "AI infill cubic @25%",
+      "input_3mf": "25%_ai_cubic.3mf",
+      "baseline_gcode": "baseline_25%_ai_cubic.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "AI infill rectilinear @25%",
+      "input_3mf": "25%_ai_rectilinear.3mf",
+      "baseline_gcode": "baseline_25%_ai_rectilinear.gcode",
+      "expected_match": true
+    }
+  ]
+}

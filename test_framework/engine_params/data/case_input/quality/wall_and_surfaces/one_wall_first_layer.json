@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "only_one_wall_first_layer_001",
+      "input_3mf": "only_one_wall_first_layer_001.3mf",
+      "expected_only_one_wall_first_layer": true
+    }
+  ]
+}

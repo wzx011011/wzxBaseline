@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "support_line_width_001",
+      "input_3mf": "support_line_width_001.3mf",
+      "expected_line_width": 0.48
+    }
+  ]
+}

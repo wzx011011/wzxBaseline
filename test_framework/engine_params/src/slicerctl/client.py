@@ -38,7 +38,7 @@ class SlicerProc:
             return
 
         env = os.environ.copy()
-        # 绕开弹窗
+        # 重要，拉起子进程的时候会注册一个环境变量来绕开弹窗
         env["SLICER_TEST_RESTORE"] = "discard"
         env["CREALITY_PRINTER_LOG_PATH"] = CREALITY_PRINTER_LOG_PATH
 

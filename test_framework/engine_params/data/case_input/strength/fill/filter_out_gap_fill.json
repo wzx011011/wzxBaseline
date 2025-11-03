@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "filter_out_gap_fill",
+      "input_3mf": "filter_out_gap_fill_001.3mf",
+      "expected_value": 5.0
+    }
+  ]
+}

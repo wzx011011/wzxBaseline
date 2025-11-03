@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "print_sequence_byOrder_001",
+      "input_3mf": "print_sequence_byOrder_001.3mf",
+      "expected_sequence": "逐件打印"
+    },
+    {
+      "project_name": "print_sequence_byOrder_002",
+      "input_3mf": "print_sequence_byOrder_002.3mf",
+      "expected_sequence": "逐层打印"
+    }
+  ]
+}

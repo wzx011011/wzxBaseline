@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "top_shell_layers_001",
+      "input_3mf": "top_shell_layers_001.3mf",
+      "expected_layers": 10
+    },
+    {
+      "project_name": "top_shell_layers_002",
+      "input_3mf": "top_shell_layers_002.3mf",
+      "expected_layers": 4
+    }
+  ]
+}

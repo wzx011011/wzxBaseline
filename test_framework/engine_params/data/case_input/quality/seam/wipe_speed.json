@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "project_name": "test_layer_height_case1",
+      "input_3mf": "cube_100%_wipe_speed.3mf",
+      "expected_has_wipe": true,
+      "timeouts": { "load": 120, "slice": 240, "export": 600 }
+    },
+    {
+      "project_name": "test_layer_height_case2",
+      "input_3mf": "wipe_speed_001.3mf",
+      "expected_has_wipe": true,
+      "timeouts": { "load": 120, "slice": 240, "export": 600 }
+    }
+  ]
+}

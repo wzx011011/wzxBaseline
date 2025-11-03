@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "ironing_type_cube",
+      "input_3mf": "ironing_type_cube.3mf",
+      "expected_ironing_type": true
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "project_name": "efc_01mm_case",
+      "input_3mf": "efc_cube_01mm_5layers.3mf",
+      "baseline_gcode": "baseline_cube_no_efc.gcode",
+      "expected_comp": 0.10,
+      "tol": 0.000001,
+      "efc_layers": 5
+    }
+  ]
+}

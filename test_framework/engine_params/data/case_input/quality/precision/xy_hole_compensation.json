@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {
+      "project_name": "xy_hole_compensation_shrink",
+      "input_3mf": "xy_hole_compensation_001.3mf",
+      "expected_offset": -2.0,
+      "baseline_gcode": "baselline_xy_compensation.gcode",
+      "tol": 0.001
+    }
+  ]
+}

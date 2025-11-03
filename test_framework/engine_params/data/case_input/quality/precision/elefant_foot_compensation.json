@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {
+      "project_name": "efc_01mm_case",
+      "input_3mf": "cube_01mm_efc.3mf",
+      "baseline_gcode": "baseline_cube_no_efc.gcode",
+      "expected_comp": 0.10,
+      "tol": 0.000001
+    }
+  ]
+}

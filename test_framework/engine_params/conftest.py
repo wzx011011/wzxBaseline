@@ -8,10 +8,23 @@ from typing import Optional
 from pathlib import Path
 import time
 import threading
+import inspect
 
 import pytest
-from .src.slicerctl.session import EngineSession
+from .src.slicerctl.session import EngineSession, RestartingEngine, EngineUnavailable
 from .src.slicerctl.constants import SLICE_BTN_ID
+
+from .src.testing_utils.caseio import (
+    repo_root,
+    case_json_path,
+    infer_module_and_group_from_file,
+    param_name_from_test_func_name,
+    load_cases_json,
+    normalize_case_for_fixture,
+    pick_expected_values,
+    resolve_extra_params,
+    model_or_baseline_path,
+)
 
 # ========== watchdog 依赖 ==========
 try:
@@ -23,19 +36,6 @@ except Exception as _e_watchdog:
     _WATCHDOG_IMPORT_ERROR = _e_watchdog
 else:
     _WATCHDOG_IMPORT_ERROR = None
-
-
-# 为engine_param_item提供默认参数
-@pytest.fixture
-def engine_param_item():
-    return {"input": "default_param", "expectation": True}
-
-
-# 为baseline_cur_path提供默认路径
-@pytest.fixture
-def baseline_cur_path():
-    return os.path.dirname(os.path.abspath(__file__))
-
 
 # ==============================
 # 通用：获取 EXE 路径（命令行 > 环境变量）
@@ -70,59 +70,60 @@ def _get_exe_path_from_cli_or_env(config: "pytest.Config") -> Optional[str]:
 # 会话级引擎 Session
 # ==============================
 @pytest.fixture(scope="session")
-def engine_session(pytestconfig):
-    """
-    启动一次 EngineSession，返回 (client, injector)。
-    若未提供 --slicer-exe 且未设置 CREALITY_PRINTER_PATH，则跳过相关用例。
-    """
+def engine_manager(pytestconfig):
     exe_path = _get_exe_path_from_cli_or_env(pytestconfig)
     if not exe_path:
-        pytest.skip(
-            "未提供 --slicer-exe 且未设置环境变量 "
-            f"{ENV_KEY}；跳过依赖引擎的测试会话"
+        pytest.skip(f"未提供 --slicer-exe 或 {ENV_KEY}，跳过依赖引擎的会话")
+
+    def _mk_session():
+        return EngineSession(
+            exe_path=exe_path,
+            log_path=pytestconfig.getoption("--slicer-log"),
+            cli_args=[exe_path, "test#157369"],
+            host=pytestconfig.getoption("--slicer-host"),
+            port=pytestconfig.getoption("--slicer-port"),
+            timeout=pytestconfig.getoption("--slicer-timeout"),
+            inter_command_delay=pytestconfig.getoption("--slicer-inter-delay"),
+            retries=pytestconfig.getoption("--slicer-retries"),
+            backoff=pytestconfig.getoption("--slicer-backoff"),
         )
 
-    session = EngineSession(
-        exe_path=exe_path,
-        log_path=pytestconfig.getoption("--slicer-log"),
-        cli_args=[exe_path, "test#157369"],
-        host=pytestconfig.getoption("--slicer-host"),
-        port=pytestconfig.getoption("--slicer-port"),
-        timeout=pytestconfig.getoption("--slicer-timeout"),
-        inter_command_delay=pytestconfig.getoption("--slicer-inter-delay"),
-        retries=pytestconfig.getoption("--slicer-retries"),
-        backoff=pytestconfig.getoption("--slicer-backoff"),
-    )
-
-    client, injector = session.__enter__()
+    mgr = RestartingEngine(mk_session=_mk_session, ping_timeout=3.0, cool_down=5.0)
     try:
-        fut = injector.submit("ping", {})
-        resp = fut.result(timeout=10)
-        assert resp.get("code") == 0, f"ping 失败：{resp}"
-        yield client, injector
+        yield mgr
     finally:
-        session.__exit__(None, None, None)
+        mgr.close()
 
 
-# 便捷别名
+# 便捷别名（保持现有用法尽量不变）
 @pytest.fixture(scope="session")
-def engine_client(engine_session):
-    client, _ = engine_session
-    return client
+def engine_injector(engine_manager, pytestconfig):
+    policy = pytestconfig.getoption("--engine-unavail")
 
+    class InjectorAdapter:
+        # 该适配器只能有这个属性
+        __slots__ = ("_mgr",)
+        def __init__(self, mgr): self._mgr = mgr
+
+        def submit(self, *args, **kwargs):
+            """
+                在这里决定怎么处理引擎奔溃错误，要区分case断言失败以及引擎奔溃的错误。
+            """
+            try:
+                return self._mgr.submit(*args, **kwargs)
+            except EngineUnavailable as e:
+                if policy == "skip":
+                    pytest.skip(str(e))
+                elif policy == "xfail":
+                    pytest.xfail(str(e))
+                # policy == "error"：保留为 ERROR（基础设施错误），而不是 FAIL
+                raise
+
+    return InjectorAdapter(engine_manager)
 
 @pytest.fixture(scope="session")
-def engine_injector(engine_session):
-    _, injector = engine_session
-    return injector
-
-
-# 可选：按标记自动启用
-@pytest.fixture(autouse=True)
-def _maybe_start_engine(request, engine_session):
-    if request.node.get_closest_marker("functional") or \
-            request.node.get_closest_marker("engine_params"):
-        _ = engine_session
+def engine_client(engine_manager):
+    return engine_manager.client
 
 
 # =================                 =================
@@ -187,9 +188,9 @@ def gcode_path_factory(request, gcode_dir):
     return make
 
 
-# =========================
-# watchdog: 等待目标文件写入完成
-# =========================
+# ==================================================
+# watchdog: 使用事件通知机制等待目标文件写入完成，不用轮询机制
+# ==================================================
 
 class _WaitForFileHandler(FileSystemEventHandler):
     """
@@ -354,6 +355,82 @@ def wait_for_file_written(target: Path, timeout: float = 60.0, settle_time: floa
         observer.stop()
         observer.join(timeout=5)
 
+
+# =================                 =================
+#                    动态参数化
+# =================                 =================
+
+
+# baseline 文件名解析：放到与 3MF 相同的 param_name 子目录
+def _resolve_baseline_gcode(repo: Path, module_: str, group: str, param_name: str, value: object):
+    return model_or_baseline_path(repo, module_, group, param_name, str(value))
+
+# 如果 json 文件中有baseline_gcode键值对，那么就会自动调用这个解析器自动将其转化成绝对路径
+RESOLVERS = {
+    "baseline_gcode": _resolve_baseline_gcode,
+    # 可按需添加其它解析器，如 "support_gcode": _resolve_support_gcode
+}
+
+@pytest.hookimpl(trylast=True)
+def pytest_generate_tests(metafunc: pytest.Metafunc):
+    """
+    - JSON：test_framework/engine_params/data/case_input/<module>/<group>/<param_name>.json
+    - 模型/基线：test_framework/engine_params/data/models/<module>/<group>/<param_name>/<filename>
+    - 参数注入顺序：slice_and_export → expected_*（按函数声明顺序）→ extra（按函数声明顺序）
+    - 仅当测试函数**声明了** slice_and_export 时才注入
+    """
+    # 仅看“测试函数声明的形参”，避免把隐式/autouse fixture 混进来
+    declared_params = tuple(inspect.signature(metafunc.function).parameters.keys())
+    if "slice_and_export" not in declared_params:
+        return
+
+    # 拆分 expected_* 与 extra（都以“声明顺序”为准）
+    expected_params = tuple(n for n in declared_params if n.startswith("expected_"))
+    known = {"slice_and_export", *expected_params}
+    extra_params = tuple(n for n in declared_params if n not in known)
+
+    # 推断仓库根、module、group、param_name，并定位 JSON
+    mod_file = Path(metafunc.module.__file__).resolve()
+    repo = repo_root(mod_file)
+    module_, group = infer_module_and_group_from_file(mod_file)   # 会去掉 test_ 前缀
+    param_name = param_name_from_test_func_name(metafunc.function.__name__)
+    json_path = case_json_path(repo, module_, group, param_name)
+
+    # 读取用例
+    raw_cases = load_cases_json(json_path)
+
+    # 组装参数行
+    arg_names = ("slice_and_export",) + expected_params + extra_params
+    arg_rows = []
+    for c in raw_cases:
+        # 给 fixture 的 case（把 input_3mf 文件名映射为绝对路径）
+        case_for_fixture = normalize_case_for_fixture(
+            c, repo=repo, module_=module_, group=group, param_name=param_name
+        )
+
+        # 期望值：按 expected_* 名依次取
+        expected_values = pick_expected_values(c, expected_params)
+
+        # 额外参数：优先用 JSON，同名缺失则尝试 RESOLVERS[name](...)
+        extra_values = resolve_extra_params(
+            c,
+            extra_params,
+            repo=repo,
+            module_=module_,
+            group=group,
+            param_name=param_name,
+            resolvers=RESOLVERS,
+        )
+
+        values = (case_for_fixture,) + tuple(expected_values) + tuple(extra_values)
+        arg_rows.append(pytest.param(*values, id=str(c.get("project_name", param_name))))
+
+    # 注入（仅让 slice_and_export 走 indirect）
+    metafunc.parametrize(
+        argnames=arg_names,
+        argvalues=arg_rows,
+        indirect=["slice_and_export"],
+    )
 
 # =================                 =================
 #                    引擎切片固定步骤fixture

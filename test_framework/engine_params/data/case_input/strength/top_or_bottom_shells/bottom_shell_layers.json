@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "bsl_001",
+      "input_3mf": "bottom_shell_layers_001.3mf",
+      "expected_layers": 6
+    }
+  ]
+}

@@ -4,41 +4,17 @@ from pathlib import Path
 
 import pytest
 
-from engine_params.src.gcode.Quality.wall_generator_check import (
+from engine_params.src.gcode.quality.wall_generator_check import (
     WallGenerator,
     parse_wall_generator,
 )
 
 # ================== wall_generator ==================
-slice_cases = [
-    {
-        "input_3mf": r"D:\C3DBaseline\test_framework\engine_params\data\models\quality\wall_generator_001.3mf",
-        "project_name": "wall_generator_arachne",
-    },
-    {
-        "input_3mf": r"D:\C3DBaseline\test_framework\engine_params\data\models\quality\wall_generator_002.3mf",
-        "project_name": "wall_generator_classic",
-    },
-]
-expectations = [
-    (WallGenerator.ARACHNE, 0.9),
-    (WallGenerator.CLASSIC, 0.9),
-]
-params = [
-    pytest.param(sc, exp, thr, id=sc.get("project_name"))
-    for (sc, (exp, thr)) in zip(slice_cases, expectations)
-]
-
 
 @pytest.mark.engine_params
-@pytest.mark.parametrize(
-    ("slice_and_export", "expected_generator", "consistency_threshold"),
-    params,
-    indirect=["slice_and_export"],
-)
 def test_wall_generator(
         slice_and_export: Path,
-        expected_generator: WallGenerator,
+        expected_generator: str,
         consistency_threshold: float
 ):
     """
@@ -55,6 +31,6 @@ def test_wall_generator(
         consistency_threshold=consistency_threshold,
     )
 
-    assert actual_generator == expected_generator, (
+    assert actual_generator == WallGenerator.from_str(expected_generator), (
         f"wall_generator expected {expected_generator}, actual {actual_generator}, details: {details}"
     )

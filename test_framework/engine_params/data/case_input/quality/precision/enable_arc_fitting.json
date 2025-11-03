@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "enable_arc_fitting_off",
+      "input_3mf": "enable_arc_fitting_001.3mf",
+      "expected_enable": false
+    },
+    {
+      "project_name": "enable_arc_fitting_on",
+      "input_3mf": "enable_arc_fitting_002.3mf",
+      "expected_enable": true
+    }
+  ]
+}

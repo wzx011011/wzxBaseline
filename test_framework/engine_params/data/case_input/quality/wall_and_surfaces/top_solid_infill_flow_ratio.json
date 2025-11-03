@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {
+      "project_name": "top_solid_infill_flow_ratio_001",
+      "input_3mf": "top_solid_infill_flow_ratio_001.3mf",
+      "expected_ratio": 0.5,
+      "baseline_gcode": "baseline_infill_flow_ratio.gcode",
+      "tol": 0.001
+    }
+  ]
+}

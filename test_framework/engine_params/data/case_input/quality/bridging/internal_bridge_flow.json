@@ -1,0 +1,11 @@
+{
+  "cases": [
+    {
+      "project_name": "internal_bridge_flow",
+      "input_3mf": "internal_bridge_flow_001.3mf",
+      "expected_ratio": 0.5,
+      "baseline_gcode": "baseline_bridging_flow_ratio.gcode",
+      "tol": 0.001
+    }
+  ]
+}

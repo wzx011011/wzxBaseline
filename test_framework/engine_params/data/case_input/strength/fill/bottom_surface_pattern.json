@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "project_name": "bottom_surface_aligned_rectilinear",
+      "input_3mf": "bottomsf_aligned_rectilinear.3mf",
+      "baseline_gcode": "baseline_bottomsf_aligned_rectilinear.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "bottom_surface_concentric",
+      "input_3mf": "bottomsf_concentric.3mf",
+      "baseline_gcode": "baseline_bottomsf_concentric.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "bottom_surface_hilbert_curve",
+      "input_3mf": "bottomsf_hilbert_curve.3mf",
+      "baseline_gcode": "baseline_bottomsf_hilbert_curve.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "bottom_surface_monotonic",
+      "input_3mf": "bottomsf_monotonic.3mf",
+      "baseline_gcode": "baseline_bottomsf_monotonic.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "bottom_surface_rectilinear",
+      "input_3mf": "bottomsf_rectilinear.3mf",
+      "baseline_gcode": "baseline_bottomsf_rectilinear.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "bottom_surface_archimedean_chords",
+      "input_3mf": "bottomsf_archimedean_chords.3mf",
+      "baseline_gcode": "baseline_bottomsf_archimedean_chords.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "bottom_surface_monotonic_line",
+      "input_3mf": "bottomsf_monotonic_line.3mf",
+      "baseline_gcode": "baseline_bottomsf_monotonic_line.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "bottom_surface_octagram_spiral",
+      "input_3mf": "bottomsf_octagram_spiral.3mf",
+      "baseline_gcode": "baseline_bottomsf_octagram_spiral.gcode",
+      "expected_match": true
+    }
+  ]
+}

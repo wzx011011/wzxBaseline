@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "only_one_wall_top_001",
+      "input_3mf": "only_one_wall_top_001.3mf",
+      "expected_only_one_wall_top": true
+    },
+    {
+      "project_name": "only_one_wall_top_002",
+      "input_3mf": "only_one_wall_top_002.3mf",
+      "expected_only_one_wall_top": false
+    }
+  ]
+}

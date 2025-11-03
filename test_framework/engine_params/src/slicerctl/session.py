@@ -1,3 +1,7 @@
+import threading
+import time
+from typing import Optional
+
 from .client import SlicerProc
 from .client import EngineClient
 from .injector import CommandInjector
@@ -34,3 +38,111 @@ class EngineSession:
         finally:
             self.proc.stop()
         return False
+
+
+# ----------------- 引擎管理器，负责管理会话期间引擎奔溃的重启。 -----------------
+class EngineUnavailable(RuntimeError):
+    """基础设施/引擎不可用，不代表用例断言失败。"""
+    pass
+
+
+_TRANSIENT_ERRORS = (
+    ConnectionRefusedError,
+    ConnectionResetError,
+    BrokenPipeError,
+    TimeoutError,
+    OSError,
+    RuntimeError,
+)
+
+
+class RestartingEngine:
+    """
+    会话级引擎管理器：
+    - submit 前先 ping；失败则重启
+    - submit 期间如遇连接类错误，自动重启并重试一次
+    - 线程安全；避免并发重启
+    """
+
+    def __init__(self, *, mk_session, ping_timeout: float = 3.0, cool_down: float = 5.0):
+        self._mk_session = mk_session  # () -> EngineSession
+        self._ping_timeout = ping_timeout
+        self._cool_down = cool_down  # 两次重启的间隔
+        self._lock = threading.RLock()
+        self._session: Optional[EngineSession] = None
+        self._client = None
+        self._injector = None
+        self._last_restart_ts = 0.0
+        self._start()
+
+    # ---- 生命周期 ----
+    def _start(self):
+        sess = self._mk_session()
+        client, injector = sess.__enter__()
+        self._session, self._client, self._injector = sess, client, injector
+        # 初次健康检查（失败不让 assert 失败测试）
+        self._ping_or_raise()
+
+    def close(self):
+        with self._lock:
+            if self._session is not None:
+                self._session.__exit__(None, None, None)
+            self._session = self._client = self._injector = None
+
+    def _restart_locked(self):
+        # 节流，避免疯狂重启
+        now = time.time()
+        if now - self._last_restart_ts < self._cool_down:
+            time.sleep(self._cool_down - (now - self._last_restart_ts))
+        self._last_restart_ts = time.time()
+
+        # 关旧开新
+        old = self._session
+        try:
+            if old is not None:
+                old.__exit__(None, None, None)
+        except Exception:
+            pass
+        self._session = self._client = self._injector = None
+        self._start()
+
+    def restart(self):
+        with self._lock:
+            self._restart_locked()
+
+    # ---- 健康检查 ----
+    def _ping_or_raise(self):
+        fut = self._injector.submit("ping", {})
+        resp = fut.result(timeout=self._ping_timeout)
+        if resp.get("code") != 0:
+            raise EngineUnavailable(f"ping 失败：{resp}")
+
+    def ensure_alive(self):
+        with self._lock:
+            try:
+                self._ping_or_raise()
+            except Exception:
+                # 尝试一次重启 + 再次 ping
+                self._restart_locked()
+                try:
+                    self._ping_or_raise()
+                except Exception as e:
+                    # 仍不可用，交给上层决定 skip/xfail/报错
+                    raise EngineUnavailable(f"重启后仍不可用：{e}") from e
+
+    # ---- 对外能力 ----
+    @property
+    def client(self):
+        return self._client
+
+    def submit(self, cmd: str, payload: dict, **kwargs):
+        self.ensure_alive()
+        try:
+            return self._injector.submit(cmd, payload, **kwargs)
+        except _TRANSIENT_ERRORS as e:
+            with self._lock:
+                self._restart_locked()
+                try:
+                    return self._injector.submit(cmd, payload, **kwargs)
+                except _TRANSIENT_ERRORS as e2:
+                    raise EngineUnavailable(f"提交 `{cmd}` 时连接故障，重启后仍失败：{e2}") from e2

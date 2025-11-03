@@ -1,5 +1,5 @@
 # ==============================
-# Pytest 命令行选项注册
+# Pytest 命令行选项注册，供CLI注册，不能放在conftest处，因为放在conftest.py的话，就太晚注册CLI选项了。
 # ==============================
 def pytest_addoption(parser):
     grp = parser.getgroup("slicer")
@@ -24,3 +24,9 @@ def pytest_addoption(parser):
     grp.addoption("--clean-gcode", action="store_true",
                   default=False,
                   help="测试结束后清理生成的 G-code（默认不清理）")
+    grp.addoption(
+        "--engine-unavail",
+        choices=("skip", "xfail", "error"),
+        default="xfail",
+        help="引擎不可用时的处理策略：xfail(默认)/skip/error"
+    )

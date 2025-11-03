@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "project_name": "Sparse infill density concentric @50%",
+      "input_3mf": "50%_noai_concentric.3mf",
+      "baseline_gcode": "baseline_50%_noai_concentric.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "Sparse infill density grid @50%",
+      "input_3mf": "50%_noai_grid.3mf",
+      "baseline_gcode": "baseline_50%_noai_grid.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "Sparse infill density hilbert_curve @50%",
+      "input_3mf": "50%_noai_hilbert_curve.3mf",
+      "baseline_gcode": "baseline_50%_noai_hilbert_curve.gcode",
+      "expected_match": true
+    }
+  ]
+}

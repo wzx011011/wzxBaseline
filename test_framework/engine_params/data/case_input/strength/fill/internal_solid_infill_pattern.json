@@ -1,0 +1,52 @@
+{
+  "cases": [
+    {
+      "project_name": "internal_solid_infill_pattern_aligned_rectilinear",
+      "input_3mf": "sip_aligned_rectilinear.3mf",
+      "baseline_gcode": "baseline_sip_aligned_rectilinear.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "internal_solid_infill_pattern_archimedean_chords",
+      "input_3mf": "sip_archimedean_chords.3mf",
+      "baseline_gcode": "baseline_sip_archimedean_chords.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "internal_solid_infill_pattern_concentric",
+      "input_3mf": "sip_concentric.3mf",
+      "baseline_gcode": "baseline_sip_concentric.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "internal_solid_infill_pattern_hilbert_curve",
+      "input_3mf": "sip_hilbert_curve.3mf",
+      "baseline_gcode": "baseline_sip_hilbert_curve.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "internal_solid_infill_pattern_monotonic",
+      "input_3mf": "sip_monotonic.3mf",
+      "baseline_gcode": "baseline_sip_monotonic.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "internal_solid_infill_pattern_monotonic_line",
+      "input_3mf": "sip_monotonic_line.3mf",
+      "baseline_gcode": "baseline_sip_monotonic_line.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "internal_solid_infill_pattern_octagram_spiral",
+      "input_3mf": "sip_octagram_spiral.3mf",
+      "baseline_gcode": "baseline_sip_octagram_spiral.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "internal_solid_infill_pattern_rectilinear",
+      "input_3mf": "sip_rectilinear.3mf",
+      "baseline_gcode": "baseline_sip_rectilinear.gcode",
+      "expected_match": true
+    }
+  ]
+}

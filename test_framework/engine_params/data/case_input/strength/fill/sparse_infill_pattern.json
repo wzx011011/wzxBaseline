@@ -1,0 +1,160 @@
+{
+  "cases": [
+    {
+      "project_name": "sparse_infill_pattern_3dhoneycomp",
+      "input_3mf": "25%_noai_3dhoneycomp.3mf",
+      "baseline_gcode": "baseline_25%_noai_3dhoneycomp.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_adapativecubic",
+      "input_3mf": "25%_noai_adapativecubic.3mf",
+      "baseline_gcode": "baseline_25%_noai_adapativecubic.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_aligned_rectilinear",
+      "input_3mf": "25%_noai_aligned_rectilinear.3mf",
+      "baseline_gcode": "baseline_25%_noai_aligned_rectilinear.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_archimedean_chords",
+      "input_3mf": "25%_noai_archimedean_chords.3mf",
+      "baseline_gcode": "baseline_25%_noai_archimedean_chords.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_concentric",
+      "input_3mf": "25%_noai_concentric.3mf",
+      "baseline_gcode": "baseline_25%_noai_concentric.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_cross",
+      "input_3mf": "25%_noai_cross.3mf",
+      "baseline_gcode": "baseline_25%_noai_cross.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_cross3d",
+      "input_3mf": "25%_noai_cross3d.3mf",
+      "baseline_gcode": "baseline_25%_noai_cross3d.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_crosshatch",
+      "input_3mf": "25%_noai_crosshatch.3mf",
+      "baseline_gcode": "baseline_25%_noai_crosshatch.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_cubic",
+      "input_3mf": "25%_noai_cubic.3mf",
+      "baseline_gcode": "baseline_25%_noai_cubic.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_grid",
+      "input_3mf": "25%_noai_grid.3mf",
+      "baseline_gcode": "baseline_25%_noai_grid.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_gtpmsd",
+      "input_3mf": "25%_noai_gtpmsd.3mf",
+      "baseline_gcode": "baseline_25%_noai_gtpmsd.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_gtpmsfks",
+      "input_3mf": "25%_noai_gtpmsfks.3mf",
+      "baseline_gcode": "baseline_25%_noai_gtpmsfks.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_gtpmsg",
+      "input_3mf": "25%_noai_gtpmsg.3mf",
+      "baseline_gcode": "baseline_25%_noai_gtpmsg.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_gyroid",
+      "input_3mf": "25%_noai_gyroid.3mf",
+      "baseline_gcode": "baseline_25%_noai_gyroid.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_hilbert_curve",
+      "input_3mf": "25%_noai_hilbert_curve.3mf",
+      "baseline_gcode": "baseline_25%_noai_hilbert_curve.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_honeycomp",
+      "input_3mf": "25%_noai_honeycomp.3mf",
+      "baseline_gcode": "baseline_25%_noai_honeycomp.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_lightning",
+      "input_3mf": "25%_noai_lightning.3mf",
+      "baseline_gcode": "baseline_25%_noai_lightning.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_line",
+      "input_3mf": "25%_noai_line.3mf",
+      "baseline_gcode": "baseline_25%_noai_line.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_octagram_spiral",
+      "input_3mf": "25%_noai_octagram_spiral.3mf",
+      "baseline_gcode": "baseline_25%_noai_octagram_spiral.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_quarter_cubic",
+      "input_3mf": "25%_noai_quarter_cubic.3mf",
+      "baseline_gcode": "baseline_25%_noai_quarter_cubic.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_rectilinear",
+      "input_3mf": "25%_noai_rectilinear.3mf",
+      "baseline_gcode": "baseline_25%_noai_rectilinear.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_support_cubic",
+      "input_3mf": "25%_noai_support_cubic.3mf",
+      "baseline_gcode": "baseline_25%_noai_support_cubic.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_tetrahedral",
+      "input_3mf": "25%_noai_tetrahedral.3mf",
+      "baseline_gcode": "baseline_25%_noai_tetrahedral.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_tpmsd",
+      "input_3mf": "25%_noai_tpmsd.3mf",
+      "baseline_gcode": "baseline_25%_noai_tpmsd.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_triangles",
+      "input_3mf": "25%_noai_triangles.3mf",
+      "baseline_gcode": "baseline_25%_noai_triangles.gcode",
+      "expected_match": true
+    },
+    {
+      "project_name": "sparse_infill_pattern_trihexagon",
+      "input_3mf": "25%_noai_trihexagon.3mf",
+      "baseline_gcode": "baseline_25%_noai_trihexagon.gcode",
+      "expected_match": true
+    }
+  ]
+}

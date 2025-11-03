@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "wall_loops_3loops",
+      "input_3mf": "wall_loops_001.3mf",
+      "expected_wall_loops": 3
+    }
+  ]
+}
