@@ -6,7 +6,7 @@ import mmap
 import re
 from pathlib import Path
 from dataclasses import dataclass, field
-from typing import Optional, Tuple, List, Dict, Literal, Sequence
+from typing import Optional, Tuple, List, Dict, Literal, Sequence, Any, Callable
 
 from engine_params.src.gcode.constants import ExtrusionType
 from concurrent.futures import ThreadPoolExecutor
@@ -89,7 +89,7 @@ class Point:
     has_z: bool = False
     has_f: bool = False
     has_e: bool = False
-    offset: Optional[int] = None  # 该点所在行（分号前指令体）的起始字节偏移
+    offset: Optional[int] = None  # 该点所在行（分号前指令体）的起始字节偏移，主要是轮廓点的第一个点是在其实字节前面
     e: Optional[float] = None  # 当前行解析得到的 G1 E 值（绝对或相对，依据 G-code 模式）
     arc_direction: Optional[Literal["cw", "ccw"]] = None
     arc_center_offset: Optional[Tuple[float, float]] = None
@@ -332,7 +332,7 @@ class GCodeParser:
             return _index_layers_flat(mm, exe_beg, exe_end)
 
     # ---------- CONFIG ----------
-    def load_config(self) -> Dict[str, object]:
+    def load_config(self) -> Dict[str, object | float]:
         if self._cfg is not None:
             return self._cfg
         with self.path.open("rb") as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
@@ -1067,10 +1067,154 @@ class GCodeParser:
             out.append(obj_map if obj_map is not None else {})
         return out
 
+    @staticmethod
+    def compare_type_contours(
+            baseline_parser: "GCodeParser",
+            test_parser: "GCodeParser",
+            *,
+            object_id: int = 0,
+            types: Sequence["ExtrusionType | str | bytes"],
+            tolerance: float = 1e-6,
+            layer_filter: Optional[Callable[[int, int], bool]] = None,
+    ) -> Tuple[bool, Dict[str, Any]]:
+        """
+        通用轮廓对比助手：针对指定挤出类型，逐层比较基线与测试 G-code 的轮廓是否一致。
+
+        逻辑概要:
+          1. 通过 get_type_contours_per_layer_by_object 提取基线/测试中指定 object_id 的轮廓。
+          2. 如果层数不同直接判定不匹配；
+          3. 对于每一层的每种挤出类型，依次比较 polyline 数量以及 polyline 内的点坐标；
+          4. 任意层出现缺失类型、polylines 数量不一致，或点坐标超 tolerance 即记录 mismatch。
+          5. 返回总体 ok 结果与详细 mismatch 信息，便于上层测试输出定位。
+           6. 可选 layer_filter 提供层筛选（如忽略首尾层）。
+        """
+        if not types:
+            raise ValueError("compare_type_contours 需要至少一个挤出类型")
+
+        def _canon(name: "ExtrusionType | str | bytes") -> str:
+            if isinstance(name, ExtrusionType):
+                return name.value
+            resolved = ExtrusionType.to_str(name)
+            return resolved if resolved is not None else str(name)
+
+        type_names = [_canon(t) for t in types]
+
+        baseline_layers = baseline_parser.get_type_contours_per_layer_by_object(
+            object_id,
+            types=type_names,
+        ) or []
+        test_layers = test_parser.get_type_contours_per_layer_by_object(
+            object_id,
+            types=type_names,
+        ) or []
+
+        # 记录层数与差异细节，便于定位
+        details: Dict[str, Any] = {
+            "types": type_names,
+            "baseline_layer_count": len(baseline_layers),
+            "test_layer_count": len(test_layers),
+            "mismatch_layers": [],
+            "errors": [],
+        }
+
+        ok = True
+
+        # 层数不同直接失败
+        if len(baseline_layers) != len(test_layers):
+            ok = False
+            details["errors"].append(
+                f"Layer count mismatch: baseline={len(baseline_layers)}, test={len(test_layers)}"
+            )
+
+        layer_count = min(len(baseline_layers), len(test_layers))
+
+        for layer_idx in range(layer_count):
+            if layer_filter and not layer_filter(layer_idx, layer_count):
+                continue
+
+            baseline_layer = baseline_layers[layer_idx] or {}
+            test_layer = test_layers[layer_idx] or {}
+
+            for type_name in type_names:
+                baseline_polys = baseline_layer.get(type_name, [])
+                test_polys = test_layer.get(type_name, [])
+
+                # 双方均无该类型，跳过
+                if not baseline_polys and not test_polys:
+                    continue
+
+                if not baseline_polys and test_polys:
+                    ok = False
+                    details["mismatch_layers"].append({
+                        "layer_index": layer_idx,
+                        "type": type_name,
+                        "reason": "baseline-missing-type",
+                        "baseline_polylines": 0,
+                        "test_polylines": len(test_polys),
+                    })
+                    continue
+
+                if baseline_polys and not test_polys:
+                    ok = False
+                    details["mismatch_layers"].append({
+                        "layer_index": layer_idx,
+                        "type": type_name,
+                        "reason": "test-missing-type",
+                        "baseline_polylines": len(baseline_polys),
+                        "test_polylines": 0,
+                    })
+                    continue
+
+                if len(baseline_polys) != len(test_polys):
+                    ok = False
+                    details["mismatch_layers"].append({
+                        "layer_index": layer_idx,
+                        "type": type_name,
+                        "reason": "polyline-count-mismatch",
+                        "baseline_polylines": len(baseline_polys),
+                        "test_polylines": len(test_polys),
+                    })
+                    continue
+
+                for poly_idx, (base_poly, test_poly) in enumerate(zip(baseline_polys, test_polys)):
+                    if len(base_poly) != len(test_poly):
+                        ok = False
+                        details["mismatch_layers"].append({
+                            "layer_index": layer_idx,
+                            "type": type_name,
+                            "reason": "point-count-mismatch",
+                            "polyline_index": poly_idx,
+                            "baseline_points": len(base_poly),
+                            "test_points": len(test_poly),
+                        })
+                        continue
+
+                    for point_idx, (base_pt, test_pt) in enumerate(zip(base_poly, test_poly)):
+                        if (
+                                abs(base_pt.x - test_pt.x) > tolerance
+                                or abs(base_pt.y - test_pt.y) > tolerance
+                        ):
+                            ok = False
+                            details["mismatch_layers"].append({
+                                "layer_index": layer_idx,
+                                "type": type_name,
+                                "reason": "point-coordinate-mismatch",
+                                "polyline_index": poly_idx,
+                                "point_index": point_idx,
+                                "baseline_point": (base_pt.x, base_pt.y),
+                                "test_point": (test_pt.x, test_pt.y),
+                            })
+                            break
+                    else:
+                        continue
+                    break
+
+        return ok, details
+
 
 # ===================== 简单自检 =====================
 if __name__ == "__main__":
-    demo_path = Path(r"D:\C3DBaseline\test_framework\engine_params\data\models\strength\baseline_25%_noai_lightning.gcode")
+    demo_path = Path(r"C:\Users\118388\Desktop\automation\lhx_test.gcode")
     p = GCodeParser(demo_path)
 
     # 1) 层→物体窗口统计
@@ -1139,16 +1283,17 @@ if __name__ == "__main__":
     print("Self-check done.")
 
     # 9)
-    entity3 = [ExtrusionType.SPARSE_INFILL]
+    entity3 = [ExtrusionType.SUPPORT]
     sparse_infill_contour = p.get_type_contours_per_layer(types=entity3)
     print(f"[EX-OID] '{entity3}' object_id={target_oid} -> layers={len(sparse_infill_contour)}")
     if sparse_infill_contour:
         print(f"[EX-OID] L0 blocks count:", len(sparse_infill_contour[0]))
 
     # 10)
-    sparse_infill_contour2 = p.get_type_contours_per_layer_by_object(0, types=entity3)
+    contour2 = p.get_type_contours_per_layer_by_object(0, types=entity3)
 
-    p2 = GCodeParser(r"D:\C3DBaseline\test_framework\engine_params\output\mod_test_fill\test_sparse_infill_pattern_sparse_infill_pattern_lightning__1.gcode")
+    p2 = GCodeParser(
+        r"D:\C3DBaseline\test_framework\engine_params\output\mod_test_fill\test_sparse_infill_pattern_sparse_infill_pattern_lightning__1.gcode")
 
     slice_gcode_contour = p2.get_type_contours_per_layer_by_object(0, types=entity3)
     pass

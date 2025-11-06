@@ -1,0 +1,10 @@
+{
+    "cases": [
+        {
+            "project_name": "bridge_acceleration_8888",
+            "expected_bridge_acceleration": 8888.0,
+            "input_3mf": "bridge_acceleration_8888.3mf",
+            "tolerance": 1e-6
+        }
+    ]
+}

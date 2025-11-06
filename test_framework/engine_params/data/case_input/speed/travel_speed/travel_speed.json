@@ -1,0 +1,6 @@
+{
+  "project_name": "travel_speed_test",
+  "input_3mf": "cube.3mf",
+  "expected_travel_speed": 120.0,
+  "tolerance": 0.0
+}

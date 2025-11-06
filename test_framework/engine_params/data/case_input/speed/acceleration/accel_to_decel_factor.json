@@ -1,0 +1,10 @@
+{
+    "cases": [
+        {
+            "project_name": "accel_to_decel_factor_50percentage",
+            "expected_accel_to_decel_factor": 0.5,
+            "input_3mf": "accel_to_decel_factor_50percentage.3mf",
+            "tolerance": 1e-6
+        }
+    ]
+}

@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "project_name": "tpms_gradual_direction Y-axis",
+      "input_3mf": "tpms_gradual_direction_y.3mf",
+      "expected_match": true,
+      "baseline_gcode": "baseline_tpms_gradual_direction_y.gcode"
+    },
+    {
+      "project_name": "tpms_gradual_direction Z-axis",
+      "input_3mf": "tpms_gradual_direction_z.3mf",
+      "expected_match": true,
+      "baseline_gcode": "baseline_tpms_gradual_direction_z.gcode"
+    }
+  ]
+}

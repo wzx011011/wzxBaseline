@@ -14,7 +14,11 @@ from engine_params.src.gcode.strength.fill_check import (
     parse_top_surface_pattern,
     parse_bottom_surface_pattern,
     parse_solid_infill_direction,
-    parse_rotate_solid_infill_direction
+    parse_rotate_solid_infill_direction,
+    parse_infill_wall_overlap,
+    parse_tmps_start_infill_density,
+    parse_tmps_end_infill_density,
+    parse_tpms_gradual_direction
 )
 
 # ================== gap_fill_target ==================
@@ -308,6 +312,100 @@ def test_top_surface_pattern(
 
     assert ok, (
         f"top_surface_pattern expected {expected_match}, actual {actual_match}, details: {details}"
+    )
+    assert actual_match == expected_match, (
+        f"Pattern match result mismatch: expected {expected_match}, got {actual_match}"
+    )
+# ================== infill_wall_overlap ==================
+@pytest.mark.engine_params
+def test_infill_wall_overlap(
+        slice_and_export: Path,
+        baseline_gcode: str | Path,
+) -> None:
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    baseline_path = Path(baseline_gcode)
+    assert baseline_path.exists()
+
+    ok, details = parse_infill_wall_overlap(
+        gcode_path,
+        baseline_gcode_path=baseline_path,
+    )
+
+    assert ok, (
+        "infill_wall_overlap snapshot mismatch: "
+        f"baseline={details.get('baseline_gcode')}, "
+        f"mismatches={details.get('mismatch_layers')}, errors={details.get('errors')}"
+    )
+
+# ================== tmps_start_infill_density ==================
+@pytest.mark.engine_params
+def test_tmps_start_infill_density(
+        slice_and_export: Path,
+        expected_match: bool,
+        baseline_gcode: str,
+) -> None:
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual_match, details = parse_tmps_start_infill_density(
+        gcode_path,
+        baseline_gcode,
+        tolerance=1e-6,
+        object_id=0,
+    )
+
+    assert ok, (
+        f"tmps_start_infill_density expected {expected_match}, actual {actual_match}, details: {details}"
+    )
+    assert actual_match == expected_match, (
+        f"Pattern match result mismatch: expected {expected_match}, got {actual_match}"
+    )
+
+# ================== tmps_end_infill_density ==================
+@pytest.mark.engine_params
+def test_tmps_end_infill_density(
+        slice_and_export: Path,
+        expected_match: bool,
+        baseline_gcode: str,
+) -> None:
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual_match, details = parse_tmps_end_infill_density(
+        gcode_path,
+        baseline_gcode,
+        tolerance=1e-6,
+        object_id=0,
+    )
+
+    assert ok, (
+        f"tmps_end_infill_density expected {expected_match}, actual {actual_match}, details: {details}"
+    )
+    assert actual_match == expected_match, (
+        f"Pattern match result mismatch: expected {expected_match}, got {actual_match}"
+    )
+
+# ================== tpms_gradual_direction ==================
+@pytest.mark.engine_params
+def test_tpms_gradual_direction(
+        slice_and_export: Path,
+        expected_match: bool,
+        baseline_gcode: str,
+) -> None:
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual_match, details = parse_tpms_gradual_direction(
+        gcode_path,
+        baseline_gcode,
+        tolerance=1e-6,
+        object_id=0,
+    )
+
+    assert ok, (
+        f"tpms_gradual_direction expected {expected_match}, actual {actual_match}, details: {details}"
     )
     assert actual_match == expected_match, (
         f"Pattern match result mismatch: expected {expected_match}, got {actual_match}"

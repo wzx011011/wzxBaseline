@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "detect_narrow_internal_solid_infill_enable",
+      "input_3mf": "detect_narrow_internal_solid_infill_enable.3mf",
+      "expected_enabled": true
+    },
+    {
+      "project_name": "detect_narrow_internal_solid_infill_disable",
+      "input_3mf": "detect_narrow_internal_solid_infill_unenable.3mf",
+      "expected_enabled": false
+    }
+  ]
+}

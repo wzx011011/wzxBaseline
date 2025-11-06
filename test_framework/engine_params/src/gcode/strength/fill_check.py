@@ -353,6 +353,39 @@ def parse_sparse_infill_pattern(
     
     return ok, match, details
 
+
+# ================== infill_wall_overlap ==================
+def parse_infill_wall_overlap(
+        gcode_path: Path | str,
+        baseline_gcode_path: Path | str,
+        *,
+        tolerance: float = 1e-6,
+        object_id: int = 0,
+) -> Tuple[bool, Dict[str, Any]]:
+    """
+    通过快照对比的方式校验 infill_wall_overlap：仅比较非首尾层上的 Sparse/Internal solid/Bridge 轮廓。
+    """
+    test_parser = GCodeParser(Path(gcode_path))
+    baseline_parser = GCodeParser(Path(baseline_gcode_path))
+
+    def _layer_filter(layer_idx: int, total_layers: int) -> bool:
+        return 0 < layer_idx < total_layers - 1
+
+    ok, details = GCodeParser.compare_type_contours(
+        baseline_parser,
+        test_parser,
+        object_id=object_id,
+        types=[
+            ExtrusionType.SPARSE_INFILL,
+            ExtrusionType.INTERNAL_SOLID_INFILL,
+            ExtrusionType.INTERNAL_BRIDGE,
+        ],
+        tolerance=tolerance,
+        layer_filter=_layer_filter,
+    )
+    details["baseline_gcode"] = str(Path(baseline_gcode_path))
+    return ok, details
+
 def parse_solid_infill_direction(
         gcode_path: Path | str,
         expected_angle: float,
@@ -1738,7 +1771,7 @@ def parse_top_surface_pattern(
     
     return ok, match, details
 
-# ================== top_surface_pattern ==================
+# ================== bottom_surface_pattern ==================
 
 def parse_bottom_surface_pattern(
         gcode_path: Path | str,
@@ -1905,4 +1938,452 @@ def parse_bottom_surface_pattern(
     
     return ok, match, details
 
-# ================== bottom_surface_pattern ==================
+# ================== tmps_start_infill_density ==================
+def parse_tmps_start_infill_density(
+        gcode_path: Path | str,
+        baseline_gcode_path: Path | str,
+        tolerance: float = 1e-6,
+        object_id: int = 0,
+) -> Tuple[bool, bool, Dict[str, object]]:
+    """
+    通过快照对比的方式测试tmps_start_infill_density参数是否有效。
+    
+    比较测试G-code和基准G-code中所有层的SPARSE_INFILL挤出块的轮廓点是否一致。
+    """
+    # 加载基准G-code
+    baseline_parser = GCodeParser(Path(baseline_gcode_path))
+    baseline_contours = baseline_parser.get_type_contours_per_layer_by_object(
+        object_id,
+        types=[ExtrusionType.SPARSE_INFILL]
+    )
+    
+    # 加载测试G-code
+    test_parser = GCodeParser(Path(gcode_path))
+    test_contours = test_parser.get_type_contours_per_layer_by_object(
+        object_id,
+        types=[ExtrusionType.SPARSE_INFILL]
+    )
+    
+    # 初始化结果
+    ok = True
+    match = True
+    details = {
+        "baseline_layer_count": len(baseline_contours),
+        "test_layer_count": len(test_contours),
+        "mismatch_layers": [],
+        "error_details": []
+    }
+    
+    # 检查层数是否一致
+    if len(baseline_contours) != len(test_contours):
+        ok = False
+        match = False
+        details["error_details"].append(
+            f"Layer count mismatch: baseline has {len(baseline_contours)}, test has {len(test_contours)}"
+        )
+        return ok, match, details
+    
+    # 遍历每一层进行比较
+    for layer_idx in range(len(baseline_contours)):
+        baseline_layer = baseline_contours[layer_idx]
+        test_layer = test_contours[layer_idx]
+        
+        # 检查基准层中是否有SPARSE_INFILL
+        if ExtrusionType.SPARSE_INFILL not in baseline_layer:
+            # 基准层没有SPARSE_INFILL，测试层也不应该有
+            if ExtrusionType.SPARSE_INFILL in test_layer:
+                ok = False
+                match = False
+                mismatch_info = {
+                    "layer_idx": layer_idx,
+                    "reason": "Baseline has no SPARSE_INFILL but test does",
+                    "baseline_polylines": 0,
+                    "test_polylines": len(test_layer[ExtrusionType.SPARSE_INFILL]) if ExtrusionType.SPARSE_INFILL in test_layer else 0
+                }
+                details["mismatch_layers"].append(mismatch_info)
+            continue
+        
+        # 检查测试层中是否有SPARSE_INFILL
+        if ExtrusionType.SPARSE_INFILL not in test_layer:
+            ok = False
+            match = False
+            mismatch_info = {
+                "layer_idx": layer_idx,
+                "reason": "Test has no SPARSE_INFILL but baseline does",
+                "baseline_polylines": len(baseline_layer[ExtrusionType.SPARSE_INFILL]),
+                "test_polylines": 0
+            }
+            details["mismatch_layers"].append(mismatch_info)
+            continue
+        
+        # 获取轮廓
+        baseline_polylines = baseline_layer[ExtrusionType.SPARSE_INFILL]
+        test_polylines = test_layer[ExtrusionType.SPARSE_INFILL]
+        
+        # 检查polyline数量是否一致
+        if len(baseline_polylines) != len(test_polylines):
+            ok = False
+            match = False
+            mismatch_info = {
+                "layer_idx": layer_idx,
+                "reason": "Polyline count mismatch",
+                "baseline_polylines": len(baseline_polylines),
+                "test_polylines": len(test_polylines)
+            }
+            details["mismatch_layers"].append(mismatch_info)
+            continue
+        
+        # 遍历每条polyline进行比较
+        polyline_match = True
+        for poly_idx in range(len(baseline_polylines)):
+            baseline_polyline = baseline_polylines[poly_idx]
+            test_polyline = test_polylines[poly_idx]
+            
+            # 检查点数是否一致
+            if len(baseline_polyline) != len(test_polyline):
+                ok = False
+                match = False
+                polyline_match = False
+                details["error_details"].append(
+                    f"Layer {layer_idx}, Polyline {poly_idx}: Point count mismatch - baseline: {len(baseline_polyline)}, test: {len(test_polyline)}"
+                )
+                continue
+            
+            # 比较每个点的坐标
+            for point_idx in range(len(baseline_polyline)):
+                baseline_point = baseline_polyline[point_idx]
+                test_point = test_polyline[point_idx]
+                
+                # 检查x坐标
+                if abs(baseline_point.x - test_point.x) > tolerance:
+                    ok = False
+                    match = False
+                    polyline_match = False
+                    details["error_details"].append(
+                        f"Layer {layer_idx}, Polyline {poly_idx}, Point {point_idx}: X coordinate mismatch - baseline: {baseline_point.x}, test: {test_point.x}"
+                    )
+                
+                # 检查y坐标
+                if abs(baseline_point.y - test_point.y) > tolerance:
+                    ok = False
+                    match = False
+                    polyline_match = False
+                    details["error_details"].append(
+                        f"Layer {layer_idx}, Polyline {poly_idx}, Point {point_idx}: Y coordinate mismatch - baseline: {baseline_point.y}, test: {test_point.y}"
+                    )
+        
+        # 如果该层有不匹配的polyline，记录信息
+        if not polyline_match:
+            mismatch_info = {
+                "layer_idx": layer_idx,
+                "reason": "Point coordinate mismatches found in polylines",
+                "baseline_polylines": len(baseline_polylines),
+                "test_polylines": len(test_polylines)
+            }
+            details["mismatch_layers"].append(mismatch_info)
+    
+    # 如果没有发现不匹配，记录成功信息
+    if match:
+        details["error_details"].append("All layers, polylines and points match within tolerance")
+    
+    return ok, match, details
+
+# ================== tmps_end_infill_density ==================
+def parse_tmps_end_infill_density(
+        gcode_path: Path | str,
+        baseline_gcode_path: Path | str,
+        tolerance: float = 1e-6,
+        object_id: int = 0,
+) -> Tuple[bool, bool, Dict[str, object]]:
+    """
+    通过快照对比的方式测试tmps_end_infill_density参数是否有效。
+    
+    比较测试G-code和基准G-code中所有层的SPARSE_INFILL挤出块的轮廓点是否一致。
+    """
+    # 加载基准G-code
+    baseline_parser = GCodeParser(Path(baseline_gcode_path))
+    baseline_contours = baseline_parser.get_type_contours_per_layer_by_object(
+        object_id,
+        types=[ExtrusionType.SPARSE_INFILL]
+    )
+    
+    # 加载测试G-code
+    test_parser = GCodeParser(Path(gcode_path))
+    test_contours = test_parser.get_type_contours_per_layer_by_object(
+        object_id,
+        types=[ExtrusionType.SPARSE_INFILL]
+    )
+    
+    # 初始化结果
+    ok = True
+    match = True
+    details = {
+        "baseline_layer_count": len(baseline_contours),
+        "test_layer_count": len(test_contours),
+        "mismatch_layers": [],
+        "error_details": []
+    }
+    
+    # 检查层数是否一致
+    if len(baseline_contours) != len(test_contours):
+        ok = False
+        match = False
+        details["error_details"].append(
+            f"Layer count mismatch: baseline has {len(baseline_contours)}, test has {len(test_contours)}"
+        )
+        return ok, match, details
+    
+    # 遍历每一层进行比较
+    for layer_idx in range(len(baseline_contours)):
+        baseline_layer = baseline_contours[layer_idx]
+        test_layer = test_contours[layer_idx]
+        
+        # 检查基准层中是否有SPARSE_INFILL
+        if ExtrusionType.SPARSE_INFILL not in baseline_layer:
+            # 基准层没有SPARSE_INFILL，测试层也不应该有
+            if ExtrusionType.SPARSE_INFILL in test_layer:
+                ok = False
+                match = False
+                mismatch_info = {
+                    "layer_idx": layer_idx,
+                    "reason": "Baseline has no SPARSE_INFILL but test does",
+                    "baseline_polylines": 0,
+                    "test_polylines": len(test_layer[ExtrusionType.SPARSE_INFILL]) if ExtrusionType.SPARSE_INFILL in test_layer else 0
+                }
+                details["mismatch_layers"].append(mismatch_info)
+            continue
+        
+        # 检查测试层中是否有SPARSE_INFILL
+        if ExtrusionType.SPARSE_INFILL not in test_layer:
+            ok = False
+            match = False
+            mismatch_info = {
+                "layer_idx": layer_idx,
+                "reason": "Test has no SPARSE_INFILL but baseline does",
+                "baseline_polylines": len(baseline_layer[ExtrusionType.SPARSE_INFILL]),
+                "test_polylines": 0
+            }
+            details["mismatch_layers"].append(mismatch_info)
+            continue
+        
+        # 获取轮廓
+        baseline_polylines = baseline_layer[ExtrusionType.SPARSE_INFILL]
+        test_polylines = test_layer[ExtrusionType.SPARSE_INFILL]
+        
+        # 检查polyline数量是否一致
+        if len(baseline_polylines) != len(test_polylines):
+            ok = False
+            match = False
+            mismatch_info = {
+                "layer_idx": layer_idx,
+                "reason": "Polyline count mismatch",
+                "baseline_polylines": len(baseline_polylines),
+                "test_polylines": len(test_polylines)
+            }
+            details["mismatch_layers"].append(mismatch_info)
+            continue
+        
+        # 遍历每条polyline进行比较
+        polyline_match = True
+        for poly_idx in range(len(baseline_polylines)):
+            baseline_polyline = baseline_polylines[poly_idx]
+            test_polyline = test_polylines[poly_idx]
+            
+            # 检查点数是否一致
+            if len(baseline_polyline) != len(test_polyline):
+                ok = False
+                match = False
+                polyline_match = False
+                details["error_details"].append(
+                    f"Layer {layer_idx}, Polyline {poly_idx}: Point count mismatch - baseline: {len(baseline_polyline)}, test: {len(test_polyline)}"
+                )
+                continue
+            
+            # 比较每个点的坐标
+            for point_idx in range(len(baseline_polyline)):
+                baseline_point = baseline_polyline[point_idx]
+                test_point = test_polyline[point_idx]
+                
+                # 检查x坐标
+                if abs(baseline_point.x - test_point.x) > tolerance:
+                    ok = False
+                    match = False
+                    polyline_match = False
+                    details["error_details"].append(
+                        f"Layer {layer_idx}, Polyline {poly_idx}, Point {point_idx}: X coordinate mismatch - baseline: {baseline_point.x}, test: {test_point.x}"
+                    )
+                
+                # 检查y坐标
+                if abs(baseline_point.y - test_point.y) > tolerance:
+                    ok = False
+                    match = False
+                    polyline_match = False
+                    details["error_details"].append(
+                        f"Layer {layer_idx}, Polyline {poly_idx}, Point {point_idx}: Y coordinate mismatch - baseline: {baseline_point.y}, test: {test_point.y}"
+                    )
+        
+        # 如果该层有不匹配的polyline，记录信息
+        if not polyline_match:
+            mismatch_info = {
+                "layer_idx": layer_idx,
+                "reason": "Point coordinate mismatches found in polylines",
+                "baseline_polylines": len(baseline_polylines),
+                "test_polylines": len(test_polylines)
+            }
+            details["mismatch_layers"].append(mismatch_info)
+    
+    # 如果没有发现不匹配，记录成功信息
+    if match:
+        details["error_details"].append("All layers, polylines and points match within tolerance")
+    
+    return ok, match, details
+
+# ================== tpms_gradual_direction ==================
+def parse_tpms_gradual_direction(
+        gcode_path: Path | str,
+        baseline_gcode_path: Path | str,
+        tolerance: float = 1e-6,
+        object_id: int = 0,
+) -> Tuple[bool, bool, Dict[str, object]]:
+    """
+    通过快照对比的方式测试tpms_gradual_direction参数是否有效。
+    
+    比较测试G-code和基准G-code中所有层的SPARSE_INFILL挤出块的轮廓点是否一致。
+    """
+    # 加载基准G-code
+    baseline_parser = GCodeParser(Path(baseline_gcode_path))
+    baseline_contours = baseline_parser.get_type_contours_per_layer_by_object(
+        object_id,
+        types=[ExtrusionType.SPARSE_INFILL]
+    )
+    
+    # 加载测试G-code
+    test_parser = GCodeParser(Path(gcode_path))
+    test_contours = test_parser.get_type_contours_per_layer_by_object(
+        object_id,
+        types=[ExtrusionType.SPARSE_INFILL]
+    )
+    
+    # 初始化结果
+    ok = True
+    match = True
+    details = {
+        "baseline_layer_count": len(baseline_contours),
+        "test_layer_count": len(test_contours),
+        "mismatch_layers": [],
+        "error_details": []
+    }
+    
+    # 检查层数是否一致
+    if len(baseline_contours) != len(test_contours):
+        ok = False
+        match = False
+        details["error_details"].append(
+            f"Layer count mismatch: baseline has {len(baseline_contours)}, test has {len(test_contours)}"
+        )
+        return ok, match, details
+    
+    # 遍历每一层进行比较
+    for layer_idx in range(len(baseline_contours)):
+        baseline_layer = baseline_contours[layer_idx]
+        test_layer = test_contours[layer_idx]
+        
+        # 检查基准层中是否有SPARSE_INFILL
+        if ExtrusionType.SPARSE_INFILL not in baseline_layer:
+            # 基准层没有SPARSE_INFILL，测试层也不应该有
+            if ExtrusionType.SPARSE_INFILL in test_layer:
+                ok = False
+                match = False
+                mismatch_info = {
+                    "layer_idx": layer_idx,
+                    "reason": "Baseline has no SPARSE_INFILL but test does",
+                    "baseline_polylines": 0,
+                    "test_polylines": len(test_layer[ExtrusionType.SPARSE_INFILL]) if ExtrusionType.SPARSE_INFILL in test_layer else 0
+                }
+                details["mismatch_layers"].append(mismatch_info)
+            continue
+        
+        # 检查测试层中是否有SPARSE_INFILL
+        if ExtrusionType.SPARSE_INFILL not in test_layer:
+            ok = False
+            match = False
+            mismatch_info = {
+                "layer_idx": layer_idx,
+                "reason": "Test has no SPARSE_INFILL but baseline does",
+                "baseline_polylines": len(baseline_layer[ExtrusionType.SPARSE_INFILL]),
+                "test_polylines": 0
+            }
+            details["mismatch_layers"].append(mismatch_info)
+            continue
+        
+        # 获取轮廓
+        baseline_polylines = baseline_layer[ExtrusionType.SPARSE_INFILL]
+        test_polylines = test_layer[ExtrusionType.SPARSE_INFILL]
+        
+        # 检查polyline数量是否一致
+        if len(baseline_polylines) != len(test_polylines):
+            ok = False
+            match = False
+            mismatch_info = {
+                "layer_idx": layer_idx,
+                "reason": "Polyline count mismatch",
+                "baseline_polylines": len(baseline_polylines),
+                "test_polylines": len(test_polylines)
+            }
+            details["mismatch_layers"].append(mismatch_info)
+            continue
+        
+        # 遍历每条polyline进行比较
+        polyline_match = True
+        for poly_idx in range(len(baseline_polylines)):
+            baseline_polyline = baseline_polylines[poly_idx]
+            test_polyline = test_polylines[poly_idx]
+            
+            # 检查点数是否一致
+            if len(baseline_polyline) != len(test_polyline):
+                ok = False
+                match = False
+                polyline_match = False
+                details["error_details"].append(
+                    f"Layer {layer_idx}, Polyline {poly_idx}: Point count mismatch - baseline: {len(baseline_polyline)}, test: {len(test_polyline)}"
+                )
+                continue
+            
+            # 比较每个点的坐标
+            for point_idx in range(len(baseline_polyline)):
+                baseline_point = baseline_polyline[point_idx]
+                test_point = test_polyline[point_idx]
+                
+                # 检查x坐标
+                if abs(baseline_point.x - test_point.x) > tolerance:
+                    ok = False
+                    match = False
+                    polyline_match = False
+                    details["error_details"].append(
+                        f"Layer {layer_idx}, Polyline {poly_idx}, Point {point_idx}: X coordinate mismatch - baseline: {baseline_point.x}, test: {test_point.x}"
+                    )
+                
+                # 检查y坐标
+                if abs(baseline_point.y - test_point.y) > tolerance:
+                    ok = False
+                    match = False
+                    polyline_match = False
+                    details["error_details"].append(
+                        f"Layer {layer_idx}, Polyline {poly_idx}, Point {point_idx}: Y coordinate mismatch - baseline: {baseline_point.y}, test: {test_point.y}"
+                    )
+        
+        # 如果该层有不匹配的polyline，记录信息
+        if not polyline_match:
+            mismatch_info = {
+                "layer_idx": layer_idx,
+                "reason": "Point coordinate mismatches found in polylines",
+                "baseline_polylines": len(baseline_polylines),
+                "test_polylines": len(test_polylines)
+            }
+            details["mismatch_layers"].append(mismatch_info)
+    
+    # 如果没有发现不匹配，记录成功信息
+    if match:
+        details["error_details"].append("All layers, polylines and points match within tolerance")
+    
+    return ok, match, details

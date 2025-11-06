@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {
+        "input_3mf": "alternate_extra_wall_on.3mf",
+        "project_name": "alternate_extra_wall",
+        "expected_on": true,
+        "baseline_gcode": "alternate_extra_wall_on.gcode"
+    }
+  ]
+}

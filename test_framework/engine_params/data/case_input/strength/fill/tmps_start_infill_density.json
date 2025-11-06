@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {
+      "project_name": "tmps_start_infill_density @25%",
+      "input_3mf": "tmps_start_infill_density_25.3mf",
+      "expected_match": true,
+      "baseline_gcode": "baseline_tmps_start_infill_density_25.gcode"
+    }
+  ]
+}

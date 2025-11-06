@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {
+      "input_3mf": "initial_layer_infill_speed_80.3mf",
+      "project_name": "initial_layer_infill_speed_80",
+      "expected_initial_layer_infill_speed": 80.0,
+      "tolerance": 1e-6
+    }
+  ]
+}

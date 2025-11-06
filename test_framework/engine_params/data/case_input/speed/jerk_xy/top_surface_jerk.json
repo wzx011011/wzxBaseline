@@ -1,0 +1,9 @@
+{
+    "cases": [
+        {
+            "project_name": "top_surface_jerk_10",
+            "expected_top_surface_jerk": 10.0,
+            "input_3mf": "top_surface_jerk_10.3mf"
+        }
+    ]
+}

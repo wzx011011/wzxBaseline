@@ -1,0 +1,10 @@
+{
+    "cases": [
+        {
+            "project_name": "inner_wall_jerk_10",
+            "expected_inner_wall_jerk": 10.0,
+            "input_3mf": "inner_wall_jerk_10.3mf",
+            "tolerance": 1e-6
+        }
+    ]
+}

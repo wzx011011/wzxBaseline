@@ -423,5 +423,5 @@ def parse_initial_layer_line_width(
 
 
 if __name__ == "__main__":
-    w = compute_line_width(0.69179, 19.2, 0.2, 1.75, 0.95)
+    w = compute_line_width(1.37489, 18.186, 0.2, 1.75, 0.95)
     print(w)

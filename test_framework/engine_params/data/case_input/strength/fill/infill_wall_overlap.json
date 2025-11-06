@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "infill_wall_overlap_100",
+      "input_3mf": "infill_wall_overlap_100percentage.3mf",
+      "baseline_gcode": "baseline_infill_wall_overlap_100percentage.gcode"
+    }
+  ]
+}
