@@ -2,10 +2,17 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
+import math
 
 from engine_params.src.gcode.GCodeParser import GCodeParser
 from engine_params.src.gcode.GCodeParserEx import GCodeParserEx
 from engine_params.src.gcode.constants import ExtrusionType
+from engine_params.src.gcode.quality.line_width_check import (
+    compute_line_width,
+    _resolve_flow_ratio,
+    _resolve_filament_diameter,
+    _resolve_layer_height,
+)
 
 
 def parse_wall_loops(
@@ -172,3 +179,143 @@ def parse_alternate_extra_wall(
             message = "Some layers have inconsistent inner wall count"
     
     return ok, message, bad_layers
+
+
+# ================== detect_thin_wall ==================
+def parse_detect_thin_wall(
+        gcode_path: Path | str,
+        expected_on: bool,
+        tolerance: float = 0.001,
+) -> Tuple[bool, bool, Dict[str, Any]]:
+    """
+    检测薄壁选项：非首层 OUTER_WALL 每层应分成两个孤岛，其中一条线宽多变、一条线宽恒定。
+    - 使用 GCodeParserEx，跳过首层。
+    - 周长与线宽计算均补充首尾闭合段；线宽按逐段 E/长度 + 层高公式计算。
+    """
+    path_obj = Path(gcode_path)
+    parser = GCodeParserEx(path_obj)
+
+    cfg_meta = parser.load_config() or {}
+    cfg = {k: (v.value if hasattr(v, "value") else v) for k, v in cfg_meta.items()}
+    flow_ratio = _resolve_flow_ratio(cfg)
+    filament_diameter = _resolve_filament_diameter(cfg)
+    layer_meta = parser.extract_layers()  # [(z, h), ...]
+
+    layers = parser.get_type_contours_per_layer(
+        types=[ExtrusionType.OUTER_WALL],
+        skip_layers=[0],
+    )
+
+    matches: List[Dict[str, Any]] = []
+    mismatches: List[Dict[str, Any]] = []
+    layers_checked = 0
+
+    def _segment_widths(path_points, h: Optional[float]) -> List[float]:
+        """
+        逐段计算线宽：
+        - Point.e 已是当前段的挤出量（delta E），直接使用 b.e；
+        - 不补首尾闭合段，按相邻点粒度累计。
+        """
+        if h is None or h <= 0:
+            return []
+        pts = path_points or []
+        out: List[float] = []
+        for a, b in zip(pts, pts[1:]):
+            if b.e is None:
+                continue
+            dE = b.e
+            if dE is None or dE <= 0:
+                continue
+            seg_len = math.hypot(b.x - a.x, b.y - a.y)
+            if seg_len <= 0:
+                continue
+            try:
+                w = compute_line_width(dE, seg_len, h, d=filament_diameter, flow_ratio=flow_ratio)
+                out.append(w)
+            except Exception:
+                continue
+        return out
+
+    if not layers:
+        details = {
+            "layers_checked": 0,
+            "matches": matches,
+            "mismatches": mismatches,
+            "note": "No layers parsed; check slicing output or markers.",
+            "match": False,
+        }
+        return False, expected_on, details
+
+    for layer in layers:
+        if not layer.regions:
+            continue
+        h = _resolve_layer_height(layer_meta, layer.index)
+        for oid, type_map in (layer.regions or {}).items():
+            region = type_map.get(ExtrusionType.OUTER_WALL.value)
+            if region is None:
+                continue
+            paths = region.paths or []
+            if len(paths) != 2:
+                mismatches.append({
+                    "layer": layer.index,
+                    "object_id": oid,
+                    "reason": "path_count_mismatch",
+                    "path_count": len(paths),
+                })
+                continue
+
+            layers_checked += 1
+            stats = []
+            for p in paths:
+                widths = _segment_widths(p.points, h)
+                if widths:
+                    vmin, vmax = min(widths), max(widths)
+                    var = (vmax - vmin) > tolerance
+                else:
+                    vmin = vmax = None
+                    var = False
+                stats.append({
+                    "widths": widths,
+                    "min_width": vmin,
+                    "max_width": vmax,
+                    "variable": var,
+                })
+
+            if len(stats) != 2:
+                mismatches.append({
+                    "layer": layer.index,
+                    "object_id": oid,
+                    "reason": "stats_missing",
+                })
+                continue
+
+            var_counts = sum(1 for s in stats if s["variable"])
+            const_counts = sum(1 for s in stats if not s["variable"])
+
+            record = {
+                "layer": layer.index,
+                "object_id": oid,
+                "paths": stats,
+            }
+            if var_counts == 1 and const_counts == 1:
+                record["status"] = "ok"
+                matches.append(record)
+            else:
+                record["status"] = "pattern_mismatch"
+                record["var_counts"] = var_counts
+                record["const_counts"] = const_counts
+                mismatches.append(record)
+
+    actual_on = layers_checked > 0 and not mismatches
+    ok = (actual_on == expected_on)
+    details = {
+        "layers_checked": layers_checked,
+        "expected_on": expected_on,
+        "actual_on": actual_on,
+        "tolerance": tolerance,
+        "matches": matches,
+        "mismatches": mismatches,
+        "note": None if layers_checked else "No eligible outer wall regions.",
+        "match": ok,
+    }
+    return ok, expected_on, details

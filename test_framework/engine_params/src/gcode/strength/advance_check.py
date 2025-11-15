@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from engine_params.src.gcode.GCodeParser import GCodeParser, Point
+from engine_params.src.gcode.GCodeParserEx import GCodeParserEx
 from engine_params.src.gcode.constants import ExtrusionType
 
 
@@ -292,3 +293,217 @@ def parse_minimum_sparse_infill_area(
     return ok, details
 
 
+
+
+# ================== infill_combination ==================
+def parse_infill_combination(
+        gcode_path: Path | str,
+        expected_enabled: bool,
+        expected_interval: Optional[int] = None,
+) -> Tuple[bool, bool, Dict[str, Any]]:
+    """
+    稀疏填充合并：N = int(nozzle_diameter / layer_height)，
+    检查稀疏填充层之间的间隔是否为 N-1（跳过首层）。
+    """
+    path_obj = Path(gcode_path)
+    parser = GCodeParserEx(path_obj)
+
+    cfg = parser.load_config() or {}
+    nozzle_cfg = cfg.get("nozzle_diameter")
+
+    def _to_float(v) -> Optional[float]:
+        try:
+            return float(getattr(v, "value", v))
+        except (TypeError, ValueError):
+            return None
+
+    nozzle_diameter = _to_float(nozzle_cfg)
+    if nozzle_diameter is None or nozzle_diameter <= 0:
+        details = {
+            "expected_enabled": expected_enabled,
+            "nozzle_diameter": nozzle_diameter,
+            "layer_height": None,
+            "interval_N": None,
+            "sparse_layers": [],
+            "diffs": [],
+            "note": "Invalid nozzle_diameter in config.",
+            "match": False,
+        }
+        return False, expected_enabled, details
+
+    layers_meta = parser.extract_layers()
+    layer_height = None
+    for _, h in layers_meta:
+        if h and h > 0:
+            layer_height = float(h)
+            break
+
+    if layer_height is None or layer_height <= 0:
+        details = {
+            "expected_enabled": expected_enabled,
+            "nozzle_diameter": nozzle_diameter,
+            "layer_height": layer_height,
+            "interval_N": None,
+            "sparse_layers": [],
+            "diffs": [],
+            "note": "Cannot resolve layer_height.",
+            "match": False,
+        }
+        return False, expected_enabled, details
+
+    interval_N = int(nozzle_diameter / layer_height)
+    interval_N = max(1, interval_N)
+
+    layers = parser.get_type_contours_per_layer(types=[ExtrusionType.SPARSE_INFILL], skip_layers=[0])
+    sparse_layers: List[int] = []
+    for layer in layers:
+        for _oid, type_map in (layer.regions or {}).items():
+            if type_map.get(ExtrusionType.SPARSE_INFILL.value):
+                sparse_layers.append(layer.index)
+                break
+    sparse_layers = sorted(set(sparse_layers))
+
+    diffs = [b - a for a, b in zip(sparse_layers, sparse_layers[1:])]
+    expect_diff = interval_N - 1
+    all_good = len(sparse_layers) > 1 and all(abs(d - expect_diff) < 1e-6 for d in diffs)
+    actual_enabled = all_good
+
+    details = {
+        "expected_enabled": expected_enabled,
+        "actual_enabled": actual_enabled,
+        "nozzle_diameter": nozzle_diameter,
+        "layer_height": layer_height,
+        "interval_N": interval_N,
+        "expected_diff": expect_diff,
+        "sparse_layers": sparse_layers,
+        "diffs": diffs,
+        "expected_interval": expected_interval,
+        "note": None if sparse_layers else "No sparse infill layers detected.",
+        "match": (actual_enabled == expected_enabled) and (expected_interval is None or expect_diff == expected_interval),
+    }
+
+    return details["match"], expected_enabled, details
+
+
+# ================== ensure_vertical_shell_thickness ==================
+def parse_ensure_vertical_shell_thickness(
+        gcode_path: Path | str,
+        expected_value: str,
+        baseline_gcode: Path | str,
+        *,
+        tolerance: float = 1e-6,
+) -> Tuple[bool, str, Dict[str, Any]]:
+    """
+    ensure_vertical_shell_thickness 快照校验：与基线 G-code 逐层对比外/内墙轮廓。
+    - 轮廓点顺序可能不同，使用坐标匹配（容差）消除顺序影响。
+    - 仅对比 Outer/Inner wall 轮廓，要求点数相等且坐标落在容差内。
+    """
+    path_obj = Path(gcode_path)
+    baseline_obj = Path(baseline_gcode)
+    parser_test = GCodeParserEx(path_obj)
+    parser_base = GCodeParserEx(baseline_obj)
+
+    target_types = [ExtrusionType.OUTER_WALL, ExtrusionType.INNER_WALL]
+    type_names = [t.value for t in target_types]
+
+    def _extract(parser: GCodeParserEx) -> Dict[int, Dict[str, List[List[Tuple[float, float]]]]]:
+        """提取每层指定挤出类型的轮廓坐标。"""
+        layers = parser.get_type_contours_per_layer(types=target_types) or []
+        out: Dict[int, Dict[str, List[List[Tuple[float, float]]]]] = {}
+        for layer in layers:
+            for _oid, type_map in (layer.regions or {}).items():
+                for tname, region in (type_map or {}).items():
+                    if tname not in type_names or not region:
+                        continue
+                    for path in region.paths or []:
+                        pts = [(p.x, p.y) for p in (path.points or [])]
+                        out.setdefault(layer.index, {}).setdefault(tname, []).append(pts)
+        return out
+
+    base_layers = _extract(parser_base)
+    test_layers = _extract(parser_test)
+
+    def _points_match(base_pts: List[Tuple[float, float]], cand_pts: List[Tuple[float, float]]) -> bool:
+        """忽略点顺序的匹配，逐点寻找未使用的近邻。"""
+        if len(base_pts) != len(cand_pts):
+            return False
+        used: set[int] = set()
+        for bx, by in base_pts:
+            found = False
+            for idx, (cx, cy) in enumerate(cand_pts):
+                if idx in used:
+                    continue
+                if abs(bx - cx) <= tolerance and abs(by - cy) <= tolerance:
+                    used.add(idx)
+                    found = True
+                    break
+            if not found:
+                return False
+        return True
+
+    mismatches: List[Dict[str, Any]] = []
+    checked_layers: List[int] = []
+
+    all_layer_indices = sorted(set(base_layers.keys()) | set(test_layers.keys()))
+
+    for layer_idx in all_layer_indices:
+        base_map = base_layers.get(layer_idx, {})
+        test_map = test_layers.get(layer_idx, {})
+        checked_layers.append(layer_idx)
+
+        for tname in type_names:
+            base_polys = list(base_map.get(tname, []))
+            test_polys = list(test_map.get(tname, []))
+
+            if not base_polys and not test_polys:
+                continue
+
+            if len(base_polys) != len(test_polys):
+                mismatches.append({
+                    "layer": layer_idx,
+                    "type": tname,
+                    "reason": "polyline-count-mismatch",
+                    "baseline_polylines": len(base_polys),
+                    "test_polylines": len(test_polys),
+                })
+                continue
+
+            # 逐条 polyline 进行无序匹配
+            remaining = test_polys.copy()
+            for base_idx, base_poly in enumerate(base_polys):
+                found_idx = None
+                for cand_idx, cand_poly in enumerate(remaining):
+                    if _points_match(base_poly, cand_poly):
+                        found_idx = cand_idx
+                        break
+                if found_idx is not None:
+                    remaining.pop(found_idx)
+                else:
+                    mismatches.append({
+                        "layer": layer_idx,
+                        "type": tname,
+                        "reason": "polyline-mismatch",
+                        "polyline_index": base_idx,
+                        "baseline_points": len(base_poly),
+                        "test_candidates": len(test_polys),
+                    })
+                    break
+
+            if remaining:
+                mismatches.append({
+                    "layer": layer_idx,
+                    "type": tname,
+                    "reason": "extra-polylines",
+                    "extra_count": len(remaining),
+                })
+
+    ok = not mismatches
+    details = {
+        "expected_value": expected_value,
+        "baseline_gcode": str(baseline_obj),
+        "tolerance": tolerance,
+        "checked_layers": checked_layers,
+        "mismatches": mismatches,
+        "match": ok,
+    }
+    return ok, expected_value, details

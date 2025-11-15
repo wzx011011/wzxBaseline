@@ -1,0 +1,10 @@
+{
+    "cases": [
+        {
+            "project_name": "small_perimeter_speed",
+            "input_3mf": "small_perimeter_speed_88.3mf",
+            "expected_small_perimeter_speed": 88.0,
+            "tolerance": 1e-6
+        }
+    ]
+}

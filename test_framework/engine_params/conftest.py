@@ -58,6 +58,8 @@ def _get_exe_path_from_cli_or_env(config: "pytest.Config") -> Optional[str]:
         return None
 
     p = Path(exe).expanduser()
+    # TODO，这里记得删掉
+    p = Path(r"E:\Creality Print 7 Alp\Creality Print 7.0 Alpha\CrealityPrint.exe")
     if not (p.exists() and p.is_file()):
         raise pytest.UsageError(
             f"指定的切片器路径不存在或不是文件: {p}。"
@@ -72,6 +74,7 @@ def _get_exe_path_from_cli_or_env(config: "pytest.Config") -> Optional[str]:
 @pytest.fixture(scope="session")
 def engine_manager(pytestconfig):
     exe_path = _get_exe_path_from_cli_or_env(pytestconfig)
+    exe_path = Path(r"E:\Creality Print 7 Alp\Creality Print 7.0 Alpha\CrealityPrint.exe")
     if not exe_path:
         pytest.skip(f"未提供 --slicer-exe 或 {ENV_KEY}，跳过依赖引擎的会话")
 
@@ -107,7 +110,7 @@ def engine_injector(engine_manager, pytestconfig):
 
         def submit(self, *args, **kwargs):
             """
-                在这里决定怎么处理引擎奔溃错误，要区分case断言失败以及引擎奔溃的错误。
+                - TODO: 在这里决定怎么处理引擎奔溃错误，要区分case断言失败以及引擎奔溃的错误。
             """
             try:
                 return self._mgr.submit(*args, **kwargs)
@@ -377,7 +380,7 @@ def pytest_generate_tests(metafunc: pytest.Metafunc):
     - JSON：test_framework/engine_params/data/case_input/<module>/<group>/<param_name>.json
     - 模型/基线：test_framework/engine_params/data/models/<module>/<group>/<param_name>/<filename>
     - 参数注入顺序：slice_and_export → expected_*（按函数声明顺序）→ extra（按函数声明顺序）
-    - 仅当测试函数**声明了** slice_and_export 时才注入
+    - 仅当测试函数声明了 slice_and_export 时才注入
     """
     # 仅看“测试函数声明的形参”，避免把隐式/autouse fixture 混进来
     declared_params = tuple(inspect.signature(metafunc.function).parameters.keys())
@@ -435,19 +438,6 @@ def pytest_generate_tests(metafunc: pytest.Metafunc):
 # =================                 =================
 #                    引擎切片固定步骤fixture
 # =================                 =================
-
-# slice_and_export: 强制通过 request.param 提供运行参数
-# request.param 必须为 dict，必要键：
-#   - "input_3mf": str (必须存在)
-# 可选键：
-#   - "output_gcode": str(目标路径)
-#   - "slice_btn_id": int
-#   - "timeouts": dict with {"load": int, "export": int, "slice": int, "settle": float, "wait": float}
-#
-# 示例：
-# @pytest.mark.parametrize("slice_and_export", [
-#     {"input_3mf": r"C:\a.3mf"}
-# ], indirect=True)
 @pytest.fixture
 def slice_and_export(request, engine_injector, gcode_path_factory):
     # ---- 验参（严格：必须提供 request.param） ----
@@ -481,7 +471,6 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
 
     # 确保父目录存在
     output_gcode.parent.mkdir(parents=True, exist_ok=True)
-
     # ---- 1) reset_project ----
     reset_fut = engine_injector.submit("reset_project", {
         "skip_confirm": True,

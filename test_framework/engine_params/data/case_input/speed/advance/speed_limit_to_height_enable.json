@@ -1,0 +1,12 @@
+{
+    "cases": [
+        {
+            "project_name": "speed_limit_to_height_enable_case1",
+            "input_3mf": "speed_limit_to_height_enable_case1.3mf",
+            "expected_speed_limit_to_height_enable": true,
+            "speed_limit_to_height": "[[0,10,66,666]]",
+            "speed_tolerance": 0.1,
+            "acc_tolerance": 1.0
+        }
+    ]
+}

@@ -13,19 +13,22 @@ class EngineSession:
 
     def __init__(self, exe_path, log_path, cli_args,
                  host, port,
+                 *,
+                 new_proc: bool = True,
                  timeout=30.0,
                  inter_command_delay=0.2, retries=1, backoff=0.5):
-        self.proc = SlicerProc(exe_path,
-                               log_path,
-                               cli_args,
-                               host,
-                               port)
-        self.client = EngineClient(host=host, port=port, timeout=timeout)
-        self.injector = CommandInjector(self.client,
-                                        inter_command_delay=inter_command_delay,
-                                        retries=retries, backoff=backoff)
+        self.client: EngineClient = EngineClient(host=host, port=port, timeout=timeout)
+        self.injector: CommandInjector = CommandInjector(self.client,
+                                                         inter_command_delay=inter_command_delay,
+                                                         retries=retries, backoff=backoff)
+        if new_proc:
+            self.proc = SlicerProc(exe_path,
+                                   log_path,
+                                   cli_args,
+                                   host,
+                                   port)
 
-    def __enter__(self):
+    def __enter__(self) -> tuple[EngineClient, CommandInjector]:
         self.proc.start_if_needed()
         self.client.connect()
         self.injector.start()
@@ -42,7 +45,7 @@ class EngineSession:
 
 # ----------------- 引擎管理器，负责管理会话期间引擎奔溃的重启。 -----------------
 class EngineUnavailable(RuntimeError):
-    """基础设施/引擎不可用，不代表用例断言失败。"""
+    """TODO,基础设施/引擎不可用，不代表用例断言失败。（但现在不行）"""
     pass
 
 

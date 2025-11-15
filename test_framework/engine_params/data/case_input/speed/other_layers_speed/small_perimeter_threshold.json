@@ -1,0 +1,16 @@
+{
+    "cases": [
+        {
+            "project_name": "small_perimeter_threshold",
+            "input_3mf": "small_perimeter_threshold_1.3mf",
+            "expected_small_perimeter_threshold": 1.0,
+            "tolerance": 1e-6
+        },
+        {
+            "project_name": "small_perimeter_threshold",
+            "input_3mf": "small_perimeter_threshold_1000.3mf",
+            "expected_small_perimeter_threshold": 1000.0,
+            "tolerance": 1e-6
+        }
+    ]
+}

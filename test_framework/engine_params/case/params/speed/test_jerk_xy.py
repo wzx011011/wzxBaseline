@@ -68,6 +68,7 @@ def _format_corner_failure(details) -> str:
 
 
 @pytest.mark.engine_params
+# ================== outer_wall_jerk ==================
 def test_outer_wall_jerk(
         slice_and_export: Path,
         expected_outer_wall_jerk: float,
@@ -86,6 +87,7 @@ def test_outer_wall_jerk(
 
 
 @pytest.mark.engine_params
+# ================== inner_wall_jerk ==================
 def test_inner_wall_jerk(
         slice_and_export: Path,
         expected_inner_wall_jerk: float,
@@ -104,6 +106,7 @@ def test_inner_wall_jerk(
 
 
 @pytest.mark.engine_params
+# ================== top_surface_acceleration ==================
 def test_top_surface_acceleration(
         slice_and_export: Path,
         expected_top_surface_acceleration: float,
@@ -119,7 +122,10 @@ def test_top_surface_acceleration(
         tolerance,
     )
     assert ok, _format_corner_failure(details)
+
+
 @pytest.mark.engine_params
+# ================== initial_layer_jerk ==================
 def test_initial_layer_jerk(
         slice_and_export: Path,
         expected_initial_layer_jerk: float,
@@ -136,6 +142,7 @@ def test_initial_layer_jerk(
     )
     assert ok, _format_corner_failure(details)
 
+
 INFILL_JERK_TYPES = [
     ExtrusionType.SPARSE_INFILL,
     ExtrusionType.INTERNAL_SOLID_INFILL,
@@ -151,12 +158,13 @@ DEFAULT_JERK_TYPES = [
 
 
 @pytest.mark.engine_params
+# ================== default_jerk ==================
 def test_default_jerk(
         slice_and_export: Path,
         expected_default_jerk: float,
         tolerance: float,
 ):
-    """非首层 GAP/SUPPORT 类型 region 的 SQUARE_CORNER_VELOCITY 应符合期望。"""
+    """非首层 GAP/SUPPORT 类型 Region 的 SQUARE_CORNER_VELOCITY 应符合期望。"""
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -169,6 +177,7 @@ def test_default_jerk(
 
 
 @pytest.mark.engine_params
+# ================== infill_jerk ==================
 def test_infill_jerk(
         slice_and_export: Path,
         expected_infill_jerk: float,

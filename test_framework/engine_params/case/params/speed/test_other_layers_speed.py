@@ -9,6 +9,8 @@ from engine_params.src.gcode.speed.other_layers_speed_check import (
     parse_solid_infill_speed,
     parse_top_surface_speed,
     parse_gap_infill_speed,
+    parse_small_perimeter_threshold,
+    parse_small_perimeter_speed,
 )
 
 
@@ -115,6 +117,38 @@ def test_gap_infill_speed(slice_and_export: Path, expected_gap_infill_speed: flo
     ok, expected, details = parse_gap_infill_speed(
         gcode_path,
         expected_gap_infill_speed,
+        tolerance,
+    )
+    assert ok, f"details={details}"
+
+
+@pytest.mark.engine_params
+def test_small_perimeter_threshold(slice_and_export: Path, expected_small_perimeter_threshold: float, tolerance: float):
+    """
+    微小轮廓阈值：当墙周长小于阈值时应使用 small_perimeter_speed（百分比时基于 outer_wall_speed）。
+    """
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, expected, details = parse_small_perimeter_threshold(
+        gcode_path,
+        expected_small_perimeter_threshold,
+        tolerance,
+    )
+    assert ok, f"details={details}"
+
+
+@pytest.mark.engine_params
+def test_small_perimeter_speed(slice_and_export: Path, expected_small_perimeter_speed: float, tolerance: float):
+    """
+    微小轮廓减速：当周长小于 2πr（r=small_perimeter_threshold）时，应降到期望速度。
+    """
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, expected, details = parse_small_perimeter_speed(
+        gcode_path,
+        expected_small_perimeter_speed,
         tolerance,
     )
     assert ok, f"details={details}"

@@ -5,9 +5,10 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from engine_params.src.gcode.GCodeParserEx import GCodeParserEx
-from engine_params.src.gcode.constants import ACCEL_KEY, ExtrusionType
+from engine_params.src.gcode.constants import ACCEL_KEY, ACCEL_TO_DECEL_KEY, ExtrusionType
 
-ACCEL_TO_DECEL_KEY = "ACCEL_TO_DECEL"
+SQUARE_CORNER_KEY = "SQUARE_CORNER_VELOCITY"
+
 
 TypeSeq = Optional[Sequence[ExtrusionType | str | bytes]]
 
@@ -334,6 +335,117 @@ def parse_top_surface_acceleration(
         target_types=[ExtrusionType.TOP_SURFACE],
         skip_layers=[0],
     )
+
+
+def parse_travel_acceleration(
+        gcode_path: Path | str,
+        expected_acceleration: float,
+        tolerance: float = 1e-6,
+) -> Tuple[bool, float, Dict[str, Any]]:
+    """检查 travel 点的 ACCEL（跳过首层）。"""
+    path_obj = Path(gcode_path)
+    parser = GCodeParserEx(path_obj)
+
+    expected_val = float(expected_acceleration)
+    motion = parser.get_motion_paths(skip_layers=[0])
+
+    total_travel = 0
+    checked_layers: List[int] = []
+    matches: List[Dict[str, Any]] = []
+    mismatches: List[Dict[str, Any]] = []
+    missing_limits: List[Dict[str, Any]] = []
+    missing_accel: List[Dict[str, Any]] = []
+    actual_values: List[float] = []
+
+    if not motion:
+        details = {
+            "checked_layers": [],
+            "checked_layer": None,
+            "skip_layers": [0],
+            "layer_indices": [],
+            "travel_points_total": 0,
+            "travel_points_checked": 0,
+            "expected": expected_val,
+            "tolerance": tolerance,
+            "matches": matches,
+            "mismatches": mismatches,
+            "missing_velocity_limits": missing_limits,
+            "missing_accel_key": missing_accel,
+            "actual_values_set": [],
+            "note": "No motion paths parsed.",
+            "match": False,
+        }
+        return False, expected_val, details
+
+    for layer_idx, points in motion.items():
+        checked_layers.append(layer_idx)
+        for pt in points or []:
+            if pt.kind != "travel":
+                continue
+            total_travel += 1
+            limits = dict(getattr(pt, "velocity_limits", {}) or {})
+            item = {
+                "layer": layer_idx,
+                "object_id": None,
+                "type": "travel",
+                "x": pt.x,
+                "y": pt.y,
+                "z": pt.z,
+                "f": pt.f,
+                "velocity_limits": limits,
+                "expected": expected_val,
+                "tolerance": tolerance,
+            }
+            if not limits:
+                item["status"] = "missing_velocity_limits"
+                missing_limits.append(item)
+                continue
+
+            accel_val = limits.get(ACCEL_KEY)
+            try:
+                accel_num = float(accel_val) if accel_val is not None else None
+            except (TypeError, ValueError):
+                accel_num = None
+
+            if accel_num is None:
+                item["status"] = "missing_accel_key"
+                item["actual_accel"] = accel_val
+                missing_accel.append(item)
+                continue
+
+            diff = accel_num - expected_val
+            item["actual"] = accel_num
+            item["diff"] = diff
+
+            if abs(diff) <= tolerance:
+                item["status"] = "ok"
+                matches.append(item)
+            else:
+                item["status"] = "mismatch"
+                mismatches.append(item)
+            actual_values.append(accel_num)
+
+    checked_layers_sorted = sorted(set(checked_layers))
+    ok = total_travel > 0 and not mismatches and not missing_limits and not missing_accel
+    details = {
+        "checked_layers": checked_layers_sorted,
+        "checked_layer": None if len(checked_layers_sorted) != 1 else checked_layers_sorted[0],
+        "skip_layers": [0],
+        "layer_indices": [],
+        "travel_points_total": total_travel,
+        "travel_points_checked": total_travel,
+        "expected": expected_val,
+        "tolerance": tolerance,
+        "matches": matches,
+        "mismatches": mismatches,
+        "missing_velocity_limits": missing_limits,
+        "missing_accel_key": missing_accel,
+        "actual_values_set": sorted(set(actual_values)),
+        "note": None if total_travel > 0 else "No travel points found.",
+        "match": ok,
+    }
+
+    return ok, expected_val, details
 
 
 def parse_accel_to_decel_enable(

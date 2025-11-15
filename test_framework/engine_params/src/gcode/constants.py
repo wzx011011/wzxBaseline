@@ -21,6 +21,8 @@ from typing import (
 # ===================== 这块先随便放吧 =====================
 
 ACCEL_KEY = "ACCEL"
+ACCEL_TO_DECEL_KEY = "ACCEL_TO_DECEL"
+SQUARE_CORNER_KEY = "SQUARE_CORNER_VELOCITY"
 
 # ===================== 类型别名（给静态检查/提示用） =====================
 

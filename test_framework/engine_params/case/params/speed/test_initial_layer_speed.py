@@ -6,6 +6,7 @@ from engine_params.src.gcode.speed.initial_layer_speed_check import (
     parse_initial_layer_speed,
     parse_initial_layer_infill_speed,
     parse_initial_layer_travel_speed,
+    parse_slow_down_layers
 )
 
 # ================== initial_layer_speed ==================
@@ -136,3 +137,17 @@ def test_initial_layer_travel_speed(slice_and_export: Path, expected_initial_lay
         tolerance,
     )
     assert ok, _format_failure_travel_speed(details)
+
+# ================== slow_down_layers ==================
+@pytest.mark.engine_params
+def test_slow_down_layers(slice_and_export: Path, expected_slow_down_layers: int, tolerance: float):
+    """慢速打印层数校验：验证差值算法应用到各挤出类型后与期望一致。"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, expected, details = parse_slow_down_layers(
+        gcode_path,
+        expected_slow_down_layers,
+        tolerance,
+    )
+    assert ok, f"details={details}"

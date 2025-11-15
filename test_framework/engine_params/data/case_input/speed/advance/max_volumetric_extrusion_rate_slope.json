@@ -1,0 +1,14 @@
+{
+    "cases": [
+        {
+            "project_name": "max_volumetric_extrusion_rate_slope_0",
+            "input_3mf": "max_volumetric_extrusion_rate_slope_0.3mf",
+            "expected_max_volumetric_extrusion_rate_slope": 0
+        },
+        {
+            "project_name": "max_volumetric_extrusion_rate_slope_300",
+            "input_3mf": "max_volumetric_extrusion_rate_slope_300.3mf",
+            "expected_max_volumetric_extrusion_rate_slope": 300.0
+        }
+    ]
+}

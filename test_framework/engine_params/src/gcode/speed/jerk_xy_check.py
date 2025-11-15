@@ -5,9 +5,9 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from engine_params.src.gcode.GCodeParserEx import GCodeParserEx
-from engine_params.src.gcode.constants import ExtrusionType
+from engine_params.src.gcode.constants import SQUARE_CORNER_KEY, ExtrusionType
 
-SQUARE_CORNER_KEY = "SQUARE_CORNER_VELOCITY"
+
 TypeSeq = Optional[Sequence[ExtrusionType | str | bytes]]
 
 

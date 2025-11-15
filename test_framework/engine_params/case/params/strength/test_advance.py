@@ -6,6 +6,8 @@ from engine_params.src.gcode.strength.advance_check import (
     parse_detect_narrow_internal_solid_infill,
     parse_bridge_angle,
     parse_minimum_sparse_infill_area,
+    parse_infill_combination,
+    parse_ensure_vertical_shell_thickness,
 )
 
 
@@ -83,3 +85,50 @@ def test_minimum_sparse_infill_area(
         f"expected_has_sp_infill={expected_has_sp_infill}, actual_ok={ok}, "
         f"violations={details['violations']}, reports={details['layer_reports']}"
     )
+
+
+# ================== infill_combination ==================
+@pytest.mark.engine_params
+def test_infill_combination(
+        slice_and_export: Path,
+        expected_infill_combination: bool,
+        expected_interval: int,
+) -> None:
+    """
+    稀疏填充合并：检测稀疏填充层间隔是否满足 N=int(nozzle_diameter/layer_height) ⇒ diff=N-1。
+    """
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, _, details = parse_infill_combination(
+        gcode_path,
+        expected_enabled=expected_infill_combination,
+        expected_interval=expected_interval,
+    )
+
+    assert ok, (
+        f"infill_combination 校验失败: expected={expected_infill_combination}, "
+        f"details={details}"
+    )
+
+# ================== ensure_vertical_shell_thickness ==================
+@pytest.mark.engine_params
+def test_ensure_vertical_shell_thickness(
+        slice_and_export: Path,
+        expected_ensure_vertical_shell_thickness: str,
+        baseline_gcode: str | Path,
+        tolerance: float,
+) -> None:
+    """
+    ensure_vertical_shell_thickness：与基线 G-code 逐层比对外/内墙轮廓，忽略轮廓顺序差异。
+    """
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, _, details = parse_ensure_vertical_shell_thickness(
+        gcode_path,
+        expected_value=expected_ensure_vertical_shell_thickness,
+        baseline_gcode=baseline_gcode,
+        tolerance=tolerance,
+    )
+    assert ok, f"details={details}"

@@ -1,0 +1,10 @@
+{
+    "cases": [
+        {
+            "project_name": "overhang_totally_speed_8",
+            "input_3mf": "overhang_totally_speed_8.3mf",
+            "expected_overhang_totally_speed": 8.0,
+            "tolerance": 1e-6
+        }
+    ]
+}

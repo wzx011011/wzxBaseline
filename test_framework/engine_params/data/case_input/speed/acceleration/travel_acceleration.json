@@ -1,0 +1,10 @@
+{
+    "cases": [
+        {
+            "project_name": "travel_acceleration_8888",
+            "expected_travel_acceleration": 8888.0,
+            "input_3mf": "travel_acceleration_8888.3mf",
+            "tolerance": 1e-6
+        }
+    ]
+}

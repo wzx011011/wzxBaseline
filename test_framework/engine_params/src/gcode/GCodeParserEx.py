@@ -7,7 +7,17 @@ import re
 import zlib
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, List, Optional, Sequence, Tuple, Iterable, Literal, Protocol, Any
+from typing import Dict, List, Optional, Sequence, Tuple, Iterable, Literal, Protocol, Any, Union
+
+ConfigValue = Union[bool, int, float, str]
+
+
+@dataclass(frozen=True)
+class ParsedConfig:
+    value: ConfigValue
+    is_percent: bool
+    raw: str
+
 
 from engine_params.src.gcode.constants import ExtrusionType
 
@@ -51,15 +61,19 @@ def _parse_z(body: bytes) -> Optional[float]:
 # ===================== Point / Point3D 定义 =====================
 @dataclass(frozen=True)
 class Point:
+    """
+    旧的测试用了这个类，后面新的尽量都用 Point3D 类。
+    """
     x: float
     y: float
     kind: Literal["extrude", "toolchange", "travel", "wipe"]
+    f: Optional[float] = None  # 新增：逐点 F（mm/s），来自该点所在行最近一次出现的 F
+    feedrate: Optional[float] = None  # mm/s，即TYPE挤出块下方找到的第一个F指令转化的速度
     has_z: bool = False
     has_f: bool = False
     has_e: bool = False
     offset: Optional[int] = None
     e: Optional[float] = None
-    feedrate: Optional[float] = None  # mm/s
     arc_direction: Optional[Literal["cw", "ccw"]] = None
     arc_center_offset: Optional[Tuple[float, float]] = None
     arc_center: Optional[Tuple[float, float]] = None
@@ -67,6 +81,7 @@ class Point:
     arc_radius_deviation: Optional[float] = None
 
 
+# ===================== Point / Point3D 定义 =====================
 @dataclass(frozen=True)
 class Point3D:
     x: float
@@ -79,12 +94,16 @@ class Point3D:
     has_e: bool = False
     offset: Optional[int] = None
     e: Optional[float] = None
-    feedrate: Optional[float] = None  # mm/s
+    feedrate: Optional[float] = None  # 记录的是切片参数中设置的区域级速度，mm/s，即TYPE挤出块下方找到的第一个F指令转化的速度
     arc_direction: Optional[Literal["cw", "ccw"]] = None
     arc_center_offset: Optional[Tuple[float, float]] = None
     arc_center: Optional[Tuple[float, float]] = None
     arc_radius: Optional[float] = None
     arc_radius_deviation: Optional[float] = None
+    # —— 逐点携带“当前就近继承”的速度限制三键（SET_VELOCITY_LIMIT）
+    #    字典键名统一为规范大写（ACCEL / ACCEL_TO_DECEL / SQUARE_CORNER_VELOCITY），值为 float。
+    #    注意：这是一个“快照”（点生成时复制 current_limits），不会在 Point3D 内部再被修改。
+    velocity_limits: Dict[str, float] = field(default_factory=dict)
 
     # ---- 打印相关 ----
     def __str__(self) -> str:
@@ -148,7 +167,7 @@ class Point3D:
         return " ".join(parts)
 
 
-# ===================== 面向对象数据模型 =====================
+# ===================== 数据 =====================
 @dataclass
 class ExtrusionPath:
     points: List[Point] = field(default_factory=list)
@@ -167,7 +186,7 @@ class ExtrusionPath:
 class LayerRegion:
     extrusion_type: str
     paths: List[ExtrusionPath] = field(default_factory=list)
-    feedrate: Optional[float] = None  # mm/s
+    feedrate: Optional[float] = None  # 局部的速度参数，mm/s。读取的是切片软件中设置的局部挤出块的速度参数。
     # —— 就近向上命中的 SET_VELOCITY_LIMIT
     velocity_limits: Dict[str, float] = field(default_factory=dict)
 
@@ -391,7 +410,7 @@ class GCodeParserEx:
       - 找 EXECUTABLE_BLOCK、按 ;LAYER_CHANGE 切层
       - 层内：按 EXCLUDE_OBJECT_START/END 切物体段，并加入“全局补集段”捕捉 Skirt/Brim/Prime Tower
       - 按 ;TYPE: 切挤出类型，剔除 WIPE 段
-      - 扫描 G1/G2/G3，支持仅 X 或仅 Y 的写法；跟踪 F 并写入 Point.feedrate
+      - 扫描 G1/G2/G3，支持仅 X 或仅 Y 的写法；跟踪 F 并写入 Point.f
       - 对每个 (object_id, type) region：
           * 用 FeedrateResolver 解析“全局速度”；
           * 依据 ;TYPE: 位置，就近向上命中并携带全局 SET_VELOCITY_LIMIT（补全三键的快照）
@@ -402,7 +421,8 @@ class GCodeParserEx:
     def __init__(self, gcode_path: str | Path, *, feedrate_resolver: Optional[FeedrateResolver] = None):
         self.path = Path(gcode_path)
         self._layers_cache_all: Optional[List[Layer]] = None
-        self._cfg_cache: Optional[Dict[str, object]] = None  # CONFIG 缓存
+        # CONFIG 缓存（包含元信息，见 ParsedConfig）
+        self._cfg_cache: Optional[Dict[str, ParsedConfig]] = None
         self._feedrate_resolver: FeedrateResolver = feedrate_resolver or DefaultFeedrateResolver()
 
         # —— 全局 SET_VELOCITY_LIMIT 索引（懒构建）
@@ -661,6 +681,103 @@ class GCodeParserEx:
 
         return last_xy
 
+    # ---------- 轮廓首锚点（回溯，允许带 E；合并最近的 X/Y，返回 Point） ----------
+    def _find_upward_contour_anchor(
+        self, mm: mmap.mmap, seg_start: int, block_start: int
+    ) -> Optional[Point]:
+        """
+        用于初始化 ;TYPE 挤出块的首个轮廓点锚：
+        - 在 [seg_start, block_start) 区间内，自下向上回溯扫描；
+        - 仅考虑 G1/G2/G3 行（是否带 E 均可）；
+        - 允许某行只有 X 或只有 Y：分别记录“最近的 X”和“最近的 Y”，
+          一旦两者都凑齐（可能来自不同的行），立刻返回 Point；
+        - 若参与补全的任一行存在 E>0，则返回 kind='extrude' 并携带 e，否则 kind='toolchange'。
+        """
+        if block_start <= seg_start:
+            return None
+
+        blob = mm[seg_start:block_start]
+
+        # 最近一次见到的 X/Y 值与来源信息（来源是否带 E>0）
+        x_seen: Optional[float] = None
+        y_seen: Optional[float] = None
+        x_from_extrude: bool = False
+        y_from_extrude: bool = False
+        e_val_on_source: Optional[float] = None
+        # 如果 X/Y 来自不同的行而仅有其中一行存在 E>0，我们把该行的 E 作为锚点的 e
+        # 如果两行都存在 E>0，优先采用更靠近 block_start 的那行的 E（即先被记录的那个）
+
+        pos = len(blob)
+        while pos > 0:
+            # 跳过尾部 CR/LF，避免空行导致 pos 不动
+            while pos > 0 and blob[pos - 1:pos] in (b"\n", b"\r"):
+                pos -= 1
+            if pos <= 0:
+                break
+
+            prev_nl = blob.rfind(b"\n", 0, pos)
+            line_start = 0 if prev_nl == -1 else (prev_nl + 1)
+            raw = blob[line_start:pos]
+            body = pre_comment(raw)
+
+            if body:
+                mode = arc_mode(body)
+                if (is_g1(body) or mode is not None):
+                    # 提取当前行是否有 E>0
+                    cur_e_pos: Optional[float] = None
+                    if has_e(body):
+                        try:
+                            ev = parse_e(body)
+                            if ev is not None and ev > 0:
+                                cur_e_pos = ev
+                        except Exception:
+                            cur_e_pos = None
+
+                    # 提取 X、Y（如果存在且尚未记过）
+                    if (x_seen is None) and DefaultFeedrateResolver._RX_X.search(body):
+                        m = DefaultFeedrateResolver._RX_X.search(body)
+                        if m:
+                            try:
+                                x_seen = float(m.group(1).decode("ascii", errors="ignore"))
+                                if cur_e_pos is not None and not x_from_extrude:
+                                    x_from_extrude = True
+                                    # 如果两者都来自“挤出行”，优先更靠近 block_start 的值
+                                    e_val_on_source = e_val_on_source if e_val_on_source is not None else cur_e_pos
+                            except Exception:
+                                pass
+                    if (y_seen is None) and DefaultFeedrateResolver._RX_Y.search(body):
+                        m = DefaultFeedrateResolver._RX_Y.search(body)
+                        if m:
+                            try:
+                                y_seen = float(m.group(1).decode("ascii", errors="ignore"))
+                                if cur_e_pos is not None and not y_from_extrude:
+                                    y_from_extrude = True
+                                    e_val_on_source = e_val_on_source if e_val_on_source is not None else cur_e_pos
+                            except Exception:
+                                pass
+
+                    # 凑齐则返回 Point
+                    if (x_seen is not None) and (y_seen is not None):
+                        is_ex = (x_from_extrude or y_from_extrude)
+                        if is_ex:
+                            return Point(
+                                x_seen, y_seen, "extrude",
+                                has_z=False, has_f=False, has_e=True,
+                                offset=None, e=e_val_on_source, f=None, feedrate=None
+                            )
+                        else:
+                            return Point(
+                                x_seen, y_seen, "toolchange",
+                                has_z=False, has_f=False, has_e=False,
+                                offset=None, e=None, f=None, feedrate=None
+                            )
+
+            if line_start == 0:
+                break
+            pos = line_start
+
+        return None
+
     # ---------- CONFIG ----------
     @staticmethod
     def _norm_key(k: str) -> str:
@@ -668,26 +785,33 @@ class GCodeParserEx:
         return _re.sub(r"\s+", "_", k.strip().lower())
 
     @staticmethod
-    def _parse_value(raw: str):
+    def _parse_value_with_meta(raw: str) -> ParsedConfig:
         """
         - for load_config()
+        - 返回 ParsedConfig，包含原始串/是否百分比/解析值
         """
         s = raw.strip()
         ls = s.lower()
         if ls in ("true", "false"):
-            return ls == "true"
-        for caster in (int, float):
+            return ParsedConfig(ls == "true", False, raw)
+        if ls.endswith("%"):
             try:
-                return caster(s)
+                num = float(s.rstrip("%").strip())
+                return ParsedConfig(num / 100.0, True, raw)
             except ValueError:
                 pass
-        return s
+        for caster in (int, float):
+            try:
+                return ParsedConfig(caster(s), False, raw)
+            except ValueError:
+                pass
+        return ParsedConfig(s, False, raw)
 
-    def load_config(self) -> Dict[str, object]:
+    def load_config(self) -> Dict[str, ParsedConfig]:
         if self._cfg_cache is not None:
             return dict(self._cfg_cache)
 
-        cfg: Dict[str, object] = {}
+        cfg: Dict[str, ParsedConfig] = {}
         with self.path.open("rb") as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
             beg, end = self._find_pair(mm, CONFIG_BEGIN, CONFIG_END, 0)
             text = mm[beg:end].decode("utf-8", errors="ignore")
@@ -697,10 +821,23 @@ class GCodeParserEx:
             if not m:
                 continue
             k, v = m.group(1), m.group(2)
-            cfg[self._norm_key(k)] = self._parse_value(v)
+            norm_key = self._norm_key(k)
+            parsed = self._parse_value_with_meta(v)
+            cfg[norm_key] = parsed
 
         self._cfg_cache = dict(cfg)
         return cfg
+
+    def get_config(self, key: str, default: Optional[ParsedConfig] = None) -> Optional[ParsedConfig]:
+        """
+        获取单个配置项（ParsedConfig）。若缓存不存在会先调用 load_config()。
+        """
+        if self._cfg_cache is None:
+            self.load_config()
+        if self._cfg_cache is None:
+            return default
+        norm_key = self._norm_key(key)
+        return self._cfg_cache.get(norm_key, default)
 
     # 单位转换
     @staticmethod
@@ -785,34 +922,34 @@ class GCodeParserEx:
         # 只返回三键，且键名为规范大写
         return {k: snap[k] for k in _VEL_KEYS_CANON if k in snap}
 
-    # ---------- 辅助：向下窥视“紧接着的 TYPE” ----------
-    @staticmethod
-    def _peek_next_type(mm: mmap.mmap, *, from_pos: int, layer_end: int) -> Optional[str]:
-        """
-        从 from_pos 向下扫描到 layer_end：
-        - 跳过纯空行与非 TYPE 的注释行；
-        - 若第一条遇到的是 ';TYPE:' 行，返回其规范化类型；
-        - 若先遇到任何有指令体的行，则返回 None。
-        """
-        pos = from_pos
-        while pos < layer_end:
-            nl = mm.find(b"\n", pos, layer_end)
-            line_end = nl if nl != -1 else layer_end
-            raw = mm[pos:line_end]
-
-            stripped = raw.lstrip()
-            if stripped.startswith(TYPE_PREFIX):
-                tname = stripped[len(TYPE_PREFIX):].decode("utf-8", errors="ignore").strip()
-                return GCodeParserEx._canon_type_name(tname)
-
-            body = pre_comment(raw)
-            if body:
-                return None
-
-            if nl == -1:
-                break
-            pos = nl + 1
-        return None
+    # # ---------- 辅助：向下窥视“紧接着的 TYPE” ----------
+    # @staticmethod
+    # def _peek_next_type(mm: mmap.mmap, *, from_pos: int, layer_end: int) -> Optional[str]:
+    #     """
+    #     从 from_pos 向下扫描到 layer_end：
+    #     - 跳过纯空行与非 TYPE 的注释行；
+    #     - 若第一条遇到的是 ';TYPE:' 行，返回其规范化类型；
+    #     - 若先遇到任何有指令体的行，则返回 None。
+    #     """
+    #     pos = from_pos
+    #     while pos < layer_end:
+    #         nl = mm.find(b"\n", pos, layer_end)
+    #         line_end = nl if nl != -1 else layer_end
+    #         raw = mm[pos:line_end]
+    #
+    #         stripped = raw.lstrip()
+    #         if stripped.startswith(TYPE_PREFIX):
+    #             tname = stripped[len(TYPE_PREFIX):].decode("utf-8", errors="ignore").strip()
+    #             return GCodeParserEx._canon_type_name(tname)
+    #
+    #         body = pre_comment(raw)
+    #         if body:
+    #             return None
+    #
+    #         if nl == -1:
+    #             break
+    #         pos = nl + 1
+    #     return None
 
     # ---------- 主入口：结构化轮廓 ----------
     def get_type_contours_per_layer(
@@ -932,11 +1069,14 @@ class GCodeParserEx:
                                 )
                                 region_feedrate = self._mm_per_min_to_mm_per_s(region_feedrate_raw)
 
-                            upward_tc = self._find_upward_toolchange(mm, ss, bs)
+                            # 使用新的“首锚点”查找：返回 Point（可能是 extrude 或 toolchange）
+                            anchor_pt: Optional[Point] = self._find_upward_contour_anchor(mm, ss, bs)
 
                             current: Optional[ExtrusionPath] = None
-                            pending_anchor: Optional[Tuple[float, float]] = None
-                            last_xy: Optional[Tuple[float, float]] = upward_tc
+                            pending_anchor: Optional[Tuple[float, float]] = None  # 片内 travel 的临时 XY
+                            last_xy: Optional[Tuple[float, float]] = (
+                                (anchor_pt.x, anchor_pt.y) if anchor_pt is not None else None
+                            )
                             current_feed: Optional[float] = region_feedrate
 
                             def ensure_current():
@@ -944,14 +1084,44 @@ class GCodeParserEx:
                                 if current is not None:
                                     return
                                 current = ExtrusionPath([])
-                                anchor = pending_anchor if pending_anchor is not None else upward_tc
-                                if anchor is not None:
+
+                                # 1) 片内 pending_anchor 优先（始终作为“toolchange”起点）
+                                if pending_anchor is not None:
                                     current.add(Point(
-                                        anchor[0], anchor[1], "toolchange",
+                                        pending_anchor[0], pending_anchor[1], "toolchange",
                                         has_z=False, has_f=(current_feed is not None), has_e=False,
-                                        offset=None, e=None, feedrate=current_feed
+                                        offset=None, e=None, f=current_feed, feedrate=region_feedrate
                                     ))
-                                pending_anchor = None
+                                    pending_anchor = None
+                                    return
+
+                                # 2) 没有片内 pending_anchor，则落到“块外锚点 anchor_pt”
+                                if anchor_pt is not None:
+                                    if anchor_pt.kind == "extrude":
+                                        # 若锚点来自挤出行：首点即为挤出点（避免插入虚拟 toolchange）
+                                        current.add(Point(
+                                            anchor_pt.x, anchor_pt.y, "extrude",
+                                            has_z=False,
+                                            has_f=(current_feed is not None) or anchor_pt.has_f,
+                                            has_e=True,
+                                            offset=anchor_pt.offset,
+                                            e=anchor_pt.e,
+                                            f=current_feed,                  # 点级 F
+                                            feedrate=region_feedrate,        # 区域级
+                                            arc_direction=anchor_pt.arc_direction,
+                                            arc_center_offset=anchor_pt.arc_center_offset,
+                                            arc_center=anchor_pt.arc_center,
+                                            arc_radius=anchor_pt.arc_radius,
+                                            arc_radius_deviation=anchor_pt.arc_radius_deviation,
+                                        ))
+                                    else:
+                                        # 否则仍按“toolchange”处理
+                                        current.add(Point(
+                                            anchor_pt.x, anchor_pt.y, "toolchange",
+                                            has_z=False, has_f=(current_feed is not None), has_e=False,
+                                            offset=None, e=None, f=current_feed, feedrate=region_feedrate
+                                        ))
+                                # 若两种锚点都没有，就不写任何起点（保持原行为）
 
                             for (ps, pe) in pieces:
                                 pos = ps
@@ -965,35 +1135,45 @@ class GCodeParserEx:
                                     if body:
                                         mode = arc_mode(body)
                                         is_move = bool(is_g1(body) or mode is not None)
-                                        if is_move and (has_x(body) or has_y(body)):
-                                            if has_f(body):
-                                                fv = parse_f(body)
-                                                if fv is not None:
-                                                    current_feed = self._mm_per_min_to_mm_per_s(fv)
+                                        if has_f(body):
+                                            fv = parse_f(body)
+                                            if fv is not None:
+                                                current_feed = self._mm_per_min_to_mm_per_s(fv)
 
+                                        if is_move and (has_x(body) or has_y(body)):
                                             xy = parse_xy_loose(body, last_xy)
                                             if xy is not None:
                                                 has_e_flag = has_e(body)
                                                 e_val = parse_e(body) if has_e_flag else None
                                                 hz = has_z(body)
-                                                hf = has_f(body) or (current_feed is not None)
+                                                hf = (current_feed is not None)
 
                                                 if has_e_flag and e_val is not None:
-                                                    ensure_current()
-                                                    am = build_arc_meta(body, last_xy, xy)
-                                                    current.add(Point(
-                                                        xy[0], xy[1], "extrude",
-                                                        has_z=hz, has_f=hf, has_e=True,
-                                                        offset=offset, e=e_val,
-                                                        feedrate=current_feed,
-                                                        arc_direction=am.direction,
-                                                        arc_center_offset=am.center_offset,
-                                                        arc_center=am.center,
-                                                        arc_radius=am.radius,
-                                                        arc_radius_deviation=am.radius_deviation,
-                                                    ))
-                                                    pending_anchor = None
+                                                    # extrude（包含 E>0 或 E<0? 这里只构建轮廓，保持与原逻辑一致：仅 E>0 作为挤出）
+                                                    if e_val > 0:
+                                                        ensure_current()
+                                                        am = build_arc_meta(body, last_xy, xy)
+                                                        current.add(Point(
+                                                            xy[0], xy[1], "extrude",
+                                                            has_z=hz, has_f=hf, has_e=True,
+                                                            offset=offset, e=e_val,
+                                                            f=current_feed,                # 点级 F（mm/s）
+                                                            feedrate=region_feedrate,      # 区域级速度（mm/s）
+                                                            arc_direction=am.direction,
+                                                            arc_center_offset=am.center_offset,
+                                                            arc_center=am.center,
+                                                            arc_radius=am.radius,
+                                                            arc_radius_deviation=am.radius_deviation,
+                                                        ))
+                                                        pending_anchor = None
+                                                    else:
+                                                        # E<=0（如擦拭）不进入轮廓；关闭当前路径，把位置作为下一段的候选起点
+                                                        if current is not None and len(current) > 0:
+                                                            paths_accum.append(current)
+                                                        current = None
+                                                        pending_anchor = xy
                                                 else:
+                                                    # travel：关闭当前路径，把位置作为下一段的候选起点
                                                     if current is not None and len(current) > 0:
                                                         paths_accum.append(current)
                                                     current = None
@@ -1046,6 +1226,12 @@ class GCodeParserEx:
         额外行为：
           - F 统一转换为 mm/s 存入 Point3D.f；
           - ;TYPE: 出现时，立即把“上一运动点”的 extrusion_type 改为新类型。
+        新增行为：
+          - 动态跟踪 SET_VELOCITY_LIMIT 行：形如
+              "SET_VELOCITY_LIMIT ACCEL=3000 ACCEL_TO_DECEL=3000 SQUARE_CORNER_VELOCITY=6"
+            该行出现后，更新“当前继承的三键快照”（可缺省部分键），影响之后的所有点，
+            直到下一条 SET_VELOCITY_LIMIT 行覆盖为止。
+          - 每个 Point3D.velocity_limits 都是当时的“快照”（浅拷贝 dict）。
         """
 
         def _build_selection(L: int) -> set[int]:
@@ -1070,6 +1256,10 @@ class GCodeParserEx:
 
         with self.path.open("rb") as f, mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
             beg, end = self._find_pair(mm, EXEC_BEGIN, EXEC_END, 0)
+
+            # —— 构建（或复用）全局 SET_VELOCITY_LIMIT 索引；用于在每层开始时给“当前继承”做一个就近上游的初始化
+            self._build_velocity_index(mm, beg, end)
+
             flat_layers = self._index_layers(mm, beg, end)
             L = len(flat_layers)
             if L == 0:
@@ -1088,6 +1278,10 @@ class GCodeParserEx:
                 last_z: Optional[float] = None
                 last_f_ms: Optional[float] = None  # mm/s
                 current_type: Optional[str] = None
+
+                # —— 新增：速度限制继承（按行动态更新）
+                # 先在层起点用“就近向上”的一条 SET_VELOCITY_LIMIT 进行初始化（如果存在）
+                current_limits: Dict[str, float] = dict(self._lookup_velocity_limits(anchor=ls))
 
                 pos = ls
                 while pos < le:
@@ -1117,11 +1311,27 @@ class GCodeParserEx:
                                 arc_center=last.arc_center,
                                 arc_radius=last.arc_radius,
                                 arc_radius_deviation=last.arc_radius_deviation,
+                                velocity_limits=last.velocity_limits,  # 保持上一点的快照不变
                             )
                         pos = (line_end + 1) if nl != -1 else le
                         continue
 
                     if body:
+                        # —— 先判定是否为 SET_VELOCITY_LIMIT 行：若是，更新“继承字典”，并继续读下一行
+                        if _RX_SET_VEL.search(body):
+                            # 抽取本行键值，**不清空**，而是在 current_limits 上“向上补全式覆盖”
+                            # 允许行内缺省部分键，仅覆盖出现的键
+                            for k_b, v_b in _RX_VEL_KV.findall(body):
+                                k = k_b.decode("ascii", errors="ignore").upper()
+                                if k not in _VEL_KEYS_CANON:
+                                    continue
+                                try:
+                                    current_limits[k] = float(v_b.decode("ascii", errors="ignore"))
+                                except Exception:
+                                    pass
+                            pos = (line_end + 1) if nl != -1 else le
+                            continue
+
                         # 先解析本行的字段（注意：F/Z 的继承要按照出现顺序更新）
                         e_val = parse_e(body) if has_e(body) else None
                         f_val = parse_f(body) if has_f(body) else None
@@ -1150,6 +1360,9 @@ class GCodeParserEx:
                         cur_f = 0.0 if last_f_ms is None else last_f_ms
                         cur_z = 0.0 if last_z is None else last_z
 
+                        # —— 为当前要产出的点制作一份“速度限制快照”
+                        acc_snap: Dict[str, float] = dict(current_limits) if current_limits else {}
+
                         if kind == "extrude":
                             # extrude: 需要 XY 至少一个出现且不含 Z（由分类器保证）；若 parse_xy 失败则跳过
                             if xy_new is not None and e_val is not None and e_val > 0:
@@ -1163,6 +1376,7 @@ class GCodeParserEx:
                                     arc_center=am.center,
                                     arc_radius=am.radius,
                                     arc_radius_deviation=am.radius_deviation,
+                                    velocity_limits=acc_snap,
                                 ))
                                 last_xy = xy_new  # 前进锚点
                         elif kind == "wipe":
@@ -1178,6 +1392,7 @@ class GCodeParserEx:
                                     arc_center=am.center,
                                     arc_radius=am.radius,
                                     arc_radius_deviation=am.radius_deviation,
+                                    velocity_limits=acc_snap,
                                 ))
                                 last_xy = xy_new
                         elif kind == "retract":
@@ -1189,6 +1404,7 @@ class GCodeParserEx:
                                     z=cur_z,
                                     f=cur_f, kind="retract", extrusion_type=current_type,
                                     e=e_val, offset=offset, feedrate=None,
+                                    velocity_limits=acc_snap,
                                 ))
                         elif kind == "unretract":
                             # unretract: 只允许 E>0 + F；不得包含坐标（分类器保证）
@@ -1199,6 +1415,7 @@ class GCodeParserEx:
                                     z=cur_z,
                                     f=cur_f, kind="unretract", extrusion_type=current_type,
                                     e=e_val, offset=offset, feedrate=None,
+                                    velocity_limits=acc_snap,
                                 ))
                         elif kind == "travel":
                             # travel: 无 E；任一坐标变化即可（包含仅 Z 变）
@@ -1217,6 +1434,7 @@ class GCodeParserEx:
                                     arc_center=am.center if xy_for_travel is not None else None,
                                     arc_radius=am.radius if xy_for_travel is not None else None,
                                     arc_radius_deviation=am.radius_deviation if xy_for_travel is not None else None,
+                                    velocity_limits=acc_snap,
                                 ))
                                 if xy_new is not None:
                                     last_xy = xy_new
@@ -1228,6 +1446,7 @@ class GCodeParserEx:
                                 z=cur_z,
                                 f=cur_f, kind="fanchange", extrusion_type=current_type,
                                 e=None, offset=offset, feedrate=None,
+                                velocity_limits=acc_snap,
                             ))
                         # 其它情况（不应出现）直接忽略
 
@@ -1252,7 +1471,7 @@ class GCodeParserEx:
             out.append(lm)
         return out
 
-    # ---------- 仅在片段内含“有效挤出”时，才输出块（修复A的核心） ----------
+    # ---------- 仅在片段内含“有效挤出”时，才输出块 ----------
     @staticmethod
     def _piece_has_extrude(mm: mmap.mmap, ps: int, pe: int) -> bool:
         """片段 [ps, pe) 是否包含至少一条“有效挤出”：
@@ -1324,7 +1543,7 @@ class GCodeParserEx:
                         if not pieces_all:
                             continue
 
-                        # === 修复A：仅保留包含“有效挤出”的片段 ===
+                        # === 仅保留包含“有效挤出”的片段 ===
                         valid_pieces = pieces_all if include_wipe else self._filter_pieces_with_extrude(mm, pieces_all)
                         if not valid_pieces:
                             continue
@@ -1396,7 +1615,7 @@ class GCodeParserEx:
 
 
 if __name__ == '__main__':
-    demo = Path(r"C:\Users\118388\Desktop\automation\lhx_test.gcode")
+    demo = Path(r"C:\Users\118388\Desktop\automation\test_m_v.gcode")
     p = GCodeParserEx(demo)
 
     # 示例：读取 CONFIG
@@ -1423,9 +1642,13 @@ if __name__ == '__main__':
     except Exception as e:
         print("[MOTION] parse skipped:", e)
 
-    contours = p.get_type_contours_per_layer(types=None)
+    lidx = 50
 
-    first_layer_paths = p.get_motion_paths_for_layer(layer_index=0)
+    contours = p.get_type_contours_per_layer(types=[ExtrusionType.OUTER_WALL], layer_indices=[lidx])
+
+    interested_contours = contours[lidx]
+
+    layer_motion = p.get_motion_paths()
 
     blocks = p.get_extrusions_blocks_per_layer(entities=[ExtrusionType.INNER_WALL, ExtrusionType.OUTER_WALL])
 

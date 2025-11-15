@@ -14,6 +14,7 @@ from engine_params.src.gcode.speed.acceleration_check import (
     parse_internal_solid_infill_acceleration,
     parse_top_surface_acceleration,
     parse_default_acceleration,
+    parse_travel_acceleration,
 )
 
 
@@ -82,6 +83,7 @@ def _format_failure(details) -> str:
 
 
 @pytest.mark.engine_params
+# ================== accel_to_decel_enable ==================
 def test_accel_to_decel_enable(
         slice_and_export: Path,
         expected_accel_to_decel_enable: bool,
@@ -98,12 +100,13 @@ def test_accel_to_decel_enable(
 
 
 @pytest.mark.engine_params
+# ================== default_acceleration ==================
 def test_default_acceleration(
         slice_and_export: Path,
         expected_default_acceleration: float,
         tolerance: float,
 ):
-    """除去特定挤出类型外，其余 LayerRegion 应遵循 default_acceleration。"""
+    """除去特定挤出类型外，其余 LayerRegion 应遵循 default_acceleration。排除第一层"""
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -128,6 +131,7 @@ def test_default_acceleration(
 
 
 @pytest.mark.engine_params
+# ================== accel_to_decel_factor ==================
 def test_accel_to_decel_factor(
         slice_and_export: Path,
         expected_accel_to_decel_factor: float,
@@ -146,6 +150,7 @@ def test_accel_to_decel_factor(
 
 
 @pytest.mark.engine_params
+# ================== initial_layer_acceleration ==================
 def test_initial_layer_acceleration(
         slice_and_export: Path,
         expected_initial_layer_acceleration: float,
@@ -164,6 +169,7 @@ def test_initial_layer_acceleration(
 
 
 @pytest.mark.engine_params
+# ================== outer_wall_acceleration ==================
 def test_outer_wall_acceleration(
         slice_and_export: Path,
         expected_outer_wall_acceleration: float,
@@ -182,6 +188,7 @@ def test_outer_wall_acceleration(
 
 
 @pytest.mark.engine_params
+# ================== inner_wall_acceleration ==================
 def test_inner_wall_acceleration(
         slice_and_export: Path,
         expected_inner_wall_acceleration: float,
@@ -200,6 +207,7 @@ def test_inner_wall_acceleration(
 
 
 @pytest.mark.engine_params
+# ================== bridge_acceleration ==================
 def test_bridge_acceleration(
         slice_and_export: Path,
         expected_bridge_acceleration: float,
@@ -218,6 +226,7 @@ def test_bridge_acceleration(
 
 
 @pytest.mark.engine_params
+# ================== sparse_infill_acceleration ==================
 def test_sparse_infill_acceleration(
         slice_and_export: Path,
         expected_sparse_infill_acceleration: float,
@@ -236,6 +245,7 @@ def test_sparse_infill_acceleration(
 
 
 @pytest.mark.engine_params
+# ================== internal_solid_infill_acceleration ==================
 def test_internal_solid_infill_acceleration(
         slice_and_export: Path,
         expected_internal_solid_infill_acceleration: float,
@@ -254,6 +264,7 @@ def test_internal_solid_infill_acceleration(
 
 
 @pytest.mark.engine_params
+# ================== top_surface_acceleration ==================
 def test_top_surface_acceleration(
         slice_and_export: Path,
         expected_top_surface_acceleration: float,
@@ -266,6 +277,25 @@ def test_top_surface_acceleration(
     ok, _, details = parse_top_surface_acceleration(
         gcode_path,
         expected_top_surface_acceleration,
+        tolerance,
+    )
+    assert ok, _format_failure(details)
+
+
+@pytest.mark.engine_params
+# ================== travel_acceleration ==================
+def test_travel_acceleration(
+        slice_and_export: Path,
+        expected_travel_acceleration: float,
+        tolerance: float,
+):
+    """Travel 点进给速度校验（跳过首层）。"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, _, details = parse_travel_acceleration(
+        gcode_path,
+        expected_travel_acceleration,
         tolerance,
     )
     assert ok, _format_failure(details)
