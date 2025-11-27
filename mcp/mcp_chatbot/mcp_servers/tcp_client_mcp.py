@@ -12,12 +12,33 @@ import time
 import psutil
 import subprocess
 import re
+import tempfile
 from typing import Dict, Any, Optional
 from datetime import datetime
 
 import cv2
 from PIL import Image
 import pyautogui
+
+# 初始化MCP工具处理映射字典
+TCP_CLIENT_HANDLERS = {}
+
+# MCP工具定义字典
+TCP_CLIENT_TOOLS = {}
+
+# 命令定义装饰器
+def CommandDefine(tooldefine: Dict[str, Any]):
+    def decorator(func): 
+        command = func.__name__
+        if command in TCP_CLIENT_HANDLERS or command in TCP_CLIENT_TOOLS:
+            raise ValueError(f"Command {command} already defined")
+        tooldefine["name"] = command
+        TCP_CLIENT_HANDLERS[command] = func
+        TCP_CLIENT_TOOLS[command] = tooldefine
+        def wrapper(*args, **kwargs):
+            return func(*args, **kwargs)
+        return wrapper
+    return decorator
 
 def gen_respone(code: int, error: str, payload: Dict[str, Any] = {}) -> Dict[str, Any]:
     """
@@ -36,6 +57,20 @@ def gen_respone(code: int, error: str, payload: Dict[str, Any] = {}) -> Dict[str
         "error": error,
         "payload": payload
     }
+
+def get_tcp_command_response(respone_dict):
+    """
+    解析send_tcp_command响应字符串, 便利函数
+    
+    Args:
+        respone_dict: send_tcp_command
+        
+    Returns:
+        send_tcp_command的code、以及payload
+    """
+    respone_dict = json.loads(respone_dict["response"])
+    return respone_dict["code"], respone_dict["payload"]
+
 
 def send_tcp_command(command: str, 
                      host: str = "127.0.0.1", 
@@ -74,7 +109,6 @@ def send_tcp_command(command: str,
             if timeout > 0:
                 if time.time() - start_time > timeout:
                     raise socket.timeout("接收响应超时")
-
             chunk = socket_obj.recv(2048)
             response_data += chunk
             break
@@ -232,7 +266,7 @@ def loop_query_status_with_ping(cmd, ping_timeout: int=5):
         # 探活
         if (interlval >= ping_timeout):
             interlval = 0
-            ping_result = handle_ping({})
+            ping_result = ping({})
             ping_result = json.loads(ping_result["response"])
             if (ping_result["code"] != 0):
                 return {
@@ -247,24 +281,37 @@ def loop_query_status_with_ping(cmd, ping_timeout: int=5):
         interlval += 1
     return 0 if status == 1 else 1 # 0 是正常 1为失败
 
-def handle_load_project(arguments: Dict[str, Any]) -> Dict[str, Any]:
+@CommandDefine({
+    "description": "加载3mf",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "description": "项目绝对路径"
+            }
+        },
+        "required": ["path"]
+    }
+})
+def load_project(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """处理加载项目请求"""
-    path = arguments.get("path", None)
+    path = arguments["path"]
     
     if not os.path.exists(path):
         return {
             "status": "error",
             "message": "项目路径不存在",
-            "response": json.dumps(gen_respone("-1", "project path not exists", {}))
+            "response": json.dumps(gen_respone(-1, "project path not exists"))
         }
 
     if not path:
         return {
             "status": "error",
             "message": "项目路径不能为空",
-            "response": json.dumps(gen_respone("-1", "project path is empty", {}))
+            "response": json.dumps(gen_respone(-1, "project path is empty"))
         }
-    
+
     # 加载项目
     result = send_tcp_command(f"trigger_load_project;{json.dumps({'file': path})}")
     query_res = loop_query_status_with_ping("trigger_load_project")
@@ -272,16 +319,32 @@ def handle_load_project(arguments: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "status": "error",
             "message": "加载项目失败",
-            "response": json.dumps(gen_respone("-1", "load project failed", {}))
+            "response": json.dumps(gen_respone(-1, "load project failed"))
         }
     return result
 
-def handle_ping(arguments: Dict[str, Any]) -> Dict[str, Any]:
+@CommandDefine({
+    "description": "探活",
+    "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    }
+})
+def ping(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """处理探活请求"""
     result = send_tcp_command(f"ping;{json.dumps({})}", timeout = 30) 
     return result
 
-def handle_wait_app_ready(arguments: Dict[str, Any]) -> Dict[str, Any]:
+@CommandDefine({
+    "description": "等待app就绪",
+    "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    }
+})
+def wait_app_ready(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """处理等待应用就绪请求"""
     arg = {
         "type": 0,
@@ -303,7 +366,7 @@ def handle_wait_app_ready(arguments: Dict[str, Any]) -> Dict[str, Any]:
             }
     return result
 
-def handle_query_cmd_status(arguments: Dict[str, Any]) -> Dict[str, Any]:
+def handle_query_cmd_status(arguments: Dict[str, Any]):
     """处理查询命令状态请求"""
     arg = {
         "type": 1,
@@ -314,10 +377,23 @@ def handle_query_cmd_status(arguments: Dict[str, Any]) -> Dict[str, Any]:
     res = json.loads(result["response"])
     status = -1
     if (int(res["code"]) == 0):
-        status = json.loads(res["payload"])["status"]
+        status = res["payload"]["status"]
     return status
 
-def handle_capture(arguments: Dict[str, Any]) -> Dict[str, Any]:
+@CommandDefine({
+    "description": "截图",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "save_path": {
+                "type": "string",
+                "description": "保存路径"
+            }
+        },
+        "required": ["save_path"]
+    }
+})
+def capture(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """处理截图请求"""
     arg = {
         "save_as": arguments.get("save_as", ""),
@@ -391,12 +467,20 @@ def handle_get_widget_geometry(arguments: Dict[str, Any]) -> Dict[str, Any]:
     result = send_tcp_command(f"get_widget_geometry;{json.dumps(arg)}") 
     return result
 
-def handle_new_project(arguments: Dict[str, Any]) -> Dict[str, Any]:
+@CommandDefine({
+    "description": "新建项目",
+    "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    }
+})
+def new_project(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """新建项目"""
     result = send_tcp_command(f"new_project;{json.dumps({})}") 
     return result
 
-def contours_similar(image_path1, image_path2, output_path1=None, output_path2=None, similarity_threshold=0.15, match_ratio_threshold=0.95):
+def contours_similar(image_path1, image_path2, output_path1="", output_path2="", similarity_threshold=0.15, match_ratio_threshold=0.95):
     # 读取图片
     img1 = cv2.imread(image_path1)
     img2 = cv2.imread(image_path2)
@@ -483,6 +567,7 @@ def contours_similar(image_path1, image_path2, output_path1=None, output_path2=N
     # 结果判断
     external_similar = (external_ratio >= match_ratio_threshold)
     internal_similar = (internal_ratio >= match_ratio_threshold)
+    overall_similar = False
     if ext_vaild == False and int_vaild == False:
         overall_similar = False
     elif (ext_vaild == True)  and (int_vaild == False):
@@ -505,7 +590,40 @@ def contours_similar(image_path1, image_path2, output_path1=None, output_path2=N
 
     return overall_similar
 
-def handle_contours_similar(arguments: Dict[str, Any]) -> Dict[str, Any]:
+@CommandDefine({
+    "description": "对比两张图的轮廓是否相似",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "image_path1": {
+                "type": "string",
+                "description": "第一张图路径"
+            },
+            "image_path2": {
+                "type": "string",
+                "description": "第二张图路径"
+            },
+            "output_path1": {
+                "type": "string",
+                "description": "第一张图轮廓图保存路径"
+            },
+            "output_path2": {
+                "type": "string",
+                "description": "第二张图轮廓图保存路径"
+            },
+            "similarity_threshold": {
+                "type": "number",
+                "description": "轮廓相似度阈值"
+            },
+            "match_ratio_threshold": {
+                "type": "number",
+                "description": "匹配率阈值"
+            }
+        },
+        "required": ["image_path1", "image_path2"]
+    }
+})
+def contours_similar(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """图像对比，基于轮廓相似性"""
     image_path1 = arguments["image_path1"]
     image_path2 = arguments["image_path2"]
@@ -518,10 +636,17 @@ def handle_contours_similar(arguments: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "status": "error",
             "message": f"图像路径不存在: {image_path1}",
-            "response": json.dumps(gen_respone(-1, "image path1 or path2 not exists", {}))
+            "response": json.dumps(gen_respone(-1, "image path1 or path2 not exists"))
         }
 
-    equal = contours_similar(image_path1, image_path2, output_path1, output_path2, similarity_threshold, match_ratio_threshold)
+    equal = contours_similar({
+        "image_path1": image_path1,
+        "image_path2": image_path2,
+        "output_path1": output_path1,
+        "output_path2": output_path2,
+        "similarity_threshold": similarity_threshold,
+        "match_ratio_threshold": match_ratio_threshold
+    })
 
     if (equal):
         resp = gen_respone(0, "图像相似", {"equal": equal})
@@ -533,9 +658,17 @@ def handle_contours_similar(arguments: Dict[str, Any]) -> Dict[str, Any]:
         "response": json.dumps(resp)
     }
     
-def handle_trigger_slice(arguments: Dict[str, Any]) -> Dict[str, Any]:
+@CommandDefine({
+    "description": "触发切片",
+    "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    }
+})
+def trigger_slice(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """触发切片"""
-    result = send_tcp_command(f"trigger_slice;{json.dumps({})}", timeout = 3)
+    result = send_tcp_command(f"trigger_slice;{json.dumps({})}", timeout = 8)
     resp = json.loads(result["response"])
     if resp["code"] != 0:
         resp = gen_respone(-1, "", {"result": "触发切片失败"})
@@ -546,7 +679,7 @@ def handle_trigger_slice(arguments: Dict[str, Any]) -> Dict[str, Any]:
         return {
             "status": "error",
             "message": "触发切片失败",
-            "response": json.dumps(gen_respone("-1", "trigger slice failed", {}))
+            "response": json.dumps(gen_respone(-1, "trigger slice failed", {}))
         }
     return result
 
@@ -556,7 +689,32 @@ def read_file(path):
     with open(path, "r", encoding="utf-8") as f:
         return f.read()
 
-def handle_execute_terminal_command(arguments: Dict[str, Any]) -> Dict[str, Any]:
+@CommandDefine({
+    "description": "执行终端命令",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "command": {
+                "type": "string",
+                "description": "要执行的命令"
+            },
+            "timeout": {
+                "type": "integer",
+                "description": "超时时间（秒）"
+            },
+            "cwd": {
+                "type": "string",
+                "description": "工作目录"
+            },
+            "sync": {
+                "type": "boolean",
+                "description": "阻塞形式或非后台形式"
+            }
+        },
+        "required": ["command"]
+    }
+})
+def execute_terminal_command(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """
     安全地执行终端命令
 
@@ -652,7 +810,46 @@ def handle_execute_terminal_command(arguments: Dict[str, Any]) -> Dict[str, Any]
             "response": json.dumps(resp)
         }
 
-def handle_define_batch_task(arguments: Dict[str, Any]) -> Dict[str, Any]:
+@CommandDefine({
+    "description": "定义批量任务  (定义批量任务的每个步骤，都如同平时调用时候一样)",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "description": "保存路径"
+            },
+            "tasks": {
+                "type": "array",
+                "description": "任务列表",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "cmd": {
+                            "type": "string",
+                            "description": "命令"
+                        },
+                        "arguments": {
+                            "type": "string",
+                            "description": "参数"
+                        }
+                    },
+                    "required": ["cmd", "arguments"]
+                }
+            },
+            "save_steps_res": {
+                "type": "array",
+                "description": "保存哪个步骤的结果",
+                "items": {
+                    "type": "integer",
+                    "description": "步骤索引"
+                }
+            }
+        },
+        "required": ["tasks", "save_steps_res"]
+    }
+})
+def define_batch_task(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """定义批量任务"""
     tasks = arguments["tasks"]
     path = arguments["path"]
@@ -696,7 +893,6 @@ def handle_define_batch_task(arguments: Dict[str, Any]) -> Dict[str, Any]:
             "cmd": cmd,
             "arguments": arg
         })
-        print(f"========>{cmd}{arg}")
 
     if len(res["tasks"]) != 0:
         open(path, "w+", encoding="utf-8").write(json.dumps(res, indent=4, ensure_ascii=False) + "\n")
@@ -706,7 +902,32 @@ def handle_define_batch_task(arguments: Dict[str, Any]) -> Dict[str, Any]:
         "response": json.dumps(gen_respone(0, "定义批量任务成功"))
     }
 
-def handle_exec_batch_task(arguments: Dict[str, Any]) -> Dict[str, Any]:
+@CommandDefine({
+    "description": "执行批量任务",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "path": {
+                "type": "string",
+                "description": "批量任务文件的路径"
+            },
+            "task_input_arg": {
+                "type": "array",
+                "description": "任务输入参数列表",
+                "items": {
+                    "type": "string",
+                    "description": "任务输入参数"
+                }
+            },
+            "restult_save_path": {
+                "type": "string",
+                "description": "结果保存路径"
+            }
+        },
+        "required": ["path", "task_input_arg"]
+    }
+})
+def exec_batch_task(arguments: Dict[str, Any]) -> Dict[str, Any]:
     """执行批量任务"""
     path = arguments["path"]
     task_input_arg = arguments["task_input_arg"]
@@ -751,7 +972,7 @@ def handle_exec_batch_task(arguments: Dict[str, Any]) -> Dict[str, Any]:
                 return {
                     "status": "success",
                     "message": f"",
-                    "response": json.dumps(gen_respone(-1, "批量任务结果文件格式错误", f"{restult_save_path}内容为非法json"))
+                    "response": json.dumps(gen_respone(-1, "批量任务结果文件格式错误", {"ret":f"{restult_save_path}内容为非法json"}))
                 }
     this_task_res = {
         "task_paht": path,
@@ -789,7 +1010,7 @@ def handle_exec_batch_task(arguments: Dict[str, Any]) -> Dict[str, Any]:
                 "arguments": arg,
                 "res": json.loads(res["response"])
             })
-    this_task_res["used_time"] = datetime.now().timestamp() - this_task_res["start_timestamp"]
+    this_task_res["used_time"] = datetime.now().timestamp() - float(this_task_res["start_timestamp"])
     write_res["tasks"].append(this_task_res)
     open(restult_save_path, "w+", encoding="utf-8").write(json.dumps(write_res, indent=4, ensure_ascii=False) + "\n")
 
@@ -799,249 +1020,377 @@ def handle_exec_batch_task(arguments: Dict[str, Any]) -> Dict[str, Any]:
         "response": json.dumps(gen_respone(0, "批量任务执行成功"))
     }
 
-# def handle_start_app(arguments: Dict[str, Any]) -> Dict[str, Any]:
-#     """
-#     启动应用
-
-#     Args:
-#         app_path: app 路径
-
-#     Returns:
-#         dict: 包含执行结果的字典
-#     """
-#     app_path = arguments["app_path"]
-#     app_arg = arguments.get("app_arg", "")  
-#     return handle_execute_terminal_command({"command": fr"start {app_path} {app_arg}", "sync": False})
-
-# MCP工具处理映射
-TCP_CLIENT_HANDLERS = {
-    # "get_resources": handle_get_resources,
-    "load_project": handle_load_project,
-    "ping": handle_ping,
-    "wait_app_ready": handle_wait_app_ready,
-    "capture": handle_take_screenshot,
-    "new_project": handle_new_project,
-    "contours_similar": handle_contours_similar,
-    "trigger_slice": handle_trigger_slice,
-    "execute_terminal_command": handle_execute_terminal_command,
-    "define_batch_task": handle_define_batch_task,
-    "exec_batch_task": handle_exec_batch_task,
-    # "start_app": handle_start_app,
-}
-
-# MCP工具定义
-TCP_CLIENT_TOOLS = {
-    "load_project": {
-        "name": "load_project",
-        "description": "加载3mf",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "string",
-                    "description": "项目绝对路径"
-                }
+@CommandDefine({
+    "description": "移动鼠标",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "x": {
+                "type": "integer",
+                "description": "目标x坐标"
             },
-            "required": ["path"]
-        }
-    },
-    "ping": {
-        "name": "ping",
-        "description": "探活",
-        "inputSchema": {
-            "type": "object",
-            "properties": {},
-            "required": []
-        }
-    },
-    "wait_app_ready": {
-        "name": "wait_app_ready",
-        "description": "等待app就绪",
-        "inputSchema": {
-            "type": "object",
-            "properties": {},
-            "required": []
-        }
-    },
-    "capture": {
-        "name": "capture",
-        "description": "截图",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "save_path": {
-                    "type": "string",
-                    "description": "保存路径"
-                }
+            "y": {
+                "type": "integer",
+                "description": "目标y坐标"
+            }
+        },
+        "required": ["x", "y"]
+    }
+})
+def mouse_move(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """移动鼠标"""
+    x = arguments["x"]
+    y = arguments["y"]
+    pyautogui.moveTo(x, y)
+    return {
+        "status": "success",
+        "message": f"",
+        "response": json.dumps(gen_respone(0, "鼠标移动成功"))
+    }
+
+@CommandDefine({
+    "description": "点击鼠标",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "x": {
+                "type": "integer",
+                "description": "目标x坐标"
             },
-            "required": ["save_path"]
-        }
-    },
-    "new_project": {
-        "name": "new_project",
-        "description": "新建项目",
-        "inputSchema": {
-            "type": "object",
-            "properties": {},
-            "required": []
-        }
-    },
-    "contours_similar": {
-        "name": "contours_similar",
-        "description": "对比两张图的轮廓是否相似",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "image_path1": {
-                    "type": "string",
-                    "description": "第一张图路径"
-                },
-                "image_path2": {
-                    "type": "string",
-                    "description": "第二张图路径"
-                },
-                "output_path1": {
-                    "type": "string",
-                    "description": "第一张图轮廓图保存路径"
-                },
-                "output_path2": {
-                    "type": "string",
-                    "description": "第二张图轮廓图保存路径"
-                },
-                "similarity_threshold": {
-                    "type": "number",
-                    "description": "轮廓相似度阈值"
-                },
-                "match_ratio_threshold": {
-                    "type": "number",
-                    "description": "匹配率阈值"
-                }
+            "y": {
+                "type": "integer",
+                "description": "目标y坐标"
             },
-            "required": ["image_path1", "image_path2"]
-        }
-    },
-    "trigger_slice": {
-        "name": "trigger_slice",
-        "description": "触发切片",
-        "inputSchema": {
-            "type": "object",
-            "properties": {},
-            "required": []
-        }
-    },
-    "execute_terminal_command": {
-        "name": "execute_terminal_command",
-        "description": "执行终端命令",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "command": {
-                    "type": "string",
-                    "description": "要执行的命令"
-                },
-                "timeout": {
-                    "type": "integer",
-                    "description": "超时时间（秒）"
-                },
-                "cwd": {
-                    "type": "string",
-                    "description": "工作目录"
-                },
-                "sync": {
-                    "type": "boolean",
-                    "description": "阻塞形式或非后台形式"
-                }
-            },
-            "required": ["command"]
-        }
-    },
-    "define_batch_task": {
-        "name": "define_batch_task",
-        "description": "定义批量任务",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "string",
-                    "description": "保存路径"
-                },
-                "tasks": {
-                    "type": "array",
-                    "description": "任务列表",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "cmd": {
-                                "type": "string",
-                                "description": "命令"
-                            },
-                            "arguments": {
-                                "type": "string",
-                                "description": "参数"
-                            }
+            "is_left": {
+                "type": "boolean",
+                "description": "是否为左键点击"
+            }
+        },
+        "required": ["x", "y"]
+    }
+})
+def mouse_click(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """点击鼠标"""
+    x = arguments["x"]
+    y = arguments["y"]
+    is_left = arguments.get("is_left", True)
+    button = "left" if is_left else "right"
+    pyautogui.click(x, y, button=button)
+    return {
+        "status": "success",
+        "message": f"",
+        "response": json.dumps(gen_respone(0, "鼠标点击成功"))
+    }
+
+@CommandDefine({
+    "description": "按下键盘",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "key": {
+                "type": "string",
+                "description": "要按下的键"
+            }
+        },
+        "required": ["key"]
+    }
+})
+def key_press(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """按下键盘"""
+    key = arguments["key"]
+    pyautogui.press(key)
+    return {
+        "status": "success",
+        "message": f"",
+        "response": json.dumps(gen_respone(0, "键盘按下成功"))
+    }
+
+@CommandDefine({
+    "description": "选择打印机",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "printer_name": {
+                "type": "string",
+                "description": "打印机名称"
+            }
+        },
+        "required": ["printer_name"]
+    }
+})
+def select_printer_preset(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """选择打印机"""
+    printer_name = arguments["printer_name"]
+    result = send_tcp_command(f"select_printer;{json.dumps({'printer_name': printer_name})}")
+    return result
+
+@CommandDefine({
+    "description": "绑定物理打印机",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "ip_or_name": {
+                "type": "string",
+                "description": "IP地址或名字"
+            }
+        },
+        "required": ["ip"]
+    }
+})
+def binding_phy_printer(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """绑定物理打印机"""
+    ip_or_name = arguments["ip_or_name"]
+    result = send_tcp_command(f"binding_phy_printer;{json.dumps({'ip_or_name': ip_or_name})}")
+    return result
+
+def handle_trigger_send_to_print(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """触发发送页面"""
+    return send_tcp_command(f"trigger_send_to_print;{json.dumps({'type': arguments['type']})}")
+
+def handle_close_send_to_print(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """关闭发送页面"""
+    return send_tcp_command(f"close_send_to_print;{{}}")
+
+def gen_web_respone(arg_code):
+    """生成webview响应"""
+    resp_code = f'''
+    const msgObj = {{
+        "command": "test_exec_js_respone",
+        "arg": {arg_code}
+    }}
+    window.wx.postMessage(JSON.stringify(msgObj));
+    '''
+    return resp_code
+
+def exec_js_in_webview(which_webview, js_script):
+    """允许在指定webview上执行 js code"""
+    js_script = f'''
+    {{
+    {js_script}
+    }}
+    '''
+    js_path = rf"{tempfile.gettempdir()}\_js_script_"
+    open(js_path, "w").write(js_script)
+    res = send_tcp_command(f"exec_js_in_webview;{json.dumps({'which_webview': which_webview, 'js_script_localtion': js_path})}")
+    os.remove(js_path)
+    return res 
+
+def exec_js_in_sendtoprint_webview(js_script):
+    """send to print页面执行js"""
+    return exec_js_in_webview("SentToPrinter", js_script)
+
+def exec_js_in_deviceMgr_webview(js_script):
+    """PrinterMgrView页面执行js"""
+    return exec_js_in_webview("PrinterMgrView", js_script)
+
+@CommandDefine({
+    "description": "仅发送",
+    "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+    }
+})
+def trigger_signle_only_send(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """仅发送"""
+    # 打开send to print webview
+    _ = handle_trigger_send_to_print({"type": "single"})
+    # 执行js code, 模拟点击仅发送按钮,并等待发送完成
+    code = f'''
+    const xpath = '//*[@class="el-button send-only"]'
+    const timer = setInterval(() => {{
+        const item = document.evaluate(xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+        if (item) {{
+            clearInterval(timer)
+            const progress_xpath = '//*[@class="el-progress-bar"]'
+
+            const progress_timer = setInterval(() => {{
+                const progress_item = document.evaluate(progress_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+                console.log("++++++++++889", progress_item.checkVisibility())
+                if (progress_item.checkVisibility()) {{
+                    clearInterval(progress_timer)
+                    console.log("++++++++++892, lanunch wait finished")
+
+                    const progress_finished_timer = setInterval(() => {{
+                        const progress_item_finished = document.evaluate(progress_xpath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue
+                        console.log("++++++++++894", progress_item_finished.checkVisibility())
+                        if (!progress_item_finished.checkVisibility())
+                        {{
+                            console.log("++++++++++898, send only finished")
+                            clearInterval(progress_finished_timer)
+                            {gen_web_respone({})}
+                        }}
+                    }}, 100)
+
+                }}
+            }}, 5)
+
+            item.click()
+        }}
+    }}, 100)
+    '''
+    res = exec_js_in_sendtoprint_webview(code)
+    # 关闭send to print webview
+    _ = handle_close_send_to_print({})
+    return res 
+
+@CommandDefine({
+    "description": "多机页面仅发送",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "ip_or_name": {
+                "type": "array",
+                "description": "IP地址或名字列表"
+            }
+        },
+        "required": ["ip_or_name"]
+    }
+})
+def trigger_multi_only_send(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """多机页面仅发送"""
+    # 打开send to print webview
+    _ = handle_trigger_send_to_print({"type": "multi"})
+    # 执行js code, 模拟点击仅发送按钮,并等待发送完成
+    ip_or_name_list = arguments["ip_or_name"]
+
+    # 根据ip、设备名选中设备，然后点击发送按钮
+    code = f'''
+    const init_timer = setInterval(() => {{
+        const onlysend_btn = document.getElementsByClassName("el-button send-only")[0]
+        if (onlysend_btn)
+        {{
+            clearInterval(init_timer)
+
+            const devices = document.getElementsByClassName("select-device-item")
+            const ipv4Regex = /\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\b/g
+            let selected_count = 0
+            for(let i = 0; i < devices.length; i++) {{
+                ip_content = devices[i].getElementsByClassName("address-cfs")[0].getElementsByTagName("span")[0].textContent
+                device_name = devices[i].getElementsByClassName("name")[0].textContent
+                for (let ip_or_name of {ip_or_name_list})
+                {{
+                    if (ip_or_name == device_name)
+                    {{
+                        devices[i].click()
+                        selected_count++
+                    }}
+                    else if (ip_content == ip_or_name)
+                    {{
+                        devices[i].click()
+                        selected_count++
+                    }}
+                }}
+            }}
+            if (selected_count == 0)
+            {{
+                console.log("++++++++++896, onlysend btn is disabled")
+                {gen_web_respone({"status": "error", "message": "未选择任何设备"})}
+            }}
+            else
+            {{
+                const can_select_timer = setInterval(() => {{
+                    if (onlysend_btn.getAttribute("aria-disabled") == 'false')
+                    {{
+                        console.log("++++++++++897", onlysend_btn.getAttribute("aria-disabled"))
+                        clearInterval(can_select_timer)
+                        {gen_web_respone({"status": "ok"})}
+                        onlysend_btn.click()
+                    }}
+
+                }}, 1000)
+            }}
+
+        }}
+    }}, 1000)
+    '''
+    res = exec_js_in_sendtoprint_webview(code)
+    _, payload = get_tcp_command_response(res)
+    if (payload["arg"]["status"] != "ok"):
+        return res
+    
+    # 点击多机发送后，等待设备页发送完成
+    code = f'''
+    const checked_task_transfer_start = setInterval(() => {{
+        if (document.getElementsByClassName("el-dialog__title").length != 0)
+        {{
+            if (document.getElementsByClassName("batch-upload-dialog").length != 0)
+            {{
+                clearInterval(checked_task_transfer_start)
+                
+                const row_check_timer = setInterval(() => {{
+                    for (let i = 0; i < document.getElementsByClassName("el-table__row").length; i++)
+                    {{
+                        const devicename = document.getElementsByClassName("el-table__row")[i].getElementsByClassName("cell")[0].textContent
+                        const ipaddr = document.getElementsByClassName("el-table__row")[i].getElementsByClassName("cell")[1].textContent
+                        const isok = document.getElementsByClassName("el-table__row")[i].getElementsByClassName("cell")[2].textContent == "发送成功"
+                        for (let ip_or_name of {ip_or_name_list})
+                        {{
+                            if (ip_or_name == devicename)
+                            {{
+                                if (isok)
+                                {{
+                                    clearInterval(row_check_timer)
+                                    {gen_web_respone({"status": "ok"})}
+                                    document.getElementsByClassName("el-dialog__headerbtn")[0].click()
+                                }}
+                                break
+                            }}
+                            else if (ipaddr == ip_or_name)
+                            {{
+                                if (isok)
+                                {{
+                                    clearInterval(row_check_timer)
+                                    {gen_web_respone({"status": "ok"})}
+                                    document.getElementsByClassName("el-dialog__headerbtn")[0].click()
+                                }}
+                                break
+                            }}
+                        }}
+                    }}
+                    
+                }}, 1000)
+                
+            }}
+        }}
+    }}, 100)
+    '''
+    res = exec_js_in_deviceMgr_webview(code)
+
+    return res 
+
+@CommandDefine({
+    "description": "设置工艺参数",
+    "inputSchema": {
+        "type": "object",
+        "properties": {
+            "paramter_list": {
+                "type": "array",
+                "description": "工艺参数列表",
+                "items": {
+                    "type": "object",
+                    "properties": {
+                        "key": {
+                            "type": "string",
+                            "description": "参数key"
                         },
-                        "required": ["cmd", "arguments"]
-                    }
-                },
-                "save_steps_res": {
-                    "type": "array",
-                    "description": "保存哪个步骤的结果",
-                    "items": {
-                        "type": "integer",
-                        "description": "步骤索引"
-                    }
+                        "value": {
+                            "type": "string",
+                            "description": "参数值"
+                        }
+                    },
+                    "required": ["key", "value"]
                 }
-            },
-            "required": ["tasks", "save_steps_res"]
-        }
-    },
-    "exec_batch_task": {
-        "name": "exec_batch_task",
-        "description": "执行批量任务",
-        "inputSchema": {
-            "type": "object",
-            "properties": {
-                "path": {
-                    "type": "string",
-                    "description": "批量任务文件的路径"
-                },
-                "task_input_arg": {
-                    "type": "array",
-                    "description": "任务输入参数列表",
-                    "items": {
-                        "type": "string",
-                        "description": "任务输入参数"
-                    }
-                },
-                "restult_save_path": {
-                    "type": "string",
-                    "description": "结果保存路径"
-                }
-            },
-            "required": ["path", "task_input_arg"]
-        }
-    },
-    # "start_app": {
-    #     "name": "start_app",
-    #     "description": "启动应用",
-    #     "inputSchema": {
-    #         "type": "object",
-    #         "properties": {
-    #             "app_path": {
-    #                 "type": "string",
-    #                 "description": "应用路径"
-    #             }
-    #         },
-    #         "properties": {
-    #             "app_arg": {
-    #                 "type": "string",
-    #                 "description": "应用启动参数"
-    #             }
-    #         },
-    #         "required": ["app_path", "app_arg"]
-    #     }
-    # },
-}
+            }
+        },
+        "required": ["paramter_list"]
+    }
+})
+def handle_set_process_parameters(arguments: Dict[str, Any]) -> Dict[str, Any]:
+    """设置工艺参数"""
+    paramter_list = arguments["paramter_list"]
+    res = send_tcp_command(f"set_process_paramter;{json.dumps({'paramter_list': paramter_list, 'which_page':''})}")
+    return res 
 
 # MCP服务器标准接口
 def handle_initialize():
