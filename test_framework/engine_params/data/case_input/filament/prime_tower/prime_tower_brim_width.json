@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "prime_tower_brim_width 0mm",
+      "input_3mf": "prime_tower_brim_width_0.3mf",
+      "expected_brim_width": 0.0
+    },
+    {
+      "project_name": "prime_tower_brim_width 3mm",
+      "input_3mf": "prime_tower_brim_width_3.3mf",
+      "expected_brim_width": 3.0
+    },
+    {
+      "project_name": "prime_tower_brim_width 5mm",
+      "input_3mf": "prime_tower_brim_width_5.3mf",
+      "expected_brim_width": 5.0
+    }
+  ]
+}

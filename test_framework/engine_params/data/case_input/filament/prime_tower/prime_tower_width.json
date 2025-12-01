@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "prime_tower_width 40mm",
+      "input_3mf": "prime_tower_width_40.3mf",
+      "expected_width": 40.0
+    },
+    {
+      "project_name": "prime_tower_width 60mm",
+      "input_3mf": "prime_tower_width_60.3mf",
+      "expected_width": 60.0
+    }
+  ]
+}

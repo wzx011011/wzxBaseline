@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "prime_volume 30mm³",
+      "input_3mf": "prime_volume_30.3mf",
+      "expected_volume": 30.0
+    },
+    {
+      "project_name": "prime_volume 45mm³",
+      "input_3mf": "prime_volume_45.3mf",
+      "expected_volume": 45.0
+    },
+     {
+      "project_name": "prime_volume 60mm³",
+      "input_3mf": "prime_volume_60.3mf",
+      "expected_volume": 60.0
+    }
+  ]
+}

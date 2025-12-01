@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "wipe_tower_rotation_angle 0°",
+      "input_3mf": "wipe_tower_rotation_angle_0.3mf",
+      "expected_angle": 0.0
+    },
+    {
+      "project_name": "wipe_tower_rotation_angle 45°",
+      "input_3mf": "wipe_tower_rotation_angle_45.3mf",
+      "expected_angle": 45.0
+    },
+    {
+      "project_name": "wipe_tower_rotation_angle 90°",
+      "input_3mf": "wipe_tower_rotation_angle_90.3mf",
+      "expected_angle": 90.0
+    }
+  ]
+}

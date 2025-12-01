@@ -1,0 +1,16 @@
+{
+  "cases": [
+    {
+      "project_name": "enable_prime_tower ON",
+      "input_3mf": "enable_prime_tower_on.3mf",
+      "expected_on": true,
+      "baseline_gcode": "baseline_enable_prime_tower_on.gcode"
+    },
+    {
+      "project_name": "enable_prime_tower OFF",
+      "input_3mf": "enable_prime_tower_off.3mf",
+      "expected_on": false,
+      "baseline_gcode": "baseline_enable_prime_tower_off.gcode"
+    }
+  ]
+}
