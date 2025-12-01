@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "wipe_tower_extra_flow 100%",
+      "input_3mf": "wipe_tower_extra_flow_100.3mf",
+      "expected_flow": 100.0
+    },
+    {
+      "project_name": "wipe_tower_extra_flow 150%",
+      "input_3mf": "wipe_tower_extra_flow_150.3mf",
+      "expected_flow": 150.0
+    },
+    {
+      "project_name": "wipe_tower_extra_flow 200%",
+      "input_3mf": "wipe_tower_extra_flow_200.3mf",
+      "expected_flow": 200.0
+    }
+  ]
+}

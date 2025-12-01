@@ -517,6 +517,75 @@ def _compare_prime_tower_paths(
     return True, details
 
 
+# ================== wipe_tower_extra_flow ==================
+def parse_wipe_tower_extra_flow(
+        gcode_path: Path | str,
+        expected_flow: float,
+        tolerance: float = 0.01,
+) -> Tuple[bool, float, Dict[str, object]]:
+    """
+    解析 G-code 文件，检测 wipe_tower_extra_flow 配置值是否与期望一致。
+    
+    校验逻辑（Level 1 配置对比）：
+    从配置中读取 wipe_tower_extra_flow 值，与期望值 expected_flow 进行对比。
+    
+    参数说明：
+    - wipe_tower_extra_flow: 擦料塔清洗线的额外流量百分比 (%)
+    - 最小值: 100%
+    - 最大值: 300%
+    - 默认值: 100%
+    
+    参数:
+        gcode_path: G-code 文件路径
+        expected_flow: 期望的 wipe_tower_extra_flow 值 (%)
+        tolerance: 允许的误差范围，默认 0.01%
+    
+    返回:
+        Tuple[bool, float, Dict[str, object]]:
+            - ok: 配置值与期望是否一致（在容差范围内）
+            - actual_flow: 实际的配置值
+            - details: 详细信息字典
+    """
+    parser = GCodeParser(Path(gcode_path))
+    cfg = parser.load_config()
+    
+    # 读取配置值
+    config_value = cfg.get("wipe_tower_extra_flow")
+    
+    # 将配置值转换为 float
+    actual_flow = 0.0
+    if config_value is not None:
+        if isinstance(config_value, (int, float)):
+            actual_flow = float(config_value)
+        elif isinstance(config_value, str):
+            # 处理百分号格式，如 "100%"
+            try:
+                clean_value = config_value.replace('%', '').strip()
+                actual_flow = float(clean_value)
+            except ValueError:
+                actual_flow = 0.0
+    
+    details = {
+        "config_value": config_value,
+        "actual_flow": actual_flow,
+        "expected_flow": expected_flow,
+        "tolerance": tolerance,
+        "gcode_path": str(gcode_path),
+    }
+    
+    # 判断是否在容差范围内
+    diff = abs(actual_flow - expected_flow)
+    ok = diff <= tolerance
+    
+    if ok:
+        details["message"] = f"wipe_tower_extra_flow 配置正确: expected={expected_flow}%, actual={actual_flow}%, diff={diff}"
+    else:
+        details["message"] = f"wipe_tower_extra_flow 配置不匹配: expected={expected_flow}%, actual={actual_flow}%, diff={diff}, tolerance={tolerance}"
+    
+    return ok, actual_flow, details
+
+
+# ================== prime_tower_enhance_type ==================
 def parse_prime_tower_enhance_type(
         gcode_path: Path | str,
         expected_type: str,

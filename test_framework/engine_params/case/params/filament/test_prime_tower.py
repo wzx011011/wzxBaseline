@@ -13,6 +13,7 @@ from engine_params.src.gcode.filament.filament_check import (
     parse_prime_volume,
     parse_wipe_tower_rotation_angle,
     parse_prime_tower_enhance_type,
+    parse_wipe_tower_extra_flow,
 )
 
 
@@ -196,4 +197,35 @@ def test_prime_tower_enhance_type(
 
     assert ok, (
         f"prime_tower_enhance_type expected {expected_type}, actual={actual_type}, details: {details}"
+    )
+
+
+# ================== wipe_tower_extra_flow ==================
+@pytest.mark.engine_params
+def test_wipe_tower_extra_flow(
+        slice_and_export: Path,
+        expected_flow: float,
+) -> None:
+    """
+    测试 wipe_tower_extra_flow 参数是否正确生效。
+    
+    校验逻辑（Level 1 配置对比）：
+    对比配置中的 wipe_tower_extra_flow 值与期望值是否一致。
+    
+    参数说明：
+    - wipe_tower_extra_flow: 擦料塔清洗线的额外流量百分比 (%)
+    - 最小值: 100%
+    - 最大值: 300%
+    - 默认值: 100%
+    """
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual_flow, details = parse_wipe_tower_extra_flow(
+        gcode_path,
+        expected_flow,
+    )
+
+    assert ok, (
+        f"wipe_tower_extra_flow expected {expected_flow}%, actual={actual_flow}%, details: {details}"
     )
