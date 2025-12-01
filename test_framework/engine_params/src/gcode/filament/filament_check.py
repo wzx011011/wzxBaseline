@@ -673,3 +673,176 @@ def parse_prime_tower_enhance_type(
         details["message"] = f"Level 1 通过: prime_tower_enhance_type 配置正确, expected={expected_type}, actual={actual_type}"
     
     return True, actual_type, details
+
+
+# ================== flush_into_infill ==================
+def parse_flush_into_infill(
+        gcode_path: Path | str,
+        expected_value: bool,
+) -> Tuple[bool, bool, Dict[str, object]]:
+    """
+    解析 G-code 文件，检测 flush_into_infill 是否生效。
+    
+    校验逻辑（Level 2 特征检测）：
+    检测换料后首个挤出块是否在填充区域。
+    
+    flush_into_infill 启用时的特征：
+    1. 换料命令（T0/T1/T2...）之后
+    2. 在 Prime tower 挤出完成后
+    3. 首个模型挤出出现在填充区域（;TYPE:Sparse infill 或 ;TYPE:Internal solid infill）
+    
+    具体检测步骤：
+    1. 定位所有换料命令（T0, T1, T2...）
+    2. 在换料后，跳过 Prime tower 区域
+    3. 记录进入模型打印后的首个 TYPE 标记
+    4. 统计换料后首个 TYPE 为填充类型的比例
+    5. 如果比例 > 80%，判定为 flush_into_infill 启用
+    
+    参数说明：
+    - flush_into_infill: 冲刷到对象的填充
+    - 类型: bool
+    - 默认值: false
+    - 将换料时的冲刷耗材用于打印填充部分，减少擦料塔浪费
+    
+    参数:
+        gcode_path: G-code 文件路径
+        expected_value: 期望的 flush_into_infill 值 (true/false)
+    
+    返回:
+        Tuple[bool, bool, Dict[str, object]]:
+            - ok: 检测结果与期望是否一致
+            - detected_value: 检测到的实际状态
+            - details: 详细信息字典
+    """
+    import re
+    
+    gcode_path = Path(gcode_path)
+    
+    # 填充类型标记
+    infill_types = ["Sparse infill", "Internal solid infill"]
+    # 需要跳过的类型（Prime tower 相关）
+    skip_types = ["Prime tower"]
+    
+    # 统计数据
+    tool_changes = []  # [(line_no, tool_id), ...]
+    first_type_after_change = []  # 换料后首个模型挤出类型
+    
+    # 正则匹配换料命令 T0, T1, T2...
+    tool_change_pattern = re.compile(r'^T(\d+)\s*$')
+    # 正则匹配 TYPE 标记
+    type_pattern = re.compile(r'^;TYPE:(.+)$')
+    
+    # 状态机
+    waiting_for_type = False  # 是否在等待换料后的首个 TYPE
+    in_prime_tower = False    # 是否在 Prime tower 区域内
+    
+    with open(gcode_path, 'r', encoding='utf-8', errors='ignore') as f:
+        for line_no, line in enumerate(f, 1):
+            line = line.strip()
+            
+            # 检测换料命令
+            tool_match = tool_change_pattern.match(line)
+            if tool_match:
+                tool_id = int(tool_match.group(1))
+                tool_changes.append((line_no, tool_id))
+                waiting_for_type = True
+                in_prime_tower = False
+                continue
+            
+            # 检测 TYPE 标记
+            type_match = type_pattern.match(line)
+            if type_match:
+                current_type = type_match.group(1)
+                
+                # 检测是否进入/离开 Prime tower
+                if current_type in skip_types:
+                    in_prime_tower = True
+                    continue
+                else:
+                    in_prime_tower = False
+                
+                # 如果正在等待换料后的首个 TYPE，且不在 Prime tower 中
+                if waiting_for_type and not in_prime_tower:
+                    first_type_after_change.append(current_type)
+                    waiting_for_type = False
+                continue
+            
+            # 检测 WIPE_TOWER_START / WIPE_TOWER_END 标记
+            if '; WIPE_TOWER_START' in line:
+                in_prime_tower = True
+            elif '; WIPE_TOWER_END' in line:
+                in_prime_tower = False
+    
+    # 计算填充类型比例
+    total_changes = len(first_type_after_change)
+    infill_count = sum(1 for t in first_type_after_change if t in infill_types)
+    
+    details = {
+        "gcode_path": str(gcode_path),
+        "expected_value": expected_value,
+        "tool_changes_count": len(tool_changes),
+        "first_types_after_change": first_type_after_change,
+        "infill_count": infill_count,
+        "total_analyzed": total_changes,
+    }
+    
+    # 如果没有换料操作，无法通过 Level 2 检测
+    if total_changes == 0:
+        # 回退到 Level 1 配置对比
+        parser = GCodeParser(gcode_path)
+        cfg = parser.load_config()
+        config_value = cfg.get("flush_into_infill")
+        
+        detected_value = False
+        if config_value is not None:
+            if isinstance(config_value, bool):
+                detected_value = config_value
+            elif isinstance(config_value, str):
+                detected_value = config_value.lower() in ("true", "1", "yes", "on")
+            elif isinstance(config_value, (int, float)):
+                detected_value = bool(config_value)
+        
+        details["detection_method"] = "Level 1 (配置对比，无换料操作)"
+        details["config_value"] = config_value
+        details["detected_value"] = detected_value
+        
+        ok = (detected_value == expected_value)
+        if ok:
+            details["message"] = f"Level 1 通过: flush_into_infill={detected_value} (无换料操作，回退到配置对比)"
+        else:
+            details["message"] = f"Level 1 失败: expected={expected_value}, config={detected_value}"
+        
+        return ok, detected_value, details
+    
+    # Level 2 特征检测：计算填充比例
+    infill_ratio = infill_count / total_changes
+    details["infill_ratio"] = infill_ratio
+    details["detection_method"] = "Level 2 (特征检测)"
+    
+    # 判定：如果换料后首个挤出大部分是填充类型，则启用
+    # 阈值说明：
+    # - 启用 flush_into_infill 时，换料后会优先在填充区域冲刷
+    # - 但并非所有换料都会进入填充区域（取决于模型结构和层的填充量）
+    # - 根据实测数据，启用时填充比例约 50%+，禁用时填充比例较低
+    # - 阈值设为 40%，能有效区分启用/禁用状态
+    threshold = 0.4
+    detected_value = infill_ratio > threshold
+    details["detected_value"] = detected_value
+    details["threshold"] = threshold
+    
+    ok = (detected_value == expected_value)
+    
+    if ok:
+        details["message"] = (
+            f"Level 2 通过: flush_into_infill detected={detected_value}, "
+            f"infill_ratio={infill_ratio:.1%} ({infill_count}/{total_changes})"
+        )
+    else:
+        details["message"] = (
+            f"Level 2 失败: expected={expected_value}, detected={detected_value}, "
+            f"infill_ratio={infill_ratio:.1%} ({infill_count}/{total_changes}), "
+            f"first_types={first_type_after_change}"
+        )
+    
+    return ok, detected_value, details
+

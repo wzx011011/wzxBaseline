@@ -2,26 +2,42 @@
 
 ## 一、参数分类与校验策略总览
 
-### 多材料 (Multimaterial) - 共 31 个参数
+### 多材料 (Multimaterial) - 共 34 个参数
 
-| 子分类 | 参数数量 | 校验难度 | 校验方式 |
-|--------|---------|---------|----------|
-| 擦料塔 (Prime tower) | 15 | 简单-中等 | 配置读取 + G-code 特征检测 |
-| 特征耗材 (Filament for Features) | 4 | 简单 | 配置注释 + 换料命令 |
-| 渗料预防 (Ooze prevention) | 4 | 中等 | 温度命令分析 |
-| 冲刷选项 (Flush options) | 3 | 简单 | 配置注释 |
-| 高级 (Advanced) | 8 | 困难 | 路径分析 |
+| 子分类 | 参数数量 | 校验难度 | 校验方式 | 校验层次 |
+|--------|---------|---------|----------|----------|
+| 擦料塔 (Prime tower) | 15 | 简单-中等 | 配置读取 + G-code 特征检测 | L1/L2/L3 |
+| 特征耗材 (Filament for Features) | 4 | 简单 | 配置注释 + 换料命令 | L1/L2 |
+| 渗料预防 (Ooze prevention) | 4 | 中等 | 温度命令分析 | L1/L2 |
+| 冲刷选项 (Flush options) | 3 | 简单-中等 | 配置读取 + 特征检测 | L1/L2 |
+| 高级 (Advanced) | 8 | 困难 | 路径分析 | L3 |
 
 ### 其他 (Others) - 共 32 个参数
 
-| 子分类 | 参数数量 | 校验难度 | 校验方式 |
-|--------|---------|---------|---------|
-| 裙边 (Skirt) | 7 | 简单 | G-code 首层分析 |
-| 边缘 (Brim) | 5 | 简单 | G-code 首层分析 |
-| 特殊模式 (Special mode) | 12 | 中等-困难 | 多种方式 |
-| G代码输出 (G-code output) | 6 | 简单 | G-code 格式检测 |
-| 后处理脚本 | 1 | 特殊 | 无法通过 G-code 校验 |
-| 备注 | 1 | 特殊 | 注释检测 |
+| 子分类 | 参数数量 | 校验难度 | 校验方式 | 校验层次 |
+|--------|---------|---------|---------|----------|
+| 裙边 (Skirt) | 7 | 简单-中等 | G-code 首层分析 | L1/L2/L3 |
+| 边缘 (Brim) | 5 | 简单 | G-code 首层分析 | L1/L2/L3 |
+| 特殊模式 (Special mode) | 12 | 中等-困难 | 多种方式 | L1/L2/L3 |
+| G代码输出 (G-code output) | 6 | 简单-中等 | G-code 格式检测 | L1/L2 |
+| 后处理脚本 | 1 | 特殊 | 无法通过 G-code 校验 | N/A |
+| 备注 | 1 | 特殊 | 注释检测 | L1 |
+
+### 校验层次说明
+
+| 层次 | 名称 | 适用场景 | 复杂度 | 可靠性 |
+|------|------|---------|--------|--------|
+| Level 1 (L1) | 配置对比 | 简单值校验，直接从 G-code 配置注释读取 | 简单 | 快速预检 |
+| Level 2 (L2) | 特征检测 | 开关型参数，检测 TYPE 标记是否存在 | 中等 | 效果验证 |
+| Level 3 (L3) | 路径分析/基线对比 | 几何验证，需要分析实际打印路径 | 复杂 | 精确验证 |
+
+### 校验覆盖统计
+
+| 分类 | 参数数量 | L1 可校验 | L2 可校验 | L3 可校验 | 无法校验 |
+|------|---------|-----------|-----------|-----------|----------|
+| 多材料 | 34 | 28 | 4 | 2 | 0 |
+| 其他 | 32 | 24 | 5 | 2 | 1 |
+| **总计** | **66** | **52** | **9** | **4** | **1** |
 
 ---
 
@@ -149,19 +165,98 @@ tower_present = any(blocks for blocks in prime_tower_blocks if blocks)
 
 ### 2.4 冲刷选项 (Flush options)
 
-| 参数名 | 类型 | 校验方法 |
-|--------|------|---------|
-| `flush_into_infill` | bool | 检测填充区域是否有冲刷动作 |
-| `flush_into_objects` | bool | 检测物体内是否有冲刷动作 |
-| `flush_into_support` | bool | 检测支撑区域是否有冲刷动作 |
+> **参考资料**: [Bambu Lab Wiki - 减少多色打印时的材料浪费](https://wiki.bambulab.com/zh/software/bambu-studio/reduce-wasting-during-filament-change)
+
+冲刷选项用于将换料时的冲刷耗材利用起来，减少浪费。冲刷功能**必须启用擦料塔才能生效**。
+
+| 参数名 | 类型 | 默认值 | 校验层次 | 校验方法 | 参数说明 |
+|--------|------|--------|---------|----------|----------|
+| `flush_into_infill` | bool | false | Level 2 | 检测换料后首个挤出是否在填充区域 | 冲刷到对象的填充，将冲刷耗材用于打印填充部分 |
+| `flush_into_support` | bool | **true** | Level 1 | 配置读取: `cfg.get("flush_into_support")` | 冲刷到对象的支撑（**默认启用**），将冲刷耗材用于支撑区域 |
+| `flush_into_objects` | bool | false | Level 1 | 配置读取: `cfg.get("flush_into_objects")` | 冲刷到指定模型，需要同时打印多个模型才可用 |
+
+**参数特性说明（来自 Wiki）：**
+
+| 参数 | 优点 | 缺点/注意事项 |
+|------|------|--------------|
+| `flush_into_infill` | 减少擦料塔耗材浪费 | 浅色/透明材料可能透色，外壁层数少时更明显 |
+| `flush_into_support` | 无明显副作用，默认启用 | 支撑面积通常不足以显著降低浪费 |
+| `flush_into_objects` | 可大幅减少浪费（如 70g→1g） | 仅多模型可用，指定模型会有渐变/杂色效果 |
 
 **校验逻辑：**
 
+```python
+# Level 1: 配置对比（用于 flush_into_support, flush_into_objects）
+parser = GCodeParser(gcode_path)
+cfg = parser.load_config()
+flush_into_support = cfg.get("flush_into_support")    # 默认 true（注意！）
+flush_into_objects = cfg.get("flush_into_objects")    # 默认 false
+
+# Level 2: 特征检测（用于 flush_into_infill）
+# 验证思路：检测换料后首个挤出块是否在填充区域
+# 
+# flush_into_infill 启用时的特征：
+#   1. 换料命令（T0/T1/T2...）之后
+#   2. 在 Prime tower 挤出完成后
+#   3. 首个模型挤出出现在填充区域（;TYPE:Sparse infill 或 ;TYPE:Internal solid infill）
+#   4. 该填充区域的挤出量明显大于正常填充（包含冲刷量）
+#
+# 具体检测步骤：
+#   1. 定位所有换料命令（T0, T1, T2...）
+#   2. 在换料后，跳过 Prime tower 区域
+#   3. 记录进入模型打印后的首个 TYPE 标记
+#   4. 统计换料后首个 TYPE 为填充类型的比例
+#   5. 如果比例 > 80%，判定为 flush_into_infill 启用
+#
+# flush_into_infill 禁用时的特征：
+#   - 换料后首个挤出通常在外墙或其他区域
+#   - 填充区域的挤出量正常
+
+def check_flush_into_infill(gcode_path: Path) -> Tuple[bool, Dict]:
+    """
+    检测 flush_into_infill 是否启用
+    
+    返回:
+        (is_enabled, details)
+    """
+    parser = GCodeParser(gcode_path)
+    
+    # 定位换料命令
+    tool_changes = []  # [(line_no, tool_id), ...]
+    
+    # 统计换料后首个挤出类型
+    first_type_after_change = []
+    
+    # 填充类型标记
+    infill_types = ["Sparse infill", "Internal solid infill"]
+    
+    # 遍历 G-code，分析换料后的挤出模式
+    # ...
+    
+    # 判断：如果换料后首个挤出大部分是填充类型，则启用
+    infill_ratio = sum(1 for t in first_type_after_change if t in infill_types) / len(first_type_after_change)
+    is_enabled = infill_ratio > 0.8
+    
+    return is_enabled, {
+        "infill_ratio": infill_ratio,
+        "first_types": first_type_after_change,
+        "tool_changes": len(tool_changes),
+    }
+
+# 注意事项：
+# 1. flush_into_support 默认启用，测试时需注意
+# 2. 冲刷功能需要 enable_prime_tower = true 才能生效
+# 3. flush_into_objects 需要多模型场景才能测试
+# 4. flush_into_infill 的 Level 2 检测需要有换料操作才能验证
 ```
-1. 从配置注释中读取设置值
-2. 分析换料后的挤出位置
-3. 判断冲刷位置是否在对应区域内
-```
+
+**测试建议：**
+
+| 参数 | 推荐测试模型 | 测试要点 |
+|------|-------------|---------|
+| `flush_into_infill` | 多色模型 + 较多填充 | 对比启用/禁用时的擦料塔耗材量 |
+| `flush_into_support` | 多色模型 + 需要支撑 | 默认启用，测试禁用场景 |
+| `flush_into_objects` | 多个模型同时打印 | 需要至少 2 个模型，其中一个设为冲刷对象 |
 
 ---
 
