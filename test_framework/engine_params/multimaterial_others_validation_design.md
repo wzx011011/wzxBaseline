@@ -172,7 +172,7 @@ tower_present = any(blocks for blocks in prime_tower_blocks if blocks)
 | 参数名 | 类型 | 默认值 | 校验层次 | 校验方法 | 参数说明 |
 |--------|------|--------|---------|----------|----------|
 | `flush_into_infill` | bool | false | Level 2 | 检测换料后首个挤出是否在填充区域 | 冲刷到对象的填充，将冲刷耗材用于打印填充部分 |
-| `flush_into_support` | bool | **true** | Level 1 | 配置读取: `cfg.get("flush_into_support")` | 冲刷到对象的支撑（**默认启用**），将冲刷耗材用于支撑区域 |
+| `flush_into_support` | bool | **true** | Level 2 | 检测换料后首个挤出是否在支撑区域 | 冲刷到对象的支撑（**默认启用**），将冲刷耗材用于支撑区域 |
 | `flush_into_objects` | bool | false | Level 1 | 配置读取: `cfg.get("flush_into_objects")` | 冲刷到指定模型，需要同时打印多个模型才可用 |
 
 **参数特性说明（来自 Wiki）：**
@@ -211,6 +211,26 @@ flush_into_objects = cfg.get("flush_into_objects")    # 默认 false
 # flush_into_infill 禁用时的特征：
 #   - 换料后首个挤出通常在外墙或其他区域
 #   - 填充区域的挤出量正常
+
+# Level 2: 特征检测（用于 flush_into_support）
+# 验证思路：检测换料后首个挤出块是否在支撑区域
+# 
+# flush_into_support 启用时的特征：
+#   1. 换料命令（T0/T1/T2...）之后
+#   2. 在 Prime tower 挤出完成后
+#   3. 首个模型挤出出现在支撑区域（;TYPE:Support 或 ;TYPE:Support interface）
+#
+# 具体检测步骤：
+#   1. 定位所有换料命令（T0, T1, T2...）
+#   2. 在换料后，跳过 Prime tower 区域
+#   3. 记录进入模型打印后的首个 TYPE 标记
+#   4. 统计换料后首个 TYPE 为支撑类型的比例
+#   5. 如果比例 > 阈值，判定为 flush_into_support 启用
+#
+# flush_into_support 禁用时的特征：
+#   - 换料后首个挤出不会优先进入支撑区域
+#
+# 注意：flush_into_support 默认启用，测试时需验证禁用场景
 
 def check_flush_into_infill(gcode_path: Path) -> Tuple[bool, Dict]:
     """
