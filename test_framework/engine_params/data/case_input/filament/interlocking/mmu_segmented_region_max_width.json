@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "mmu_segmented_region_max_width_0mm",
+      "input_3mf": "mmu_segmented_region_max_width_0.3mf",
+      "expected_value": 0.0
+    },
+    {
+      "project_name": "mmu_segmented_region_max_width_5mm",
+      "input_3mf": "mmu_segmented_region_max_width_5.3mf",
+      "expected_value": 5.0
+    }
+  ]
+}

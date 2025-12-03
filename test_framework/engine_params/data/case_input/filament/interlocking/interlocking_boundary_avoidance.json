@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "interlocking_boundary_avoidance_1mm",
+      "input_3mf": "interlocking_boundary_avoidance_1.3mf",
+      "expected_value": 1.0
+    },
+    {
+      "project_name": "interlocking_boundary_avoidance_2mm",
+      "input_3mf": "interlocking_boundary_avoidance_2.3mf",
+      "expected_value": 2.0
+    },
+    {
+      "project_name": "interlocking_boundary_avoidance_3mm",
+      "input_3mf": "interlocking_boundary_avoidance_3.3mf",
+      "expected_value": 3.0
+    }
+  ]
+}
