@@ -58,8 +58,6 @@ def _get_exe_path_from_cli_or_env(config: "pytest.Config") -> Optional[str]:
         return None
 
     p = Path(exe).expanduser()
-    # TODO，这里记得删掉
-    p = Path(r"E:\Creality Print 7 Alp\Creality Print 7.0 Alpha\CrealityPrint.exe")
     if not (p.exists() and p.is_file()):
         raise pytest.UsageError(
             f"指定的切片器路径不存在或不是文件: {p}。"
@@ -74,7 +72,6 @@ def _get_exe_path_from_cli_or_env(config: "pytest.Config") -> Optional[str]:
 @pytest.fixture(scope="session")
 def engine_manager(pytestconfig):
     exe_path = _get_exe_path_from_cli_or_env(pytestconfig)
-    exe_path = Path(r"E:\Creality Print 7 Alp\Creality Print 7.0 Alpha\CrealityPrint.exe")
     if not exe_path:
         pytest.skip(f"未提供 --slicer-exe 或 {ENV_KEY}，跳过依赖引擎的会话")
 
