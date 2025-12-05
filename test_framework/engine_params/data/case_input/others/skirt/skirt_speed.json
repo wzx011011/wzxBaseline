@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "skirt_speed_50",
+      "input_3mf": "skirt_speed_50.3mf",
+      "expected_value": 50.0
+    },
+    {
+      "project_name": "skirt_speed_100",
+      "input_3mf": "skirt_speed_100.3mf",
+      "expected_value": 100.0
+    },
+    {
+      "project_name": "skirt_speed_150",
+      "input_3mf": "skirt_speed_150.3mf",
+      "expected_value": 150.0
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "draft_shield_disabled",
+      "input_3mf": "draft_shield_disabled.3mf",
+      "expected_value": "disabled"
+    },
+    {
+      "project_name": "draft_shield_enabled",
+      "input_3mf": "draft_shield_enabled.3mf",
+      "expected_value": "enabled"
+    }
+  ]
+}
