@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "fuzzy_skin_first_layer_disabled",
+      "input_3mf": "fuzzy_skin_first_layer_disabled.3mf",
+      "expected_value": false
+    },
+    {
+      "project_name": "fuzzy_skin_first_layer_enabled",
+      "input_3mf": "fuzzy_skin_first_layer_enabled.3mf",
+      "expected_value": true
+    }
+  ]
+}

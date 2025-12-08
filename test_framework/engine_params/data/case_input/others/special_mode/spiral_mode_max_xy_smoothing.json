@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "spiral_mode_max_xy_smoothing_0",
+      "input_3mf": "spiral_mode_max_xy_smoothing_0.3mf",
+      "expected_value": 0.0
+    },
+    {
+      "project_name": "spiral_mode_max_xy_smoothing_50",
+      "input_3mf": "spiral_mode_max_xy_smoothing_50.3mf",
+      "expected_value": 50.0
+    },
+    {
+      "project_name": "spiral_mode_max_xy_smoothing_100",
+      "input_3mf": "spiral_mode_max_xy_smoothing_100.3mf",
+      "expected_value": 100.0
+    }
+  ]
+}

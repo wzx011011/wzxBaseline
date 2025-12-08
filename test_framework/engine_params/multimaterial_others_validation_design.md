@@ -379,20 +379,47 @@ brim_blocks = parser.get_extrusion_blocks_per_layer(ExtrusionType.BRIM.value)
 
 ### 2.8 特殊模式 (Special mode)
 
-| 参数名 | 类型 | 校验方法 |
-|--------|------|---------|
-| `slicing_mode` | enum | 检测配置注释 |
-| `print_sequence` | enum | 分析多物体打印顺序 |
-| `print_order` | enum | 分析打印优先级 |
-| `spiral_mode` | bool | **检测 Z 轴是否连续变化** |
-| `ignore_inner_color` | bool | 检测内部是否忽略颜色 |
-| `spiral_mode_smooth` | bool | 分析 Z 轴变化平滑度 |
-| `spiral_mode_max_xy_smoothing` | float | 分析 XY 平滑程度 |
-| `timelapse_type` | enum | 检测延时摄影命令 |
-| `fuzzy_skin` | enum | **检测外墙路径是否有随机偏移** |
-| `fuzzy_skin_point_distance` | float | 分析模糊点间距 |
-| `fuzzy_skin_thickness` | float | 分析模糊偏移幅度 |
-| `fuzzy_skin_first_layer` | bool | 检测首层是否有模糊效果 |
+| 参数名 | 类型 | 枚举值/范围 | 校验方法 |
+|--------|------|------------|---------|
+| `slicing_mode` | enum | `Regular`, `EvenOdd`, `CloseHoles` | 检测配置注释 (Level 1) |
+| `print_sequence` | enum | `ByLayer`, `ByObject`, `ByDefault` | 分析多物体打印顺序 (Level 1) |
+| `print_order` | enum | `Default`, `AsObjectList` | 分析打印优先级 (Level 1) |
+| `spiral_mode` | bool | `true`/`false` | **检测 Z 轴是否连续变化** (Level 2) |
+| `ignore_inner_color` | bool | `true`/`false` | 检测内部是否忽略颜色 (Level 1) |
+| `spiral_mode_smooth` | bool | `true`/`false` | 分析 Z 轴变化平滑度 (Level 1) |
+| `spiral_mode_max_xy_smoothing` | float | 0-200% | 分析 XY 平滑程度 (Level 1) |
+| `timelapse_type` | enum | `tlTraditional`, `tlSmooth`, `tlClose` | 检测延时摄影命令 (Level 2) |
+| `fuzzy_skin` | enum | `None`, `External`, `All`, `AllWalls` | **检测外墙路径是否有随机偏移** (Level 2/3) |
+| `fuzzy_skin_point_distance` | float | 0.1-1.5mm | 分析模糊点间距 (Level 3) |
+| `fuzzy_skin_thickness` | float | 0.1-0.5mm | 分析模糊偏移幅度 (Level 3) |
+| `fuzzy_skin_first_layer` | bool | `true`/`false` | 检测首层是否有模糊效果 (Level 2) |
+
+**枚举值说明（来自 PrintConfig.hpp）：**
+
+- **slicing_mode**:
+  - `Regular`: 普通裁剪规则（默认）
+  - `EvenOdd`: 与 3DLabPrint 模型兼容，使用奇偶规则
+  - `CloseHoles`: 强制所有轮廓逆时针，闭合孔洞
+
+- **print_sequence**:
+  - `ByLayer`: 按层打印（默认）
+  - `ByObject`: 按对象顺序打印（逐件打印）
+  - `ByDefault`: 默认行为，由用户或全局设置决定
+
+- **print_order**:
+  - `Default`: 层内顺序（默认）
+  - `AsObjectList`: 按照对象列表的顺序
+
+- **timelapse_type**:
+  - `tlTraditional`: 传统延时摄影
+  - `tlSmooth`: 平滑模式，打印后移动到分流槽拍照
+  - `tlClose`: 关闭延时摄影
+
+- **fuzzy_skin**:
+  - `None`: 关闭模糊
+  - `External`: 仅外墙（推荐）
+  - `All`: 全部墙面
+  - `AllWalls`: 所有墙面且间隔更密
 
 **spiral_mode 校验逻辑（Level 2 - Z轴连续性检测）：**
 

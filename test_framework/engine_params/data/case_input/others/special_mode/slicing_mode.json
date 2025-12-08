@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "slicing_mode_regular",
+      "input_3mf": "slicing_mode_regular.3mf",
+      "expected_value": "regular"
+    },
+    {
+      "project_name": "slicing_mode_even_odd",
+      "input_3mf": "slicing_mode_even_odd.3mf",
+      "expected_value": "even_odd"
+    },
+    {
+      "project_name": "slicing_mode_close_holes",
+      "input_3mf": "slicing_mode_close_holes.3mf",
+      "expected_value": "close_holes"
+    }
+  ]
+}

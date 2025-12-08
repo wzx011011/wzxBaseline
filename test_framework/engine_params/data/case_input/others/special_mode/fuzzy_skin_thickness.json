@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "fuzzy_skin_thickness_0.1mm",
+      "input_3mf": "fuzzy_skin_thickness_0.1mm.3mf",
+      "expected_value": 0.1
+    },
+    {
+      "project_name": "fuzzy_skin_thickness_0.3mm",
+      "input_3mf": "fuzzy_skin_thickness_0.3mm.3mf",
+      "expected_value": 0.3
+    },
+    {
+      "project_name": "fuzzy_skin_thickness_0.5mm",
+      "input_3mf": "fuzzy_skin_thickness_0.5mm.3mf",
+      "expected_value": 0.5
+    }
+  ]
+}

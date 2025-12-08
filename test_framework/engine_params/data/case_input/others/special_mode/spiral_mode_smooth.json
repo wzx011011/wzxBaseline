@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "spiral_mode_smooth_disabled",
+      "input_3mf": "spiral_mode_smooth_disabled.3mf",
+      "expected_value": false
+    },
+    {
+      "project_name": "spiral_mode_smooth_enabled",
+      "input_3mf": "spiral_mode_smooth_enabled.3mf",
+      "expected_value": true
+    }
+  ]
+}
