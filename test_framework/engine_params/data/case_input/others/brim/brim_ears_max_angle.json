@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "brim_ears_max_angle_90",
+      "input_3mf": "brim_ears_max_angle_90.3mf",
+      "expected_value": 90.0
+    },
+    {
+      "project_name": "brim_ears_max_angle_125",
+      "input_3mf": "brim_ears_max_angle_125.3mf",
+      "expected_value": 125.0
+    },
+    {
+      "project_name": "brim_ears_max_angle_160",
+      "input_3mf": "brim_ears_max_angle_160.3mf",
+      "expected_value": 160.0
+    }
+  ]
+}
