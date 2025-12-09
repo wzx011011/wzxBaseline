@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {
+      "project_name": "post_process_none",
+      "input_3mf": "post_process_none.3mf",
+      "expected_value": "",
+      "note": "此参数无法通过 G-code 内容直接校验，需要基线对比或外部验证"
+    }
+  ]
+}

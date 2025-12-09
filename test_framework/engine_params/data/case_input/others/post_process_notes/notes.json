@@ -1,0 +1,15 @@
+{
+  "cases": [
+    {
+      "project_name": "notes_empty",
+      "input_3mf": "notes_empty.3mf",
+      "expected_value": ""
+    },
+    {
+      "project_name": "notes_custom",
+      "input_3mf": "notes_custom.3mf",
+      "expected_value": "Test notes for G-code validation",
+      "note": "需要在切片器 UI 中手动添加备注内容"
+    }
+  ]
+}

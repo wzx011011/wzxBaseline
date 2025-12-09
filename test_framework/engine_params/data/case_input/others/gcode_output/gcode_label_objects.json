@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "gcode_label_objects_disabled",
+      "input_3mf": "gcode_label_objects_disabled.3mf",
+      "expected_value": false
+    },
+    {
+      "project_name": "gcode_label_objects_enabled",
+      "input_3mf": "gcode_label_objects_enabled.3mf",
+      "expected_value": true
+    }
+  ]
+}

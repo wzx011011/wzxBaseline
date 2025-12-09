@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "gcode_add_line_number_disabled",
+      "input_3mf": "gcode_add_line_number_disabled.3mf",
+      "expected_value": false
+    }
+  ]
+}

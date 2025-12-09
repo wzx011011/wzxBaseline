@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "gcode_comments_disabled",
+      "input_3mf": "gcode_comments_disabled.3mf",
+      "expected_value": false
+    },
+    {
+      "project_name": "gcode_comments_enabled",
+      "input_3mf": "gcode_comments_enabled.3mf",
+      "expected_value": true
+    }
+  ]
+}
