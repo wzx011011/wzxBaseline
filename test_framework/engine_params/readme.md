@@ -1,3 +1,55 @@
+
+## 添加新参数测试用例的 Prompt 模板
+请帮我添加一个 {参数名} 参数的测试用例，要求如下：
+
+1. **参考 C3DSlicer 源码**：读取 E:\wzx\C3DSlicer\C3DSlicer 路径下的工程，了解该参数的定义和使用方式
+
+2. **目录结构**： **一级分类 是printer,filament,process之一**
+   - 测试文件：engine_params/case/params/{一级分类}/{分类}/{test_文件名}.py
+   - 校验函数：engine_params/src/gcode/{一级分类}/{分类}/{文件名}_check.py
+   - JSON配置：engine_params/data/case_input/{一级分类}/{分类}/{子分类}/{参数名}.json
+   - 模型目录：engine_params/data/models/{一级分类}/{分类}/{子分类}/{参数名}/
+
+3. **校验逻辑**：
+   - 简单对比型：仅对比 G-code 配置中的参数值与期望值是否一致
+   - 复杂校验型：需要解析 G-code 中的挤出块、坐标等进行验证
+
+4. **参数信息**（需要从源码中获取）：
+   - 参数类型（coFloat/coInt/coBool/coEnum等）
+   - 最小值/最大值
+   - 默认值
+   - 参数含义
+
+5. **测试用例配置**（JSON格式）：
+   {
+     "cases": [
+       {
+         "project_name": "用例描述",
+         "input_3mf": "模型文件名.3mf",
+         "expected_xxx": 期望值
+       }
+     ]
+   }
+
+6. **执行测试**：使用切片器路径 C:/Program Files/Creality/Creality Print 7.0 Beta/CrealityPrint.exe
+   
+7. **资料**：所有的参数结构在这里：process_parameters.md
+
+
+## 示例 Prompt
+一级分类为 printer
+请帮我添加一个 prime_tower_brim_width 参数的测试用例：
+1. 使用的策略用{一级分类}_parameters_validation.md文件总结的策略
+2. 要准备哪些gcode或者3mf文件提前告诉我，等我准备好再执行下一步
+3. 目录结构：放在 {一级分类}/{分类} 下
+4. 校验逻辑：简单对比型，对比配置值与期望值
+5. 测试用例：设计 2-3 个不同值的用例
+6. 执行测试验证
+
+
+
+
+## 以前的文档 ##
 TODO
 ####
 src/slicerctl文件夹下放客户端实现。
