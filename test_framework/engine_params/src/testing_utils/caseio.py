@@ -15,16 +15,33 @@ def repo_root(start: Path) -> Path:
 
 def case_json_path(repo: Path, module_: str, group: str, param_name: str) -> Path:
     """JSON: test_framework/engine_params/data/case_input/<module>/<group>/<param_name>.json"""
-    return (repo / "test_framework" / "engine_params" / "data" / "case_input"
-            / module_ / group / f"{param_name}.json")
+    base = (repo / "test_framework" / "engine_params" / "data" / "case_input" / module_ / group)
+    direct = base / f"{param_name}.json"
+    if direct.exists():
+        return direct
+    # 如果存在子分类目录（如 module/group/<subgroup>/<param>.json），尝试在子目录中查找
+    if base.exists():
+        matches = list(base.rglob(f"{param_name}.json"))
+        if matches:
+            return matches[0]
+    # 返回预期路径（不存在时，调用者会抛出 FileNotFound）
+    return direct
 
 def model_or_baseline_path(repo: Path, module_: str, group: str, param_name: str, filename: str) -> Path:
     """
     3MF 与 GCODE 都在：
     test_framework/engine_params/data/models/<module>/<group>/<param_name>/<filename>
     """
-    return (repo / "test_framework" / "engine_params" / "data" / "models"
+    expected = (repo / "test_framework" / "engine_params" / "data" / "models"
             / module_ / group / param_name / filename).resolve()
+    if expected.exists():
+        return expected
+    # 容错：如果文件不在预期位置，尝试在 models/ 下全局查找相同文件名的候选项
+    models_root = (repo / "test_framework" / "engine_params" / "data" / "models")
+    matches = list(models_root.rglob(filename)) if models_root.exists() else []
+    if matches:
+        return matches[0].resolve()
+    return expected
 
 # ---------------- 元信息推断 ----------------
 
