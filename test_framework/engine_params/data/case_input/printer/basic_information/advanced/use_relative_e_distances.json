@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "use_relative_e_distances_true",
+      "input_3mf": "use_relative_e_distances_true.3mf",
+      "expected_value": true
+    }
+  ]
+}

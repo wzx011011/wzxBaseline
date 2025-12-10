@@ -5,10 +5,10 @@
 1. **参考 C3DSlicer 源码**：读取 E:\wzx\C3DSlicer\C3DSlicer 路径下的工程，了解该参数的定义和使用方式
 
 2. **目录结构**： **一级分类 是printer,filament,process之一**
-   - 测试文件：engine_params/case/params/{一级分类}/{分类}/{test_文件名}.py
-   - 校验函数：engine_params/src/gcode/{一级分类}/{分类}/{文件名}_check.py
-   - JSON配置：engine_params/data/case_input/{一级分类}/{分类}/{子分类}/{参数名}.json
-   - 模型目录：engine_params/data/models/{一级分类}/{分类}/{子分类}/{参数名}/
+   - 测试文件：engine_params/case/params/{一级分类}/{分类}/{test_组名称}.py
+   - 校验函数：engine_params/src/gcode/{一级分类}/{分类}/{组名称}_check.py
+   - JSON配置：engine_params/data/case_input/{一级分类}/{分类}/{组名称}/{参数名}.json
+   - 模型目录：engine_params/data/models/{一级分类}/{分类}/{组名称}/{参数名}/参数名_期望值.3mf
 
 3. **校验逻辑**：
    - 简单对比型：仅对比 G-code 配置中的参数值与期望值是否一致
@@ -40,7 +40,7 @@
 一级分类为 printer
 请帮我添加一个 prime_tower_brim_width 参数的测试用例：
 1. 使用的策略用{一级分类}_parameters_validation.md文件总结的策略
-2. 要准备哪些gcode或者3mf文件提前告诉我，等我准备好再执行下一步
+2. 要准备哪些gcode或者3mf文件提前告诉我，需要的3mf从template_model.3mf拷贝
 3. 目录结构：放在 {一级分类}/{分类} 下
 4. 校验逻辑：简单对比型，对比配置值与期望值
 5. 测试用例：设计 2-3 个不同值的用例

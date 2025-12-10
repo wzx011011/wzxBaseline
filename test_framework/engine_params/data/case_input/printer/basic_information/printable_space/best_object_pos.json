@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "best_object_pos_center",
+      "input_3mf": "best_object_pos_center.3mf",
+      "expected_value": "0.5,0.5"
+    },
+    {
+      "project_name": "best_object_pos_custom",
+      "input_3mf": "best_object_pos_custom.3mf",
+      "expected_value": "10,10"
+    }
+  ]
+}

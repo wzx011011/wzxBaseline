@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "bed_exclude_area_none",
+      "input_3mf": "bed_exclude_area_default.3mf",
+      "expected_value": "0x0"
+    },
+    {
+      "project_name": "bed_exclude_area_custom",
+      "input_3mf": "bed_exclude_area_single.3mf",
+      "expected_value": "210x10"
+    }
+  ]
+}

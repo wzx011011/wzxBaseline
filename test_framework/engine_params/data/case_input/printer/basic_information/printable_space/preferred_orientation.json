@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "preferred_orientation_0",
+      "input_3mf": "preferred_orientation_0.3mf",
+      "expected_value": 0
+    },
+    {
+      "project_name": "preferred_orientation_90",
+      "input_3mf": "preferred_orientation_90.3mf",
+      "expected_value": 90
+    },
+    {
+      "project_name": "preferred_orientation_180",
+      "input_3mf": "preferred_orientation_180.3mf",
+      "expected_value": 180
+    }
+  ]
+}

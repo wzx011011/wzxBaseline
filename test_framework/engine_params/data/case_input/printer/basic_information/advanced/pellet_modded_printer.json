@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "pellet_modded_printer_false",
+      "input_3mf": "pellet_modded_printer_false.3mf",
+      "expected_value": false
+    },
+    {
+      "project_name": "pellet_modded_printer_true",
+      "input_3mf": "pellet_modded_printer_true.3mf",
+      "expected_value": true
+    }
+  ]
+}

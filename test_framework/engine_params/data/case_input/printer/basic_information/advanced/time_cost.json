@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "time_cost_0",
+      "input_3mf": "time_cost_0.3mf",
+      "expected_value": 0
+    },
+    {
+      "project_name": "time_cost_1",
+      "input_3mf": "time_cost_1.3mf",
+      "expected_value": 1
+    }
+  ]
+}

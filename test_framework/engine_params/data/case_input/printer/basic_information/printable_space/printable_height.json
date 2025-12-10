@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "printable_height_250",
+      "input_3mf": "printable_height_250.3mf",
+      "expected_value": 250
+    },
+    {
+      "project_name": "printable_height_200",
+      "input_3mf": "printable_height_200.3mf",
+      "expected_value": 200
+    },
+    {
+      "project_name": "printable_height_300",
+      "input_3mf": "printable_height_300.3mf",
+      "expected_value": 300
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "multicolor_method_false",
+      "input_3mf": "multicolor_method_false.3mf",
+      "expected_value": false
+    },
+    {
+      "project_name": "multicolor_method_true",
+      "input_3mf": "multicolor_method_true.3mf",
+      "expected_value": true
+    }
+  ]
+}
