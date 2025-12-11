@@ -599,3 +599,65 @@ def parse_multicolor_method(gcode_path: Path, expected_value: Any) -> Tuple[bool
         "message": "boolean compare for multicolor_method",
         "raw_data": cfg
     }
+
+
+def parse_fan_speedup_time(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: 从 G-code 的配置块读取 fan_speedup_time 并与期望值对比"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+
+    actual_raw = cfg.get("fan_speedup_time")
+    actual = _to_float(actual_raw)
+    exp = _to_float(expected_value)
+    
+    if actual is None:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "fan_speedup_time not found or cannot be parsed as float",
+            "raw_data": cfg
+        }
+    
+    ok = actual == exp
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"float compare for fan_speedup_time: {actual} == {exp}",
+        "raw_data": cfg
+    }
+
+
+def parse_fan_kickstart(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: 从 G-code 的配置块读取 fan_kickstart 并与期望值对比"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+
+    actual_raw = cfg.get("fan_kickstart")
+    actual = _to_float(actual_raw)
+    exp = _to_float(expected_value)
+    
+    if actual is None:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "fan_kickstart not found or cannot be parsed as float",
+            "raw_data": cfg
+        }
+    
+    ok = actual == exp
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"float compare for fan_kickstart: {actual} == {exp}",
+        "raw_data": cfg
+    }

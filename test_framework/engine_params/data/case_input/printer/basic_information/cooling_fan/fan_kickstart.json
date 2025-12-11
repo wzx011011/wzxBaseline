@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "fan_kickstart_0",
+      "input_3mf": "fan_kickstart_0.3mf",
+      "expected_value": 0
+    },
+    {
+      "project_name": "fan_kickstart_0p5",
+      "input_3mf": "fan_kickstart_0p5.3mf",
+      "expected_value": 0.5
+    }
+  ]
+}
