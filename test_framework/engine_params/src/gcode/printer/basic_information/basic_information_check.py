@@ -31,6 +31,18 @@ def _norm_raw(val):
     return None if val is None else str(val).strip().lower()
 
 
+def _compare_gcode_strings(actual: str, expected: str) -> bool:
+    """比较 G-code 字符串：支持空字符串、子字符串匹配"""
+    # 都为空 -> True
+    if not actual and not expected:
+        return True
+    # 只有一个为空 -> False
+    if not actual or not expected:
+        return False
+    # 子字符串匹配
+    return expected in actual
+
+
 def parse_printable_area(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
     """Level 1 - Config: 从 G-code 的配置块读取 printable_area 并与期望值对比"""
     parser = GCodeParser(gcode_path)
@@ -659,5 +671,245 @@ def parse_fan_kickstart(gcode_path: Path, expected_value: Any) -> Tuple[bool, An
     return ok, actual, {
         "detection_method": "Level 1 - Config",
         "message": f"float compare for fan_kickstart: {actual} == {exp}",
+        "raw_data": cfg
+    }
+
+
+def parse_machine_start_gcode(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: 从 G-code 的配置块读取 machine_start_gcode 并与期望值对比"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+
+    actual_raw = cfg.get("machine_start_gcode")
+    actual = _norm_raw(actual_raw)
+    exp = _norm_raw(expected_value)
+    
+    ok = _compare_gcode_strings(actual, exp)
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": "gcode string compare for machine_start_gcode",
+        "raw_data": cfg
+    }
+
+
+def parse_machine_end_gcode(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: 从 G-code 的配置块读取 machine_end_gcode 并与期望值对比"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+
+    actual_raw = cfg.get("machine_end_gcode")
+    actual = _norm_raw(actual_raw)
+    exp = _norm_raw(expected_value)
+    
+    ok = _compare_gcode_strings(actual, exp)
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": "gcode string compare for machine_end_gcode",
+        "raw_data": cfg
+    }
+
+
+def parse_printing_by_object_gcode(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: 从 G-code 的配置块读取 printing_by_object_gcode 并与期望值对比"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+
+    actual_raw = cfg.get("printing_by_object_gcode")
+    actual = _norm_raw(actual_raw)
+    exp = _norm_raw(expected_value)
+    
+    ok = _compare_gcode_strings(actual, exp)
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": "gcode string compare for printing_by_object_gcode",
+        "raw_data": cfg
+    }
+
+
+def parse_before_layer_change_gcode(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: 从 G-code 的配置块读取 before_layer_change_gcode 并与期望值对比"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+
+    actual_raw = cfg.get("before_layer_change_gcode")
+    actual = _norm_raw(actual_raw)
+    exp = _norm_raw(expected_value)
+    
+    ok = _compare_gcode_strings(actual, exp)
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": "gcode string compare for before_layer_change_gcode",
+        "raw_data": cfg
+    }
+
+
+def parse_layer_change_gcode(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: 从 G-code 的配置块读取 layer_change_gcode 并与期望值对比"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+
+    actual_raw = cfg.get("layer_change_gcode")
+    actual = _norm_raw(actual_raw)
+    exp = _norm_raw(expected_value)
+    
+    ok = _compare_gcode_strings(actual, exp)
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": "gcode string compare for layer_change_gcode",
+        "raw_data": cfg
+    }
+
+
+def parse_time_lapse_gcode(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: 从 G-code 的配置块读取 time_lapse_gcode 并与期望值对比"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+
+    actual_raw = cfg.get("time_lapse_gcode")
+    actual = _norm_raw(actual_raw)
+    exp = _norm_raw(expected_value)
+    
+    ok = _compare_gcode_strings(actual, exp)
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": "gcode string compare for time_lapse_gcode",
+        "raw_data": cfg
+    }
+
+
+def parse_change_filament_gcode(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: 从 G-code 的配置块读取 change_filament_gcode 并与期望值对比"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+
+    actual_raw = cfg.get("change_filament_gcode")
+    actual = _norm_raw(actual_raw)
+    exp = _norm_raw(expected_value)
+    
+    ok = _compare_gcode_strings(actual, exp)
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": "gcode string compare for change_filament_gcode",
+        "raw_data": cfg
+    }
+
+
+def parse_change_extrusion_role_gcode(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: 从 G-code 的配置块读取 change_extrusion_role_gcode 并与期望值对比"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+
+    actual_raw = cfg.get("change_extrusion_role_gcode")
+    actual = _norm_raw(actual_raw)
+    exp = _norm_raw(expected_value)
+    
+    ok = _compare_gcode_strings(actual, exp)
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": "gcode string compare for change_extrusion_role_gcode",
+        "raw_data": cfg
+    }
+
+
+def parse_machine_pause_gcode(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: 从 G-code 的配置块读取 machine_pause_gcode 并与期望值对比"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+
+    actual_raw = cfg.get("machine_pause_gcode")
+    actual = _norm_raw(actual_raw)
+    exp = _norm_raw(expected_value)
+    
+    ok = _compare_gcode_strings(actual, exp)
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": "gcode string compare for machine_pause_gcode",
+        "raw_data": cfg
+    }
+
+
+def parse_template_custom_gcode(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: 从 G-code 的配置块读取 template_custom_gcode 并与期望值对比"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+
+    actual_raw = cfg.get("template_custom_gcode")
+    actual = _norm_raw(actual_raw)
+    exp = _norm_raw(expected_value)
+    
+    ok = _compare_gcode_strings(actual, exp)
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": "gcode string compare for template_custom_gcode",
         "raw_data": cfg
     }
