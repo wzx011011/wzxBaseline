@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "enable_filament_ramming_false",
+      "input_3mf": "enable_filament_ramming_false.3mf",
+      "expected_value": false
+    }
+  ]
+}

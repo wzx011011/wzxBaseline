@@ -913,3 +913,276 @@ def parse_template_custom_gcode(gcode_path: Path, expected_value: Any) -> Tuple[
         "message": "gcode string compare for template_custom_gcode",
         "raw_data": cfg
     }
+
+
+# ===== Multimaterial Page Parameters =====
+
+def parse_single_extruder_multi_material(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: single_extruder_multi_material (bool)"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+    
+    actual_raw = cfg.get("single_extruder_multi_material")
+    actual = _to_bool(actual_raw)
+    expected = _to_bool(expected_value)
+    
+    ok = actual == expected
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"bool compare for single_extruder_multi_material",
+        "raw_data": cfg
+    }
+
+
+def parse_extruders_count(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: extruders_count (int)"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+    
+    actual_raw = cfg.get("extruders_count")
+    try:
+        actual = int(actual_raw) if actual_raw is not None else None
+        expected = int(expected_value) if expected_value is not None else None
+    except (ValueError, TypeError):
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": f"failed to parse extruders_count as int",
+            "raw_data": cfg
+        }
+    
+    ok = actual == expected
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"int compare for extruders_count",
+        "raw_data": cfg
+    }
+
+
+def parse_manual_filament_change(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: manual_filament_change (bool)"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+    
+    actual_raw = cfg.get("manual_filament_change")
+    actual = _to_bool(actual_raw)
+    expected = _to_bool(expected_value)
+    
+    ok = actual == expected
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"bool compare for manual_filament_change",
+        "raw_data": cfg
+    }
+
+
+def parse_purge_in_prime_tower(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: purge_in_prime_tower (bool)"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+    
+    actual_raw = cfg.get("purge_in_prime_tower")
+    actual = _to_bool(actual_raw)
+    expected = _to_bool(expected_value)
+    
+    ok = actual == expected
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"bool compare for purge_in_prime_tower",
+        "raw_data": cfg
+    }
+
+
+def parse_enable_filament_ramming(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: enable_filament_ramming (bool)"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+    
+    actual_raw = cfg.get("enable_filament_ramming")
+    actual = _to_bool(actual_raw)
+    expected = _to_bool(expected_value)
+    
+    ok = actual == expected
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"bool compare for enable_filament_ramming",
+        "raw_data": cfg
+    }
+
+
+def parse_prime_tower_position_type(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: prime_tower_position_type (string)"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+    
+    actual_raw = cfg.get("prime_tower_position_type")
+    actual = _norm_raw(actual_raw)
+    expected = _norm_raw(expected_value)
+    
+    ok = actual == expected
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"string compare for prime_tower_position_type",
+        "raw_data": cfg
+    }
+
+
+def parse_cooling_tube_retraction(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: cooling_tube_retraction (float)"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+    
+    actual_raw = cfg.get("cooling_tube_retraction")
+    actual = _to_float(actual_raw)
+    expected = _to_float(expected_value)
+    
+    ok = actual == expected
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"float compare for cooling_tube_retraction",
+        "raw_data": cfg
+    }
+
+
+def parse_cooling_tube_length(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: cooling_tube_length (float)"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+    
+    actual_raw = cfg.get("cooling_tube_length")
+    actual = _to_float(actual_raw)
+    expected = _to_float(expected_value)
+    
+    ok = actual == expected
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"float compare for cooling_tube_length",
+        "raw_data": cfg
+    }
+
+
+def parse_parking_pos_retraction(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: parking_pos_retraction (float)"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+    
+    actual_raw = cfg.get("parking_pos_retraction")
+    actual = _to_float(actual_raw)
+    expected = _to_float(expected_value)
+    
+    ok = actual == expected
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"float compare for parking_pos_retraction",
+        "raw_data": cfg
+    }
+
+
+def parse_extra_loading_move(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: extra_loading_move (float)"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+    
+    actual_raw = cfg.get("extra_loading_move")
+    actual = _to_float(actual_raw)
+    expected = _to_float(expected_value)
+    
+    ok = actual == expected
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"float compare for extra_loading_move",
+        "raw_data": cfg
+    }
+
+
+def parse_high_current_on_filament_swap(gcode_path: Path, expected_value: Any) -> Tuple[bool, Any, Dict]:
+    """Level 1 - Config: high_current_on_filament_swap (bool)"""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    
+    if not cfg:
+        return False, None, {
+            "detection_method": "Level 1 - Config",
+            "message": "no CONFIG block found",
+            "raw_data": None
+        }
+    
+    actual_raw = cfg.get("high_current_on_filament_swap")
+    actual = _to_bool(actual_raw)
+    expected = _to_bool(expected_value)
+    
+    ok = actual == expected
+    return ok, actual, {
+        "detection_method": "Level 1 - Config",
+        "message": f"bool compare for high_current_on_filament_swap",
+        "raw_data": cfg
+    }

@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "manual_filament_change_false",
+      "input_3mf": "manual_filament_change_false.3mf",
+      "expected_value": false
+    }
+  ]
+}
