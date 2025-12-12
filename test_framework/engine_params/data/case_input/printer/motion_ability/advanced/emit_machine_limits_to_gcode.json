@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "emit_machine_limits_to_gcode_1",
+      "input_3mf": "emit_machine_limits_to_gcode_1.3mf",
+      "expected_value": 1
+    }
+  ]
+}
