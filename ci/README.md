@@ -60,7 +60,7 @@ pipeline {
             export JENKINS_JOB_WINDOWS=build-windows
             export JENKINS_JOB_MAC=build-mac
             export JENKINS_JOB_LINUX=build-linux
-            python ci/jenkins_release_orchestrator.py --platforms windows mac linux --artifacts-dir artifacts
+            python ci/jenkins_release_orchestrator.py --platforms windows macos linux --artifacts-dir artifacts
           '''
         }
       }
