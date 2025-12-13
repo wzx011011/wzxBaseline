@@ -19,7 +19,8 @@ pipeline {
     RTYPE = "${RTYPE}"
     BRANCH = "${BRANCH}"
     POWERSHELL_HOME = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
-    PATH = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0;${PATH}"
+    PYTHONHOME = "C:\\Users\\cx2056\\AppData\\Local\\Programs\\Python\\Python310"
+    PATH = "C:\\Windows\\System32;C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Users\\cx2056\\AppData\\Local\\Programs\\Python\\Python310;${PATH}"
   }
   stages {
     stage('Checkout') {
