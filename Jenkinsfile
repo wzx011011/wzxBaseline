@@ -11,12 +11,14 @@ pipeline {
     string(name: 'BRANCH', defaultValue: 'release-1130', description: 'Jenkins parameter BRANCH (optional)')
     string(name: 'TAG_NAME', defaultValue: '7.0.0', description: 'Tag name to pass to builds (optional)')
     string(name: 'RTYPE', defaultValue: 'Beta', description: 'Release type to pass to builds (optional)')
+    booleanParam(name: 'RUN_TESTS', defaultValue: false, description: 'Whether to run tests')
   }
   environment {
     PYTHONUNBUFFERED = '1'
     JENKINS_BASE_URL = "${JENKINS_URL}"
     ARTIFACTS_DIR = "artifacts"
     DASHSCOPE_MODEL = "qwen-turbo"
+    RUN_TESTS = "${RUN_TESTS}"
     SKIP_TESTS = "false"
     TAG_NAME = "${TAG_NAME}"
     RTYPE = "${RTYPE}"
@@ -62,7 +64,11 @@ if "%DASHSCOPE_API_KEY%"=="" (
 
 REM Test control
 set "SKIP_FLAG="
-if /I "%SKIP_TESTS%"=="true" set "SKIP_FLAG=--skip-tests"
+if /I "%RUN_TESTS%"=="false" (
+  set "SKIP_FLAG=--run-tests false"
+) else if /I "%SKIP_TESTS%"=="true" (
+  set "SKIP_FLAG=--run-tests true"
+)
 
 REM Run orchestrator
 python ci\\jenkins_release_orchestrator.py --platforms windows macos linux --artifacts-dir "%ARTIFACTS_DIR%" --branch "%BRANCH%" --tag-name "%TAG_NAME%" --rtype "%RTYPE%" %SKIP_FLAG%
