@@ -1,13 +1,13 @@
 pipeline {
-  agent any
+  agent { label 'windows' }
   options {
     timestamps()
     disableConcurrentBuilds()
   }
   parameters {
-    string(name: 'BRANCH', defaultValue: '', description: 'Jenkins parameter BRANCH (optional)')
-    string(name: 'TAG_NAME', defaultValue: '', description: 'Tag name to pass to builds (optional)')
-    string(name: 'RTYPE', defaultValue: '', description: 'Release type to pass to builds (optional)')
+    string(name: 'BRANCH', defaultValue: 'release-1130', description: 'Jenkins parameter BRANCH (optional)')
+    string(name: 'TAG_NAME', defaultValue: '7.0.0', description: 'Tag name to pass to builds (optional)')
+    string(name: 'RTYPE', defaultValue: 'Beta', description: 'Release type to pass to builds (optional)')
   }
   environment {
     PYTHONUNBUFFERED = '1'
