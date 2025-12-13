@@ -4,6 +4,9 @@ pipeline {
     timestamps()
     disableConcurrentBuilds()
   }
+  triggers {
+    cron('0 1 * * *') // 每天凌晨1点
+  }
   parameters {
     string(name: 'BRANCH', defaultValue: 'release-1130', description: 'Jenkins parameter BRANCH (optional)')
     string(name: 'TAG_NAME', defaultValue: '7.0.0', description: 'Tag name to pass to builds (optional)')
