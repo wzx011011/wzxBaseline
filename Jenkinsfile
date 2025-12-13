@@ -62,7 +62,7 @@ set "SKIP_FLAG="
 if /I "%SKIP_TESTS%"=="true" set "SKIP_FLAG=--skip-tests"
 
 REM Run orchestrator
-python ci\\jenkins_release_orchestrator.py --platforms windows mac linux --artifacts-dir "%ARTIFACTS_DIR%" --branch "%BRANCH%" --tag-name "%TAG_NAME%" --rtype "%RTYPE%" %SKIP_FLAG%
+python ci\\jenkins_release_orchestrator.py --platforms windows macos linux --artifacts-dir "%ARTIFACTS_DIR%" --branch "%BRANCH%" --tag-name "%TAG_NAME%" --rtype "%RTYPE%" %SKIP_FLAG%
 endlocal
 '''
         }
