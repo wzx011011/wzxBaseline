@@ -14,3 +14,7 @@ test_engine_params/
 **/__pycache__/
 **/slicer_stdout.log
 AGENTS.md
+/artifacts
+/.env
+/test_framework/report_engine_params.html
+/test_framework/junit_engine_params.xml
