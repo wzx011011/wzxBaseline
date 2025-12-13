@@ -718,32 +718,36 @@ def main() -> int:
 
     test_result: Optional[TestOutcome] = None
     if should_run_tests and not args.dry_run:
-        env = os.environ.copy()
-        env["ARTIFACTS_DIR"] = str(artifacts_dir)
-        slicer_exe: Optional[Path] = None
-        for build in build_results:
-            if build.artifact_local_path:
-                env_key = f"ARTIFACT_{build.platform.upper()}"
-                env[env_key] = str(build.artifact_local_path)
-                extracted_dir = extract_artifact_zip(build.artifact_local_path)
-                if extracted_dir:
-                    maybe_exe = find_slicer_exe(extracted_dir)
-                    if maybe_exe:
-                        env[f"SLICER_EXE_{build.platform.upper()}"] = str(maybe_exe)
-                        if not slicer_exe:
-                            slicer_exe = maybe_exe
-        test_command = args.test_command
-        if "{slicer_exe}" in test_command:
-            if slicer_exe:
-                test_command = test_command.replace("{slicer_exe}", str(slicer_exe))
-            else:
-                print("[warn] slicer_exe placeholder present but no CrealityPrint.exe found in artifacts", file=sys.stderr)
-        test_result = run_tests(test_command, env, repo_root)
-        console_summary = llm.summarize(test_result.output, max_tokens=800)
-        print(f"[info] console_summary: {console_summary}")
-        if test_result.status != "SUCCESS":
-            notifier.send_text("构建通过但测试失败", build_feishu_lines(build_results, test_result))
-            return 1
+        windows_builds = [b for b in build_results if b.platform.lower() == "windows"]
+        if not windows_builds:
+            print("[warn] run_tests enabled but no windows build found; skipping tests", file=sys.stderr)
+        else:
+            env = os.environ.copy()
+            env["ARTIFACTS_DIR"] = str(artifacts_dir)
+            slicer_exe: Optional[Path] = None
+            for build in windows_builds:
+                if build.artifact_local_path:
+                    env_key = f"ARTIFACT_{build.platform.upper()}"
+                    env[env_key] = str(build.artifact_local_path)
+                    extracted_dir = extract_artifact_zip(build.artifact_local_path)
+                    if extracted_dir:
+                        maybe_exe = find_slicer_exe(extracted_dir)
+                        if maybe_exe:
+                            env[f"SLICER_EXE_{build.platform.upper()}"] = str(maybe_exe)
+                            if not slicer_exe:
+                                slicer_exe = maybe_exe
+            test_command = args.test_command
+            if "{slicer_exe}" in test_command:
+                if slicer_exe:
+                    test_command = test_command.replace("{slicer_exe}", str(slicer_exe))
+                else:
+                    print("[warn] slicer_exe placeholder present but no CrealityPrint.exe found in artifacts", file=sys.stderr)
+            test_result = run_tests(test_command, env, repo_root)
+            console_summary = llm.summarize(test_result.output, max_tokens=800)
+            print(f"[info] console_summary: {console_summary}")
+            if test_result.status != "SUCCESS":
+                notifier.send_text("构建通过但测试失败", build_feishu_lines(build_results, test_result))
+                return 1
 
     changes = collect_change_scope(changes_repo_root, args.previous_ref, resolved_current_ref)
     #print(f"[info] change scope from {changes}")
