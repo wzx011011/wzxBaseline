@@ -25,10 +25,10 @@ pipeline {
     }
     stage('Install deps') {
       steps {
-        powershell(script: '''
+        powershell '''
 python -m pip install -U pip
 python -m pip install -r requirements.txt
-''')
+'''
       }
     }
     stage('Trigger builds + test + notify') {
@@ -41,7 +41,7 @@ python -m pip install -r requirements.txt
           usernamePassword(credentialsId: 'zentao-login', usernameVariable: 'ZENTAO_ACCOUNT', passwordVariable: 'ZENTAO_PASSWORD'),
           string(credentialsId: 'zentao-token', variable: 'ZENTAO_TOKEN_CRED')
         ]) {
-          powershell(script: '''
+          powershell '''
 # Prefer injected token over password login when provided
 if (-not [string]::IsNullOrEmpty($env:ZENTAO_TOKEN)) {
   $env:ZENTAO_TOKEN = $env:ZENTAO_TOKEN
@@ -73,7 +73,7 @@ if ($env:SKIP_TESTS -eq 'true') {
 
 # Run orchestrator
 & python @cmdArgs
-''')
+'''
         }
       }
     }
