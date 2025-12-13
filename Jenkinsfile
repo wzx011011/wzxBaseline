@@ -25,7 +25,7 @@ pipeline {
     }
     stage('Install deps') {
       steps {
-        powershell(pwsh: true, script: '''
+        powershell(script: '''
 python -m pip install -U pip
 python -m pip install -r requirements.txt
 ''')
@@ -41,7 +41,7 @@ python -m pip install -r requirements.txt
           usernamePassword(credentialsId: 'zentao-login', usernameVariable: 'ZENTAO_ACCOUNT', passwordVariable: 'ZENTAO_PASSWORD'),
           string(credentialsId: 'zentao-token', variable: 'ZENTAO_TOKEN_CRED')
         ]) {
-          powershell(pwsh: true, script: '''
+          powershell(script: '''
 # Prefer injected token over password login when provided
 if (-not [string]::IsNullOrEmpty($env:ZENTAO_TOKEN)) {
   $env:ZENTAO_TOKEN = $env:ZENTAO_TOKEN
