@@ -28,7 +28,7 @@ pipeline {
     }
     stage('Install deps') {
       steps {
-        powershell '''
+        bat '''
 python -m pip install -U pip
 python -m pip install -r requirements.txt
 '''
@@ -37,38 +37,33 @@ python -m pip install -r requirements.txt
     stage('Trigger builds + test + notify') {
       steps {
               withCredentials([sshUserPrivateKey(credentialsId: 'cxsw-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
-          powershell '''
-# Prefer injected token over password login when provided
-if (-not [string]::IsNullOrEmpty($env:ZENTAO_TOKEN)) {
-  $env:ZENTAO_TOKEN = $env:ZENTAO_TOKEN
-} elseif (-not [string]::IsNullOrEmpty($env:ZENTAO_TOKEN_CRED)) {
-  $env:ZENTAO_TOKEN = $env:ZENTAO_TOKEN_CRED
-}
+          bat '''
+@echo off
+setlocal enabledelayedexpansion
 
-# LLM config: prefer DashScope, fallback to OpenAI if not set
-if ([string]::IsNullOrEmpty($env:DASHSCOPE_API_KEY)) {
-  if (-not [string]::IsNullOrEmpty($env:OPENAI_API_KEY)) {
-    $env:OPENAI_API_KEY = $env:OPENAI_API_KEY
-  }
-} else {
-  $env:DASHSCOPE_API_KEY = $env:DASHSCOPE_API_KEY
-}
-
-# Test control
-$cmdArgs = @(
-  'ci\\jenkins_release_orchestrator.py'
-  '--platforms' 'windows' 'mac' 'linux'
-  '--artifacts-dir' $env:ARTIFACTS_DIR
-  '--branch' $env:BRANCH
-  '--tag-name' $env:TAG_NAME
-  '--rtype' $env:RTYPE
+REM Prefer injected token over password login when provided
+if not "%ZENTAO_TOKEN%"=="" (
+  set "ZENTAO_TOKEN=%ZENTAO_TOKEN%"
+) else if not "%ZENTAO_TOKEN_CRED%"=="" (
+  set "ZENTAO_TOKEN=%ZENTAO_TOKEN_CRED%"
 )
-if ($env:SKIP_TESTS -eq 'true') {
-  $cmdArgs += '--skip-tests'
-}
 
-# Run orchestrator
-& python @cmdArgs
+REM LLM config: prefer DashScope, fallback to OpenAI if not set
+if "%DASHSCOPE_API_KEY%"=="" (
+  if not "%OPENAI_API_KEY%"=="" (
+    set "OPENAI_API_KEY=%OPENAI_API_KEY%"
+  )
+) else (
+  set "DASHSCOPE_API_KEY=%DASHSCOPE_API_KEY%"
+)
+
+REM Test control
+set "SKIP_FLAG="
+if /I "%SKIP_TESTS%"=="true" set "SKIP_FLAG=--skip-tests"
+
+REM Run orchestrator
+python ci\\jenkins_release_orchestrator.py --platforms windows mac linux --artifacts-dir "%ARTIFACTS_DIR%" --branch "%BRANCH%" --tag-name "%TAG_NAME%" --rtype "%RTYPE%" %SKIP_FLAG%
+endlocal
 '''
         }
       }
