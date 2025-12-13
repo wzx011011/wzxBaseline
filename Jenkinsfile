@@ -4,9 +4,20 @@ pipeline {
     timestamps()
     disableConcurrentBuilds()
   }
+  parameters {
+    string(name: 'BRANCH', defaultValue: '', description: 'Jenkins parameter BRANCH (optional)')
+    string(name: 'TAG_NAME', defaultValue: '', description: 'Tag name to pass to builds (optional)')
+    string(name: 'RTYPE', defaultValue: '', description: 'Release type to pass to builds (optional)')
+  }
   environment {
     PYTHONUNBUFFERED = '1'
     JENKINS_BASE_URL = "${JENKINS_URL}"
+    ARTIFACTS_DIR = "artifacts"
+    DASHSCOPE_MODEL = "qwen-turbo"
+    SKIP_TESTS = "false"
+    TAG_NAME = "${TAG_NAME}"
+    RTYPE = "${RTYPE}"
+    BRANCH = "${BRANCH}"
   }
   stages {
     stage('Checkout') {
@@ -30,7 +41,10 @@ pipeline {
         ]) {
           sh '''#!/usr/bin/env bash
 set -e
-python ci/jenkins_release_orchestrator.py --platforms windows mac linux
+export BRANCH="${BRANCH}"
+export TAG_NAME="${TAG_NAME}"
+export RTYPE="${RTYPE}"
+python ci/jenkins_release_orchestrator.py --platforms windows mac linux --artifacts-dir "${ARTIFACTS_DIR}" --branch "${BRANCH}" --tag-name "${TAG_NAME}" --rtype "${RTYPE}"
 '''
         }
       }

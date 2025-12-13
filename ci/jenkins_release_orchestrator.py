@@ -674,6 +674,9 @@ def main() -> int:
                 if detected_ref:
                     resolved_current_ref = detected_ref
             console = client.fetch_console(job.job_name, build_number)
+            if len(console.encode("utf-8")) > 2 * 1024 * 1024:
+                tail_bytes = console.encode("utf-8")[-2 * 1024 * 1024 :]
+                console = tail_bytes.decode("utf-8", errors="ignore")
             outcome = BuildOutcome(
                 platform=job.platform,
                 job_name=job.job_name,
@@ -686,13 +689,16 @@ def main() -> int:
                 downloaded = client.download_artifact(job.job_name, build_number, job.artifact_path, artifacts_dir / job.platform)
                 outcome.artifact_local_path = downloaded
             else:
-                summary = llm.summarize(console)
+                error_lines = [line for line in console.splitlines() if "error:" in line.lower()]
+                summary_input = "\n".join(error_lines) if error_lines else console
+                summary = llm.summarize(summary_input)
                 notifier.send_text(
                     title=f"{job.platform} 构建失败",
                     lines=[
                         f"Job: {job.job_name}",
                         f"Build: #{build_number}",
                         f"Link: {url}",
+                        f"console: {summary_input[:1000]}",
                         f"Summary: {summary}",
                     ],
                 )
