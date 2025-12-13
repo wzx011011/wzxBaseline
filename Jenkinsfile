@@ -18,6 +18,8 @@ pipeline {
     TAG_NAME = "${TAG_NAME}"
     RTYPE = "${RTYPE}"
     BRANCH = "${BRANCH}"
+    POWERSHELL_HOME = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+    PATH = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0;${PATH}"
   }
   stages {
     stage('Checkout') {
