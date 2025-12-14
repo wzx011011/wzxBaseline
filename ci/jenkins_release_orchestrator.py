@@ -8,7 +8,7 @@ import time
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import requests
 from git import Repo
@@ -29,6 +29,7 @@ class BuildOutcome:
     build_number: Optional[int] = None
     status: str = "UNKNOWN"
     url: Optional[str] = None
+    artifact_url: Optional[str] = None
     artifact_local_path: Optional[Path] = None
     console_excerpt: str = ""
 
@@ -115,7 +116,7 @@ class JenkinsClient:
             return resp.text
         return ""
 
-    def download_artifact(self, job_name: str, build_number: int, desired_path: Optional[str], dest_dir: Path) -> Optional[Path]:
+    def download_artifact(self, job_name: str, build_number: int, desired_path: Optional[str], dest_dir: Path) -> Tuple[Optional[Path], Optional[str]]:
         dest_dir.mkdir(parents=True, exist_ok=True)
         api_url = f"{self.base_url}/job/{job_name}/{build_number}/api/json"
         resp = self.session.get(api_url, timeout=self.timeout)
@@ -123,7 +124,7 @@ class JenkinsClient:
         data = resp.json()
         artifacts = data.get("artifacts") or []
         if not artifacts:
-            return None
+            return None, None
         artifact = artifacts[0]
         if desired_path:
             for candidate in artifacts:
@@ -139,7 +140,7 @@ class JenkinsClient:
                 for chunk in r.iter_content(chunk_size=1024 * 1024):
                     if chunk:
                         f.write(chunk)
-        return target
+        return target, artifact_url
 
 
 class FeishuNotifier:
@@ -686,8 +687,9 @@ def main() -> int:
                 console_excerpt=console[-1200:],
             )
             if status == "SUCCESS":
-                downloaded = client.download_artifact(job.job_name, build_number, job.artifact_path, artifacts_dir / job.platform)
+                downloaded, artifact_url = client.download_artifact(job.job_name, build_number, job.artifact_path, artifacts_dir / job.platform)
                 outcome.artifact_local_path = downloaded
+                outcome.artifact_url = artifact_url
             else:
                 error_lines = [line for line in console.splitlines() if "error:" in line.lower()]
                 summary_input = "\n".join(error_lines) if error_lines else console
@@ -760,7 +762,9 @@ def main() -> int:
     feishu_lines = build_feishu_lines(build_results, test_result)
     artifact_lines = []
     for build in build_results:
-        if build.artifact_local_path:
+        if build.artifact_url:
+            artifact_lines.append(f"{build.platform} artifact: {build.artifact_url}")
+        elif build.artifact_local_path:
             artifact_lines.append(f"{build.platform} artifact: {build.artifact_local_path}")
     if artifact_lines:
         feishu_lines.append("")
