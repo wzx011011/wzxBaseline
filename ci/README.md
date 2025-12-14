@@ -1,13 +1,13 @@
 ## Jenkins 跨平台打包+回传流水线
 
-此目录提供 `jenkins_release_orchestrator.py`，用于 Jenkins Pipeline 调用三个现有的 Windows/Mac/Linux 任务、汇总失败日志（可选用 LLM）、通过飞书机器人通知，成功后下载测试包并执行测试命令，最后把版本变更和测试关注点回传到禅道。
+此目录提供 `jenkins_release_orchestrator.py`，用于 Jenkins Pipeline 调用多个现有的 Windows / Mac（x86 与 ARM64）/ Linux 任务、汇总失败日志（可选用 LLM）、通过飞书机器人通知，成功后下载测试包并执行测试命令，最后把版本变更和测试关注点回传到禅道。
 
 ### 所需环境变量
 
 - `JENKINS_BASE_URL` / `JENKINS_USER` / `JENKINS_TOKEN`：主 Jenkins 实例信息。
-- `JENKINS_JOB_WINDOWS` / `JENKINS_JOB_MAC` / `JENKINS_JOB_LINUX`：三个既有跨平台任务的名称。
-- `JENKINS_ARTIFACT_WINDOWS` / `JENKINS_ARTIFACT_MAC` / `JENKINS_ARTIFACT_LINUX`（可选）：希望下载的构件路径或文件名，未设置则取首个构件。
-- `JENKINS_PARAMS_WINDOWS` / `JENKINS_PARAMS_MAC` / `JENKINS_PARAMS_LINUX`（可选）：任务参数，JSON 字符串。
+- `JENKINS_JOB_WINDOWS` / `JENKINS_JOB_MACOS_X86` / `JENKINS_JOB_MACOS_ARM64` / `JENKINS_JOB_LINUX`：跨平台任务名称。
+- `JENKINS_ARTIFACT_WINDOWS` / `JENKINS_ARTIFACT_MACOS_X86` / `JENKINS_ARTIFACT_MACOS_ARM64` / `JENKINS_ARTIFACT_LINUX`（可选）：希望下载的构件路径或文件名，未设置则取首个构件。
+- `JENKINS_PARAMS_WINDOWS` / `JENKINS_PARAMS_MACOS_X86` / `JENKINS_PARAMS_MACOS_ARM64` / `JENKINS_PARAMS_LINUX`（可选）：任务参数，JSON 字符串。
 - `FEISHU_WEBHOOK`：飞书机器人 Webhook 地址。
 - `DASHSCOPE_API_KEY`（推荐）/ `DASHSCOPE_API_BASE` / `DASHSCOPE_MODEL`：通义千问（OpenAI 兼容模式）用于失败日志与改动范围的 AI 总结，默认 `https://dashscope.aliyuncs.com/compatible-mode/v1` + `qwen-turbo`。未提供时回退读取 `OPENAI_API_KEY` / `OPENAI_API_BASE` / `OPENAI_MODEL`。
 - `CHANGES_REPO`（可选）：用于计算改动范围的 Git 仓库路径或远程地址，未提供则使用当前仓库。脚本会在 `git log/diff` 前执行 `fetch`。
@@ -58,9 +58,10 @@ pipeline {
           sh '''
             export JENKINS_BASE_URL=https://jenkins.example.com
             export JENKINS_JOB_WINDOWS=build-windows
-            export JENKINS_JOB_MAC=build-mac
+            export JENKINS_JOB_MACOS_X86=build-mac-intel
+            export JENKINS_JOB_MACOS_ARM64=build-mac-arm64
             export JENKINS_JOB_LINUX=build-linux
-            python ci/jenkins_release_orchestrator.py --platforms windows macos linux --artifacts-dir artifacts
+            python ci/jenkins_release_orchestrator.py --platforms windows macos_x86 macos_arm64 linux --artifacts-dir artifacts
           '''
         }
       }
@@ -74,7 +75,7 @@ pipeline {
 ### 本地/手动运行
 
 ```bash
-python ci/jenkins_release_orchestrator.py --platforms windows mac linux --skip-tests --dry-run
+python ci/jenkins_release_orchestrator.py --platforms windows macos_x86 macos_arm64 linux --skip-tests --dry-run
 ```
 
 - `--dry-run` 仅打印计划动作，不访问 Jenkins。

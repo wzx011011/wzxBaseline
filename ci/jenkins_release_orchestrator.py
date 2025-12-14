@@ -475,7 +475,7 @@ def render_zentao_body(builds: List[BuildOutcome], tests: Optional[TestOutcome],
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Trigger cross-platform Jenkins builds, run tests, notify Feishu, and update Zentao.")
-    parser.add_argument("--platforms", nargs="+", default=["windows", "mac", "linux"], help="Platforms to build")
+    parser.add_argument("--platforms", nargs="+", default=["windows", "macos_x86", "macos_arm64", "linux"], help="Platforms to build")
     parser.add_argument("--artifacts-dir", default="artifacts", help="Where to store downloaded artifacts")
     parser.add_argument("--test-command", default=os.getenv("TEST_COMMAND", "pytest -q"), help="Command to run tests after builds succeed")
     parser.add_argument("--run-tests", default=os.getenv("RUN_TESTS"), choices=["true", "false", "1", "0", "yes", "no", "on", "off"], help="Explicitly control test execution; overrides --skip-tests when provided")

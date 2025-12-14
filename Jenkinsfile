@@ -71,7 +71,7 @@ if /I "%RUN_TESTS%"=="false" (
 )
 
 REM Run orchestrator
-python ci\\jenkins_release_orchestrator.py --platforms windows macos linux --artifacts-dir "%ARTIFACTS_DIR%" --branch "%BRANCH%" --tag-name "%TAG_NAME%" --rtype "%RTYPE%" %SKIP_FLAG%
+python ci\\jenkins_release_orchestrator.py --platforms windows macos_x86 macos_arm64 linux --artifacts-dir "%ARTIFACTS_DIR%" --branch "%BRANCH%" --tag-name "%TAG_NAME%" --rtype "%RTYPE%" %SKIP_FLAG%
 endlocal
 '''
         }
