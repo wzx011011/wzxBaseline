@@ -1,0 +1,70 @@
+pipeline {
+  agent { label 'windows' }
+  options {
+    timestamps()
+    disableConcurrentBuilds()
+  }
+  parameters {
+    string(name: 'JOB_NAME', defaultValue: 'CrealityPrint_Release_Package', description: 'Jenkins job name to download from')
+    string(name: 'BUILD_ID', defaultValue: '1234', description: 'Jenkins build number')
+    string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
+    string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
+    string(name: 'TEST_COMMAND', defaultValue: '', description: 'Override test command (optional)')
+  }
+  environment {
+    PYTHONUNBUFFERED = '1'
+    JENKINS_BASE_URL = "${JENKINS_URL}"
+    ARTIFACTS_DIR = "artifacts"
+    POWERSHELL_HOME = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
+    PYTHONHOME = "C:\\Users\\cx2056\\AppData\\Local\\Programs\\Python\\Python310"
+    PATH = "C:\\Windows\\System32;C:\\Program Files\\Git\\bin;C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Users\\cx2056\\AppData\\Local\\Programs\\Python\\Python310;${PATH}"
+  }
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+    stage('Install deps') {
+      steps {
+        bat '''
+python -m pip install -U pip
+python -m pip install -r requirements.txt
+'''
+      }
+    }
+    stage('Download artifact and run tests') {
+      steps {
+        withCredentials([
+          usernamePassword(credentialsId: 'jenkins-api-token', usernameVariable: 'JENKINS_USER', passwordVariable: 'JENKINS_TOKEN'),
+          string(credentialsId: 'feishu-webhook', variable: 'FEISHU_WEBHOOK')
+        ]) {
+          bat '''
+@echo off
+setlocal enabledelayedexpansion
+
+if "%JOB_NAME%"=="" (
+  echo JOB_NAME is required
+  exit /b 1
+)
+if "%BUILD_ID%"=="" (
+  echo BUILD_ID is required
+  exit /b 1
+)
+
+set "EXTRA_ARGS="
+if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ARTIFACT_PATH%\""
+if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
+if not "%TEST_COMMAND%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%TEST_COMMAND%\""
+
+python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" !EXTRA_ARGS!
+endlocal
+'''
+        }
+      }
+    }
+  }
+  post {
+    failure {
+      echo 'Pipeline failed; check Feishu notifications for details.'
+    }
+  }
+}
