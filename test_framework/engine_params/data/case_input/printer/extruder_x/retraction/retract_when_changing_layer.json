@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "retract_when_changing_layer_0",
+      "input_3mf": "retract_when_changing_layer_0.3mf",
+      "expected_value": 0
+    },
+    {
+      "project_name": "retract_when_changing_layer_1",
+      "input_3mf": "retract_when_changing_layer_1.3mf",
+      "expected_value": 1
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "long_retractions_when_cut_0",
+      "input_3mf": "long_retractions_when_cut_0.3mf",
+      "expected_value": 0
+    },
+    {
+      "project_name": "long_retractions_when_cut_1",
+      "input_3mf": "long_retractions_when_cut_1.3mf",
+      "expected_value": 1
+    }
+  ]
+}

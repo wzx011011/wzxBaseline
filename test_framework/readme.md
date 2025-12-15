@@ -75,7 +75,7 @@ pip install -r requirements.txt
    - 测试文件：engine_params/case/params/{分类}/{test_文件名}.py
    - 校验函数：engine_params/src/gcode/{分类}/{文件名}_check.py
    - JSON配置：engine_params/data/case_input/{分类}/{子分类}/{参数名}.json
-   - 模型目录：engine_params/data/models/{分类}/{子分类}/{参数名}/
+   - 模型目录：engine_params/data/models/{分类}/{子分类}/{参数名}/{参数名}_{参数值}.3mf
 
 3. **校验逻辑**：
    - 简单对比型：仅对比 G-code 配置中的参数值与期望值是否一致

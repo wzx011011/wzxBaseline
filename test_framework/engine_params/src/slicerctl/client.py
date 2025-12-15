@@ -34,7 +34,8 @@ class SlicerProc:
         if not exe.is_file(): raise FileNotFoundError(f"EXE not found: {self.exe_path}")
 
         if is_process_running_by_name(Path(self.exe_path).name):
-            wait_port(self.host, self.port)
+            # 如果切片器已在运行，端口通常应已就绪；给一个较短等待。
+            wait_port(self.host, self.port, timeout=30)
             return
 
         env = os.environ.copy()
@@ -62,7 +63,8 @@ class SlicerProc:
                     getattr(signal, "SIGBREAK", None)):
             if sig: signal.signal(sig, self._graceful_exit)
 
-        wait_port(self.host, self.port)
+        # 首次拉起切片器可能较慢（首次初始化/资源加载/杀毒扫描等），放宽等待时间。
+        wait_port(self.host, self.port, timeout=180)
 
     def _graceful_exit(self, *_):
         sys.exit(0)

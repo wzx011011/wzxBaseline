@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "z_hop_types_normal_lift",
+      "input_3mf": "z_hop_types_normal_lift.3mf",
+      "expected_value": "Normal Lift"
+    },
+    {
+      "project_name": "z_hop_types_slope_lift",
+      "input_3mf": "z_hop_types_slope_lift.3mf",
+      "expected_value": "Slope Lift"
+    },
+    {
+      "project_name": "z_hop_types_spiral_lift",
+      "input_3mf": "z_hop_types_spiral_lift.3mf",
+      "expected_value": "Spiral Lift"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "max_layer_height_0.28",
+      "input_3mf": "max_layer_height_0.28.3mf",
+      "expected_value": 0.28
+    },
+    {
+      "project_name": "max_layer_height_0.3",
+      "input_3mf": "max_layer_height_0.3.3mf",
+      "expected_value": 0.3
+    },
+    {
+      "project_name": "max_layer_height_0.35",
+      "input_3mf": "max_layer_height_0.35.3mf",
+      "expected_value": 0.35
+    }
+  ]
+}

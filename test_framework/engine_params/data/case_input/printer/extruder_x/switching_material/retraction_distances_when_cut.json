@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "retraction_distances_when_cut_18",
+      "input_3mf": "retraction_distances_when_cut_18.3mf",
+      "expected_value": 18
+    },
+    {
+      "project_name": "retraction_distances_when_cut_25",
+      "input_3mf": "retraction_distances_when_cut_25.3mf",
+      "expected_value": 25
+    }
+  ]
+}

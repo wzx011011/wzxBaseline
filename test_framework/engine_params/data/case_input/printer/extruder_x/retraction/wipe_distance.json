@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "wipe_distance_1",
+      "input_3mf": "wipe_distance_1.3mf",
+      "expected_value": 1
+    },
+    {
+      "project_name": "wipe_distance_2",
+      "input_3mf": "wipe_distance_2.3mf",
+      "expected_value": 2
+    }
+  ]
+}

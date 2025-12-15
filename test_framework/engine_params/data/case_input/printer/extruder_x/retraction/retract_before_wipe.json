@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "retract_before_wipe_0%",
+      "input_3mf": "retract_before_wipe_0%.3mf",
+      "expected_value": "0%"
+    },
+    {
+      "project_name": "retract_before_wipe_50%",
+      "input_3mf": "retract_before_wipe_50%.3mf",
+      "expected_value": "50%"
+    },
+    {
+      "project_name": "retract_before_wipe_100%",
+      "input_3mf": "retract_before_wipe_100%.3mf",
+      "expected_value": "100%"
+    }
+  ]
+}

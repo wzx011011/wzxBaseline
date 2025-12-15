@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "travel_slope_0",
+      "input_3mf": "travel_slope_0.3mf",
+      "expected_value": 0
+    },
+    {
+      "project_name": "travel_slope_15",
+      "input_3mf": "travel_slope_15.3mf",
+      "expected_value": 15
+    }
+  ]
+}

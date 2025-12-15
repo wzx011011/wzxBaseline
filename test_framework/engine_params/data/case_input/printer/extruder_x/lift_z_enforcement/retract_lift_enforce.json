@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "retract_lift_enforce_all_surfaces",
+      "input_3mf": "retract_lift_enforce_all_surfaces.3mf",
+      "expected_value": "All Surfaces"
+    },
+    {
+      "project_name": "retract_lift_enforce_top_only",
+      "input_3mf": "retract_lift_enforce_top_only.3mf",
+      "expected_value": "Top Only"
+    }
+  ]
+}

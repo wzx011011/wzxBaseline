@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "extruder_offset_0x0",
+      "input_3mf": "extruder_offset_0x0.3mf",
+      "expected_value": "0x0"
+    },
+    {
+      "project_name": "extruder_offset_10x5",
+      "input_3mf": "extruder_offset_10x5.3mf",
+      "expected_value": "10x5"
+    }
+  ]
+}

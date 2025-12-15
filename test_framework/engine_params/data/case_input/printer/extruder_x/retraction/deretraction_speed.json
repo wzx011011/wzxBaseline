@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "deretraction_speed_30",
+      "input_3mf": "deretraction_speed_30.3mf",
+      "expected_value": 30
+    },
+    {
+      "project_name": "deretraction_speed_40",
+      "input_3mf": "deretraction_speed_40.3mf",
+      "expected_value": 40
+    }
+  ]
+}
