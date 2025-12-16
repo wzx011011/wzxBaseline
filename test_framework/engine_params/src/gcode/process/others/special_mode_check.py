@@ -129,18 +129,47 @@ def parse_print_sequence(
         gcode_path: Path | str,
         expected_sequence: Optional[str] = None,
 ) -> Tuple[bool, Optional[str], Dict[str, object]]:
-    """Inspect configuration and geometry to determine print sequence."""
-    parser = GCodeParser(Path(gcode_path))
+    """Inspect configuration and geometry to determine print sequence.
+    
+    检测方法：
+    - by layer: 层号单调递增（每次打印更高的层）
+    - by object: 层号不单调递增（先打印完一个对象的所有层，再打印下一个对象）
+    """
+    gcode_path = Path(gcode_path)
+    parser = GCodeParser(gcode_path)
     cfg = parser.load_config()
-    layers = parser.extract_layers()
+    
+    # 从 G-code 中提取层 Z 高度序列
+    # Creality Print 格式: ";LAYER_CHANGE" 后紧跟 ";:0.2" 表示层的 Z 高度
+    layer_z_values = []
+    next_is_z = False
+    
+    try:
+        with open(gcode_path, 'r', encoding='utf-8') as f:
+            for line in f:
+                line = line.strip()
+                if line == ';LAYER_CHANGE':
+                    next_is_z = True
+                elif next_is_z and line.startswith(';:'):
+                    try:
+                        z_val = float(line[2:].strip())  # 去掉 ";:" 前缀
+                        layer_z_values.append(z_val)
+                    except (ValueError, IndexError):
+                        pass
+                    next_is_z = False
+    except FileNotFoundError:
+        pass
 
+    # 检查 Z 高度序列是否单调递增
+    # by layer: Z 单调递增 (0.2, 0.4, 0.6, ..., 19.8, 20.0)
+    # by object: Z 会回退 (0.2, 0.4, ..., 20.0, 0.2, 0.4, ..., 20.0) - 打完一个对象后 Z 回到起点
     is_monotonic = True
-    last_z: Optional[float] = None
-    for z, _ in layers:
-        if last_z is not None and (z + 1e-6) < last_z:
-            is_monotonic = False
-            break
-        last_z = z
+    if len(layer_z_values) > 1:
+        for i in range(len(layer_z_values) - 1):
+            # 如果下一层 Z 值明显小于当前层（回退），说明是 by object
+            if layer_z_values[i+1] < layer_z_values[i] - 0.01:  # 容差 0.01mm
+                is_monotonic = False
+                break
 
     detected_sequence = "by layer" if is_monotonic else "by object"
 
@@ -159,9 +188,11 @@ def parse_print_sequence(
         "detected_sequence": detected_sequence,
         "expected_sequence": normalized_expected,
         "is_monotonic_z": is_monotonic,
-        "layers_count": len(layers),
-        "detection_method": "Level 1 (配置对比) + Level 2 (Z轴单调性分析)",
-        "message": f"检测到打印顺序: {detected_sequence}",
+        "layer_count": len(layer_z_values),
+        "first_10_z_values": layer_z_values[:10] if layer_z_values else [],
+        "last_10_z_values": layer_z_values[-10:] if len(layer_z_values) >= 10 else layer_z_values,
+        "detection_method": "Level 2 (Z 高度回退检测)",
+        "message": f"检测到打印顺序: {detected_sequence}（分析了{len(layer_z_values)}层的 Z 高度）",
     }
 
     return ok, detected_sequence, details

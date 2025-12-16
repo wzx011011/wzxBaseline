@@ -25,6 +25,13 @@ def test_single_extruder_multi_material(
     gcode_path = slice_and_export
     ok, actual, details = parse_single_extruder_multi_material(gcode_path, expected_value)
     
+    print(f"\n=== single_extruder_multi_material 检测详情 ===")
+    print(f"  预期值: {expected_value}")
+    print(f"  实际值: {actual}")
+    print(f"  检测方法: {details.get('detection_method', 'N/A')}")
+    print(f"  结果: {'[PASS]' if ok else '[FAIL]'}")
+    print("=" * 50)
+    
     assert ok, f"single_extruder_multi_material expected {expected_value}, got {actual}: {details}"
 
 

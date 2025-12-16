@@ -3,7 +3,7 @@ import sys
 import pytest
 
 # 读取排除列表
-with open(r"C:\Users\106660\AppData\Local\Temp\tmpauc0_50f.txt", "r", encoding="utf-8") as f:
+with open(r"C:\Users\106660\AppData\Local\Temp\tmptdqtdkq8.txt", "r", encoding="utf-8") as f:
     deselected = [line.strip() for line in f if line.strip()]
 
 # 构建参数

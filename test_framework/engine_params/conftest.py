@@ -505,3 +505,126 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
 
     assert output_gcode.exists(), f"G-code 未生成：{output_gcode}"
     return output_gcode
+
+
+# ========== pytest 钩子：自动跳过 ignored_tests.json 中的用例 ==========
+def pytest_collection_modifyitems(config, items):
+    """读取 ignored_tests.json 并标记匹配的测试用例为 skip"""
+    import json
+    
+    root = repo_root(Path.cwd())
+    ignored_file = root / "test_framework" / "engine_params" / "data" / "ignored_tests.json"
+    if not ignored_file.exists():
+        return  # 没有忽略配置文件，不做处理
+    
+    try:
+        with open(ignored_file, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        ignored_tests = data.get("ignored_tests", [])
+    except Exception as e:
+        pytest.warning(f"无法加载 ignored_tests.json: {e}")
+        return
+    
+    # 构建忽略规则：{test_path: [test_cases]}
+    ignore_map = {}
+    for entry in ignored_tests:
+        test_path = entry.get("test_path", "")
+        test_case = entry.get("test_case")
+        reason = entry.get("reason", "在 ignored_tests.json 中")
+        
+        if not test_path:
+            continue
+        
+        # 提取路径和函数名（如果包含 ::）
+        if "::" in test_path:
+            path_part, func_part = test_path.split("::", 1)
+        else:
+            path_part, func_part = test_path, None
+        
+        key = (path_part, func_part, test_case)
+        if key not in ignore_map:
+            ignore_map[key] = reason
+    
+    # 遍历收集的测试项，匹配并标记 skip
+    for item in items:
+        # 获取测试的相对路径（engine_params/case/params/...）
+        try:
+            rel_path = item.fspath.relto(root)
+        except:
+            rel_path = str(item.fspath)
+        
+        # 标准化路径分隔符
+        rel_path = rel_path.replace("\\", "/")
+        
+        # 获取测试函数名和参数化ID
+        func_name = item.originalname if hasattr(item, "originalname") else item.name
+        param_id = item.callspec.id if hasattr(item, "callspec") else None
+        
+        # 检查是否匹配忽略规则
+        for (path_part, func_part, test_case), reason in ignore_map.items():
+            # 路径匹配（包含关系）
+            if path_part not in rel_path:
+                continue
+            
+            # 函数名匹配（如果指定）
+            if func_part and func_part not in func_name:
+                continue
+            
+            # 测试用例ID匹配（如果指定）
+            if test_case:
+                if param_id and test_case in param_id:
+                    item.add_marker(pytest.mark.skip(reason=f"忽略: {reason}"))
+                    break
+            else:
+                # 没有指定 test_case，跳过整个函数的所有参数化
+                item.add_marker(pytest.mark.skip(reason=f"忽略: {reason}"))
+                break
+
+
+# ========== pytest 钩子：增强测试报告，显示预期值和实际值 ==========
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
+def pytest_runtest_makereport(item, call):
+    """增强测试报告，显示预期值和实际值"""
+    outcome = yield
+    report = outcome.get_result()
+    
+    # 只在测试调用阶段处理
+    if report.when == "call" and hasattr(item, "callspec"):
+        # 获取参数
+        params = item.callspec.params
+        expected = params.get("expected_value")
+        
+        if expected is not None:
+            # 在测试输出中添加预期值和实际值的摘要
+            if report.passed:
+                # 尝试从捕获的输出中提取实际值
+                if hasattr(report, "capstdout"):
+                    stdout = report.capstdout
+                    import re
+                    match = re.search(r'实际值:\s*(.+)', stdout)
+                    if match:
+                        actual = match.group(1).strip()
+                        report.sections.append(("测试结果", f"✓ 通过 - 预期: {expected}, 实际: {actual}"))
+            
+            elif report.failed:
+                # 从异常消息中提取实际值
+                if hasattr(report.longrepr, "reprcrash"):
+                    msg = str(report.longrepr.reprcrash.message)
+                    import re
+                    match = re.search(r'got\s+([^:,\]]+)', msg)
+                    if match:
+                        actual = match.group(1).strip()
+                        report.sections.insert(0, ("失败详情", f"✗ 失败 - 预期: {expected}, 实际: {actual}"))
+
+
+def pytest_terminal_summary(terminalreporter, exitstatus, config):
+    """在测试摘要中添加预期值/实际值统计"""
+    if hasattr(terminalreporter.config, 'option') and terminalreporter.config.option.verbose >= 1:
+        # 添加一个自定义的摘要部分
+        terminalreporter.write_sep("=", "测试结果详情", bold=True)
+        
+        for report in terminalreporter.stats.get('passed', []):
+            if hasattr(report, 'sections'):
+                for section_name, section_content in report.sections:
+                    if section_name == "测试结果":
+                        terminalreporter.write_line(f"  {report.nodeid}: {section_content}")

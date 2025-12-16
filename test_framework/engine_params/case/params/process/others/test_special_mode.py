@@ -73,6 +73,10 @@ def test_print_sequence(
 ):
     """测试 print_sequence 参数 (Level 1 - 配置对比)"""
     gcode_path = slice_and_export
+    print(f"\n[DEBUG] G-code 路径: {gcode_path}")
+    print(f"[DEBUG] 文件是否存在: {gcode_path.exists()}")
+    if gcode_path.exists():
+        print(f"[DEBUG] 文件大小: {gcode_path.stat().st_size} bytes")
     ok, actual_value, details = parse_print_sequence(
         gcode_path,
         expected_value,

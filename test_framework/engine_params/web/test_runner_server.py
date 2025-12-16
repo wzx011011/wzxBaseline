@@ -220,8 +220,19 @@ def run_server(port=8000):
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
-        print("\n⏹ 服务器已停止")
-        httpd.shutdown()
+        print("\n⏹ 正在停止服务器...")
+        # 终止正在运行的测试进程
+        if TestRunnerHandler.test_process:
+            try:
+                TestRunnerHandler.test_process.terminate()
+                TestRunnerHandler.test_process.wait(timeout=3)
+            except:
+                try:
+                    TestRunnerHandler.test_process.kill()
+                except:
+                    pass
+        httpd.server_close()
+        print("✅ 服务器已停止")
 
 if __name__ == '__main__':
     import argparse

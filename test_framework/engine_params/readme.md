@@ -36,6 +36,52 @@
 7. **资料**：所有的参数结构在这里：process_parameters.md
 
 
+## 忽略测试用例 (ignored_tests.json)
+
+某些测试用例可能因为硬件/软件版本差异、功能未实现或其他原因需要暂时跳过。使用 `engine_params/data/ignored_tests.json` 集中管理：
+
+### 配置文件格式
+```json
+{
+  "description": "忽略的测试用例列表 - 这些测试在运行时会被自动跳过",
+  "ignored_tests": [
+    {
+      "test_path": "printer/multimaterial/test_multimaterial.py::test_extruders_count",
+      "test_case": "extruders_count_1",
+      "reason": "Creality Print 不输出 extruders_count 参数到配置块",
+      "date_added": "2025-12-16"
+    }
+  ],
+  "notes": [
+    "test_path: 相对于 engine_params/case/params/ 的路径（支持 :: 指定函数）",
+    "test_case: 可选，参数化测试的用例ID（如 'extruders_count_1'）",
+    "reason: 忽略原因说明",
+    "date_added: 添加日期（YYYY-MM-DD 格式）"
+  ]
+}
+```
+
+### 匹配规则
+- **test_path**: 支持部分匹配（如 `multimaterial/test_multimaterial.py` 匹配所有相关测试）
+- **test_case**: 指定时只跳过特定参数化用例，不指定则跳过整个函数的所有用例
+- **函数名**: 使用 `::` 指定函数（如 `test_multimaterial.py::test_extruders_count`）
+
+### 示例用法
+```powershell
+# 自动跳过 ignored_tests.json 中配置的用例
+pytest engine_params/case/params/printer/multimaterial/test_multimaterial.py -v
+
+# 输出示例：
+# SKIPPED [1] ... 忽略: Creality Print 不输出 extruders_count 参数到配置块
+```
+
+### 最佳实践
+1. **记录清晰原因**: 说明为什么跳过（硬件限制、版本差异、待修复bug等）
+2. **定期审查**: 每次更新切片器或测试框架时检查是否还需要忽略
+3. **限制使用**: 只在确实无法解决的情况下使用，避免隐藏真正的问题
+4. **版本说明**: 在 `reason` 中注明适用的软件版本
+
+
 ## 示例 Prompt
 一级分类为 printer
 请帮我添加一个 prime_tower_brim_width 参数的测试用例：
