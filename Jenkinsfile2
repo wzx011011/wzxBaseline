@@ -58,13 +58,11 @@ endlocal
         }
       }
     }
-    stage('Archive reports') {
-      steps {
-        archiveArtifacts artifacts: 'test_framework/report_engine_params.html', onlyIfSuccessful: false
-      }
-    }
   }
   post {
+    always {
+      archiveArtifacts artifacts: 'test_framework/report_engine_params.html', onlyIfSuccessful: false
+    }
     failure {
       echo 'Pipeline failed; check Feishu notifications for details.'
     }
