@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C3DBaseline 测试用例选择器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .controls {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .controls button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-success {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #218838;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 10px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            padding: 20px 30px;
+            background: #fff;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 10px 20px;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .stat-item .number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-item .label {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+
+        .main-layout {
+            display: flex;
+            gap: 0;
+            height: calc(100vh - 250px);
+            overflow: hidden;
+        }
+
+        .left-panel {
+            flex: 0 0 50%;
+            display: flex;
+            flex-direction: column;
+            border-right: 2px solid #dee2e6;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .right-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .content {
+            padding: 20px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        /* 模块级别 (printer/process) */
+        .module {
+            margin-bottom: 25px;
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            overflow: hidden;
+            background: white;
+        }
+
+        .module-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            color: white;
+        }
+
+        .module-header:hover {
+            transform: translateX(5px);
+        }
+
+        .module-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .module-count {
+            background: rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .expand-icon {
+            transition: transform 0.3s;
+            display: inline-block;
+            width: 12px;
+        }
+
+        .module.expanded .expand-icon,
+        .group-section.expanded .expand-icon,
+        .subgroup-section.expanded .expand-icon,
+        .test-file-section.expanded .expand-icon {
+            transform: rotate(90deg);
+        }
+
+        .module-content {
+            display: none;
+            padding: 15px 20px;
+            background: white;
+        }
+
+        .module.expanded .module-content {
+            display: block;
+        }
+
+        /* 组级别 (extruder_x, motion_ability) */
+        .group-section {
+            margin-bottom: 12px;
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        .group-header {
+            background: #f1f3f5;
+            padding: 12px 15px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .group-header:hover {
+            background: #e9ecef;
+        }
+
+        .group-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            font-size: 15px;
+            color: #495057;
+        }
+
+        .group-count {
+            background: #868e96;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 11px;
+        }
+
+        .group-content {
+            display: none;
+            padding: 10px 15px;
+            background: #f8f9fa;
+        }
+
+        .group-section.expanded .group-content {
+            display: block;
+        }
+
+        /* 子组级别 (size, retraction, layer_height_limits) */
+        .subgroup-section {
+            margin-bottom: 10px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            background: white;
+        }
+
+        .subgroup-header {
+            background: #e9ecef;
+            padding: 10px 12px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.2s;
+        }
+
+        .subgroup-header:hover {
+            background: #dee2e6;
+        }
+
+        .subgroup-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .subgroup-count {
+            background: #adb5bd;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-size: 10px;
+        }
+
+        .subgroup-content {
+            display: none;
+            padding: 8px 12px;
+            background: white;
+        }
+
+        .subgroup-section.expanded .subgroup-content {
+            display: block;
+        }
+
+        /* 测试文件级别 (test_*.py) */
+        .test-file-section {
+            margin-bottom: 8px;
+            border-left: 3px solid #667eea;
+            padding-left: 10px;
+        }
+
+        .test-file-header {
+            background: #f8f9fa;
+            padding: 8px 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .test-file-header:hover {
+            background: #e9ecef;
+        }
+
+        .test-file-title {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+            font-size: 13px;
+            color: #495057;
+            flex: 1;
+        }
+
+        .test-file-count {
+            background: #ced4da;
+            color: #495057;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-size: 10px;
+        }
+
+        .test-file-content {
+            display: none;
+            padding: 5px 0 5px 15px;
+        }
+
+        .test-file-section.expanded .test-file-content {
+            display: block;
+        }
+
+        /* 测试项 (参数/测试函数) */
+        .test-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 10px;
+            margin: 3px 0;
+            background: white;
+            border-radius: 4px;
+            transition: all 0.2s;
+            border-left: 2px solid transparent;
+        }
+
+        .test-item:hover {
+            background: #e7f1ff;
+            border-left-color: #667eea;
+            transform: translateX(3px);
+        }
+
+        .test-item input[type="checkbox"] {
+            cursor: pointer;
+            width: 16px;
+            height: 16px;
+        }
+
+        .test-item label {
+            cursor: pointer;
+            flex: 1;
+            font-size: 13px;
+            color: #212529;
+        }
+
+        .command-output {
+            padding: 15px;
+            background: white;
+            border-bottom: 1px solid #dee2e6;
+            max-height: 150px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .command {
+            background: #2d3748;
+            color: #68d391;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .footer {
+            padding: 15px 20px;
+            background: white;
+            border-top: 2px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .right-footer {
+            padding: 12px 15px;
+            background: white;
+            border-top: 2px solid #dee2e6;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .right-footer button {
+            width: 100%;
+            padding: 12px;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        /* 测试输出区域 */
+        .test-output-section {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            overflow: hidden;
+            min-height: 0;
+        }
+
+        .output-header {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .output-header h3 {
+            margin: 0;
+            font-size: 14px;
+        }
+
+        .output-header button {
+            margin-left: 6px;
+            padding: 5px 10px;
+            font-size: 11px;
+        }
+
+        .test-output {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 12px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.5;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            word-break: break-all;
+            min-height: 0;
+            max-width: 100%;
+        }
+
+        .test-output .pass {
+            color: #4ec9b0;
+        }
+
+        .test-output .fail {
+            color: #f48771;
+        }
+
+        .test-output .error {
+            color: #ce9178;
+        }
+
+        .test-output .skip {
+            color: #dcdcaa;
+        }
+
+        .running-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #28a745;
+            animation: pulse 1.5s infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 4px;
+            background: #e9ecef;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            display: none;
+        }
+
+        .progress-container.active {
+            display: block;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            right: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            font-size: 12px;
+            color: #6c757d;
+            margin-bottom: 8px;
+            display: none;
+        }
+
+        .progress-text.active {
+            display: block;
+        }
+
+        .btn-cancel {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .btn-cancel:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🧪 C3DBaseline 测试用例选择器 v2</h1>
+            <p>完整层级结构：模块 → 组 → 子组 → 测试文件 → 测试参数</p>
+        </div>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="loadTests()">🔄 刷新测试列表</button>
+            <button class="btn-secondary" onclick="selectAll()">✅ 全选</button>
+            <button class="btn-secondary" onclick="deselectAll()">❌ 全不选</button>
+            <button class="btn-secondary" onclick="invertSelection()">🔄 反选</button>
+            <button class="btn-secondary" onclick="expandAll()">📂 全部展开</button>
+            <button class="btn-secondary" onclick="collapseAll()">📁 全部折叠</button>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 搜索测试用例..." onkeyup="filterTests()">
+            </div>
+            <button class="btn-success" onclick="copyCommand()">📋 复制命令</button>
+        </div>
+
+        <div class="stats">
+            <div class="stat-item">
+                <div class="number" id="totalTests">0</div>
+                <div class="label">总测试数</div>
+            </div>
+            <div class="stat-item">
+                <div class="number" id="selectedTests">0</div>
+                <div class="label">已选择</div>
+            </div>
+            <div class="stat-item">
+                <div class="number" id="deselectedTests">0</div>
+                <div class="label">已排除</div>
+            </div>
+        </div>
+
+        <div class="main-layout">
+            <!-- 左侧：测试用例选择区 -->
+            <div class="left-panel">
+                <div class="content" id="testContent">
+                    <div class="loading">正在加载测试用例...</div>
+                </div>
+                <div class="footer">
+                    <span id="statusMessage">准备就绪</span>
+                </div>
+            </div>
+
+            <!-- 右侧：测试输出 -->
+            <div class="right-panel">
+                <!-- 测试输出区域 -->
+                <div id="testOutputSection" class="test-output-section">
+                    <div class="output-header">
+                        <h3>🔬 测试执行输出</h3>
+                        <div>
+                            <button class="btn-secondary" onclick="clearOutput()">🗑️ 清空</button>
+                            <button class="btn-secondary" onclick="stopTests()">⏹️ 停止</button>
+                        </div>
+                    </div>
+                    <div id="testOutput" class="test-output">等待执行测试...</div>
+                </div>
+
+                <div class="right-footer">
+                    <div class="progress-text" id="progressText">准备运行测试...</div>
+                    <div class="progress-container" id="progressContainer">
+                        <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                    </div>
+                    <button class="btn-primary" id="runButton" onclick="toggleTest()">▶️ 运行选中的测试</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let testData = {};
+        let allTests = [];
+
+        // 这里会被Python脚本替换为实际数据
+        const mockTestData = {
+  "printer": {
+    "basic_information": {
+      "advanced": {
+        "advanced": [
+          "test_pellet_modded_printer[pellet_modded_printer_false]",
+          "test_pellet_modded_printer[pellet_modded_printer_true]",
+          "test_disable_m73[disable_m73_false]",
+          "test_disable_m73[disable_m73_true]",
+          "test_use_relative_e_distances[use_relative_e_distances_true]",
+          "test_machine_load_filament_time[machine_load_filament_time_0]",
+          "test_machine_load_filament_time[machine_load_filament_time_119]",
+          "test_machine_unload_filament_time[machine_unload_filament_time_0]",
+          "test_machine_unload_filament_time[machine_unload_filament_time_119]",
+          "test_time_cost[time_cost_0]",
+          "test_time_cost[time_cost_1]",
+          "test_multicolor_method[multicolor_method_false]",
+          "test_multicolor_method[multicolor_method_true]"
+        ]
+      },
+      "cooling_fan": {
+        "cooling_fan": [
+          "test_fan_speedup_time[fan_speedup_time_0]",
+          "test_fan_speedup_time[fan_speedup_time_5]",
+          "test_fan_kickstart[fan_kickstart_0]",
+          "test_fan_kickstart[fan_kickstart_0p5]"
+        ]
+      },
+      "printable_space": {
+        "printable_space": [
+          "test_printable_area[printable_area_220x220]",
+          "test_printable_area[printable_area_300x200]",
+          "test_printable_area[printable_area_256x256]",
+          "test_printable_height[printable_height_250]",
+          "test_printable_height[printable_height_200]",
+          "test_printable_height[printable_height_300]",
+          "test_bed_exclude_area[bed_exclude_area_none]",
+          "test_bed_exclude_area[bed_exclude_area_custom]",
+          "test_support_multi_bed_types[support_multi_bed_types_enabled]",
+          "test_support_multi_bed_types[support_multi_bed_types_disabled]",
+          "test_nozzle_volume[nozzle_volume_200]",
+          "test_best_object_pos[best_object_pos_center]",
+          "test_best_object_pos[best_object_pos_custom]",
+          "test_z_offset[z_offset_0]",
+          "test_z_offset[z_offset_2p5]",
+          "test_z_offset[z_offset_neg1p5]",
+          "test_preferred_orientation[preferred_orientation_0]",
+          "test_preferred_orientation[preferred_orientation_90]",
+          "test_preferred_orientation[preferred_orientation_180]"
+        ]
+      }
+    },
+    "extruder_x": {
+      "layer_height_limits": [
+        "test_min_layer_height[min_layer_height_0.08]",
+        "test_min_layer_height[min_layer_height_0.1]",
+        "test_min_layer_height[min_layer_height_0.12]",
+        "test_max_layer_height[max_layer_height_0.28]",
+        "test_max_layer_height[max_layer_height_0.3]",
+        "test_max_layer_height[max_layer_height_0.35]"
+      ],
+      "lift_z_enforcement": [
+        "test_retract_lift_above[retract_lift_above_0]",
+        "test_retract_lift_above[retract_lift_above_5]",
+        "test_retract_lift_below[retract_lift_below_199]",
+        "test_retract_lift_below[retract_lift_below_150]",
+        "test_retract_lift_enforce[retract_lift_enforce_all_surfaces]",
+        "test_retract_lift_enforce[retract_lift_enforce_top_only]"
+      ],
+      "position": [
+        "test_extruder_offset[extruder_offset_0x0]",
+        "test_extruder_offset[extruder_offset_10x5]"
+      ],
+      "retraction": [
+        "test_retraction_length[retraction_length_0.8]",
+        "test_retraction_length[retraction_length_1.5]",
+        "test_retraction_length[retraction_length_2.0]",
+        "test_retract_restart_extra[retract_restart_extra_0]",
+        "test_retract_restart_extra[retract_restart_extra_0.1]",
+        "test_z_hop[z_hop_0]",
+        "test_z_hop[z_hop_0.2]",
+        "test_z_hop[z_hop_0.4]",
+        "test_z_hop_types[z_hop_types_normal_lift]",
+        "test_z_hop_types[z_hop_types_slope_lift]",
+        "test_z_hop_types[z_hop_types_spiral_lift]",
+        "test_travel_slope[travel_slope_0]",
+        "test_travel_slope[travel_slope_15]",
+        "test_retraction_speed[retraction_speed_30]",
+        "test_retraction_speed[retraction_speed_45]",
+        "test_retraction_speed[retraction_speed_60]",
+        "test_deretraction_speed[deretraction_speed_30]",
+        "test_deretraction_speed[deretraction_speed_40]",
+        "test_retraction_minimum_travel[retraction_minimum_travel_2]",
+        "test_retraction_minimum_travel[retraction_minimum_travel_5]",
+        "test_retract_when_changing_layer[retract_when_changing_layer_0]",
+        "test_retract_when_changing_layer[retract_when_changing_layer_1]",
+        "test_wipe[wipe_0]",
+        "test_wipe[wipe_1]",
+        "test_wipe_distance[wipe_distance_1]",
+        "test_wipe_distance[wipe_distance_2]",
+        "test_retract_before_wipe[retract_before_wipe_0%]",
+        "test_retract_before_wipe[retract_before_wipe_50%]",
+        "test_retract_before_wipe[retract_before_wipe_100%]"
+      ],
+      "retraction_when_switching_material": [
+        "test_retract_length_toolchange[retract_length_toolchange_2]",
+        "test_retract_length_toolchange[retract_length_toolchange_5]",
+        "test_retract_restart_extra_toolchange[retract_restart_extra_toolchange_0]",
+        "test_retract_restart_extra_toolchange[retract_restart_extra_toolchange_0.5]",
+        "test_long_retractions_when_cut[long_retractions_when_cut_0]",
+        "test_long_retractions_when_cut[long_retractions_when_cut_1]",
+        "test_retraction_distances_when_cut[retraction_distances_when_cut_18]",
+        "test_retraction_distances_when_cut[retraction_distances_when_cut_25]"
+      ],
+      "size": [
+        "test_nozzle_diameter[nozzle_diameter_0.2]",
+        "test_nozzle_diameter[nozzle_diameter_0.4]",
+        "test_nozzle_diameter[nozzle_diameter_0.6]",
+        "test_nozzle_diameter[nozzle_diameter_0.8]"
+      ]
+    },
+    "machine_gcode": {
+      "machine_gcode": [
+        "test_machine_start_gcode[machine_start_gcode_default]",
+        "test_machine_end_gcode[machine_end_gcode_default]",
+        "test_printing_by_object_gcode[printing_by_object_gcode_empty]",
+        "test_before_layer_change_gcode[before_layer_change_gcode_default]",
+        "test_layer_change_gcode[layer_change_gcode_default]",
+        "test_time_lapse_gcode[time_lapse_gcode_empty]",
+        "test_change_filament_gcode[change_filament_gcode_default]",
+        "test_change_extrusion_role_gcode[change_extrusion_role_gcode_empty]",
+        "test_machine_pause_gcode[machine_pause_gcode_default]",
+        "test_template_custom_gcode[template_custom_gcode_empty]"
+      ]
+    },
+    "motion_ability": {
+      "acceleration": [
+        "test_machine_max_acceleration_x[machine_max_acceleration_x_20000]",
+        "test_machine_max_acceleration_y[machine_max_acceleration_y_20000]",
+        "test_machine_max_acceleration_z[machine_max_acceleration_z_300]",
+        "test_machine_max_acceleration_e[machine_max_acceleration_e_5000]",
+        "test_machine_max_acceleration_extruding[machine_max_acceleration_extruding_20000]",
+        "test_machine_max_acceleration_retracting[machine_max_acceleration_retracting_5000]",
+        "test_machine_max_acceleration_travel[machine_max_acceleration_travel_20000]"
+      ],
+      "advanced": [
+        "test_emit_machine_limits_to_gcode[emit_machine_limits_to_gcode_1]"
+      ],
+      "jerk": [
+        "test_machine_max_jerk_x[machine_max_jerk_x_20]",
+        "test_machine_max_jerk_y[machine_max_jerk_y_20]",
+        "test_machine_max_jerk_z[machine_max_jerk_z_5]",
+        "test_machine_max_jerk_e[machine_max_jerk_e_10]"
+      ],
+      "speed": [
+        "test_machine_max_speed_x[machine_max_speed_x_600]",
+        "test_machine_max_speed_y[machine_max_speed_y_600]",
+        "test_machine_max_speed_z[machine_max_speed_z_10]",
+        "test_machine_max_speed_e[machine_max_speed_e_100]"
+      ]
+    },
+    "multimaterial": {
+      "multimaterial": [
+        "test_single_extruder_multi_material[single_extruder_multi_material_false]",
+        "test_extruders_count[extruders_count_1]",
+        "test_manual_filament_change[manual_filament_change_false]",
+        "test_purge_in_prime_tower[purge_in_prime_tower_false]",
+        "test_enable_filament_ramming[enable_filament_ramming_false]",
+        "test_prime_tower_position_type[prime_tower_position_type_middle]",
+        "test_cooling_tube_retraction[cooling_tube_retraction_0]",
+        "test_cooling_tube_length[cooling_tube_length_0]",
+        "test_parking_pos_retraction[parking_pos_retraction_0]",
+        "test_extra_loading_move[extra_loading_move_0]",
+        "test_high_current_on_filament_swap[high_current_on_filament_swap_false]"
+      ]
+    }
+  },
+  "process": {
+    "filament": {
+      "flush_options": [
+        "test_flush_into_infill[flush_into_infill_enabled]",
+        "test_flush_into_infill[flush_into_infill_disabled]",
+        "test_flush_into_support[flush_into_support_enabled]",
+        "test_flush_into_support[flush_into_support_disabled]"
+      ],
+      "interlocking": [
+        "test_interlocking_beam[interlocking_beam_enabled]",
+        "test_interlocking_beam[interlocking_beam_disabled]",
+        "test_mmu_segmented_region_max_width[mmu_segmented_region_max_width_0mm]",
+        "test_mmu_segmented_region_max_width[mmu_segmented_region_max_width_5mm]",
+        "test_interlocking_beam_width[interlocking_beam_width_0.5mm]",
+        "test_interlocking_beam_width[interlocking_beam_width_0.8mm]",
+        "test_interlocking_beam_width[interlocking_beam_width_1.2mm]",
+        "test_interlocking_orientation[interlocking_orientation_22.5deg]",
+        "test_interlocking_orientation[interlocking_orientation_45deg]",
+        "test_interlocking_orientation[interlocking_orientation_90deg]",
+        "test_interlocking_beam_layer_count[interlocking_beam_layer_count_1]",
+        "test_interlocking_beam_layer_count[interlocking_beam_layer_count_2]",
+        "test_interlocking_beam_layer_count[interlocking_beam_layer_count_3]",
+        "test_interlocking_depth[interlocking_depth_1mm]",
+        "test_interlocking_depth[interlocking_depth_2mm]",
+        "test_interlocking_depth[interlocking_depth_3mm]",
+        "test_interlocking_boundary_avoidance[interlocking_boundary_avoidance_1mm]",
+        "test_interlocking_boundary_avoidance[interlocking_boundary_avoidance_2mm]",
+        "test_interlocking_boundary_avoidance[interlocking_boundary_avoidance_3mm]"
+      ],
+      "prime_tower": [
+        "test_enable_prime_tower[enable_prime_tower ON]",
+        "test_enable_prime_tower[enable_prime_tower OFF]",
+        "test_prime_tower_width[prime_tower_width 40mm]",
+        "test_prime_tower_width[prime_tower_width 60mm]",
+        "test_prime_tower_brim_width[prime_tower_brim_width 0mm]",
+        "test_prime_tower_brim_width[prime_tower_brim_width 3mm]",
+        "test_prime_tower_brim_width[prime_tower_brim_width 5mm]",
+        "test_prime_volume[prime_volume 30mm\\xb3]",
+        "test_prime_volume[prime_volume 45mm\\xb3]",
+        "test_prime_volume[prime_volume 60mm\\xb3]",
+        "test_wipe_tower_rotation_angle[wipe_tower_rotation_angle 0\\xb0]",
+        "test_wipe_tower_rotation_angle[wipe_tower_rotation_angle 45\\xb0]",
+        "test_wipe_tower_rotation_angle[wipe_tower_rotation_angle 90\\xb0]",
+        "test_prime_tower_enhance_type[prime_tower_enhance_type cone]",
+        "test_prime_tower_enhance_type[prime_tower_enhance_type chamfer]",
+        "test_wipe_tower_extra_flow[wipe_tower_extra_flow 100%]",
+        "test_wipe_tower_extra_flow[wipe_tower_extra_flow 150%]",
+        "test_wipe_tower_extra_flow[wipe_tower_extra_flow 200%]"
+      ]
+    },
+    "others": {
+      "brim": [
+        "test_brim_type[brim_type_auto_brim]",
+        "test_brim_type[brim_type_outer_only]",
+        "test_brim_type[brim_type_outer_and_inner]",
+        "test_brim_width[brim_width_3mm]",
+        "test_brim_width[brim_width_5mm]",
+        "test_brim_width[brim_width_10mm]",
+        "test_brim_object_gap[brim_object_gap_0mm]",
+        "test_brim_object_gap[brim_object_gap_0.1mm]",
+        "test_brim_object_gap[brim_object_gap_0.5mm]",
+        "test_brim_ears_max_angle[brim_ears_max_angle_90]",
+        "test_brim_ears_max_angle[brim_ears_max_angle_125]",
+        "test_brim_ears_max_angle[brim_ears_max_angle_160]",
+        "test_brim_ears_detection_length[brim_ears_detection_length_0.5mm]",
+        "test_brim_ears_detection_length[brim_ears_detection_length_1mm]",
+        "test_brim_ears_detection_length[brim_ears_detection_length_2mm]"
+      ],
+      "gcode_output": [
+        "test_reduce_infill_retraction[reduce_infill_retraction_disabled]",
+        "test_reduce_infill_retraction[reduce_infill_retraction_enabled]",
+        "test_gcode_add_line_number[gcode_add_line_number_disabled]",
+        "test_gcode_comments[gcode_comments_disabled]",
+        "test_gcode_comments[gcode_comments_enabled]",
+        "test_gcode_label_objects[gcode_label_objects_disabled]",
+        "test_gcode_label_objects[gcode_label_objects_enabled]",
+        "test_exclude_object[exclude_object_disabled]",
+        "test_exclude_object[exclude_object_enabled]",
+        "test_filename_format[filename_format_default]"
+      ],
+      "post_process_notes": [
+        "test_post_process[post_process_none]",
+        "test_notes[notes_empty]",
+        "test_notes[notes_custom]"
+      ],
+      "skirt": [
+        "test_skirt_type[skirt_type_combined]",
+        "test_skirt_loops[skirt_loops_1]",
+        "test_skirt_loops[skirt_loops_2]",
+        "test_skirt_loops[skirt_loops_3]",
+        "test_skirt_distance[skirt_distance_3mm]",
+        "test_skirt_distance[skirt_distance_6mm]",
+        "test_skirt_distance[skirt_distance_12mm]",
+        "test_skirt_height[skirt_height_1]",
+        "test_skirt_height[skirt_height_3]",
+        "test_skirt_height[skirt_height_5]",
+        "test_skirt_speed[skirt_speed_50]",
+        "test_skirt_speed[skirt_speed_100]",
+        "test_skirt_speed[skirt_speed_150]",
+        "test_min_skirt_length[min_skirt_length_100mm]",
+        "test_min_skirt_length[min_skirt_length_250mm]",
+        "test_min_skirt_length[min_skirt_length_500mm]",
+        "test_draft_shield[draft_shield_disabled]",
+        "test_draft_shield[draft_shield_enabled]"
+      ],
+      "special_mode": [
+        "test_slicing_mode[slicing_mode_regular]",
+        "test_slicing_mode[slicing_mode_even_odd]",
+        "test_slicing_mode[slicing_mode_close_holes]",
+        "test_print_sequence[print_sequence_by_layer]",
+        "test_print_sequence[print_sequence_by_object]",
+        "test_print_order[print_order_default]",
+        "test_print_order[print_order_as_object_list]",
+        "test_spiral_mode[spiral_mode_disabled]",
+        "test_spiral_mode[spiral_mode_enabled]",
+        "test_spiral_mode_smooth[spiral_mode_smooth_disabled]",
+        "test_spiral_mode_smooth[spiral_mode_smooth_enabled]",
+        "test_spiral_mode_max_xy_smoothing[spiral_mode_max_xy_smoothing_0]",
+        "test_spiral_mode_max_xy_smoothing[spiral_mode_max_xy_smoothing_50]",
+        "test_spiral_mode_max_xy_smoothing[spiral_mode_max_xy_smoothing_100]",
+        "test_ignore_inner_color[ignore_inner_color_disabled]",
+        "test_ignore_inner_color[ignore_inner_color_enabled]",
+        "test_timelapse_type[timelapse_type_traditional]",
+        "test_timelapse_type[timelapse_type_smooth]",
+        "test_timelapse_type[timelapse_type_close]",
+        "test_fuzzy_skin[fuzzy_skin_none]",
+        "test_fuzzy_skin[fuzzy_skin_external]",
+        "test_fuzzy_skin[fuzzy_skin_all]",
+        "test_fuzzy_skin[fuzzy_skin_all_walls]",
+        "test_fuzzy_skin_point_distance[fuzzy_skin_point_distance_0.5mm]",
+        "test_fuzzy_skin_point_distance[fuzzy_skin_point_distance_0.8mm]",
+        "test_fuzzy_skin_point_distance[fuzzy_skin_point_distance_1.5mm]",
+        "test_fuzzy_skin_thickness[fuzzy_skin_thickness_0.1mm]",
+        "test_fuzzy_skin_thickness[fuzzy_skin_thickness_0.3mm]",
+        "test_fuzzy_skin_thickness[fuzzy_skin_thickness_0.5mm]",
+        "test_fuzzy_skin_first_layer[fuzzy_skin_first_layer_disabled]",
+        "test_fuzzy_skin_first_layer[fuzzy_skin_first_layer_enabled]"
+      ]
+    },
+    "quality": {
+      "bridging": [
+        "test_internal_bridge_flow[internal_bridge_flow]"
+      ],
+      "ironing_type": [
+        "test_ironing_type[ironing_type_cube]"
+      ],
+      "layer_height": [
+        "test_initial_layer_print_height[initial_layer_print_height_0_28]",
+        "test_layer_height[layer_height_0_24]",
+        "test_layer_height[layer_height_0_32]"
+      ],
+      "line_width": [
+        "test_initial_layer_line_width[initial_layer_line_width_001]",
+        "test_outer_wall_line_width[outer_wall_line_width_001]",
+        "test_inner_wall_line_width[inner_wall_line_width_001]",
+        "test_top_surface_line_width[top_surface_line_width_001]",
+        "test_sparse_infill_line_width[sparse_infill_line_width_001]",
+        "test_internal_solid_line_width[internal_solid_line_width_001]",
+        "test_support_line_width[support_line_width_001]"
+      ],
+      "precision": [
+        "test_elefant_foot_compensation[efc_01mm_case]",
+        "test_elefant_foot_compensation_layers[efc_01mm_case]",
+        "test_xy_hole_compensation[xy_hole_compensation_shrink]",
+        "test_xy_contour_compensation[xy_contour_compensation_shrink]",
+        "test_enable_arc_fitting[enable_arc_fitting_off]",
+        "test_enable_arc_fitting[enable_arc_fitting_on]"
+      ],
+      "seam": [
+        "test_wipe_speed[test_layer_height_case1]",
+        "test_wipe_speed[test_layer_height_case2]"
+      ],
+      "wall_and_surfaces": [
+        "test_wall_sequence[wall_sequence_inner_outer_inner]",
+        "test_is_infill_first[is_infill_first_001]",
+        "test_wall_direction[cw_wall_direction_01]",
+        "test_only_one_wall_top[only_one_wall_top_001]",
+        "test_only_one_wall_top[only_one_wall_top_002]",
+        "test_one_wall_first_layer[only_one_wall_first_layer_001]",
+        "test_top_solid_infill_flow_ratio[top_solid_infill_flow_ratio_001]",
+        "test_bottom_solid_infill_flow_ratio[bottom_solid_infill_flow_ratio_001]"
+      ],
+      "wall_generator": [
+        "test_wall_generator[wall_generator_arachne]",
+        "test_wall_generator[wall_generator_classic]"
+      ]
+    },
+    "speed": {
+      "acceleration": [
+        "test_accel_to_decel_enable[accel_to_decel_enable_false]",
+        "test_default_acceleration[default_acceleration_8888]",
+        "test_accel_to_decel_factor[accel_to_decel_factor_50percentage]",
+        "test_initial_layer_acceleration[initial_layer_acceleration_500]",
+        "test_outer_wall_acceleration[outer_wall_acceleration_8888]",
+        "test_inner_wall_acceleration[inner_wall_acceleration_8888]",
+        "test_bridge_acceleration[bridge_acceleration_8888]",
+        "test_sparse_infill_acceleration[sparse_infill_acceleration_8888]",
+        "test_internal_solid_infill_acceleration[internal_solid_infill_acceleration_8888]",
+        "test_top_surface_acceleration[top_surface_acceleration_500]",
+        "test_travel_acceleration[travel_acceleration_8888]"
+      ],
+      "advance": [
+        "test_max_volumetric_extrusion_rate_slope[max_volumetric_extrusion_rate_slope_0]",
+        "test_max_volumetric_extrusion_rate_slope[max_volumetric_extrusion_rate_slope_300]",
+        "test_max_volumetric_extrusion_rate_slope_segment_length[max_volumetric_extrusion_rate_slope_segment_length_1]",
+        "test_speed_limit_to_height_enable[speed_limit_to_height_enable_case1]",
+        "test_acceleration_limit_mess_enable[acceleration_limit_mess_enable_case1]"
+      ],
+      "initial_layer_speed": [
+        "test_initial_layer_speed[initial_layer_speed_80]",
+        "test_initial_layer_infill_speed[initial_layer_infill_speed_80]",
+        "test_initial_layer_travel_speed[initial_layer_travel_speed_1500]",
+        "test_slow_down_layers[slow_down_layers_5]"
+      ],
+      "jerk_xy": [
+        "test_outer_wall_jerk[outer_wall_jerk_10]",
+        "test_inner_wall_jerk[inner_wall_jerk_10]",
+        "test_top_surface_acceleration[top_surface_acceleration_500]",
+        "test_initial_layer_jerk[initial_layer_jerk_10]",
+        "test_default_jerk[default_jerk_10]",
+        "test_infill_jerk[infill_jerk_10]"
+      ],
+      "other_layers_speed": [
+        "test_outer_wall_speed[outer_wall_speed0]",
+        "test_outer_wall_speed[outer_wall_speed1]",
+        "test_inner_wall_speed[inner_wall_speed]",
+        "test_sparse_infill_speed[sparse_infill_speed]",
+        "test_solid_infill_speed[solid_infill_speed]",
+        "test_top_surface_speed[top_surface_speed]",
+        "test_gap_infill_speed[gap_infill_speed]",
+        "test_small_perimeter_threshold[small_perimeter_threshold0]",
+        "test_small_perimeter_threshold[small_perimeter_threshold1]",
+        "test_small_perimeter_speed[small_perimeter_speed]"
+      ],
+      "overhang_speed": [
+        "test_bridge_speed[bridge_speed]",
+        "test_internal_bridge_speed[internal_bridge_speed]",
+        "test_enable_overhang_speed[enable_overhang_speed_false]",
+        "test_enable_overhang_speed[enable_overhang_speed_true]",
+        "test_slowdown_for_curled_perimeters[slowdown_for_curled_perimeters_true]",
+        "test_slowdown_for_curled_perimeters[slowdown_for_curled_perimeters_false]",
+        "test_overhang_speed_classic[overhang_speed_classic_true]",
+        "test_overhang_totally_speed[overhang_totally_speed_8]",
+        "test_smooth_speed_discontinuity_area[smooth_speed_discontinuity_area_on]"
+      ],
+      "travel_speed": [
+        "test_travel_speed"
+      ]
+    },
+    "strength": {
+      "advance": [
+        "test_detect_narrow_internal_solid_infill[detect_narrow_internal_solid_infill_enable]",
+        "test_detect_narrow_internal_solid_infill[detect_narrow_internal_solid_infill_disable]",
+        "test_bridge_angle[bridge_angle_45]",
+        "test_bridge_angle[bridge_angle_180]",
+        "test_bridge_angle[bridge_angle_0_snapshot]",
+        "test_minimum_sparse_infill_area[minimum_sparse_infill_area_10000]",
+        "test_infill_combination[infill_combination_04_019]",
+        "test_ensure_vertical_shell_thickness[ensure_vertical_shell_thickness_all]",
+        "test_ensure_vertical_shell_thickness[ensure_vertical_shell_thickness_moderate]",
+        "test_ensure_vertical_shell_thickness[ensure_vertical_shell_thickness_critical]",
+        "test_ensure_vertical_shell_thickness[ensure_vertical_shell_thickness_none]"
+      ],
+      "fill": [
+        "test_gap_fill_target[gap_fill_target_nowhere]",
+        "test_filter_out_gap_fill[filter_out_gap_fill]",
+        "test_anchor_line[test infill_anchor and infill_anchor_max]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_3dhoneycomp]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_adapativecubic]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_aligned_rectilinear]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_archimedean_chords]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_concentric]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_cross]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_cross3d]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_crosshatch]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_cubic]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_grid]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_gtpmsd]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_gtpmsfks]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_gtpmsg]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_gyroid]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_hilbert_curve]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_honeycomp]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_lightning]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_line]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_octagram_spiral]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_quarter_cubic]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_rectilinear]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_support_cubic]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_tetrahedral]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_tpmsd]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_triangles]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_trihexagon]",
+        "test_bottom_surface_pattern[bottom_surface_aligned_rectilinear]",
+        "test_bottom_surface_pattern[bottom_surface_concentric]",
+        "test_bottom_surface_pattern[bottom_surface_hilbert_curve]",
+        "test_bottom_surface_pattern[bottom_surface_monotonic]",
+        "test_bottom_surface_pattern[bottom_surface_rectilinear]",
+        "test_bottom_surface_pattern[bottom_surface_archimedean_chords]",
+        "test_bottom_surface_pattern[bottom_surface_monotonic_line]",
+        "test_bottom_surface_pattern[bottom_surface_octagram_spiral]",
+        "test_ai_infill[AI infill cubic @25%]",
+        "test_ai_infill[AI infill rectilinear @25%]",
+        "test_infill_direction[infill_direction_60_degree]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_aligned_rectilinear]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_archimedean_chords]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_concentric]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_hilbert_curve]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_monotonic]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_monotonic_line]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_octagram_spiral]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_rectilinear]",
+        "test_solid_infill_direction[solid_infill_direction_0_degree]",
+        "test_sparse_infill_density[Sparse infill density concentric @50%]",
+        "test_sparse_infill_density[Sparse infill density grid @50%]",
+        "test_sparse_infill_density[Sparse infill density hilbert_curve @50%]",
+        "test_rotate_solid_infill_direction[rotate_solid_infill_direction_true]",
+        "test_rotate_solid_infill_direction[rotate_solid_infill_direction_false]",
+        "test_top_surface_pattern[top_surface_aligned_rectilinear]",
+        "test_top_surface_pattern[top_surface_concentric]",
+        "test_top_surface_pattern[top_surface_hilbert_curve]",
+        "test_top_surface_pattern[top_surface_monotonic]",
+        "test_top_surface_pattern[top_surface_rectilinear]",
+        "test_top_surface_pattern[top_surface_archimedean_chords]",
+        "test_top_surface_pattern[top_surface_monotonic_line]",
+        "test_top_surface_pattern[top_surface_octagram_spiral]",
+        "test_infill_wall_overlap[infill_wall_overlap_100]",
+        "test_tmps_start_infill_density[tmps_start_infill_density @25%]",
+        "test_tmps_end_infill_density[tmps_end_infill_density @99%]",
+        "test_tpms_gradual_direction[tpms_gradual_direction Y-axis]",
+        "test_tpms_gradual_direction[tpms_gradual_direction Z-axis]"
+      ],
+      "top_or_bottom_shells": [
+        "test_top_shell_layers[top_shell_layers_001]",
+        "test_top_shell_layers[top_shell_layers_002]",
+        "test_top_shell_thickness[top_shell_thickness_1point805]",
+        "test_top_bottom_infill_wall_overlap[top_bottom_infill_wall_overlap_100]",
+        "test_bottom_shell_layers[bsl_001]",
+        "test_bottom_shell_thickness[bottom_shell_thickness_1point805]"
+      ],
+      "walls": [
+        "test_wall_loops[wall_loops_3loops]",
+        "test_alternate_extra_wall[alternate_extra_wall]",
+        "test_detect_thin_wall[detect_thin_wall_enabled]",
+        "test_detect_thin_wall[detect_thin_wall_disabled]"
+      ]
+    }
+  }
+};
+
+        function loadTests() {
+            document.getElementById('statusMessage').textContent = '正在加载测试用例...';
+            
+            testData = mockTestData;
+            allTests = [];
+            
+            const content = document.getElementById('testContent');
+            content.innerHTML = '';
+            
+            for (const [moduleName, moduleData] of Object.entries(testData)) {
+                const moduleDiv = createModuleElement(moduleName, moduleData);
+                content.appendChild(moduleDiv);
+            }
+            
+            updateStats();
+            generateCommand();
+            document.getElementById('statusMessage').textContent = '测试列表加载完成';
+        }
+
+        function createModuleElement(moduleName, moduleData) {
+            const moduleDiv = document.createElement('div');
+            moduleDiv.className = 'module';
+            
+            const testCount = countTestsInObject(moduleData);
+            
+            const header = document.createElement('div');
+            header.className = 'module-header';
+            header.onclick = (e) => {
+                if (e.target.tagName !== 'INPUT') {
+                    moduleDiv.classList.toggle('expanded');
+                }
+            };
+            header.innerHTML = `
+                <div class="module-title">
+                    <span class="expand-icon">▶</span>
+                    <span>📦 ${moduleName}</span>
+                    <span class="module-count">${testCount} 个测试</span>
+                </div>
+                <input type="checkbox" checked onclick="event.stopPropagation(); toggleModule(this)" />
+            `;
+            
+            const content = document.createElement('div');
+            content.className = 'module-content';
+            
+            for (const [groupName, groupData] of Object.entries(moduleData)) {
+                content.appendChild(createGroupElement(moduleName, groupName, groupData));
+            }
+            
+            moduleDiv.appendChild(header);
+            moduleDiv.appendChild(content);
+            
+            return moduleDiv;
+        }
+
+        function createGroupElement(moduleName, groupName, groupData) {
+            const groupDiv = document.createElement('div');
+            groupDiv.className = 'group-section';
+            
+            const testCount = countTestsInObject(groupData);
+            
+            const header = document.createElement('div');
+            header.className = 'group-header';
+            header.onclick = (e) => {
+                if (e.target.tagName !== 'INPUT') {
+                    groupDiv.classList.toggle('expanded');
+                }
+            };
+            header.innerHTML = `
+                <div class="group-title">
+                    <span class="expand-icon">▶</span>
+                    <span>📁 ${groupName}</span>
+                    <span class="group-count">${testCount}</span>
+                </div>
+                <input type="checkbox" checked onclick="event.stopPropagation(); toggleGroup(this)" />
+            `;
+            
+            const content = document.createElement('div');
+            content.className = 'group-content';
+            
+            // 判断是否有子组
+            const firstValue = Object.values(groupData)[0];
+            if (Array.isArray(firstValue)) {
+                // 直接是测试文件 (无子组)
+                for (const [fileName, tests] of Object.entries(groupData)) {
+                    content.appendChild(createTestFileElement(moduleName, groupName, null, fileName, tests));
+                }
+            } else {
+                // 有子组
+                for (const [subgroupName, subgroupData] of Object.entries(groupData)) {
+                    content.appendChild(createSubgroupElement(moduleName, groupName, subgroupName, subgroupData));
+                }
+            }
+            
+            groupDiv.appendChild(header);
+            groupDiv.appendChild(content);
+            
+            return groupDiv;
+        }
+
+        function createSubgroupElement(moduleName, groupName, subgroupName, subgroupData) {
+            const subgroupDiv = document.createElement('div');
+            subgroupDiv.className = 'subgroup-section';
+            
+            const testCount = countTestsInObject(subgroupData);
+            
+            const header = document.createElement('div');
+            header.className = 'subgroup-header';
+            header.onclick = (e) => {
+                if (e.target.tagName !== 'INPUT') {
+                    subgroupDiv.classList.toggle('expanded');
+                }
+            };
+            header.innerHTML = `
+                <div class="subgroup-title">
+                    <span class="expand-icon">▶</span>
+                    <span>📂 ${subgroupName}</span>
+                    <span class="subgroup-count">${testCount}</span>
+                </div>
+                <input type="checkbox" checked onclick="event.stopPropagation(); toggleSubgroup(this)" />
+            `;
+            
+            const content = document.createElement('div');
+            content.className = 'subgroup-content';
+            
+            for (const [fileName, tests] of Object.entries(subgroupData)) {
+                content.appendChild(createTestFileElement(moduleName, groupName, subgroupName, fileName, tests));
+            }
+            
+            subgroupDiv.appendChild(header);
+            subgroupDiv.appendChild(content);
+            
+            return subgroupDiv;
+        }
+
+        function createTestFileElement(moduleName, groupName, subgroupName, fileName, tests) {
+            const fileDiv = document.createElement('div');
+            fileDiv.className = 'test-file-section';
+            
+            const pathParts = [moduleName, groupName];
+            if (subgroupName) pathParts.push(subgroupName);
+            const filePath = pathParts.join('/');
+            const fullFileName = `test_${fileName}.py`;
+            
+            const header = document.createElement('div');
+            header.className = 'test-file-header';
+            header.onclick = (e) => {
+                if (e.target.tagName !== 'INPUT') {
+                    fileDiv.classList.toggle('expanded');
+                }
+            };
+            header.innerHTML = `
+                <span class="expand-icon">▶</span>
+                <div class="test-file-title">
+                    <input type="checkbox" checked onclick="event.stopPropagation(); toggleFile(this)" />
+                    <span>📄 ${fullFileName}</span>
+                    <span class="test-file-count">${tests.length}</span>
+                </div>
+            `;
+            
+            const content = document.createElement('div');
+            content.className = 'test-file-content';
+            
+            tests.forEach(testName => {
+                const testPath = `${filePath}/test_${fileName}.py::${testName}`;
+                allTests.push(testPath);
+                
+                const testItem = document.createElement('div');
+                testItem.className = 'test-item';
+                testItem.innerHTML = `
+                    <input type="checkbox" checked id="${testPath}" onchange="updateStats(); generateCommand()" />
+                    <label for="${testPath}">🔬 ${testName}</label>
+                `;
+                content.appendChild(testItem);
+            });
+            
+            fileDiv.appendChild(header);
+            fileDiv.appendChild(content);
+            
+            return fileDiv;
+        }
+
+        function countTestsInObject(obj) {
+            let count = 0;
+            for (const value of Object.values(obj)) {
+                if (Array.isArray(value)) {
+                    count += value.length;
+                } else if (typeof value === 'object') {
+                    count += countTestsInObject(value);
+                }
+            }
+            return count;
+        }
+
+        function toggleModule(checkbox) {
+            const moduleDiv = checkbox.closest('.module');
+            const checkboxes = moduleDiv.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+            updateStats();
+            generateCommand();
+        }
+
+        function toggleGroup(checkbox) {
+            const groupDiv = checkbox.closest('.group-section');
+            const checkboxes = groupDiv.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+            updateStats();
+            generateCommand();
+        }
+
+        function toggleSubgroup(checkbox) {
+            const subgroupDiv = checkbox.closest('.subgroup-section');
+            const checkboxes = subgroupDiv.querySelectorAll('input[type="checkbox"]');
+            checkboxes.forEach(cb => cb.checked = checkbox.checked);
+            updateStats();
+            generateCommand();
+        }
+
+        function toggleFile(checkbox) {
+            const fileDiv = checkbox.closest('.test-file-section');
+            const testCheckboxes = fileDiv.querySelectorAll('.test-item input[type="checkbox"]');
+            testCheckboxes.forEach(cb => cb.checked = checkbox.checked);
+            updateStats();
+            generateCommand();
+        }
+
+        function selectAll() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = true);
+            updateStats();
+            generateCommand();
+        }
+
+        function deselectAll() {
+            document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            updateStats();
+            generateCommand();
+        }
+
+        function invertSelection() {
+            document.querySelectorAll('.test-item input[type="checkbox"]').forEach(cb => {
+                cb.checked = !cb.checked;
+            });
+            updateStats();
+            generateCommand();
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.module, .group-section, .subgroup-section, .test-file-section').forEach(el => {
+                el.classList.add('expanded');
+            });
+        }
+
+        function collapseAll() {
+            document.querySelectorAll('.module, .group-section, .subgroup-section, .test-file-section').forEach(el => {
+                el.classList.remove('expanded');
+            });
+        }
+
+        function filterTests() {
+            const searchText = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (!searchText) {
+                // 清空搜索，显示所有项
+                document.querySelectorAll('.test-item').forEach(item => {
+                    item.style.display = 'flex';
+                });
+                document.querySelectorAll('.test-file-section, .subgroup-section, .group-section, .module').forEach(section => {
+                    section.style.display = '';
+                });
+                return;
+            }
+            
+            let hasVisibleItems = false;
+            
+            // 搜索测试项
+            document.querySelectorAll('.test-item').forEach(item => {
+                const label = item.querySelector('label').textContent.toLowerCase();
+                const checkbox = item.querySelector('input[type="checkbox"]');
+                const fullPath = checkbox ? checkbox.id.toLowerCase() : '';
+                
+                // 搜索测试名称或完整路径
+                const matches = label.includes(searchText) || fullPath.includes(searchText);
+                item.style.display = matches ? 'flex' : 'none';
+                
+                if (matches) {
+                    hasVisibleItems = true;
+                    // 展开父级元素
+                    let parent = item.closest('.test-file-section');
+                    if (parent) {
+                        parent.classList.add('expanded');
+                        parent.style.display = '';
+                    }
+                    
+                    parent = item.closest('.subgroup-section');
+                    if (parent) {
+                        parent.classList.add('expanded');
+                        parent.style.display = '';
+                    }
+                    
+                    parent = item.closest('.group-section');
+                    if (parent) {
+                        parent.classList.add('expanded');
+                        parent.style.display = '';
+                    }
+                    
+                    parent = item.closest('.module');
+                    if (parent) {
+                        parent.classList.add('expanded');
+                        parent.style.display = '';
+                    }
+                }
+            });
+            
+            // 隐藏没有匹配项的文件/组
+            document.querySelectorAll('.test-file-section').forEach(section => {
+                const visibleItems = section.querySelectorAll('.test-item[style*="display: flex"]');
+                section.style.display = visibleItems.length > 0 ? '' : 'none';
+            });
+            
+            document.querySelectorAll('.subgroup-section').forEach(section => {
+                const visibleFiles = section.querySelectorAll('.test-file-section:not([style*="display: none"])');
+                section.style.display = visibleFiles.length > 0 ? '' : 'none';
+            });
+            
+            document.querySelectorAll('.group-section').forEach(section => {
+                const visibleSubgroups = section.querySelectorAll('.subgroup-section:not([style*="display: none"])');
+                const visibleFiles = section.querySelectorAll('.test-file-section:not([style*="display: none"])');
+                section.style.display = (visibleSubgroups.length > 0 || visibleFiles.length > 0) ? '' : 'none';
+            });
+            
+            document.querySelectorAll('.module').forEach(module => {
+                const visibleGroups = module.querySelectorAll('.group-section:not([style*="display: none"])');
+                module.style.display = visibleGroups.length > 0 ? '' : 'none';
+            });
+            
+            // 更新状态消息
+            const statusMsg = document.getElementById('statusMessage');
+            if (hasVisibleItems) {
+                const visibleCount = document.querySelectorAll('.test-item[style*="display: flex"]').length;
+                statusMsg.textContent = `🔍 找到 ${visibleCount} 个匹配的测试`;
+            } else {
+                statusMsg.textContent = '⚠️ 没有找到匹配的测试';
+            }
+        }
+
+        function updateStats() {
+            const total = allTests.length;
+            const selected = document.querySelectorAll('.test-item input[type="checkbox"]:checked').length;
+            const deselected = total - selected;
+            
+            document.getElementById('totalTests').textContent = total;
+            document.getElementById('selectedTests').textContent = selected;
+            document.getElementById('deselectedTests').textContent = deselected;
+        }
+
+        function generateCommand() {
+            const deselected = [];
+            document.querySelectorAll('.test-item input[type="checkbox"]:not(:checked)').forEach(cb => {
+                deselected.push(cb.id);
+            });
+            
+            let command = '$env:CREALITY_PRINTER_PATH = "C:\\Program Files\\Creality\\Creality Print 7.0 Beta\\CrealityPrint.exe"\n';
+            command += '$env:PYTHONPATH = "E:\\wzx\\C3DBaseline\\test_framework"\n\n';
+            command += 'pytest engine_params/case/params/ -v --tb=line';
+            
+            if (deselected.length > 0 && deselected.length < allTests.length) {
+                command += ' `\n';
+                deselected.forEach((test, index) => {
+                    command += `  --deselect="engine_params/case/params/${test}"`;
+                    if (index < deselected.length - 1) {
+                        command += ' `\n';
+                    }
+                });
+            } else if (deselected.length === allTests.length) {
+                command = '# 没有选中任何测试用例';
+            }
+            
+            document.getElementById('commandOutput').innerHTML = `<div class="command">${command}</div>`;
+        }
+
+        function copyCommand() {
+            const command = document.getElementById('commandOutput').textContent;
+            navigator.clipboard.writeText(command).then(() => {
+                const originalText = document.getElementById('statusMessage').textContent;
+                document.getElementById('statusMessage').textContent = '✅ 命令已复制到剪贴板';
+                setTimeout(() => {
+                    document.getElementById('statusMessage').textContent = originalText;
+                }, 2000);
+            });
+        }
+
+        let eventSource = null;
+        let isRunning = false;
+        let totalTests = 0;
+        let completedTests = 0;
+
+        function toggleTest() {
+            if (isRunning) {
+                // 正在运行，执行取消
+                cancelTests();
+            } else {
+                // 未运行，开始测试
+                runTests();
+            }
+        }
+
+        function updateProgress() {
+            if (totalTests === 0) return;
+            
+            const percentage = Math.round((completedTests / totalTests) * 100);
+            document.getElementById('progressBar').style.width = percentage + '%';
+            document.getElementById('progressText').textContent = `进度: ${completedTests}/${totalTests} (${percentage}%)`;
+        }
+
+        function runTests() {
+            if (isRunning) {
+                return;
+            }
+
+            // 收集未选中的测试
+            const deselected = [];
+            document.querySelectorAll('.test-item input[type="checkbox"]:not(:checked)').forEach(cb => {
+                deselected.push(cb.id);
+            });
+
+            if (deselected.length === allTests.length) {
+                alert('没有选中任何测试用例');
+                return;
+            }
+
+            const outputDiv = document.getElementById('testOutput');
+            outputDiv.innerHTML = '<div style="color: #4ec9b0;">🚀 正在启动测试...</div>';
+            
+            // 发送运行请求
+            fetch('/run', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ deselected })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'started') {
+                    isRunning = true;
+                    
+                    // 更新按钮状态
+                    const runButton = document.getElementById('runButton');
+                    runButton.className = 'btn-cancel';
+                    runButton.innerHTML = '⏹️ 取消测试';
+                    
+                    // 显示进度条
+                    document.getElementById('progressContainer').classList.add('active');
+                    document.getElementById('progressText').classList.add('active');
+                    
+                    // 计算总测试数
+                    totalTests = allTests.length - deselected.length;
+                    completedTests = 0;
+                    updateProgress();
+                    
+                    document.getElementById('statusMessage').innerHTML = '<span class="running-indicator"></span>测试运行中...';
+                    
+                    // 连接到输出流
+                    connectToOutputStream();
+                }
+            })
+            .catch(error => {
+                outputDiv.innerHTML += `<div style="color: #f48771;">❌ 启动失败: ${error}</div>`;
+            });
+        }
+
+        function cancelTests() {
+            if (!isRunning) {
+                return;
+            }
+            
+            if (confirm('确定要取消正在运行的测试吗？')) {
+                stopTests();
+            }
+        }
+
+        function resetRunButton() {
+            const runButton = document.getElementById('runButton');
+            runButton.className = 'btn-primary';
+            runButton.innerHTML = '▶️ 运行选中的测试';
+            
+            // 隐藏进度条
+            document.getElementById('progressContainer').classList.remove('active');
+            document.getElementById('progressText').classList.remove('active');
+            
+            isRunning = false;
+        }
+
+        function connectToOutputStream() {
+            if (eventSource) {
+                eventSource.close();
+            }
+
+            eventSource = new EventSource('/output');
+            const outputDiv = document.getElementById('testOutput');
+
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                if (data.line) {
+                    let line = data.line;
+                    
+                    // 更新进度（检测测试完成）
+                    if (line.includes('PASSED') || line.includes('FAILED') || 
+                        line.includes('ERROR') || line.includes('SKIPPED')) {
+                        completedTests++;
+                        updateProgress();
+                    }
+                    
+                    // 添加颜色高亮
+                    if (line.includes('PASSED')) {
+                        line = `<span class="pass">${escapeHtml(line)}</span>`;
+                    } else if (line.includes('FAILED')) {
+                        line = `<span class="fail">${escapeHtml(line)}</span>`;
+                    } else if (line.includes('ERROR')) {
+                        line = `<span class="error">${escapeHtml(line)}</span>`;
+                    } else if (line.includes('SKIPPED')) {
+                        line = `<span class="skip">${escapeHtml(line)}</span>`;
+                    } else {
+                        line = escapeHtml(line);
+                    }
+                    
+                    outputDiv.innerHTML += line + '\n';
+                    outputDiv.scrollTop = outputDiv.scrollHeight;
+                }
+            };
+
+            eventSource.onerror = function() {
+                eventSource.close();
+                resetRunButton();
+                document.getElementById('statusMessage').textContent = '测试完成';
+                outputDiv.innerHTML += '\n<div style="color: #4ec9b0;">✅ 测试执行完成</div>';
+            };
+        }
+
+        function stopTests() {
+            if (!isRunning) {
+                return;
+            }
+
+            fetch('/stop', {
+                method: 'POST'
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (eventSource) {
+                    eventSource.close();
+                    eventSource = null;
+                }
+                resetRunButton();
+                document.getElementById('statusMessage').textContent = '测试已停止';
+                document.getElementById('testOutput').innerHTML += '\n<div style="color: #dcdcaa;">⏹️ 测试已被用户停止</div>';
+            })
+            .catch(error => {
+                console.error('停止测试失败:', error);
+                resetRunButton();
+            });
+        }
+
+        function clearOutput() {
+            document.getElementById('testOutput').innerHTML = '';
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 页面加载时自动加载测试列表
+        window.onload = loadTests;
+    </script>
+</body>
+</html>

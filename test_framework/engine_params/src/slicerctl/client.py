@@ -43,9 +43,9 @@ class SlicerProc:
         env["SLICER_TEST_RESTORE"] = "discard"
         env["CREALITY_PRINTER_LOG_PATH"] = CREALITY_PRINTER_LOG_PATH
 
-        # 可选：让 C++ 读取端口/复用配置
-        # env["SLICER_TEST_PORT"] = str(PORT)
-        # env["SLICER_TEST_REUSE"] = "1"
+        # 让 C++ 读取端口/复用配置
+        env["SLICER_TEST_PORT"] = str(self.port)
+        env["SLICER_TEST_REUSE"] = "1"
 
         self.log_file = open(self.log_path, "a", encoding="utf-8", buffering=1)
         # 创建新控制台以确保 GUI 前台可见

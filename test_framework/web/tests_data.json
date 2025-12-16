@@ -1,0 +1,526 @@
+{
+  "printer": {
+    "basic_information": {
+      "advanced": {
+        "advanced": [
+          "test_pellet_modded_printer[pellet_modded_printer_false]",
+          "test_pellet_modded_printer[pellet_modded_printer_true]",
+          "test_disable_m73[disable_m73_false]",
+          "test_disable_m73[disable_m73_true]",
+          "test_use_relative_e_distances[use_relative_e_distances_true]",
+          "test_machine_load_filament_time[machine_load_filament_time_0]",
+          "test_machine_load_filament_time[machine_load_filament_time_119]",
+          "test_machine_unload_filament_time[machine_unload_filament_time_0]",
+          "test_machine_unload_filament_time[machine_unload_filament_time_119]",
+          "test_time_cost[time_cost_0]",
+          "test_time_cost[time_cost_1]",
+          "test_multicolor_method[multicolor_method_false]",
+          "test_multicolor_method[multicolor_method_true]"
+        ]
+      },
+      "cooling_fan": {
+        "cooling_fan": [
+          "test_fan_speedup_time[fan_speedup_time_0]",
+          "test_fan_speedup_time[fan_speedup_time_5]",
+          "test_fan_kickstart[fan_kickstart_0]",
+          "test_fan_kickstart[fan_kickstart_0p5]"
+        ]
+      },
+      "printable_space": {
+        "printable_space": [
+          "test_printable_area[printable_area_220x220]",
+          "test_printable_area[printable_area_300x200]",
+          "test_printable_area[printable_area_256x256]",
+          "test_printable_height[printable_height_250]",
+          "test_printable_height[printable_height_200]",
+          "test_printable_height[printable_height_300]",
+          "test_bed_exclude_area[bed_exclude_area_none]",
+          "test_bed_exclude_area[bed_exclude_area_custom]",
+          "test_support_multi_bed_types[support_multi_bed_types_enabled]",
+          "test_support_multi_bed_types[support_multi_bed_types_disabled]",
+          "test_nozzle_volume[nozzle_volume_200]",
+          "test_best_object_pos[best_object_pos_center]",
+          "test_best_object_pos[best_object_pos_custom]",
+          "test_z_offset[z_offset_0]",
+          "test_z_offset[z_offset_2p5]",
+          "test_z_offset[z_offset_neg1p5]",
+          "test_preferred_orientation[preferred_orientation_0]",
+          "test_preferred_orientation[preferred_orientation_90]",
+          "test_preferred_orientation[preferred_orientation_180]"
+        ]
+      }
+    },
+    "extruder_x": {
+      "layer_height_limits": [
+        "test_min_layer_height[min_layer_height_0.08]",
+        "test_min_layer_height[min_layer_height_0.1]",
+        "test_min_layer_height[min_layer_height_0.12]",
+        "test_max_layer_height[max_layer_height_0.28]",
+        "test_max_layer_height[max_layer_height_0.3]",
+        "test_max_layer_height[max_layer_height_0.35]"
+      ],
+      "lift_z_enforcement": [
+        "test_retract_lift_above[retract_lift_above_0]",
+        "test_retract_lift_above[retract_lift_above_5]",
+        "test_retract_lift_below[retract_lift_below_199]",
+        "test_retract_lift_below[retract_lift_below_150]",
+        "test_retract_lift_enforce[retract_lift_enforce_all_surfaces]",
+        "test_retract_lift_enforce[retract_lift_enforce_top_only]"
+      ],
+      "position": [
+        "test_extruder_offset[extruder_offset_0x0]",
+        "test_extruder_offset[extruder_offset_10x5]"
+      ],
+      "retraction": [
+        "test_retraction_length[retraction_length_0.8]",
+        "test_retraction_length[retraction_length_1.5]",
+        "test_retraction_length[retraction_length_2.0]",
+        "test_retract_restart_extra[retract_restart_extra_0]",
+        "test_retract_restart_extra[retract_restart_extra_0.1]",
+        "test_z_hop[z_hop_0]",
+        "test_z_hop[z_hop_0.2]",
+        "test_z_hop[z_hop_0.4]",
+        "test_z_hop_types[z_hop_types_normal_lift]",
+        "test_z_hop_types[z_hop_types_slope_lift]",
+        "test_z_hop_types[z_hop_types_spiral_lift]",
+        "test_travel_slope[travel_slope_0]",
+        "test_travel_slope[travel_slope_15]",
+        "test_retraction_speed[retraction_speed_30]",
+        "test_retraction_speed[retraction_speed_45]",
+        "test_retraction_speed[retraction_speed_60]",
+        "test_deretraction_speed[deretraction_speed_30]",
+        "test_deretraction_speed[deretraction_speed_40]",
+        "test_retraction_minimum_travel[retraction_minimum_travel_2]",
+        "test_retraction_minimum_travel[retraction_minimum_travel_5]",
+        "test_retract_when_changing_layer[retract_when_changing_layer_0]",
+        "test_retract_when_changing_layer[retract_when_changing_layer_1]",
+        "test_wipe[wipe_0]",
+        "test_wipe[wipe_1]",
+        "test_wipe_distance[wipe_distance_1]",
+        "test_wipe_distance[wipe_distance_2]",
+        "test_retract_before_wipe[retract_before_wipe_0%]",
+        "test_retract_before_wipe[retract_before_wipe_50%]",
+        "test_retract_before_wipe[retract_before_wipe_100%]"
+      ],
+      "retraction_when_switching_material": [
+        "test_retract_length_toolchange[retract_length_toolchange_2]",
+        "test_retract_length_toolchange[retract_length_toolchange_5]",
+        "test_retract_restart_extra_toolchange[retract_restart_extra_toolchange_0]",
+        "test_retract_restart_extra_toolchange[retract_restart_extra_toolchange_0.5]",
+        "test_long_retractions_when_cut[long_retractions_when_cut_0]",
+        "test_long_retractions_when_cut[long_retractions_when_cut_1]",
+        "test_retraction_distances_when_cut[retraction_distances_when_cut_18]",
+        "test_retraction_distances_when_cut[retraction_distances_when_cut_25]"
+      ],
+      "size": [
+        "test_nozzle_diameter[nozzle_diameter_0.2]",
+        "test_nozzle_diameter[nozzle_diameter_0.4]",
+        "test_nozzle_diameter[nozzle_diameter_0.6]",
+        "test_nozzle_diameter[nozzle_diameter_0.8]"
+      ]
+    },
+    "machine_gcode": {
+      "machine_gcode": [
+        "test_machine_start_gcode[machine_start_gcode_default]",
+        "test_machine_end_gcode[machine_end_gcode_default]",
+        "test_printing_by_object_gcode[printing_by_object_gcode_empty]",
+        "test_before_layer_change_gcode[before_layer_change_gcode_default]",
+        "test_layer_change_gcode[layer_change_gcode_default]",
+        "test_time_lapse_gcode[time_lapse_gcode_empty]",
+        "test_change_filament_gcode[change_filament_gcode_default]",
+        "test_change_extrusion_role_gcode[change_extrusion_role_gcode_empty]",
+        "test_machine_pause_gcode[machine_pause_gcode_default]",
+        "test_template_custom_gcode[template_custom_gcode_empty]"
+      ]
+    },
+    "motion_ability": {
+      "acceleration": [
+        "test_machine_max_acceleration_x[machine_max_acceleration_x_20000]",
+        "test_machine_max_acceleration_y[machine_max_acceleration_y_20000]",
+        "test_machine_max_acceleration_z[machine_max_acceleration_z_300]",
+        "test_machine_max_acceleration_e[machine_max_acceleration_e_5000]",
+        "test_machine_max_acceleration_extruding[machine_max_acceleration_extruding_20000]",
+        "test_machine_max_acceleration_retracting[machine_max_acceleration_retracting_5000]",
+        "test_machine_max_acceleration_travel[machine_max_acceleration_travel_20000]"
+      ],
+      "advanced": [
+        "test_emit_machine_limits_to_gcode[emit_machine_limits_to_gcode_1]"
+      ],
+      "jerk": [
+        "test_machine_max_jerk_x[machine_max_jerk_x_20]",
+        "test_machine_max_jerk_y[machine_max_jerk_y_20]",
+        "test_machine_max_jerk_z[machine_max_jerk_z_5]",
+        "test_machine_max_jerk_e[machine_max_jerk_e_10]"
+      ],
+      "speed": [
+        "test_machine_max_speed_x[machine_max_speed_x_600]",
+        "test_machine_max_speed_y[machine_max_speed_y_600]",
+        "test_machine_max_speed_z[machine_max_speed_z_10]",
+        "test_machine_max_speed_e[machine_max_speed_e_100]"
+      ]
+    },
+    "multimaterial": {
+      "multimaterial": [
+        "test_single_extruder_multi_material[single_extruder_multi_material_false]",
+        "test_extruders_count[extruders_count_1]",
+        "test_manual_filament_change[manual_filament_change_false]",
+        "test_purge_in_prime_tower[purge_in_prime_tower_false]",
+        "test_enable_filament_ramming[enable_filament_ramming_false]",
+        "test_prime_tower_position_type[prime_tower_position_type_middle]",
+        "test_cooling_tube_retraction[cooling_tube_retraction_0]",
+        "test_cooling_tube_length[cooling_tube_length_0]",
+        "test_parking_pos_retraction[parking_pos_retraction_0]",
+        "test_extra_loading_move[extra_loading_move_0]",
+        "test_high_current_on_filament_swap[high_current_on_filament_swap_false]"
+      ]
+    }
+  },
+  "process": {
+    "filament": {
+      "flush_options": [
+        "test_flush_into_infill[flush_into_infill_enabled]",
+        "test_flush_into_infill[flush_into_infill_disabled]",
+        "test_flush_into_support[flush_into_support_enabled]",
+        "test_flush_into_support[flush_into_support_disabled]"
+      ],
+      "interlocking": [
+        "test_interlocking_beam[interlocking_beam_enabled]",
+        "test_interlocking_beam[interlocking_beam_disabled]",
+        "test_mmu_segmented_region_max_width[mmu_segmented_region_max_width_0mm]",
+        "test_mmu_segmented_region_max_width[mmu_segmented_region_max_width_5mm]",
+        "test_interlocking_beam_width[interlocking_beam_width_0.5mm]",
+        "test_interlocking_beam_width[interlocking_beam_width_0.8mm]",
+        "test_interlocking_beam_width[interlocking_beam_width_1.2mm]",
+        "test_interlocking_orientation[interlocking_orientation_22.5deg]",
+        "test_interlocking_orientation[interlocking_orientation_45deg]",
+        "test_interlocking_orientation[interlocking_orientation_90deg]",
+        "test_interlocking_beam_layer_count[interlocking_beam_layer_count_1]",
+        "test_interlocking_beam_layer_count[interlocking_beam_layer_count_2]",
+        "test_interlocking_beam_layer_count[interlocking_beam_layer_count_3]",
+        "test_interlocking_depth[interlocking_depth_1mm]",
+        "test_interlocking_depth[interlocking_depth_2mm]",
+        "test_interlocking_depth[interlocking_depth_3mm]",
+        "test_interlocking_boundary_avoidance[interlocking_boundary_avoidance_1mm]",
+        "test_interlocking_boundary_avoidance[interlocking_boundary_avoidance_2mm]",
+        "test_interlocking_boundary_avoidance[interlocking_boundary_avoidance_3mm]"
+      ],
+      "prime_tower": [
+        "test_enable_prime_tower[enable_prime_tower ON]",
+        "test_enable_prime_tower[enable_prime_tower OFF]",
+        "test_prime_tower_width[prime_tower_width 40mm]",
+        "test_prime_tower_width[prime_tower_width 60mm]",
+        "test_prime_tower_brim_width[prime_tower_brim_width 0mm]",
+        "test_prime_tower_brim_width[prime_tower_brim_width 3mm]",
+        "test_prime_tower_brim_width[prime_tower_brim_width 5mm]",
+        "test_prime_volume[prime_volume 30mm\\xb3]",
+        "test_prime_volume[prime_volume 45mm\\xb3]",
+        "test_prime_volume[prime_volume 60mm\\xb3]",
+        "test_wipe_tower_rotation_angle[wipe_tower_rotation_angle 0\\xb0]",
+        "test_wipe_tower_rotation_angle[wipe_tower_rotation_angle 45\\xb0]",
+        "test_wipe_tower_rotation_angle[wipe_tower_rotation_angle 90\\xb0]",
+        "test_prime_tower_enhance_type[prime_tower_enhance_type cone]",
+        "test_prime_tower_enhance_type[prime_tower_enhance_type chamfer]",
+        "test_wipe_tower_extra_flow[wipe_tower_extra_flow 100%]",
+        "test_wipe_tower_extra_flow[wipe_tower_extra_flow 150%]",
+        "test_wipe_tower_extra_flow[wipe_tower_extra_flow 200%]"
+      ]
+    },
+    "others": {
+      "brim": [
+        "test_brim_type[brim_type_auto_brim]",
+        "test_brim_type[brim_type_outer_only]",
+        "test_brim_type[brim_type_outer_and_inner]",
+        "test_brim_width[brim_width_3mm]",
+        "test_brim_width[brim_width_5mm]",
+        "test_brim_width[brim_width_10mm]",
+        "test_brim_object_gap[brim_object_gap_0mm]",
+        "test_brim_object_gap[brim_object_gap_0.1mm]",
+        "test_brim_object_gap[brim_object_gap_0.5mm]",
+        "test_brim_ears_max_angle[brim_ears_max_angle_90]",
+        "test_brim_ears_max_angle[brim_ears_max_angle_125]",
+        "test_brim_ears_max_angle[brim_ears_max_angle_160]",
+        "test_brim_ears_detection_length[brim_ears_detection_length_0.5mm]",
+        "test_brim_ears_detection_length[brim_ears_detection_length_1mm]",
+        "test_brim_ears_detection_length[brim_ears_detection_length_2mm]"
+      ],
+      "gcode_output": [
+        "test_reduce_infill_retraction[reduce_infill_retraction_disabled]",
+        "test_reduce_infill_retraction[reduce_infill_retraction_enabled]",
+        "test_gcode_add_line_number[gcode_add_line_number_disabled]",
+        "test_gcode_comments[gcode_comments_disabled]",
+        "test_gcode_comments[gcode_comments_enabled]",
+        "test_gcode_label_objects[gcode_label_objects_disabled]",
+        "test_gcode_label_objects[gcode_label_objects_enabled]",
+        "test_exclude_object[exclude_object_disabled]",
+        "test_exclude_object[exclude_object_enabled]",
+        "test_filename_format[filename_format_default]"
+      ],
+      "post_process_notes": [
+        "test_post_process[post_process_none]",
+        "test_notes[notes_empty]",
+        "test_notes[notes_custom]"
+      ],
+      "skirt": [
+        "test_skirt_type[skirt_type_combined]",
+        "test_skirt_loops[skirt_loops_1]",
+        "test_skirt_loops[skirt_loops_2]",
+        "test_skirt_loops[skirt_loops_3]",
+        "test_skirt_distance[skirt_distance_3mm]",
+        "test_skirt_distance[skirt_distance_6mm]",
+        "test_skirt_distance[skirt_distance_12mm]",
+        "test_skirt_height[skirt_height_1]",
+        "test_skirt_height[skirt_height_3]",
+        "test_skirt_height[skirt_height_5]",
+        "test_skirt_speed[skirt_speed_50]",
+        "test_skirt_speed[skirt_speed_100]",
+        "test_skirt_speed[skirt_speed_150]",
+        "test_min_skirt_length[min_skirt_length_100mm]",
+        "test_min_skirt_length[min_skirt_length_250mm]",
+        "test_min_skirt_length[min_skirt_length_500mm]",
+        "test_draft_shield[draft_shield_disabled]",
+        "test_draft_shield[draft_shield_enabled]"
+      ],
+      "special_mode": [
+        "test_slicing_mode[slicing_mode_regular]",
+        "test_slicing_mode[slicing_mode_even_odd]",
+        "test_slicing_mode[slicing_mode_close_holes]",
+        "test_print_sequence[print_sequence_by_layer]",
+        "test_print_sequence[print_sequence_by_object]",
+        "test_print_order[print_order_default]",
+        "test_print_order[print_order_as_object_list]",
+        "test_spiral_mode[spiral_mode_disabled]",
+        "test_spiral_mode[spiral_mode_enabled]",
+        "test_spiral_mode_smooth[spiral_mode_smooth_disabled]",
+        "test_spiral_mode_smooth[spiral_mode_smooth_enabled]",
+        "test_spiral_mode_max_xy_smoothing[spiral_mode_max_xy_smoothing_0]",
+        "test_spiral_mode_max_xy_smoothing[spiral_mode_max_xy_smoothing_50]",
+        "test_spiral_mode_max_xy_smoothing[spiral_mode_max_xy_smoothing_100]",
+        "test_ignore_inner_color[ignore_inner_color_disabled]",
+        "test_ignore_inner_color[ignore_inner_color_enabled]",
+        "test_timelapse_type[timelapse_type_traditional]",
+        "test_timelapse_type[timelapse_type_smooth]",
+        "test_timelapse_type[timelapse_type_close]",
+        "test_fuzzy_skin[fuzzy_skin_none]",
+        "test_fuzzy_skin[fuzzy_skin_external]",
+        "test_fuzzy_skin[fuzzy_skin_all]",
+        "test_fuzzy_skin[fuzzy_skin_all_walls]",
+        "test_fuzzy_skin_point_distance[fuzzy_skin_point_distance_0.5mm]",
+        "test_fuzzy_skin_point_distance[fuzzy_skin_point_distance_0.8mm]",
+        "test_fuzzy_skin_point_distance[fuzzy_skin_point_distance_1.5mm]",
+        "test_fuzzy_skin_thickness[fuzzy_skin_thickness_0.1mm]",
+        "test_fuzzy_skin_thickness[fuzzy_skin_thickness_0.3mm]",
+        "test_fuzzy_skin_thickness[fuzzy_skin_thickness_0.5mm]",
+        "test_fuzzy_skin_first_layer[fuzzy_skin_first_layer_disabled]",
+        "test_fuzzy_skin_first_layer[fuzzy_skin_first_layer_enabled]"
+      ]
+    },
+    "quality": {
+      "bridging": [
+        "test_internal_bridge_flow[internal_bridge_flow]"
+      ],
+      "ironing_type": [
+        "test_ironing_type[ironing_type_cube]"
+      ],
+      "layer_height": [
+        "test_initial_layer_print_height[initial_layer_print_height_0_28]",
+        "test_layer_height[layer_height_0_24]",
+        "test_layer_height[layer_height_0_32]"
+      ],
+      "line_width": [
+        "test_initial_layer_line_width[initial_layer_line_width_001]",
+        "test_outer_wall_line_width[outer_wall_line_width_001]",
+        "test_inner_wall_line_width[inner_wall_line_width_001]",
+        "test_top_surface_line_width[top_surface_line_width_001]",
+        "test_sparse_infill_line_width[sparse_infill_line_width_001]",
+        "test_internal_solid_line_width[internal_solid_line_width_001]",
+        "test_support_line_width[support_line_width_001]"
+      ],
+      "precision": [
+        "test_elefant_foot_compensation[efc_01mm_case]",
+        "test_elefant_foot_compensation_layers[efc_01mm_case]",
+        "test_xy_hole_compensation[xy_hole_compensation_shrink]",
+        "test_xy_contour_compensation[xy_contour_compensation_shrink]",
+        "test_enable_arc_fitting[enable_arc_fitting_off]",
+        "test_enable_arc_fitting[enable_arc_fitting_on]"
+      ],
+      "seam": [
+        "test_wipe_speed[test_layer_height_case1]",
+        "test_wipe_speed[test_layer_height_case2]"
+      ],
+      "wall_and_surfaces": [
+        "test_wall_sequence[wall_sequence_inner_outer_inner]",
+        "test_is_infill_first[is_infill_first_001]",
+        "test_wall_direction[cw_wall_direction_01]",
+        "test_only_one_wall_top[only_one_wall_top_001]",
+        "test_only_one_wall_top[only_one_wall_top_002]",
+        "test_one_wall_first_layer[only_one_wall_first_layer_001]",
+        "test_top_solid_infill_flow_ratio[top_solid_infill_flow_ratio_001]",
+        "test_bottom_solid_infill_flow_ratio[bottom_solid_infill_flow_ratio_001]"
+      ],
+      "wall_generator": [
+        "test_wall_generator[wall_generator_arachne]",
+        "test_wall_generator[wall_generator_classic]"
+      ]
+    },
+    "speed": {
+      "acceleration": [
+        "test_accel_to_decel_enable[accel_to_decel_enable_false]",
+        "test_default_acceleration[default_acceleration_8888]",
+        "test_accel_to_decel_factor[accel_to_decel_factor_50percentage]",
+        "test_initial_layer_acceleration[initial_layer_acceleration_500]",
+        "test_outer_wall_acceleration[outer_wall_acceleration_8888]",
+        "test_inner_wall_acceleration[inner_wall_acceleration_8888]",
+        "test_bridge_acceleration[bridge_acceleration_8888]",
+        "test_sparse_infill_acceleration[sparse_infill_acceleration_8888]",
+        "test_internal_solid_infill_acceleration[internal_solid_infill_acceleration_8888]",
+        "test_top_surface_acceleration[top_surface_acceleration_500]",
+        "test_travel_acceleration[travel_acceleration_8888]"
+      ],
+      "advance": [
+        "test_max_volumetric_extrusion_rate_slope[max_volumetric_extrusion_rate_slope_0]",
+        "test_max_volumetric_extrusion_rate_slope[max_volumetric_extrusion_rate_slope_300]",
+        "test_max_volumetric_extrusion_rate_slope_segment_length[max_volumetric_extrusion_rate_slope_segment_length_1]",
+        "test_speed_limit_to_height_enable[speed_limit_to_height_enable_case1]",
+        "test_acceleration_limit_mess_enable[acceleration_limit_mess_enable_case1]"
+      ],
+      "initial_layer_speed": [
+        "test_initial_layer_speed[initial_layer_speed_80]",
+        "test_initial_layer_infill_speed[initial_layer_infill_speed_80]",
+        "test_initial_layer_travel_speed[initial_layer_travel_speed_1500]",
+        "test_slow_down_layers[slow_down_layers_5]"
+      ],
+      "jerk_xy": [
+        "test_outer_wall_jerk[outer_wall_jerk_10]",
+        "test_inner_wall_jerk[inner_wall_jerk_10]",
+        "test_top_surface_acceleration[top_surface_acceleration_500]",
+        "test_initial_layer_jerk[initial_layer_jerk_10]",
+        "test_default_jerk[default_jerk_10]",
+        "test_infill_jerk[infill_jerk_10]"
+      ],
+      "other_layers_speed": [
+        "test_outer_wall_speed[outer_wall_speed0]",
+        "test_outer_wall_speed[outer_wall_speed1]",
+        "test_inner_wall_speed[inner_wall_speed]",
+        "test_sparse_infill_speed[sparse_infill_speed]",
+        "test_solid_infill_speed[solid_infill_speed]",
+        "test_top_surface_speed[top_surface_speed]",
+        "test_gap_infill_speed[gap_infill_speed]",
+        "test_small_perimeter_threshold[small_perimeter_threshold0]",
+        "test_small_perimeter_threshold[small_perimeter_threshold1]",
+        "test_small_perimeter_speed[small_perimeter_speed]"
+      ],
+      "overhang_speed": [
+        "test_bridge_speed[bridge_speed]",
+        "test_internal_bridge_speed[internal_bridge_speed]",
+        "test_enable_overhang_speed[enable_overhang_speed_false]",
+        "test_enable_overhang_speed[enable_overhang_speed_true]",
+        "test_slowdown_for_curled_perimeters[slowdown_for_curled_perimeters_true]",
+        "test_slowdown_for_curled_perimeters[slowdown_for_curled_perimeters_false]",
+        "test_overhang_speed_classic[overhang_speed_classic_true]",
+        "test_overhang_totally_speed[overhang_totally_speed_8]",
+        "test_smooth_speed_discontinuity_area[smooth_speed_discontinuity_area_on]"
+      ],
+      "travel_speed": [
+        "test_travel_speed"
+      ]
+    },
+    "strength": {
+      "advance": [
+        "test_detect_narrow_internal_solid_infill[detect_narrow_internal_solid_infill_enable]",
+        "test_detect_narrow_internal_solid_infill[detect_narrow_internal_solid_infill_disable]",
+        "test_bridge_angle[bridge_angle_45]",
+        "test_bridge_angle[bridge_angle_180]",
+        "test_bridge_angle[bridge_angle_0_snapshot]",
+        "test_minimum_sparse_infill_area[minimum_sparse_infill_area_10000]",
+        "test_infill_combination[infill_combination_04_019]",
+        "test_ensure_vertical_shell_thickness[ensure_vertical_shell_thickness_all]",
+        "test_ensure_vertical_shell_thickness[ensure_vertical_shell_thickness_moderate]",
+        "test_ensure_vertical_shell_thickness[ensure_vertical_shell_thickness_critical]",
+        "test_ensure_vertical_shell_thickness[ensure_vertical_shell_thickness_none]"
+      ],
+      "fill": [
+        "test_gap_fill_target[gap_fill_target_nowhere]",
+        "test_filter_out_gap_fill[filter_out_gap_fill]",
+        "test_anchor_line[test infill_anchor and infill_anchor_max]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_3dhoneycomp]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_adapativecubic]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_aligned_rectilinear]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_archimedean_chords]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_concentric]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_cross]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_cross3d]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_crosshatch]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_cubic]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_grid]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_gtpmsd]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_gtpmsfks]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_gtpmsg]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_gyroid]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_hilbert_curve]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_honeycomp]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_lightning]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_line]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_octagram_spiral]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_quarter_cubic]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_rectilinear]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_support_cubic]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_tetrahedral]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_tpmsd]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_triangles]",
+        "test_sparse_infill_pattern[sparse_infill_pattern_trihexagon]",
+        "test_bottom_surface_pattern[bottom_surface_aligned_rectilinear]",
+        "test_bottom_surface_pattern[bottom_surface_concentric]",
+        "test_bottom_surface_pattern[bottom_surface_hilbert_curve]",
+        "test_bottom_surface_pattern[bottom_surface_monotonic]",
+        "test_bottom_surface_pattern[bottom_surface_rectilinear]",
+        "test_bottom_surface_pattern[bottom_surface_archimedean_chords]",
+        "test_bottom_surface_pattern[bottom_surface_monotonic_line]",
+        "test_bottom_surface_pattern[bottom_surface_octagram_spiral]",
+        "test_ai_infill[AI infill cubic @25%]",
+        "test_ai_infill[AI infill rectilinear @25%]",
+        "test_infill_direction[infill_direction_60_degree]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_aligned_rectilinear]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_archimedean_chords]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_concentric]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_hilbert_curve]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_monotonic]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_monotonic_line]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_octagram_spiral]",
+        "test_internal_solid_infill_pattern[internal_solid_infill_pattern_rectilinear]",
+        "test_solid_infill_direction[solid_infill_direction_0_degree]",
+        "test_sparse_infill_density[Sparse infill density concentric @50%]",
+        "test_sparse_infill_density[Sparse infill density grid @50%]",
+        "test_sparse_infill_density[Sparse infill density hilbert_curve @50%]",
+        "test_rotate_solid_infill_direction[rotate_solid_infill_direction_true]",
+        "test_rotate_solid_infill_direction[rotate_solid_infill_direction_false]",
+        "test_top_surface_pattern[top_surface_aligned_rectilinear]",
+        "test_top_surface_pattern[top_surface_concentric]",
+        "test_top_surface_pattern[top_surface_hilbert_curve]",
+        "test_top_surface_pattern[top_surface_monotonic]",
+        "test_top_surface_pattern[top_surface_rectilinear]",
+        "test_top_surface_pattern[top_surface_archimedean_chords]",
+        "test_top_surface_pattern[top_surface_monotonic_line]",
+        "test_top_surface_pattern[top_surface_octagram_spiral]",
+        "test_infill_wall_overlap[infill_wall_overlap_100]",
+        "test_tmps_start_infill_density[tmps_start_infill_density @25%]",
+        "test_tmps_end_infill_density[tmps_end_infill_density @99%]",
+        "test_tpms_gradual_direction[tpms_gradual_direction Y-axis]",
+        "test_tpms_gradual_direction[tpms_gradual_direction Z-axis]"
+      ],
+      "top_or_bottom_shells": [
+        "test_top_shell_layers[top_shell_layers_001]",
+        "test_top_shell_layers[top_shell_layers_002]",
+        "test_top_shell_thickness[top_shell_thickness_1point805]",
+        "test_top_bottom_infill_wall_overlap[top_bottom_infill_wall_overlap_100]",
+        "test_bottom_shell_layers[bsl_001]",
+        "test_bottom_shell_thickness[bottom_shell_thickness_1point805]"
+      ],
+      "walls": [
+        "test_wall_loops[wall_loops_3loops]",
+        "test_alternate_extra_wall[alternate_extra_wall]",
+        "test_detect_thin_wall[detect_thin_wall_enabled]",
+        "test_detect_thin_wall[detect_thin_wall_disabled]"
+      ]
+    }
+  }
+}
