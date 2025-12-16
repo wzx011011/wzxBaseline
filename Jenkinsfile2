@@ -33,8 +33,9 @@ python -m pip install -r requirements.txt
     }
     stage('Download artifact and run tests') {
       steps {
-        withCredentials([sshUserPrivateKey(credentialsId: 'cxsw-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
-          bat '''
+        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+          withCredentials([sshUserPrivateKey(credentialsId: 'cxsw-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+            bat '''
 @echo off
 setlocal enabledelayedexpansion
 
@@ -55,14 +56,26 @@ if not "%TEST_COMMAND%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%TEST_
 python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" !EXTRA_ARGS!
 endlocal
 '''
+          }
+        }
+      }
+    }
+    stage('Allure results') {
+      steps {
+        script {
+          def allurePaths = ['allure-results', 'test_framework/allure-results', 'output/report/allure-results', 'test_engine_framework/output/report/allure-results']
+          def found = allurePaths.find { fileExists(it) }
+          if (found) {
+            echo "Publishing Allure results from ${found}"
+            allure includeProperties: false, jdk: '', results: [[path: found]]
+          } else {
+            echo 'No Allure results found, skipping publish'
+          }
         }
       }
     }
   }
   post {
-    always {
-      archiveArtifacts artifacts: 'test_framework/report_engine_params.html', onlyIfSuccessful: false
-    }
     failure {
       echo 'Pipeline failed; check Feishu notifications for details.'
     }

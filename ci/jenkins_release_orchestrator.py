@@ -29,6 +29,7 @@ class BuildOutcome:
     build_number: Optional[int] = None
     status: str = "UNKNOWN"
     url: Optional[str] = None
+    artifact_path: Optional[str] = None
     artifact_url: Optional[str] = None
     artifact_local_path: Optional[Path] = None
     artifact_urls: List[str] = field(default_factory=list)
@@ -691,6 +692,7 @@ def main() -> int:
                 build_number=build_number,
                 status=status,
                 url=url,
+                artifact_path=job.artifact_path,
                 console_excerpt=console[-1200:],
             )
             if status == "SUCCESS":
@@ -732,38 +734,28 @@ def main() -> int:
 
     test_result: Optional[TestOutcome] = None
     if should_run_tests and not args.dry_run:
-        windows_builds = [b for b in build_results if b.platform.lower() == "windows"]
+        test_pipeline = os.getenv("JENKINS_JOB_TEST_PIPELINE") or os.getenv("JENKINS_JOB_TESTER")
+        windows_builds = [b for b in build_results if b.platform.lower() == "windows" and b.status == "SUCCESS"]
         if not windows_builds:
-            print("[warn] run_tests enabled but no windows build found; skipping tests", file=sys.stderr)
+            print("[warn] run_tests enabled but no successful windows build found; skipping tests", file=sys.stderr)
+        elif not test_pipeline:
+            print("[warn] run_tests enabled but JENKINS_JOB_TEST_PIPELINE/JENKINS_JOB_TESTER not set; skipping tests", file=sys.stderr)
         else:
-            env = os.environ.copy()
-            env["ARTIFACTS_DIR"] = str(artifacts_dir)
-            slicer_exe: Optional[Path] = None
-            for build in windows_builds:
-                if build.artifact_local_path:
-                    if build.artifact_local_path.suffix.lower() != ".zip":
-                        continue
-                    env_key = f"ARTIFACT_{build.platform.upper()}"
-                    env[env_key] = str(build.artifact_local_path)
-                    extracted_dir = extract_artifact_zip(build.artifact_local_path)
-                    if extracted_dir:
-                        maybe_exe = find_slicer_exe(extracted_dir)
-                        if maybe_exe:
-                            env[f"SLICER_EXE_{build.platform.upper()}"] = str(maybe_exe)
-                            if not slicer_exe:
-                                slicer_exe = maybe_exe
-            test_command = args.test_command
-            if "{slicer_exe}" in test_command:
-                if slicer_exe:
-                    test_command = test_command.replace("{slicer_exe}", str(slicer_exe))
-                else:
-                    print("[warn] slicer_exe placeholder present but no CrealityPrint.exe found in artifacts", file=sys.stderr)
-            test_result = run_tests(test_command, env, repo_root)
-            console_summary = llm.summarize(test_result.output, max_tokens=800)
-            print(f"[info] console_summary: {console_summary}")
-            if test_result.status != "SUCCESS":
-                notifier.send_text("构建通过但测试失败", build_feishu_lines(build_results, test_result))
-                return 1
+            target = windows_builds[0]
+            params = {
+                "JOB_NAME": target.job_name,
+                "BUILD_ID": str(target.build_number or ""),
+                "PLATFORM": target.platform,
+            }
+            if target.artifact_path:
+                params["ARTIFACT_PATH"] = target.artifact_path
+            if args.test_command:
+                params["TEST_COMMAND"] = args.test_command
+            try:
+                queue_api = client.trigger_job(test_pipeline, parameters=params)
+                print(f"[info] triggered test pipeline {test_pipeline} for {target.job_name}#{target.build_number}: {queue_api}")
+            except Exception as exc:
+                print(f"[warn] failed to trigger test pipeline {test_pipeline}: {exc}", file=sys.stderr)
 
     changes = collect_change_scope(changes_repo_root, args.previous_ref, resolved_current_ref)
     #print(f"[info] change scope from {changes}")
