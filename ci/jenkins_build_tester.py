@@ -62,7 +62,7 @@ def main() -> int:
     dest_dir = artifacts_root / args.platform
 
     print(f"[info] downloading artifact for {args.job_name} #{build_number}")
-    downloaded, artifact_url = client.download_artifact(args.job_name, build_number, args.artifact_path, dest_dir)
+    downloaded, artifact_url, artifacts_meta = client.download_artifact(args.job_name, build_number, args.artifact_path, dest_dir)
     if not downloaded:
         msg = f"[error] no artifact found for {args.job_name} #{build_number}"
         print(msg, file=sys.stderr)
@@ -96,10 +96,23 @@ def main() -> int:
     print(f"[info] running tests with command: {test_command}")
     result = run_tests(test_command, env, repo_root)
     print(f"[info] tests finished with status: {result.status}, rc={result.return_code}")
+    # Prefer exe URL for Windows notifications when available
+    preferred_url = None
+    if artifacts_meta:
+        if args.platform.lower().startswith("windows"):
+            for a in artifacts_meta:
+                rel = a.get("relativePath") or ""
+                if rel.lower().endswith(".exe"):
+                    preferred_url = f"{jenkins_base}/job/{args.job_name}/{build_number}/artifact/{rel}"
+                    break
+        if not preferred_url and artifact_url:
+            preferred_url = artifact_url
+    if not preferred_url:
+        preferred_url = artifact_url or downloaded
     lines = [
         f"Job: {args.job_name}",
         f"Build: #{build_number}",
-        f"Artifact: {artifact_url or downloaded}",
+        f"Artifact: {preferred_url}",
         f"Test: {result.status} (rc={result.return_code})",
     ]
     tail = (result.output or "")[-1200:]

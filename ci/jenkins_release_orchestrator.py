@@ -6,7 +6,7 @@ import subprocess
 import sys
 import time
 import zipfile
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -31,6 +31,7 @@ class BuildOutcome:
     url: Optional[str] = None
     artifact_url: Optional[str] = None
     artifact_local_path: Optional[Path] = None
+    artifact_urls: List[str] = field(default_factory=list)
     console_excerpt: str = ""
 
 
@@ -116,7 +117,7 @@ class JenkinsClient:
             return resp.text
         return ""
 
-    def download_artifact(self, job_name: str, build_number: int, desired_path: Optional[str], dest_dir: Path) -> Tuple[Optional[Path], Optional[str]]:
+    def download_artifact(self, job_name: str, build_number: int, desired_path: Optional[str], dest_dir: Path) -> Tuple[Optional[Path], Optional[str], List[Dict]]:
         dest_dir.mkdir(parents=True, exist_ok=True)
         api_url = f"{self.base_url}/job/{job_name}/{build_number}/api/json"
         resp = self.session.get(api_url, timeout=self.timeout)
@@ -124,13 +125,19 @@ class JenkinsClient:
         data = resp.json()
         artifacts = data.get("artifacts") or []
         if not artifacts:
-            return None, None
-        artifact = artifacts[0]
+            return None, None, []
+        artifact = None
         if desired_path:
             for candidate in artifacts:
                 if candidate.get("relativePath") == desired_path or candidate.get("fileName") == desired_path:
                     artifact = candidate
                     break
+        if artifact is None:
+            zip_candidates = [
+                a for a in artifacts if str(a.get("relativePath", "")).lower().endswith(".zip") or str(a.get("fileName", "")).lower().endswith(".zip")
+            ]
+            artifact = zip_candidates[0] if zip_candidates else artifacts[0]
+
         artifact_url = f"{self.base_url}/job/{job_name}/{build_number}/artifact/{artifact['relativePath']}"
         file_name = Path(artifact["fileName"]).name
         target = dest_dir / file_name
@@ -140,7 +147,7 @@ class JenkinsClient:
                 for chunk in r.iter_content(chunk_size=1024 * 1024):
                     if chunk:
                         f.write(chunk)
-        return target, artifact_url
+        return target, artifact_url, artifacts
 
 
 class FeishuNotifier:
@@ -687,9 +694,14 @@ def main() -> int:
                 console_excerpt=console[-1200:],
             )
             if status == "SUCCESS":
-                downloaded, artifact_url = client.download_artifact(job.job_name, build_number, job.artifact_path, artifacts_dir / job.platform)
+                downloaded, artifact_url, artifacts_meta = client.download_artifact(job.job_name, build_number, job.artifact_path, artifacts_dir / job.platform)
                 outcome.artifact_local_path = downloaded
                 outcome.artifact_url = artifact_url
+                outcome.artifact_urls = [
+                    f"{jenkins_base}/job/{job.job_name}/{build_number}/artifact/{a.get('relativePath')}"
+                    for a in artifacts_meta
+                    if a.get("relativePath")
+                ]
             else:
                 error_lines = [line for line in console.splitlines() if "error:" in line.lower()]
                 summary_input = "\n".join(error_lines) if error_lines else console
@@ -729,6 +741,8 @@ def main() -> int:
             slicer_exe: Optional[Path] = None
             for build in windows_builds:
                 if build.artifact_local_path:
+                    if build.artifact_local_path.suffix.lower() != ".zip":
+                        continue
                     env_key = f"ARTIFACT_{build.platform.upper()}"
                     env[env_key] = str(build.artifact_local_path)
                     extracted_dir = extract_artifact_zip(build.artifact_local_path)
@@ -762,8 +776,16 @@ def main() -> int:
     feishu_lines = build_feishu_lines(build_results, test_result)
     artifact_lines = []
     for build in build_results:
-        if build.artifact_url:
-            artifact_lines.append(f"{build.platform} artifact: {build.artifact_url}")
+        chosen_url = None
+        if build.platform.lower().startswith("windows") and build.artifact_urls:
+            for url_candidate in build.artifact_urls:
+                if url_candidate.lower().endswith(".exe"):
+                    chosen_url = url_candidate
+                    break
+        if not chosen_url and build.artifact_url:
+            chosen_url = build.artifact_url
+        if chosen_url:
+            artifact_lines.append(f"{build.platform} artifact: {chosen_url}")
         elif build.artifact_local_path:
             artifact_lines.append(f"{build.platform} artifact: {build.artifact_local_path}")
     if artifact_lines:
