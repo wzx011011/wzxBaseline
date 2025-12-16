@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -563,7 +564,7 @@ def parse_bool_flag(value: Optional[str]) -> Optional[bool]:
 
 
 def extract_artifact_zip(artifact_path: Path) -> Optional[Path]:
-    """Extract a zip artifact and return the extraction directory."""
+    """Extract a zip artifact, flatten single top-level folder, and return the extraction directory."""
     if artifact_path.suffix.lower() != ".zip":
         return None
     target_dir = artifact_path.with_suffix("")
@@ -572,6 +573,16 @@ def extract_artifact_zip(artifact_path: Path) -> Optional[Path]:
     target_dir.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(artifact_path, "r") as zf:
         zf.extractall(target_dir)
+    # Flatten if the zip contains a single top-level directory
+    children = [p for p in target_dir.iterdir()]
+    if len(children) == 1 and children[0].is_dir():
+        inner = children[0]
+        for item in inner.iterdir():
+            shutil.move(str(item), target_dir / item.name)
+        try:
+            inner.rmdir()
+        except OSError:
+            shutil.rmtree(inner, ignore_errors=True)
     return target_dir
 
 

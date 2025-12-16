@@ -123,6 +123,18 @@ def main() -> int:
 
     title = "单平台构建测试通过" if result.status == "SUCCESS" else "单平台构建测试失败"
     notifier.send_text(title, lines)
+
+    # Cleanup downloaded/extracted artifacts
+    try:
+        if downloaded and downloaded.exists():
+            if downloaded.is_file():
+                downloaded.unlink()
+        if extracted_dir and extracted_dir.exists():
+            import shutil
+            shutil.rmtree(extracted_dir, ignore_errors=True)
+    except Exception as exc:
+        print(f"[warn] cleanup failed: {exc}", file=sys.stderr)
+
     return 0 if result.status == "SUCCESS" else 1
 
 
