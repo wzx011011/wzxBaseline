@@ -47,7 +47,7 @@ class SlicerProc:
         # env["SLICER_TEST_REUSE"] = "1"
 
         self.log_file = open(self.log_path, "a", encoding="utf-8", buffering=1)
-        flags = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+        flags = subprocess.CREATE_NEW_PROCESS_GROUP
         self.proc = subprocess.Popen(
             args=self.args, cwd=str(exe.parent), env=env,
             stdout=self.log_file, stderr=subprocess.STDOUT,
