@@ -56,6 +56,10 @@ python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID
 endlocal
 '''
         }
+      }
+    }
+    stage('Archive reports') {
+      steps {
         archiveArtifacts artifacts: 'test_framework/report_engine_params.html', onlyIfSuccessful: false
       }
     }
