@@ -78,7 +78,7 @@ class TestRunnerHandler(BaseHTTPRequestHandler):
             # 设置环境变量
             env = os.environ.copy()
             env['CREALITY_PRINTER_PATH'] = r"C:\Program Files\Creality\Creality Print 7.0 Beta\CrealityPrint.exe"
-            env['PYTHONPATH'] = str(Path(__file__).parent.parent)
+            env['PYTHONPATH'] = str(Path(__file__).parent.parent.parent)
             
             # 清空输出队列
             while not TestRunnerHandler.output_queue.empty():
@@ -116,7 +116,7 @@ for test in deselected:
 # 运行pytest
 sys.exit(pytest.main(args))
 '''
-                        script_file = Path(__file__).parent / '_temp_run_tests.py'
+                        script_file = Path(__file__).parent.parent.parent / '_temp_run_tests.py'
                         with open(script_file, 'w', encoding='utf-8') as f:
                             f.write(script)
                         
@@ -126,7 +126,7 @@ sys.exit(pytest.main(args))
                             stderr=subprocess.STDOUT,
                             text=True,
                             bufsize=1,
-                            cwd=Path(__file__).parent.parent,
+                            cwd=Path(__file__).parent.parent.parent,
                             env=env
                         )
                     finally:
@@ -148,7 +148,7 @@ sys.exit(pytest.main(args))
                         stderr=subprocess.STDOUT,
                         text=True,
                         bufsize=1,
-                        cwd=Path(__file__).parent.parent,
+                        cwd=Path(__file__).parent.parent.parent,
                         env=env
                     )
                 
@@ -162,7 +162,7 @@ sys.exit(pytest.main(args))
                 
                 # 清理临时脚本
                 try:
-                    script_file = Path(__file__).parent.parent / '_temp_run_tests.py'
+                    script_file = Path(__file__).parent.parent.parent / '_temp_run_tests.py'
                     if script_file.exists():
                         os.unlink(script_file)
                 except:

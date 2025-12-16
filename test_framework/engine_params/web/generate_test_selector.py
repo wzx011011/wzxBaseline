@@ -26,7 +26,7 @@ def check_cache_valid():
     """检查缓存是否有效"""
     cache_file = Path(__file__).parent / ".test_cache.json"
     json_file = Path(__file__).parent / "tests_data.json"
-    params_dir = Path(__file__).parent.parent / "engine_params" / "case" / "params"
+    params_dir = Path(__file__).parent.parent.parent / "engine_params" / "case" / "params"
     
     if not cache_file.exists() or not json_file.exists():
         return False
@@ -51,7 +51,7 @@ def check_cache_valid():
 def save_cache_info(tests_data):
     """保存缓存信息"""
     cache_file = Path(__file__).parent / ".test_cache.json"
-    params_dir = Path(__file__).parent.parent / "engine_params" / "case" / "params"
+    params_dir = Path(__file__).parent.parent.parent / "engine_params" / "case" / "params"
     
     cache_info = {
         'timestamp': time.time(),
@@ -66,7 +66,7 @@ def collect_tests():
     """使用pytest收集所有测试用例（包括参数化的）"""
     try:
         tests = {}
-        params_dir = Path(__file__).parent.parent / "engine_params" / "case" / "params"
+        params_dir = Path(__file__).parent.parent.parent / "engine_params" / "case" / "params"
         
         if not params_dir.exists():
             print(f"错误: 找不到目录 {params_dir}")
@@ -85,13 +85,13 @@ def collect_tests():
         
         # 设置环境变量
         env = os.environ.copy()
-        env['PYTHONPATH'] = str(Path(__file__).parent.parent)
+        env['PYTHONPATH'] = str(Path(__file__).parent.parent.parent)
         
         result = subprocess.run(
             ["pytest", str(params_dir), "--collect-only"],
             capture_output=True,
             text=True,
-            cwd=Path(__file__).parent.parent,
+            cwd=Path(__file__).parent.parent.parent,
             encoding='utf-8',
             env=env
         )
