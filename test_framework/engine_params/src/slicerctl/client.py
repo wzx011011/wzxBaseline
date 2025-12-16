@@ -47,7 +47,8 @@ class SlicerProc:
         # env["SLICER_TEST_REUSE"] = "1"
 
         self.log_file = open(self.log_path, "a", encoding="utf-8", buffering=1)
-        flags = subprocess.CREATE_NEW_PROCESS_GROUP
+        # 创建新控制台以确保 GUI 前台可见
+        flags = subprocess.CREATE_NEW_PROCESS_GROUP | getattr(subprocess, "CREATE_NEW_CONSOLE", 0)
         self.proc = subprocess.Popen(
             args=self.args, cwd=str(exe.parent), env=env,
             stdout=self.log_file, stderr=subprocess.STDOUT,
