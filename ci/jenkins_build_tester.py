@@ -69,6 +69,10 @@ def main() -> int:
         notifier.send_text("单平台构建测试失败", [msg])
         return 1
 
+    print(f"[info] artifact saved to: {downloaded}")
+    if artifact_url:
+        print(f"[info] artifact URL: {artifact_url}")
+
     env = os.environ.copy()
     env["ARTIFACTS_DIR"] = str(artifacts_root)
     platform_key = args.platform.upper()
@@ -89,7 +93,9 @@ def main() -> int:
         else:
             print("[warn] slicer_exe placeholder present but no executable found", file=sys.stderr)
 
+    print(f"[info] running tests with command: {test_command}")
     result = run_tests(test_command, env, repo_root)
+    print(f"[info] tests finished with status: {result.status}, rc={result.return_code}")
     lines = [
         f"Job: {args.job_name}",
         f"Build: #{build_number}",
