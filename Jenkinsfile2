@@ -10,6 +10,7 @@ pipeline {
     string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
     string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
     string(name: 'TEST_COMMAND', defaultValue: '', description: 'Override test command (optional)')
+    string(name: 'ALLURE_CMD', defaultValue: 'Allure', description: 'Allure commandline tool name (Global Tool); leave empty to use default')
   }
   environment {
     PYTHONUNBUFFERED = '1'
@@ -62,14 +63,21 @@ endlocal
     }
     stage('Allure results') {
       steps {
-        script {
-          def allurePaths = ['allure-results', 'test_framework/allure-results', 'output/report/allure-results', 'test_engine_framework/output/report/allure-results']
-          def found = allurePaths.find { fileExists(it) }
-          if (found) {
-            echo "Publishing Allure results from ${found}"
-            allure includeProperties: false, jdk: '', results: [[path: found]]
-          } else {
-            echo 'No Allure results found, skipping publish'
+        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+          script {
+            def allurePaths = ['allure-results', 'test_framework/allure-results', 'output/report/allure-results', 'test_engine_framework/output/report/allure-results']
+            def found = allurePaths.find { fileExists(it) }
+            if (found) {
+              echo "Publishing Allure results from ${found}"
+              def cmdName = params.ALLURE_CMD?.trim()
+              if (cmdName) {
+                allure includeProperties: false, jdk: '', commandline: cmdName, results: [[path: found]]
+              } else {
+                allure includeProperties: false, jdk: '', results: [[path: found]]
+              }
+            } else {
+              echo 'No Allure results found, skipping publish'
+            }
           }
         }
       }
