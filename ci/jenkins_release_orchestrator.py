@@ -760,8 +760,8 @@ def main() -> int:
             }
             if target.artifact_path:
                 params["ARTIFACT_PATH"] = target.artifact_path
-            if args.test_command:
-                params["TEST_COMMAND"] = args.test_command
+            #if args.test_command:
+            #    params["TEST_COMMAND"] = args.test_command
             try:
                 queue_api = client.trigger_job(test_pipeline, parameters=params)
                 print(f"[info] triggered test pipeline {test_pipeline} for {target.job_name}#{target.build_number}: {queue_api}")
