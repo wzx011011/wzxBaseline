@@ -1,4 +1,4 @@
-import os, sys, time, json, socket, subprocess, atexit, signal, threading
+import os, time, json, socket, subprocess, atexit, signal, threading
 from pathlib import Path
 from typing import Optional
 
@@ -72,6 +72,7 @@ class SlicerProc:
         self.host = host
         self.port = port
         self.spawned_by_me = False
+        self._orig_handlers = {}
 
     def start_if_needed(self):
         exe = Path(self.exe_path)
@@ -86,7 +87,8 @@ class SlicerProc:
         env = os.environ.copy()
         # 重要，拉起子进程的时候会注册一个环境变量来绕开弹窗
         env["SLICER_TEST_RESTORE"] = "discard"
-        env["CREALITY_PRINTER_LOG_PATH"] = CREALITY_PRINTER_LOG_PATH
+        # 使用外部传入的 CREALITY_PRINTER_LOG_PATH（目录）优先，否则落回默认常量
+        env["CREALITY_PRINTER_LOG_PATH"] = os.getenv("CREALITY_PRINTER_LOG_PATH", CREALITY_PRINTER_LOG_PATH)
 
         # 让 C++ 读取端口/复用配置
         env["SLICER_TEST_PORT"] = str(self.port)
@@ -103,37 +105,66 @@ class SlicerProc:
         self.spawned_by_me = True
 
         atexit.register(self._cleanup)
-        for sig in (getattr(signal, "SIGINT", None),
-                    getattr(signal, "SIGTERM", None),
-                    getattr(signal, "SIGBREAK", None)):
-            if sig: signal.signal(sig, self._graceful_exit)
+        self._install_signal_handlers()
 
         # 首次拉起切片器可能较慢（首次初始化/资源加载/杀毒扫描等），放宽等待时间。
         wait_port(self.host, self.port, timeout=180)
 
-    def _graceful_exit(self, *_):
-        sys.exit(0)
+    def _install_signal_handlers(self):
+        self._orig_handlers.clear()
+        for sig in (getattr(signal, "SIGTERM", None),
+                    getattr(signal, "SIGBREAK", None),
+                    getattr(signal, "SIGINT", None)):
+            if not sig:
+                continue
+            try:
+                self._orig_handlers[sig] = signal.getsignal(sig)
+                signal.signal(sig, self._graceful_exit)
+            except Exception:
+                pass
+
+    def _restore_signal_handlers(self):
+        for sig, handler in list(self._orig_handlers.items()):
+            try:
+                signal.signal(sig, handler)
+            except Exception:
+                pass
+        self._orig_handlers.clear()
+
+    def _graceful_exit(self, signum=None, frame=None):
+        self._cleanup()
+        if signum == getattr(signal, "SIGINT", None):
+            # 保留 Ctrl+C 的 KeyboardInterrupt 语义，让 pytest 能正确终止。
+            raise KeyboardInterrupt
+        raise SystemExit(0)
 
     def _cleanup(self):
-        if self.log_file:
-            try:
-                self.log_file.flush()
-                self.log_file.close()
-            except Exception:
-                pass
-        if not self.spawned_by_me or not self.proc: return
-        pid = self.proc.pid
         try:
             try:
-                os.kill(pid, getattr(signal, "CTRL_BREAK_EVENT", signal.SIGTERM))
-                self.proc.wait(timeout=5)
+                if self.log_file:
+                    try:
+                        self.log_file.flush()
+                        self.log_file.close()
+                    except Exception:
+                        pass
+                if not self.spawned_by_me or not self.proc:
+                    return
+                pid = self.proc.pid
+                try:
+                    os.kill(pid, getattr(signal, "CTRL_BREAK_EVENT", signal.SIGTERM))
+                    self.proc.wait(timeout=5)
+                except Exception:
+                    pass
+                subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"],
+                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                               creationflags=subprocess.CREATE_NO_WINDOW)
+                self.proc = None
             except Exception:
                 pass
-            subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"],
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-                           creationflags=subprocess.CREATE_NO_WINDOW)
         except Exception:
             pass
+        finally:
+            self._restore_signal_handlers()
 
     def stop(self):
         self._cleanup()
@@ -205,6 +236,32 @@ class EngineClient:
             if not self._sock: self.connect()
             s = self._sock
             s.settimeout(timeout or self.timeout)
+            #接受完所有数据再发送
+            # 先读取所有剩余数据，防止缓冲区数据干扰
+            s.settimeout(0.1)  # 设置短超时，非阻塞检查
+            try:
+                while True:
+                    try:
+                        chunk = s.recv(8192)
+                        if not chunk:  # 连接关闭
+                            break
+                        # 处理读取到的数据
+                        self._buf += chunk.decode("utf-8", errors="strict")
+                        # 检查是否有完整的消息
+                        while True:
+                            sep = self._buf.find(";")
+                            if sep < 0:  # 没有完整消息
+                                break
+                            frame_cmd, js = self._buf[:sep], self._buf[sep + 1:]
+                            try:
+                                json.loads(js)  # 尝试解析，验证是否完整
+                                self._buf = ""  # 清空缓冲，因为是旧消息
+                            except json.JSONDecodeError:
+                                break  # JSON 不完整，保留缓冲
+                    except socket.timeout:
+                        break  # 没有更多数据
+            finally:
+                s.settimeout(timeout or self.timeout)  # 恢复原超时设置
             try:
                 s.sendall(data)
             except (BrokenPipeError, ConnectionResetError, OSError):
@@ -217,6 +274,7 @@ class EngineClient:
             while time.time() < end:
                 try:
                     chunk = s.recv(8192)
+                    print(chunk)
                 except socket.timeout:
                     continue
                 if not chunk:

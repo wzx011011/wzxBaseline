@@ -10,6 +10,30 @@ from pathlib import Path
 # 将项目根目录添加到Python路径，以便测试可以正确导入模块
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+def _load_env_from_file() -> None:
+    """
+    Lightweight .env loader (no external dependency).
+    Only sets keys that are not already in os.environ.
+    """
+    env_path = Path(__file__).resolve().parent.parent / ".env"
+    print(f"load env from {env_path}")
+    if not env_path.exists():
+        return
+    for line in env_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        if "=" not in line:
+            continue
+        key, val = line.split("=", 1)
+        key = key.strip()
+        val = val.strip().strip('"').strip("'")
+        if key and key not in os.environ:
+            os.environ[key] = val
+
+# 在pytest启动时加载环境变量
+_load_env_from_file()
+
 import git
 import pytest
 import pyautogui
@@ -61,6 +85,7 @@ def open_creality_printer():
 def open_creality_printer_with_file():
     """Open and close creality printer with file path.
     """
+    print("open creality printer with file")
     proc,client_socket,send_cmd_handle = open_impl(None)
     yield send_cmd_handle
     client_socket.close()
@@ -75,6 +100,7 @@ def open_impl(file_path):
     lanuncher = [creality_printer_path(), "test#157369"]
     if not file_path is None:
         lanuncher.append(file_path)
+    print("launch:", lanuncher)
     proc = subprocess.Popen(
         lanuncher,
         stdout=subprocess.DEVNULL,

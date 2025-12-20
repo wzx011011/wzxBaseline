@@ -4,7 +4,6 @@
     // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
-        
         {
             "name": "Python 调试程序: 当前文件",
             "type": "debugpy",
@@ -17,6 +16,23 @@
                 "--capture=no",
                 "--gcode-root=${workspaceFolder}/output",
                 "${file}"
+            ],
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "调试性能测试: test_slice.py",
+            "type": "debugpy",
+            "request": "launch",
+            "cwd": "${workspaceFolder}/test_framework/",
+            "module": "pytest",
+            "args": [
+                "-v",
+                "-s",
+                "--capture=no",
+                "--gcode-root=${workspaceFolder}/output",
+                "performance/case/test_slice.py",
+                "-m",
+                "performance"
             ],
             "console": "integratedTerminal"
         }

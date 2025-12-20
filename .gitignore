@@ -19,3 +19,5 @@ AGENTS.md
 /test_framework/report_engine_params.html
 /test_framework/junit_engine_params.xml
 /test_framework/allure-results
+/test_framework/.env
+/test_framework/artifacts
