@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "raft_first_layer_density_90pct",
+      "input_3mf": "raft_first_layer_density_90pct.3mf",
+      "expected_value": "90%"
+    },
+    {
+      "project_name": "raft_first_layer_density_50pct",
+      "input_3mf": "raft_first_layer_density_50pct.3mf",
+      "expected_value": "50%"
+    },
+    {
+      "project_name": "raft_first_layer_density_100pct",
+      "input_3mf": "raft_first_layer_density_100pct.3mf",
+      "expected_value": "100%"
+    }
+  ]
+}

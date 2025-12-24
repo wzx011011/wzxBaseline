@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "support_interface_top_layers_1",
+      "input_3mf": "support_interface_top_layers_1.3mf",
+      "expected_value": "1"
+    },
+    {
+      "project_name": "support_interface_top_layers_2",
+      "input_3mf": "support_interface_top_layers_2.3mf",
+      "expected_value": "2"
+    },
+    {
+      "project_name": "support_interface_top_layers_3",
+      "input_3mf": "support_interface_top_layers_3.3mf",
+      "expected_value": "3"
+    }
+  ]
+}

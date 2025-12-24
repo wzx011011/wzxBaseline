@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "support_interface_loop_pattern_disabled",
+      "input_3mf": "support_interface_loop_pattern_disabled.3mf",
+      "expected_value": 0
+    },
+    {
+      "project_name": "support_interface_loop_pattern_enabled",
+      "input_3mf": "support_interface_loop_pattern_enabled.3mf",
+      "expected_value": 1
+    }
+  ]
+}

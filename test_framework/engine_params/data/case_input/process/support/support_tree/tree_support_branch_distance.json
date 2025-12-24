@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "tree_support_branch_distance_0.5",
+      "input_3mf": "tree_support_branch_distance_0.5.3mf",
+      "expected_value": "0.5"
+    },
+    {
+      "project_name": "tree_support_branch_distance_1",
+      "input_3mf": "tree_support_branch_distance_1.3mf",
+      "expected_value": "1"
+    },
+    {
+      "project_name": "tree_support_branch_distance_1.5",
+      "input_3mf": "tree_support_branch_distance_1.5.3mf",
+      "expected_value": "1.5"
+    }
+  ]
+}

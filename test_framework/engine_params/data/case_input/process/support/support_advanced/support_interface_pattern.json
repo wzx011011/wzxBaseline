@@ -1,0 +1,34 @@
+{
+  "cases": [
+    {
+      "project_name": "support_interface_pattern_auto",
+      "input_3mf": "support_interface_pattern_auto.3mf",
+      "expected_value": "auto"
+    },
+    {
+      "project_name": "support_interface_pattern_rectilinear",
+      "input_3mf": "support_interface_pattern_rectilinear.3mf",
+      "expected_value": "rectilinear"
+    },
+    {
+      "project_name": "support_interface_pattern_concentric",
+      "input_3mf": "support_interface_pattern_concentric.3mf",
+      "expected_value": "concentric"
+    },
+    {
+      "project_name": "support_interface_pattern_rectilinear_interlaced",
+      "input_3mf": "support_interface_pattern_rectilinear_interlaced.3mf",
+      "expected_value": "rectilinear_interlaced"
+    },
+    {
+      "project_name": "support_interface_pattern_grid",
+      "input_3mf": "support_interface_pattern_grid.3mf",
+      "expected_value": "grid"
+    },
+    {
+      "project_name": "support_interface_pattern_monotonicline",
+      "input_3mf": "support_interface_pattern_monotonicline.3mf",
+      "expected_value": "monotonicline"
+    }
+  ]
+}

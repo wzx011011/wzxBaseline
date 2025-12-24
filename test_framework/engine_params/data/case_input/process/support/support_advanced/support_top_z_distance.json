@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "support_top_z_distance_0.2",
+      "input_3mf": "support_top_z_distance_0.2.3mf",
+      "expected_value": "0.2"
+    },
+    {
+      "project_name": "support_top_z_distance_0.1",
+      "input_3mf": "support_top_z_distance_0.1.3mf",
+      "expected_value": "0.1"
+    },
+    {
+      "project_name": "support_top_z_distance_0.3",
+      "input_3mf": "support_top_z_distance_0.3.3mf",
+      "expected_value": "0.3"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "support_interface_filament_0",
+      "input_3mf": "support_interface_filament_0.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "support_interface_filament_1",
+      "input_3mf": "support_interface_filament_1.3mf",
+      "expected_value": "1"
+    }
+  ]
+}

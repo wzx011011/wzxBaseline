@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "support_xy_overrides_z_xy_overrides_z",
+      "input_3mf": "support_xy_overrides_z_xy_overrides_z.3mf",
+      "expected_value": "xy_overrides_z"
+    },
+    {
+      "project_name": "support_xy_overrides_z_z_overrides_xy",
+      "input_3mf": "support_xy_overrides_z_z_overrides_xy.3mf",
+      "expected_value": "z_overrides_xy"
+    }
+  ]
+}

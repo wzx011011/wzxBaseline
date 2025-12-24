@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "support_threshold_angle_30",
+      "input_3mf": "support_threshold_angle_30.3mf",
+      "expected_value": "30"
+    },
+    {
+      "project_name": "support_threshold_angle_45",
+      "input_3mf": "support_threshold_angle_45.3mf",
+      "expected_value": "45"
+    },
+    {
+      "project_name": "support_threshold_angle_60",
+      "input_3mf": "support_threshold_angle_60.3mf",
+      "expected_value": "60"
+    }
+  ]
+}

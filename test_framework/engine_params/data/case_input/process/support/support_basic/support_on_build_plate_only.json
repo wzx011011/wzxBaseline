@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "support_on_build_plate_only_disabled",
+      "input_3mf": "support_on_build_plate_only_disabled.3mf",
+      "expected_value": 0
+    },
+    {
+      "project_name": "support_on_build_plate_only_enabled",
+      "input_3mf": "support_on_build_plate_only_enabled.3mf",
+      "expected_value": 1
+    }
+  ]
+}

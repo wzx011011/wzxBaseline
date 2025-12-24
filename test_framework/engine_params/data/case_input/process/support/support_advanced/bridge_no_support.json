@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "bridge_no_support_0",
+      "input_3mf": "bridge_no_support_0.3mf",
+      "expected_value": 0
+    },
+    {
+      "project_name": "bridge_no_support_1",
+      "input_3mf": "bridge_no_support_1.3mf",
+      "expected_value": 1
+    }
+  ]
+}

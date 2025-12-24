@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "support_object_first_layer_gap_0.2",
+      "input_3mf": "support_object_first_layer_gap_0.2.3mf",
+      "expected_value": "0.2"
+    },
+    {
+      "project_name": "support_object_first_layer_gap_0",
+      "input_3mf": "support_object_first_layer_gap_0.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "support_object_first_layer_gap_0.3",
+      "input_3mf": "support_object_first_layer_gap_0.3.3mf",
+      "expected_value": "0.3"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "tree_support_branch_angle_30",
+      "input_3mf": "tree_support_branch_angle_30.3mf",
+      "expected_value": "30"
+    },
+    {
+      "project_name": "tree_support_branch_angle_45",
+      "input_3mf": "tree_support_branch_angle_45.3mf",
+      "expected_value": "45"
+    },
+    {
+      "project_name": "tree_support_branch_angle_60",
+      "input_3mf": "tree_support_branch_angle_60.3mf",
+      "expected_value": "60"
+    }
+  ]
+}

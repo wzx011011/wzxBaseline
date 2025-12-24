@@ -18,6 +18,50 @@ def is_process_running_by_name(name="CrealityPrint.exe"):
         return False
 
 
+def kill_process_by_name(name="CrealityPrint.exe", timeout=10):
+    """
+    强制停止指定名称的进程
+    
+    Args:
+        name: 进程名称
+        timeout: 等待进程退出的超时时间（秒）
+        
+    Returns:
+        bool: 是否成功停止（或进程本来就不存在）
+    """
+    if not is_process_running_by_name(name):
+        return True
+    
+    print(f"[SlicerProc] 发现已运行的 {name}，正在强制停止...")
+    
+    try:
+        # 使用 taskkill 强制终止进程及其子进程
+        result = subprocess.run(
+            ["taskkill", "/IM", name, "/T", "/F"],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+        
+        # 等待进程完全退出
+        end_time = time.time() + timeout
+        while time.time() < end_time:
+            if not is_process_running_by_name(name):
+                print(f"[SlicerProc] {name} 已成功停止")
+                # 额外等待一小段时间确保端口释放
+                time.sleep(1.0)
+                return True
+            time.sleep(0.5)
+        
+        print(f"[SlicerProc] 警告: {name} 停止超时")
+        return False
+        
+    except Exception as e:
+        print(f"[SlicerProc] 停止进程失败: {e}")
+        return False
+
+
 class SlicerProc:
     def __init__(self, exe_path: str, log_path: str, cli_args: list[str], host, port):
         self.exe_path = str(exe_path)
@@ -33,10 +77,11 @@ class SlicerProc:
         exe = Path(self.exe_path)
         if not exe.is_file(): raise FileNotFoundError(f"EXE not found: {self.exe_path}")
 
-        if is_process_running_by_name(Path(self.exe_path).name):
-            # 如果切片器已在运行，端口通常应已就绪；给一个较短等待。
-            wait_port(self.host, self.port, timeout=30)
-            return
+        proc_name = Path(self.exe_path).name
+        
+        # 启动前强制停止已有进程，确保干净的启动环境
+        if is_process_running_by_name(proc_name):
+            kill_process_by_name(proc_name)
 
         env = os.environ.copy()
         # 重要，拉起子进程的时候会注册一个环境变量来绕开弹窗

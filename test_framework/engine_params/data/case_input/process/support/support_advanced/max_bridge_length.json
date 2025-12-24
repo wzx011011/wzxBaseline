@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "max_bridge_length_10",
+      "input_3mf": "max_bridge_length_10.3mf",
+      "expected_value": "10"
+    },
+    {
+      "project_name": "max_bridge_length_5",
+      "input_3mf": "max_bridge_length_5.3mf",
+      "expected_value": "5"
+    },
+    {
+      "project_name": "max_bridge_length_20",
+      "input_3mf": "max_bridge_length_20.3mf",
+      "expected_value": "20"
+    }
+  ]
+}

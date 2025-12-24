@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "tree_support_branch_diameter_2",
+      "input_3mf": "tree_support_branch_diameter_2.3mf",
+      "expected_value": "2"
+    },
+    {
+      "project_name": "tree_support_branch_diameter_3",
+      "input_3mf": "tree_support_branch_diameter_3.3mf",
+      "expected_value": "3"
+    },
+    {
+      "project_name": "tree_support_branch_diameter_5",
+      "input_3mf": "tree_support_branch_diameter_5.3mf",
+      "expected_value": "5"
+    }
+  ]
+}

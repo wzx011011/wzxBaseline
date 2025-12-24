@@ -581,6 +581,25 @@ def pytest_collection_modifyitems(config, items):
                 break
 
 
+# ========== pytest 钩子：记录当前运行的测试用例 ==========
+_CURRENT_TEST_FILE = Path(__file__).parent / "output" / "_current_test.txt"
+
+@pytest.hookimpl(tryfirst=True)
+def pytest_runtest_setup(item):
+    """在每个测试开始前记录测试名称到文件，方便崩溃时查看"""
+    _CURRENT_TEST_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with open(_CURRENT_TEST_FILE, "w", encoding="utf-8") as f:
+        f.write(f"{item.nodeid}\n")
+    print(f"\n>>> 开始测试: {item.nodeid}")
+
+@pytest.hookimpl(trylast=True)
+def pytest_runtest_teardown(item, nextitem):
+    """测试完成后清除记录"""
+    if _CURRENT_TEST_FILE.exists():
+        with open(_CURRENT_TEST_FILE, "a", encoding="utf-8") as f:
+            f.write(f"完成\n")
+
+
 # ========== pytest 钩子：增强测试报告，显示预期值和实际值 ==========
 @pytest.hookimpl(hookwrapper=True, tryfirst=True)
 def pytest_runtest_makereport(item, call):

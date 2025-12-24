@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "raft_contact_distance_0.1",
+      "input_3mf": "raft_contact_distance_0.1.3mf",
+      "expected_value": "0.1"
+    },
+    {
+      "project_name": "raft_contact_distance_0.2",
+      "input_3mf": "raft_contact_distance_0.2.3mf",
+      "expected_value": "0.2"
+    }
+  ]
+}

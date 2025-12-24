@@ -37,7 +37,8 @@
 |------|---------|-----------|-----------|-----------|----------|
 | 多材料 | 34 | 28 | 4 | 2 | 0 |
 | 其他 | 32 | 24 | 5 | 2 | 1 |
-| **总计** | **66** | **52** | **9** | **4** | **1** |
+| 支撑 | 47 | 37 | 9 | 1 | 0 |
+| **总计** | **113** | **89** | **18** | **5** | **1** |
 
 ---
 
@@ -589,9 +590,324 @@ gcode_label_objects（Level 2 - 关键字检测）:
 
 ---
 
+## 六、支撑 (Support) 参数校验
+
+> **说明**：支撑参数分为普通支撑和树支撑两大类，部分参数在不同类型下行为不同。UI界面组织为5个参数组：Support(支撑)、Raft、Support filament(支撑耗材)、Advanced(高级)、Tree supports(树形支撑)。
+
+### 6.1 支撑 (Support)
+
+| 参数名 | 类型 | 默认值 | 校验层次 | 校验方法 | 参数说明 |
+|--------|------|--------|---------|----------|----------|
+| `enable_support` | bool | false | Level 2 | 检测 `;TYPE:Support` 标记是否存在 | 启用/禁用支撑生成 |
+| `support_type` | enum | stNormalAuto | Level 1 | 配置读取: `cfg.get("support_type")` | 支撑类型：normal/tree/normalAuto/treeAuto/normal(manual)/tree(manual) |
+| `support_style` | enum | smsDefault | Level 1 | 配置读取: `cfg.get("support_style")` | 支撑风格：Default/Grid/Snug/TreeSlim/TreeStrong/TreeHybrid/TreeOrganic |
+| `support_threshold_angle` | int | 30° | Level 1 | 配置读取: `cfg.get("support_threshold_angle")` | 支撑阈值角度，小于此角度的悬空需要支撑 |
+| `support_on_build_plate_only` | bool | false | Level 2 | 检测支撑是否仅在底板上生成 | 仅在打印平台生成支撑，不在模型表面 |
+| `support_critical_regions_only` | bool | false | Level 2 | 检测是否只有关键区域有支撑 | 仅为尖锐尾部、悬臂等关键区域生成支撑 |
+| `support_remove_small_overhang` | bool | false | Level 1 | 配置读取: `cfg.get("support_remove_small_overhang")` | 移除可能不需要支撑的小悬空 |
+
+**枚举值说明：**
+
+- **support_type**:
+  - `stNormal` / `stNormalAuto`: 普通支撑（自动）
+  - `stTree` / `stTreeAuto`: 树支撑（自动）
+  - `stNormalManual`: 普通支撑（手动，仅支撑添加器）
+  - `stTreeManual`: 树支撑（手动，仅支撑添加器）
+
+- **support_style**:
+  - `smsDefault`: 默认
+  - `smsGrid`: 网格支撑（更稳定）
+  - `smsSnug`: 贴合支撑塔（节省材料）
+  - `smsTreeSlim`: 树支撑-纤细
+  - `smsTreeStrong`: 树支撑-强壮
+  - `smsTreeHybrid`: 树支撑-混合（大平面悬空下类似普通支撑）
+  - `smsTreeOrganic`: 树支撑-有机（默认，更激进合并分支）
+
+**校验逻辑：**
+
+```python
+# Level 1: 配置对比
+parser = GCodeParser(gcode_path)
+cfg = parser.load_config()
+support_type = cfg.get("support_type")      # 读取支撑类型
+support_style = cfg.get("support_style")    # 读取支撑风格
+threshold_angle = cfg.get("support_threshold_angle")  # 阈值角度
+
+# Level 2: 特征检测（enable_support）
+# 检测 ;TYPE:Support 或 ;TYPE:Support interface 标记
+support_blocks = parser.get_extrusion_blocks_per_layer(ExtrusionType.SUPPORT.value)
+support_present = any(blocks for blocks in support_blocks if blocks)
+
+# Level 2: 特征检测（support_on_build_plate_only）
+# 验证思路：检测支撑是否只在首层或靠近底板的层
+# - 仅底板支撑：Support 标记只出现在靠近底板的层（如前 10 层）
+# - 支撑在模型上：Support 标记出现在较高的层
+def check_support_on_build_plate_only(gcode_path):
+    parser = GCodeParser(gcode_path)
+    support_layers = []
+    for layer_idx, blocks in enumerate(parser.get_extrusion_blocks_per_layer(ExtrusionType.SUPPORT.value)):
+        if blocks:
+            support_layers.append(layer_idx)
+    
+    if not support_layers:
+        return None  # 无支撑
+    
+    # 如果支撑层都集中在底部（如 < 20% 总层高），判定为仅底板支撑
+    total_layers = parser.get_layer_count()
+    max_support_layer = max(support_layers)
+    on_build_plate_only = max_support_layer < total_layers * 0.2
+    
+    return on_build_plate_only
+```
+
+---
+
+### 6.2 Raft
+
+| 参数名 | 类型 | 默认值 | 校验层次 | 校验方法 | 参数说明 |
+|--------|------|--------|---------|----------|----------|
+| `raft_layers` | int | 0 | Level 2 | 统计首层以下的支撑层数 | 筏层数（在模型下方打印的额外层） |
+| `raft_contact_distance` | float | 0.1mm | Level 1 | 配置读取: `cfg.get("raft_contact_distance")` | 筏与模型的接触距离（Z间隙） |
+
+**校验逻辑：**
+
+```python
+# Level 1: 配置对比
+cfg = parser.load_config()
+raft_contact = cfg.get("raft_contact_distance")
+
+# Level 2: 筏层数检测
+# 验证思路：统计模型首层（Z=layer_height）之前的支撑层数
+def check_raft_layers(gcode_path):
+    parser = GCodeParser(gcode_path)
+    layer_height = float(cfg.get("layer_height"))
+    
+    raft_layer_count = 0
+    for layer_idx, z in enumerate(parser.get_layer_z_values()):
+        if z < layer_height:
+            # 检查该层是否有支撑
+            blocks = parser.get_extrusion_blocks_at_layer(layer_idx, ExtrusionType.SUPPORT.value)
+            if blocks:
+                raft_layer_count += 1
+    
+    return raft_layer_count
+```
+
+---
+
+### 6.3 支撑耗材 (Support filament)
+
+| 参数名 | 类型 | 默认值 | 校验层次 | 校验方法 | 参数说明 |
+|--------|------|--------|---------|----------|----------|
+| `support_filament` | int | 0 (默认) | Level 2 | 检测支撑前的换料命令 | 支撑/筏基础使用的耗材 |
+| `support_interface_filament` | int | 0 (默认) | Level 2 | 检测接触面前的换料命令 | 支撑接触面使用的耗材 |
+| `support_interface_not_for_body` | bool | false | Level 2 | 检测支撑基础是否避免使用接触面材料 | 避免用接触面材料打印支撑基础 |
+
+**校验逻辑：**
+
+```python
+# Level 2: 换料命令检测
+# 验证思路：检测 ;TYPE:Support 前的 T<n> 命令
+def check_support_filament(gcode_path):
+    parser = GCodeParser(gcode_path)
+    support_tools = []
+    interface_tools = []
+    current_tool = 0
+    
+    for line in parser.lines:
+        if line.startswith("T"):
+            # 提取换料命令
+            tool_match = re.match(r'T(\d+)', line)
+            if tool_match:
+                current_tool = int(tool_match.group(1))
+        elif ";TYPE:Support" in line and ";TYPE:Support interface" not in line:
+            support_tools.append(current_tool)
+        elif ";TYPE:Support interface" in line:
+            interface_tools.append(current_tool)
+    
+    # 统计最常用的工具
+    most_common_support = max(set(support_tools), key=support_tools.count) if support_tools else None
+    most_common_interface = max(set(interface_tools), key=interface_tools.count) if interface_tools else None
+    
+    return most_common_support, most_common_interface
+```
+
+---
+
+### 6.4 高级 (Advanced)
+
+| 参数名 | 类型 | 默认值 | 校验层次 | 校验方法 | 参数说明 |
+|--------|------|--------|---------|----------|----------|
+| `raft_first_layer_density` | percent | 90% | Level 1 | 配置读取: `cfg.get("raft_first_layer_density")` | Raft 首层密度 |
+| `raft_first_layer_expansion` | float | 2 | Level 1 | 配置读取: `cfg.get("raft_first_layer_expansion")` | Raft 首层外扩 |
+| `support_top_z_distance` | float | 0.2 | Level 1 | 配置读取: `cfg.get("support_top_z_distance")` | 支撑与模型顶部接触面的 Z 间隙 |
+| `support_bottom_z_distance` | float | 0.2 | Level 1 | 配置读取: `cfg.get("support_bottom_z_distance")` | 支撑与模型底部接触面的 Z 间隙 |
+| `support_base_pattern` | enum | rectilinear | Level 1 | 配置读取: `cfg.get("support_base_pattern")` | 支撑主体图案 |
+| `support_base_pattern_spacing` | float | 2.5 | Level 1 | 配置读取: `cfg.get("support_base_pattern_spacing")` | 支撑主体线间距 |
+| `support_angle` | float | 0 | Level 1 | 配置读取: `cfg.get("support_angle")` | 支撑角度/方向参数（具体含义与实现有关） |
+| `support_interface_top_layers` | int | 2 | Level 1 / Level 2 | 配置读取 / 统计接触面层数 | 顶部接触面层数 |
+| `support_interface_bottom_layers` | int | 2 | Level 1 / Level 2 | 配置读取 / 统计接触面层数 | 底部接触面层数 |
+| `support_interface_pattern` | enum | smipRectilinear | Level 1 | 配置读取: `cfg.get("support_interface_pattern")` | 接触面图案：rectilinear/concentric/grid等 |
+| `support_interface_spacing` | float | 0.5mm | Level 1 | 配置读取: `cfg.get("support_interface_spacing")` | 接触面线间距（0表示实心） |
+| `support_bottom_interface_spacing` | float | 0.5mm | Level 1 | 配置读取: `cfg.get("support_bottom_interface_spacing")` | 底部接触面线间距 |
+| `support_interface_loop_pattern` | bool | false | Level 2 | 检测接触面是否有环形路径 | 用环形覆盖接触层 |
+| `support_interface_speed` | float | 80mm/s | Level 2 | 检测接触面区域的打印速度 | 接触面打印速度 |
+| `support_interface_min_area` | float | 0.25mm² | Level 1 | 配置读取: `cfg.get("support_interface_min_area")` | 最小接触面积（小于此值不生成接触面） |
+| `support_expansion` | float | 0 | Level 1 | 配置读取: `cfg.get("support_expansion")` | 支撑外扩 |
+| `support_object_xy_distance` | float | 0.35 | Level 1 | 配置读取: `cfg.get("support_object_xy_distance")` | 支撑与模型 XY 距离 |
+| `support_object_first_layer_gap` | float | 0.2 | Level 1 | 配置读取: `cfg.get("support_object_first_layer_gap")` | 支撑首层与模型的间隙 |
+| `support_xy_overrides_z` | enum | xy_overrides_z | Level 1 | 配置读取: `cfg.get("support_xy_overrides_z")` | XY/Z 间隙覆盖规则（G-code 里通常序列化为字符串） |
+| `bridge_no_support` | bool | 0 | Level 1 | 配置读取: `cfg.get("bridge_no_support")` | 桥接区域是否禁止生成支撑 |
+| `max_bridge_length` | float | 10 | Level 1 | 配置读取: `cfg.get("max_bridge_length")` | 最大桥接长度阈值 |
+| `independent_support_layer_height` | bool | 0 | Level 1 | 配置读取: `cfg.get("independent_support_layer_height")` | 支撑是否使用独立层高 |
+| `ironing_support_layer` | bool | 0 | Level 1 | 配置读取: `cfg.get("ironing_support_layer")` | 支撑层是否熨烫 |
+| `tree_hybrid_cross_height` | float | 0 | Level 1 | 配置读取: `cfg.get("tree_hybrid_cross_height")` | 树支撑混合横梁高度 |
+| `support_line_width` | float | 0.42 | Level 1 | 配置读取: `cfg.get("support_line_width")` | 支撑线宽 |
+| `support_speed` | float | 150 | Level 1 | 配置读取: `cfg.get("support_speed")` | 支撑打印速度 |
+| `minimum_support_area` | float | 5 | Level 1 | 配置读取: `cfg.get("minimum_support_area")` | 最小支撑面积 |
+| `support_material_interface_fan_speed` | string | -1,-1 | Level 1 | 配置读取: `cfg.get("support_material_interface_fan_speed")` | 接触面风扇速度（按耗材序列，-1 表示跟随默认） |
+| `tree_support_wall_count` | int | 0 | Level 1 | 配置读取: `cfg.get("tree_support_wall_count")` | 树支撑外壳圈数 |
+
+**枚举值说明：**
+
+- **support_interface_pattern**:
+  - `smipRectilinear`: 直线（默认，非可溶材料）
+  - `smipConcentric`: 同心圆（默认，可溶材料）
+  - `smipGrid`: 网格
+  - `smipRectilinearInterlaced`: 交错直线
+  - `smipMonotonicLine`: 单调线
+  - `smipAuto`: 自动（根据材料类型选择）
+
+**校验逻辑：**
+
+```python
+# Level 1: 配置对比
+cfg = parser.load_config()
+interface_top_layers = cfg.get("support_interface_top_layers")
+interface_bottom_layers = cfg.get("support_interface_bottom_layers")
+interface_pattern = cfg.get("support_interface_pattern")
+interface_spacing = cfg.get("support_interface_spacing")
+
+# Level 2: 层数统计（验证实际生成）
+# 验证思路：统计 ;TYPE:Support interface 出现的连续层数
+def check_support_interface_layers(gcode_path):
+    parser = GCodeParser(gcode_path)
+    interface_layer_groups = []  # [(start_layer, end_layer), ...]
+    
+    in_interface = False
+    start_layer = None
+    
+    for layer_idx, blocks in enumerate(parser.get_extrusion_blocks_per_layer(ExtrusionType.SUPPORT_INTERFACE.value)):
+        if blocks and not in_interface:
+            # 开始一个新的接触面区域
+            start_layer = layer_idx
+            in_interface = True
+        elif not blocks and in_interface:
+            # 结束当前接触面区域
+            interface_layer_groups.append((start_layer, layer_idx - 1))
+            in_interface = False
+    
+    # 计算每组的层数
+    layer_counts = [end - start + 1 for start, end in interface_layer_groups]
+    return layer_counts
+```
+
+---
+
+### 6.5 树形支撑 (Tree supports)
+
+| 参数名 | 类型 | 默认值 | 校验层次 | 校验方法 | 参数说明 |
+|--------|------|--------|---------|----------|----------|
+| `tree_support_branch_diameter` | float | 2mm | Level 1 | 配置读取: `cfg.get("tree_support_branch_diameter")` | 树支撑分支直径 |
+| `tree_support_branch_angle` | float | 45° | Level 1 | 配置读取: `cfg.get("tree_support_branch_angle")` | 树支撑分支角度（控制分支倾斜程度） |
+| `tree_support_wall_count` | int | 1 | Level 1 / Level 2 | 配置读取 / 检测树支撑是否有外壳 | 树支撑外壳圈数（至少1圈） |
+| `tree_support_branch_distance` | float | 1mm | Level 1 | 配置读取: `cfg.get("tree_support_branch_distance")` | 树支撑分支间距 |
+| `tree_support_tip_diameter` | float | 0.8mm | Level 1 | 配置读取: `cfg.get("tree_support_tip_diameter")` | 树支撑尖端直径 |
+
+**校验逻辑：**
+
+```python
+# Level 1: 配置对比
+cfg = parser.load_config()
+branch_diameter = cfg.get("tree_support_branch_diameter")
+branch_angle = cfg.get("tree_support_branch_angle")
+wall_count = cfg.get("tree_support_wall_count")
+
+# Level 2: 外壳检测
+# 验证思路：检测树支撑区域是否有多层外壳
+# - wall_count > 0: 支撑区域有明显的外壳轮廓
+# - wall_count = 0: 支撑区域无外壳，直接填充
+def check_tree_support_wall(gcode_path):
+    parser = GCodeParser(gcode_path)
+    # 提取树支撑区域的路径
+    # 分析是否有外壳特征（路径首先沿边界走一圈）
+    # ...
+```
+
+---
+
 ## 七、参数完整列表
 
-### 多材料 (Multimaterial) - 31 个参数
+### 支撑 (Support) - 47 个参数
+
+#### 6.1 支撑 (Support) - 7 个参数
+- `enable_support`
+- `support_type`
+- `support_style`
+- `support_threshold_angle`
+- `support_on_build_plate_only`
+- `support_critical_regions_only`
+- `support_remove_small_overhang`
+
+#### 6.2 Raft - 2 个参数
+- `raft_layers`
+- `raft_contact_distance`
+
+#### 6.3 支撑耗材 (Support filament) - 3 个参数
+- `support_filament`
+- `support_interface_filament`
+- `support_interface_not_for_body`
+
+#### 6.4 高级 (Advanced) - 29 个参数
+- `raft_first_layer_density`
+- `raft_first_layer_expansion`
+- `support_top_z_distance`
+- `support_base_pattern`
+- `tree_support_wall_count`
+- `support_base_pattern_spacing`
+- `support_angle`
+- `support_interface_top_layers`
+- `support_interface_bottom_layers`
+- `support_interface_min_area`
+- `support_interface_pattern`
+- `support_interface_spacing`
+- `support_bottom_interface_spacing`
+- `support_expansion`
+- `support_object_xy_distance`
+- `support_object_first_layer_gap`
+- `support_xy_overrides_z`
+- `bridge_no_support`
+- `max_bridge_length`
+- `independent_support_layer_height`
+- `ironing_support_layer`
+- `tree_hybrid_cross_height`
+- `support_bottom_z_distance`
+- `support_line_width`
+- `support_speed`
+- `support_interface_loop_pattern`
+- `support_interface_speed`
+- `minimum_support_area`
+- `support_material_interface_fan_speed`
+
+#### 6.5 树形支撑 (Tree supports) - 6 个参数
+- `tree_support_branch_distance`
+- `tree_support_branch_diameter`
+- `tree_support_branch_angle`
+- `tree_support_branch_diameter_angle`
+- `support_base_pattern_tree`
+- `tree_support_wall_count_tree`
+
+### 多材料 (Multimaterial) - 34 个参数
 
 #### 擦料塔 (Prime tower) - 15 个参数
 - `enable_prime_tower`
@@ -627,18 +943,42 @@ gcode_label_objects（Level 2 - 关键字检测）:
 - `flush_into_objects`
 - `flush_into_support`
 
-#### 高级 (Advanced)
-- `interlocking_beam`
-- `mmu_segmented_region_max_width`
-- `mmu_segmented_region_interlocking_depth`
-- `interlocking_beam_width`
-- `interlocking_orientation`
-- `interlocking_beam_layer_count`
-- `interlocking_depth`
-- `interlocking_boundary_avoidance`
+### 6.4 高级 (Advanced)
 
-### 其他 (Others) - 32 个参数
+> 说明：本章节参数以 G-code 配置块（`; CONFIG_BLOCK_START`）输出的 **实际 key** 为准；布尔通常为 `0/1`，部分枚举为字符串。
 
+| 参数 (config key) | 默认值 | 校验层级 | 校验方式/说明 |
+|------|--------|----------|--------------|
+| support_interface_top_layers | 3 | L1 | 配置块对比 |
+| support_interface_bottom_layers | 3 | L1 | 配置块对比 |
+| support_interface_pattern | rectilinear | L1 | 配置块对比 |
+| support_interface_spacing | 0.2 | L1 | 配置块对比 |
+| support_interface_speed | 80 | L1 | 配置块对比 |
+| support_interface_loop_pattern | 0 | L1 | 配置块对比 |
+| support_interface_min_area | 0 | L1 | 配置块对比 |
+| support_material_interface_fan_speed | -1,-1 | L1 | 配置块对比（文档旧名 `support_interface_fan_speed` 以此为准） |
+| support_bottom_interface_spacing | 0.5 | L1 | 配置块对比 |
+| support_top_z_distance | 0.2 | L1 | 配置块对比 |
+| support_bottom_z_distance | 0.2 | L1 | 配置块对比 |
+| support_base_pattern | rectilinear | L1 | 配置块对比 |
+| support_base_pattern_tree | 0 | L1 | 配置块对比 |
+| support_base_pattern_spacing | 2.5 | L1 | 配置块对比 |
+| support_angle | 0 | L1 | 配置块对比 |
+| support_expansion | 0 | L1 | 配置块对比 |
+| support_object_xy_distance | 0.35 | L1 | 配置块对比 |
+| support_object_first_layer_gap | 0.2 | L1 | 配置块对比 |
+| support_xy_overrides_z | xy_overrides_z | L1 | 配置块对比 |
+| bridge_no_support | 0 | L1 | 配置块对比 |
+| max_bridge_length | 10 | L1 | 配置块对比 |
+| independent_support_layer_height | 1 | L1 | 配置块对比 |
+| ironing_support_layer | 0 | L1 | 配置块对比 |
+| tree_hybrid_cross_height | 0 | L1 | 配置块对比 |
+| support_line_width | 0 | L1 | 配置块对比 |
+| support_speed | 60 | L1 | 配置块对比 |
+| minimum_support_area | 5 | L1 | 配置块对比 |
+| raft_layers | 0 | L1 | 配置块对比 |
+| raft_first_layer_density | 90% | L1 | 配置块对比 |
+| raft_first_layer_expansion | 2 | L1 | 配置块对比 |
 #### 裙边 (Skirt)
 - `skirt_type`
 - `skirt_loops`
@@ -716,9 +1056,10 @@ gcode_label_objects（Level 2 - 关键字检测）:
 
 | 分类 | 参数数量 | Level 1 可校验 | Level 2 可校验 | Level 3 可校验 | 无法校验 |
 |------|---------|---------------|---------------|---------------|----------|
-| 多材料 | 34 | 28 | 4 | 0 | 2 |
-| 其他 | 32 | 24 | 4 | 2 | 2 |
-| **总计** | **66** | **52** | **8** | **2** | **4** |
+| 多材料 | 34 | 28 | 4 | 2 | 0 |
+| 其他 | 32 | 24 | 5 | 2 | 1 |
+| 支撑 | 47 | 37 | 9 | 1 | 0 |
+| **总计** | **113** | **89** | **18** | **5** | **1** |
 
 - **Level 1 可校验 (52个)**：直接从 G-code 配置注释读取（快速预检）
 - **Level 2 可校验 (8个)**：需要 TYPE 标记或特征检测

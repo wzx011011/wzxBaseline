@@ -1,0 +1,39 @@
+{
+  "cases": [
+    {
+      "project_name": "support_style_default",
+      "input_3mf": "support_style_default.3mf",
+      "expected_value": "default"
+    },
+    {
+      "project_name": "support_style_grid",
+      "input_3mf": "support_style_grid.3mf",
+      "expected_value": "grid"
+    },
+    {
+      "project_name": "support_style_snug",
+      "input_3mf": "support_style_snug.3mf",
+      "expected_value": "snug"
+    },
+    {
+      "project_name": "support_style_tree_slim",
+      "input_3mf": "support_style_tree_slim.3mf",
+      "expected_value": "tree_slim"
+    },
+    {
+      "project_name": "support_style_tree_strong",
+      "input_3mf": "support_style_tree_strong.3mf",
+      "expected_value": "tree_strong"
+    },
+    {
+      "project_name": "support_style_tree_hybrid",
+      "input_3mf": "support_style_tree_hybrid.3mf",
+      "expected_value": "tree_hybrid"
+    },
+    {
+      "project_name": "support_style_organic",
+      "input_3mf": "support_style_organic.3mf",
+      "expected_value": "organic"
+    }
+  ]
+}

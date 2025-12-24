@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "raft_first_layer_expansion_2",
+      "input_3mf": "raft_first_layer_expansion_2.3mf",
+      "expected_value": "2"
+    },
+    {
+      "project_name": "raft_first_layer_expansion_0",
+      "input_3mf": "raft_first_layer_expansion_0.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "raft_first_layer_expansion_5",
+      "input_3mf": "raft_first_layer_expansion_5.3mf",
+      "expected_value": "5"
+    }
+  ]
+}

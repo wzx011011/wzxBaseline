@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "tree_support_wall_count_tree_0",
+      "input_3mf": "tree_support_wall_count_tree_0.3mf",
+      "expected_value": 0
+    },
+    {
+      "project_name": "tree_support_wall_count_tree_1",
+      "input_3mf": "tree_support_wall_count_tree_1.3mf",
+      "expected_value": 1
+    },
+    {
+      "project_name": "tree_support_wall_count_tree_2",
+      "input_3mf": "tree_support_wall_count_tree_2.3mf",
+      "expected_value": 2
+    }
+  ]
+}
