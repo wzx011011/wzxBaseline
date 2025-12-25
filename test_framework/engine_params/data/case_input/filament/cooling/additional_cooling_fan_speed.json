@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "additional_cooling_fan_speed_0",
+      "input_3mf": "additional_cooling_fan_speed_0.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "additional_cooling_fan_speed_50",
+      "input_3mf": "additional_cooling_fan_speed_50.3mf",
+      "expected_value": "50"
+    },
+    {
+      "project_name": "additional_cooling_fan_speed_100",
+      "input_3mf": "additional_cooling_fan_speed_100.3mf",
+      "expected_value": "100"
+    }
+  ]
+}

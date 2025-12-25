@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "reduce_fan_stop_start_freq_false",
+      "input_3mf": "reduce_fan_stop_start_freq_false.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "reduce_fan_stop_start_freq_true",
+      "input_3mf": "reduce_fan_stop_start_freq_true.3mf",
+      "expected_value": "1"
+    }
+  ]
+}

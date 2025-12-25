@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "filament_density_1.00",
+      "input_3mf": "filament_density_1.00.3mf",
+      "expected_value": "1"
+    },
+    {
+      "project_name": "filament_density_1.24",
+      "input_3mf": "filament_density_1.24.3mf",
+      "expected_value": "1.24"
+    },
+    {
+      "project_name": "filament_density_1.50",
+      "input_3mf": "filament_density_1.50.3mf",
+      "expected_value": "1.5"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "filament_multitool_ramming_flow_80",
+      "input_3mf": "filament_multitool_ramming_flow_80.3mf",
+      "expected_value": "80"
+    },
+    {
+      "project_name": "filament_multitool_ramming_flow_100",
+      "input_3mf": "filament_multitool_ramming_flow_100.3mf",
+      "expected_value": "100"
+    },
+    {
+      "project_name": "filament_multitool_ramming_flow_120",
+      "input_3mf": "filament_multitool_ramming_flow_120.3mf",
+      "expected_value": "120"
+    }
+  ]
+}

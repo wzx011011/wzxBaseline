@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "filament_toolchange_delay_0",
+      "input_3mf": "filament_toolchange_delay_0.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "filament_toolchange_delay_1",
+      "input_3mf": "filament_toolchange_delay_1.3mf",
+      "expected_value": "1"
+    },
+    {
+      "project_name": "filament_toolchange_delay_5",
+      "input_3mf": "filament_toolchange_delay_5.3mf",
+      "expected_value": "5"
+    }
+  ]
+}

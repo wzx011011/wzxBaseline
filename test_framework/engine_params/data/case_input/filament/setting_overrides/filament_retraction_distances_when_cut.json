@@ -1,0 +1,9 @@
+{
+    "cases":  [
+                  {
+                      "input_3mf":  "template_model.3mf",
+                      "project_name":  "filament_retraction_distances_when_cut_default",
+                      "expected_value":  "nil"
+                  }
+              ]
+}

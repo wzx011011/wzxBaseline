@@ -1,0 +1,9 @@
+{
+    "cases":  [
+                  {
+                      "input_3mf":  "template_model.3mf",
+                      "project_name":  "filament_retract_lift_above_default",
+                      "expected_value":  "nil"
+                  }
+              ]
+}

@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "idle_temperature_0",
+      "input_3mf": "idle_temperature_0.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "idle_temperature_150",
+      "input_3mf": "idle_temperature_150.3mf",
+      "expected_value": "150"
+    },
+    {
+      "project_name": "idle_temperature_180",
+      "input_3mf": "idle_temperature_180.3mf",
+      "expected_value": "180"
+    }
+  ]
+}

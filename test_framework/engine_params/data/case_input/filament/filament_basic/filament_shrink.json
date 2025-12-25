@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "filament_shrink_0",
+      "input_3mf": "filament_shrink_0.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "filament_shrink_1",
+      "input_3mf": "filament_shrink_1.3mf",
+      "expected_value": "1"
+    },
+    {
+      "project_name": "filament_shrink_2",
+      "input_3mf": "filament_shrink_2.3mf",
+      "expected_value": "2"
+    }
+  ]
+}

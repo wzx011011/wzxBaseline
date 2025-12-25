@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "cooling_slowdown_logic_default",
+      "input_3mf": "cooling_slowdown_logic_default.3mf",
+      "expected_value": "default"
+    },
+    {
+      "project_name": "cooling_slowdown_logic_custom",
+      "input_3mf": "cooling_slowdown_logic_custom.3mf",
+      "expected_value": "custom"
+    }
+  ]
+}

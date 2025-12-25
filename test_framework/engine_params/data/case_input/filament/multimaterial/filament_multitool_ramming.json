@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "filament_multitool_ramming_false",
+      "input_3mf": "filament_multitool_ramming_false.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "filament_multitool_ramming_true",
+      "input_3mf": "filament_multitool_ramming_true.3mf",
+      "expected_value": "1"
+    }
+  ]
+}

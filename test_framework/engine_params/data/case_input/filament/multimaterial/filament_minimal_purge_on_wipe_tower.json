@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "filament_minimal_purge_on_wipe_tower_10",
+      "input_3mf": "filament_minimal_purge_on_wipe_tower_10.3mf",
+      "expected_value": "10"
+    },
+    {
+      "project_name": "filament_minimal_purge_on_wipe_tower_15",
+      "input_3mf": "filament_minimal_purge_on_wipe_tower_15.3mf",
+      "expected_value": "15"
+    },
+    {
+      "project_name": "filament_minimal_purge_on_wipe_tower_20",
+      "input_3mf": "filament_minimal_purge_on_wipe_tower_20.3mf",
+      "expected_value": "20"
+    }
+  ]
+}

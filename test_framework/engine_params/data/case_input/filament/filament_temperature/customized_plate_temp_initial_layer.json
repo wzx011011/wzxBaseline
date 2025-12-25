@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "customized_plate_temp_initial_layer_30",
+      "input_3mf": "customized_plate_temp_initial_layer_30.3mf",
+      "expected_value": "30"
+    },
+    {
+      "project_name": "customized_plate_temp_initial_layer_50",
+      "input_3mf": "customized_plate_temp_initial_layer_50.3mf",
+      "expected_value": "50"
+    }
+  ]
+}

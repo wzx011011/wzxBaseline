@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "enable_special_area_additional_cooling_fan_false",
+      "input_3mf": "enable_special_area_additional_cooling_fan_false.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "enable_special_area_additional_cooling_fan_true",
+      "input_3mf": "enable_special_area_additional_cooling_fan_true.3mf",
+      "expected_value": "1"
+    }
+  ]
+}

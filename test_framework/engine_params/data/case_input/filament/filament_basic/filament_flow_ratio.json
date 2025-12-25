@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "filament_flow_ratio_0.9",
+      "input_3mf": "filament_flow_ratio_0.9.3mf",
+      "expected_value": "0.9"
+    },
+    {
+      "project_name": "filament_flow_ratio_1.0",
+      "input_3mf": "filament_flow_ratio_1.0.3mf",
+      "expected_value": "1"
+    },
+    {
+      "project_name": "filament_flow_ratio_1.1",
+      "input_3mf": "filament_flow_ratio_1.1.3mf",
+      "expected_value": "1.1"
+    }
+  ]
+}

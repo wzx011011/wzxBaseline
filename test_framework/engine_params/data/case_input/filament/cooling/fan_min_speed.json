@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "fan_min_speed_0",
+      "input_3mf": "fan_min_speed_0.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "fan_min_speed_20",
+      "input_3mf": "fan_min_speed_20.3mf",
+      "expected_value": "20"
+    },
+    {
+      "project_name": "fan_min_speed_50",
+      "input_3mf": "fan_min_speed_50.3mf",
+      "expected_value": "50"
+    }
+  ]
+}

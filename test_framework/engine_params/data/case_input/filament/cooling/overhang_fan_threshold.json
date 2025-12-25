@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "overhang_fan_threshold_50",
+      "input_3mf": "overhang_fan_threshold_50.3mf",
+      "expected_value": "50"
+    },
+    {
+      "project_name": "overhang_fan_threshold_75",
+      "input_3mf": "overhang_fan_threshold_75.3mf",
+      "expected_value": "75"
+    },
+    {
+      "project_name": "overhang_fan_threshold_90",
+      "input_3mf": "overhang_fan_threshold_90.3mf",
+      "expected_value": "90"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "default_filament_colour_white",
+      "input_3mf": "default_filament_colour_white.3mf",
+      "expected_value": "#FFFFFF"
+    },
+    {
+      "project_name": "default_filament_colour_red",
+      "input_3mf": "default_filament_colour_red.3mf",
+      "expected_value": "#FF0000"
+    },
+    {
+      "project_name": "default_filament_colour_blue",
+      "input_3mf": "default_filament_colour_blue.3mf",
+      "expected_value": "#0000FF"
+    }
+  ]
+}

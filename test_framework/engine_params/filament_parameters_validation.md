@@ -24,26 +24,26 @@
 
 ### 1.1 页面结构
 
-耗材丝设置UI包含 **6个主要页面**，共 **155个参数**（基础配置）：
+耗材丝设置UI包含 **6个主要页面**，共 **94个参数**（基础配置）：
 
 | 页面序号 | 页面名称 | 参数分组数 | 参数数量 | 用途 | 显示条件 |
 |---------|---------|----------|---------|------|---------|
-| 1 | **Filament** | 8个 | 51个 | 基础信息、温度配置 | 总是显示 |
-| 2 | **Cooling** | 4个 | 47个 | 风扇、冷却策略 | 总是显示 |
-| 3 | **Advanced** | 2个 | 2个 | 自定义G-code | 总是显示 |
-| 4 | **Multimaterial** | 3个 | 24个 | 多材料、换料参数 | 总是显示 |
-| 5 | **Filament overrides** | N个 | N×参数 | 打印机特定覆盖参数 | 动态生成 |
+| 1 | **Filament** | 5个 | 39个 | 基础信息、温度配置 | 总是显示 |
+| 2 | **Cooling** | 4个 | 22个 | 风扇、冷却策略 | 总是显示 |
+| 3 | **Setting Overrides** | 1个 | 16个 | 回抽覆盖参数 | 总是显示 |
+| 4 | **Advanced** | 2个 | 2个 | 自定义G-code | 总是显示 |
+| 5 | **Multimaterial** | 3个 | 14个 | 多材料、换料参数 | 总是显示 |
 | 6 | **Notes** | 1个 | 1个 | 耗材备注 | 总是显示 |
-| **合计** | | | **125个** | | |
+| **合计** | | | **94个** | | |
 
 ### 1.2 参数统计概览
 
 | 维度 | 统计值 |
 |------|--------|
-| **总参数数** | 125 个 |
-| **L1 可校验** | 125 (100%) |
-| **L2 可校验** | 68 (54%) |
-| **L3 可校验** | 12 (10%) |
+| **总参数数** | 94 个 |
+| **L1 可校验** | 94 (100%) |
+| **L2 可校验** | 52 (55%) |
+| **L3 可校验** | 8 (9%) |
 | **无法校验** | 0 |
 
 ### 1.3 参数类型分布
@@ -67,7 +67,7 @@
 
 ### 2.1 Page 1: Filament（耗材基础信息页面）
 
-#### 2.1.1 Basic information 分组（18个参数）
+#### 2.1.1 Basic information 分组（19个参数）
 
 | 参数名 | 类型 | 显示标签 | 范围/枚举 | 默认值 | 校验层次 | 说明 |
 |--------|------|---------|---------|--------|---------|------|
@@ -78,6 +78,7 @@
 | `required_nozzle_HRC` | coInt | Required nozzle HRC | 0-100 | 0 | L1 | 所需喷嘴硬度 ★关键 |
 | `default_filament_colour` | coString | Color | 自由文本/色值 | "#FFF000" | L1 | 耗材颜色 |
 | `filament_diameter` | coFloat | Diameter | 1.5-4.0 | 1.75 | L1 | 耗材直径 (mm) ★关键 |
+| `filament_adhesiveness_category` | coEnum | Adhesiveness category | 枚举 | - | L1 | 粘附性分类 |
 | `filament_flow_ratio` | coFloat | Flow ratio | 0.5-1.5 | 1.0 | L1 | 流量比 ★关键 |
 | `enable_pressure_advance` | coBool | Enable pressure advance | true/false | false | L1 | 启用压力补偿 |
 | `pressure_advance` | coFloat | Pressure advance | 0.0-2.0 | 0.0 | L2 | 压力补偿值 |
@@ -130,7 +131,7 @@
 |--------|------|---------|------|--------|---------|------|
 | `filament_max_volumetric_speed` | coFloat | Max volumetric speed | 0.0-100.0 | 15.0 | L2 | 最大体积速度 (mm³/s) |
 
-**小计**: 51 个参数
+**小计**: 39 个参数
 
 ---
 
@@ -143,7 +144,7 @@
 | `close_fan_the_first_x_layers` | coInt | Close fan first X layers | 0-100 | 0 | L1 | 前X层关闭风扇 |
 | `full_fan_speed_layer` | coInt | Full fan speed from layer | 0-10000 | 5 | L1 | 从第N层开启全速风扇 |
 
-#### 2.2.2 Model fan 分组（11个参数）
+#### 2.2.2 Model fan 分组（13个参数）
 
 | 参数名 | 类型 | 显示标签 | 范围 | 默认值 | 校验层次 | 说明 |
 |--------|------|---------|------|--------|---------|------|
@@ -158,6 +159,8 @@
 | `slow_down_min_speed` | coFloat | Min speed | 10-200 | 30.0 | L1 | 最小速度 (mm/s) |
 | `enable_overhang_bridge_fan` | coBool | Enable overhang/bridge fan | true/false | false | L2 | 启用悬垂/桥接风扇 |
 | `overhang_fan_threshold` | coFloat | Overhang threshold | 0-100 | 75.0 | L2 | 悬垂阈值 (%) |
+| `overhang_fan_speed` | coFloat | Overhang fan speed | 0-100 | 100.0 | L2 | 悬垂风扇速度 (%) |
+| `support_material_interface_fan_speed` | coFloat | Support interface fan speed | 0-100 | -1 | L2 | 支撑接触面风扇速度 (%) |
 
 #### 2.2.3 Side Fan 分组（4个参数）
 
@@ -176,13 +179,40 @@
 | `during_print_exhaust_fan_speed` | coFloat | During print | 0-100 | 0.0 | L1 | 打印中排气扇速度 |
 | `complete_print_exhaust_fan_speed` | coFloat | Complete print | 0-100 | 0.0 | L1 | 打印完成排气扇速度 |
 
-**小计**: 47 个参数
+**小计**: 22 个参数
 
 ---
 
-### 2.3 Page 3: Advanced（高级页面）
+### 2.3 Page 3: Setting Overrides（设置覆盖页面）
 
-#### 2.3.1 Filament start/end G-code 分组（2个参数）
+#### 2.3.1 Retraction 分组（16个参数）
+
+| 参数名 | 类型 | 显示标签 | 范围 | 默认值 | 校验层次 | 说明 |
+|--------|------|---------|------|--------|---------|------|
+| `filament_retraction_length` | coFloat | Retraction length | 0-10 | - | L1 | 回抽长度 (mm) |
+| `filament_z_hop` | coFloat | Z hop | 0-5 | - | L1 | Z轴抬升高度 (mm) |
+| `filament_z_hop_types` | coEnum | Z hop type | 枚举 | - | L1 | Z轴抬升类型 |
+| `filament_retract_lift_above` | coFloat | Lift above | 0-300 | - | L1 | 高于此高度时抬升 (mm) |
+| `filament_retract_lift_below` | coFloat | Lift below | 0-300 | - | L1 | 低于此高度时抬升 (mm) |
+| `filament_retract_lift_enforce` | coFloat | Lift enforce | 0-300 | - | L1 | 强制抬升高度 (mm) |
+| `filament_retraction_speed` | coFloat | Retraction speed | 0-100 | - | L1 | 回抽速度 (mm/s) |
+| `filament_deretraction_speed` | coFloat | Deretraction speed | 0-100 | - | L1 | 回填速度 (mm/s) |
+| `filament_retract_restart_extra` | coFloat | Restart extra | -2-2 | - | L1 | 回填额外量 (mm) |
+| `filament_retraction_minimum_travel` | coFloat | Minimum travel | 0-100 | - | L1 | 最小行程距离 (mm) |
+| `filament_retract_when_changing_layer` | coBool | Retract on layer change | true/false | - | L1 | 换层时回抽 |
+| `filament_wipe` | coBool | Wipe | true/false | - | L1 | 擦拭 |
+| `filament_wipe_distance` | coFloat | Wipe distance | 0-10 | - | L1 | 擦拭距离 (mm) |
+| `filament_retract_before_wipe` | coFloat | Retract before wipe | 0-100 | - | L1 | 擦拭前回抽 (%) |
+| `filament_long_retractions_when_cut` | coBool | Long retractions when cut | true/false | - | L1 | 切断时长回抽 |
+| `filament_retraction_distances_when_cut` | coFloat | Retraction distance when cut | 0-100 | - | L1 | 切断回抽距离 (mm) |
+
+**小计**: 16 个参数
+
+---
+
+### 2.4 Page 4: Advanced（高级页面）
+
+#### 2.4.1 Filament start/end G-code 分组（2个参数）
 
 | 参数名 | 类型 | 显示标签 | 范围 | 默认值 | 校验层次 | 说明 |
 |--------|------|---------|------|--------|---------|------|
@@ -193,15 +223,15 @@
 
 ---
 
-### 2.4 Page 4: Multimaterial（多材料页面）
+### 2.5 Page 5: Multimaterial（多材料页面）
 
-#### 2.4.1 Wipe tower parameters 分组（1个参数）
+#### 2.5.1 Wipe tower parameters 分组（1个参数）
 
 | 参数名 | 类型 | 显示标签 | 范围 | 默认值 | 校验层次 | 说明 |
 |--------|------|---------|------|--------|---------|------|
 | `filament_minimal_purge_on_wipe_tower` | coFloat | Minimal purge | 0-500 | 15.0 | L2 | 擦料塔最小清洗长度 (mm) |
 
-#### 2.4.2 Toolchange parameters with single extruder MM printers 分组（10个参数）
+#### 2.5.2 Toolchange parameters with single extruder MM printers 分组（10个参数）
 
 | 参数名 | 类型 | 显示标签 | 范围 | 默认值 | 校验层次 | 说明 |
 |--------|------|---------|------|--------|---------|------|
@@ -216,11 +246,11 @@
 | `filament_stamping_loading_speed` | coFloat | Stamping loading speed | 0-100 | 40.0 | L1 | 冲压装料速度 (mm/s) |
 | `filament_stamping_distance` | coFloat | Stamping distance | 0-100 | 30.0 | L1 | 冲压距离 (mm) |
 
-#### 2.4.3 Ramming settings（特殊控件）
+#### 2.5.3 Ramming settings（特殊控件）
 
 特殊项：`filament_ramming_parameters` - 打开单独对话框配置
 
-#### 2.4.4 Toolchange parameters with multi extruder MM printers 分组（3个参数）
+#### 2.5.4 Toolchange parameters with multi extruder MM printers 分组（3个参数）
 
 | 参数名 | 类型 | 显示标签 | 范围 | 默认值 | 校验层次 | 说明 |
 |--------|------|---------|------|--------|---------|------|
@@ -228,13 +258,13 @@
 | `filament_multitool_ramming_volume` | coFloat | Ramming volume | 0-1000 | 150.0 | L2 | 冲压体积 (mm³) |
 | `filament_multitool_ramming_flow` | coFloat | Ramming flow | 0-200 | 100.0 | L2 | 冲压流量 (%) |
 
-**小计**: 24 个参数
+**小计**: 14 个参数
 
 ---
 
-### 2.5 Page 5: Notes（备注页面）
+### 2.6 Page 6: Notes（备注页面）
 
-#### 2.5.1 Notes 分组（1个参数）
+#### 2.6.1 Notes 分组（1个参数）
 
 | 参数名 | 类型 | 显示标签 | 范围 | 默认值 | 校验层次 | 说明 |
 |--------|------|---------|------|--------|---------|------|

@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "filament_type_PLA",
+      "input_3mf": "filament_type_PLA.3mf",
+      "expected_value": "PLA"
+    },
+    {
+      "project_name": "filament_type_ABS",
+      "input_3mf": "filament_type_ABS.3mf",
+      "expected_value": "ABS"
+    },
+    {
+      "project_name": "filament_type_PETG",
+      "input_3mf": "filament_type_PETG.3mf",
+      "expected_value": "PETG"
+    }
+  ]
+}

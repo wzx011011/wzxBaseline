@@ -1,4 +1,8 @@
-# 多材料与其他参数 G-code 校验方案
+# 多材料、支撑与其他参数 G-code 校验方案
+
+> **文档范围**: 本文档仅涵盖 Process Tab 的 3 个页面（Multimaterial、Support、Others），共 **113 个参数**。
+> 
+> **完整版**: 请参阅 `process_parameters_complete.md`，涵盖全部 6 个页面、**390 个参数**。
 
 ## 一、参数分类与校验策略总览
 

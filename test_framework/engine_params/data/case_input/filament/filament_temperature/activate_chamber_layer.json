@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "activate_chamber_layer_0",
+      "input_3mf": "activate_chamber_layer_0.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "activate_chamber_layer_1",
+      "input_3mf": "activate_chamber_layer_1.3mf",
+      "expected_value": "1"
+    },
+    {
+      "project_name": "activate_chamber_layer_5",
+      "input_3mf": "activate_chamber_layer_5.3mf",
+      "expected_value": "5"
+    }
+  ]
+}

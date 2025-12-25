@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "filament_shrinkage_compensation_z_0",
+      "input_3mf": "filament_shrinkage_compensation_z_0.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "filament_shrinkage_compensation_z_1",
+      "input_3mf": "filament_shrinkage_compensation_z_1.3mf",
+      "expected_value": "1"
+    },
+    {
+      "project_name": "filament_shrinkage_compensation_z_2",
+      "input_3mf": "filament_shrinkage_compensation_z_2.3mf",
+      "expected_value": "2"
+    }
+  ]
+}

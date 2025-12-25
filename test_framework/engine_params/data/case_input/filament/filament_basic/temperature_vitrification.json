@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "temperature_vitrification_0",
+      "input_3mf": "temperature_vitrification_0.3mf",
+      "expected_value": "0"
+    },
+    {
+      "project_name": "temperature_vitrification_55",
+      "input_3mf": "temperature_vitrification_55.3mf",
+      "expected_value": "55"
+    },
+    {
+      "project_name": "temperature_vitrification_105",
+      "input_3mf": "temperature_vitrification_105.3mf",
+      "expected_value": "105"
+    }
+  ]
+}

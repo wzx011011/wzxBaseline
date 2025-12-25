@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "nozzle_temperature_initial_layer_200",
+      "input_3mf": "nozzle_temperature_initial_layer_200.3mf",
+      "expected_value": "200"
+    },
+    {
+      "project_name": "nozzle_temperature_initial_layer_220",
+      "input_3mf": "nozzle_temperature_initial_layer_220.3mf",
+      "expected_value": "220"
+    },
+    {
+      "project_name": "nozzle_temperature_initial_layer_240",
+      "input_3mf": "nozzle_temperature_initial_layer_240.3mf",
+      "expected_value": "240"
+    }
+  ]
+}
