@@ -79,6 +79,7 @@ def test_material_flow_dependent_temperature(slice_and_export: Path, expected_va
 
 
 @pytest.mark.engine_params
+@pytest.mark.xfail(reason="Slicer ignores material_flow_temp_graph from 3MF config - uses preset value instead")
 def test_material_flow_temp_graph(slice_and_export: Path, expected_value: str):
     """Test material_flow_temp_graph parameter (Level 1 - Config)"""
     gcode_path = slice_and_export

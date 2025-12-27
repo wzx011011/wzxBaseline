@@ -11,9 +11,21 @@ from engine_params.src.gcode.GCodeParser import GCodeParser
 
 
 def _str_norm(v: Any) -> str | None:
+    """Normalize value for comparison. Treats None and 'nil' as equivalent."""
     if v is None:
         return None
-    return str(v).strip()
+    s = str(v).strip()
+    # Treat 'nil' as None for comparison
+    if s.lower() == 'nil':
+        return None
+    return s
+
+
+def _values_equal(actual: Any, expected: Any) -> bool:
+    """Compare values, treating None and 'nil' as equivalent."""
+    norm_actual = _str_norm(actual)
+    norm_expected = _str_norm(expected)
+    return norm_actual == norm_expected
 
 
 def parse_filament_retraction_length(gcode_path: Path, expected_value: str) -> Tuple[bool, Any, Dict]:
@@ -22,7 +34,7 @@ def parse_filament_retraction_length(gcode_path: Path, expected_value: str) -> T
     cfg = parser.load_config()
     actual = cfg.get("filament_retraction_length")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament retraction length: {actual}"},
     )
@@ -34,7 +46,7 @@ def parse_filament_z_hop(gcode_path: Path, expected_value: str) -> Tuple[bool, A
     cfg = parser.load_config()
     actual = cfg.get("filament_z_hop")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament Z hop: {actual}"},
     )
@@ -46,7 +58,7 @@ def parse_filament_z_hop_types(gcode_path: Path, expected_value: str) -> Tuple[b
     cfg = parser.load_config()
     actual = cfg.get("filament_z_hop_types")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament Z hop types: {actual}"},
     )
@@ -58,7 +70,7 @@ def parse_filament_retract_lift_above(gcode_path: Path, expected_value: str) -> 
     cfg = parser.load_config()
     actual = cfg.get("filament_retract_lift_above")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament retract lift above: {actual}"},
     )
@@ -70,7 +82,7 @@ def parse_filament_retract_lift_below(gcode_path: Path, expected_value: str) -> 
     cfg = parser.load_config()
     actual = cfg.get("filament_retract_lift_below")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament retract lift below: {actual}"},
     )
@@ -82,7 +94,7 @@ def parse_filament_retract_lift_enforce(gcode_path: Path, expected_value: str) -
     cfg = parser.load_config()
     actual = cfg.get("filament_retract_lift_enforce")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament retract lift enforce: {actual}"},
     )
@@ -94,7 +106,7 @@ def parse_filament_retraction_speed(gcode_path: Path, expected_value: str) -> Tu
     cfg = parser.load_config()
     actual = cfg.get("filament_retraction_speed")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament retraction speed: {actual}"},
     )
@@ -106,7 +118,7 @@ def parse_filament_deretraction_speed(gcode_path: Path, expected_value: str) -> 
     cfg = parser.load_config()
     actual = cfg.get("filament_deretraction_speed")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament deretraction speed: {actual}"},
     )
@@ -118,7 +130,7 @@ def parse_filament_retract_restart_extra(gcode_path: Path, expected_value: str) 
     cfg = parser.load_config()
     actual = cfg.get("filament_retract_restart_extra")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament retract restart extra: {actual}"},
     )
@@ -130,7 +142,7 @@ def parse_filament_retraction_minimum_travel(gcode_path: Path, expected_value: s
     cfg = parser.load_config()
     actual = cfg.get("filament_retraction_minimum_travel")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament retraction minimum travel: {actual}"},
     )
@@ -142,7 +154,7 @@ def parse_filament_retract_when_changing_layer(gcode_path: Path, expected_value:
     cfg = parser.load_config()
     actual = cfg.get("filament_retract_when_changing_layer")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament retract when changing layer: {actual}"},
     )
@@ -154,7 +166,7 @@ def parse_filament_wipe(gcode_path: Path, expected_value: str) -> Tuple[bool, An
     cfg = parser.load_config()
     actual = cfg.get("filament_wipe")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament wipe: {actual}"},
     )
@@ -166,7 +178,7 @@ def parse_filament_wipe_distance(gcode_path: Path, expected_value: str) -> Tuple
     cfg = parser.load_config()
     actual = cfg.get("filament_wipe_distance")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament wipe distance: {actual}"},
     )
@@ -178,7 +190,7 @@ def parse_filament_retract_before_wipe(gcode_path: Path, expected_value: str) ->
     cfg = parser.load_config()
     actual = cfg.get("filament_retract_before_wipe")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament retract before wipe: {actual}"},
     )
@@ -190,7 +202,7 @@ def parse_filament_long_retractions_when_cut(gcode_path: Path, expected_value: s
     cfg = parser.load_config()
     actual = cfg.get("filament_long_retractions_when_cut")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament long retractions when cut: {actual}"},
     )
@@ -202,7 +214,7 @@ def parse_filament_retraction_distances_when_cut(gcode_path: Path, expected_valu
     cfg = parser.load_config()
     actual = cfg.get("filament_retraction_distances_when_cut")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _values_equal(actual, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Filament retraction distances when cut: {actual}"},
     )

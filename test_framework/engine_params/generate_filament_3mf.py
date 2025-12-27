@@ -246,6 +246,23 @@ def create_3mf(src_dir: Path, dest_3mf: Path) -> None:
                 zf.write(file_path, arcname)
 
 
+# Filament type to preset ID mapping (K1C 0.4 nozzle)
+# 当修改 filament_type 时，需要同步更新 filament_settings_id
+FILAMENT_TYPE_TO_PRESET_ID = {
+    "PLA": "Hyper PLA @Creality K1C 0.4 nozzle",
+    "ABS": "CR-ABS @Creality K1C 0.4 nozzle",
+    "PETG": "CR-PETG @Creality K1C 0.4 nozzle",
+    "TPU": "CR-TPU @Creality K1C 0.4 nozzle",
+    "PA": "CR-Nylon @Creality K1C 0.4 nozzle",
+    "PA-CF": "CR-PA-CF @Creality K1C 0.4 nozzle",
+    "PLA-CF": "CR-PLA-CF @Creality K1C 0.4 nozzle",
+    "ASA": "CR-ASA @Creality K1C 0.4 nozzle",
+    "PC": "CR-PC @Creality K1C 0.4 nozzle",
+    "HIPS": "CR-HIPS @Creality K1C 0.4 nozzle",
+    "PVA": "CR-PVA @Creality K1C 0.4 nozzle",
+}
+
+
 def modify_config_value(config: Dict[str, Any], param_name: str, expected_value: Any) -> Dict[str, Any]:
     """修改配置中的参数值"""
     # 转换值类型
@@ -255,19 +272,34 @@ def modify_config_value(config: Dict[str, Any], param_name: str, expected_value:
     # 修改配置值
     config[param_name] = converted_value
     
+    # 特殊处理：当修改 filament_type 时，同步更新 filament_settings_id
+    if param_name == "filament_type" and expected_value in FILAMENT_TYPE_TO_PRESET_ID:
+        preset_id = FILAMENT_TYPE_TO_PRESET_ID[expected_value]
+        config["filament_settings_id"] = [preset_id]
+        # 同时更新 default_filament_type
+        config["default_filament_type"] = expected_value
+    
     # 将修改的参数添加到 different_settings_to_system 数组中
-    if "different_settings_to_system" not in config:
-        config["different_settings_to_system"] = ["", ""]
+    # 根据实际 3MF 分析，格式为: [process_params, filament_params, '', '']
+    # Filament 参数应放在 **索引 1** 位置，用分号分隔多个参数名
+    if "different_settings_to_system" not in config or config["different_settings_to_system"] is None:
+        config["different_settings_to_system"] = ["", "", "", ""]
     
     settings_list = config["different_settings_to_system"]
     
-    # 确保前两个元素是空字符串
-    while len(settings_list) < 2:
-        settings_list.insert(0, "")
+    # 确保有 4 个元素
+    while len(settings_list) < 4:
+        settings_list.append("")
     
-    # 确保参数在列表中（避免重复）
-    if param_name not in settings_list:
-        settings_list.append(param_name)
+    # Filament 参数放在索引 1 (不是索引 2!)
+    filament_params = settings_list[1] if settings_list[1] else ""
+    if filament_params:
+        # 已有其他参数，用分号分隔
+        existing_params = set(filament_params.split(";"))
+        if param_name not in existing_params:
+            settings_list[1] = filament_params + ";" + param_name
+    else:
+        settings_list[1] = param_name
     
     config["different_settings_to_system"] = settings_list
     
