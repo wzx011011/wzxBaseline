@@ -11,9 +11,14 @@ from engine_params.src.gcode.GCodeParser import GCodeParser
 
 
 def _str_norm(v: Any) -> str | None:
+    """Normalize string value, removing surrounding quotes and whitespace."""
     if v is None:
         return None
-    return str(v).strip()
+    s = str(v).strip()
+    # Remove surrounding quotes if present (e.g., '""' -> '')
+    if len(s) >= 2 and s.startswith('"') and s.endswith('"'):
+        s = s[1:-1]
+    return s
 
 
 def parse_filament_start_gcode(gcode_path: Path, expected_value: str) -> Tuple[bool, Any, Dict]:

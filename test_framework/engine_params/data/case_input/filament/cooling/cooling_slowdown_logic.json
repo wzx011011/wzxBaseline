@@ -1,14 +1,14 @@
 {
   "cases": [
     {
-      "project_name": "cooling_slowdown_logic_default",
-      "input_3mf": "cooling_slowdown_logic_default.3mf",
-      "expected_value": "default"
+      "project_name": "cooling_slowdown_logic_uniform_cooling",
+      "input_3mf": "cooling_slowdown_logic_uniform_cooling.3mf",
+      "expected_value": "uniform_cooling"
     },
     {
-      "project_name": "cooling_slowdown_logic_custom",
-      "input_3mf": "cooling_slowdown_logic_custom.3mf",
-      "expected_value": "custom"
+      "project_name": "cooling_slowdown_logic_consistent_surface",
+      "input_3mf": "cooling_slowdown_logic_consistent_surface.3mf",
+      "expected_value": "consistent_surface"
     }
   ]
 }

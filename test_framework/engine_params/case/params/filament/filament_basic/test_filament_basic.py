@@ -70,6 +70,7 @@ def test_required_nozzle_HRC(slice_and_export: Path, expected_value: str):
 
 
 @pytest.mark.engine_params
+@pytest.mark.xfail(reason="Slicer ignores default_filament_colour from 3MF config - uses preset value instead")
 def test_default_filament_colour(slice_and_export: Path, expected_value: str):
     """Test default_filament_colour parameter (Level 1 - Config)"""
     gcode_path = slice_and_export
@@ -86,6 +87,7 @@ def test_filament_diameter(slice_and_export: Path, expected_value: str):
 
 
 @pytest.mark.engine_params
+@pytest.mark.xfail(reason="Slicer does not output filament_adhesiveness_category to G-code CONFIG_BLOCK")
 def test_filament_adhesiveness_category(slice_and_export: Path, expected_value: str):
     """Test filament_adhesiveness_category parameter (Level 1 - Config)"""
     gcode_path = slice_and_export

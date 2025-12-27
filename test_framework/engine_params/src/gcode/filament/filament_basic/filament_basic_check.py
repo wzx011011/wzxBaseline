@@ -68,7 +68,8 @@ def parse_required_nozzle_HRC(gcode_path: Path, expected_value: str) -> Tuple[bo
     """Test required_nozzle_HRC parameter (Level 1 - Config)"""
     parser = GCodeParser(gcode_path)
     cfg = parser.load_config()
-    actual = cfg.get("required_nozzle_HRC")
+    # GCodeParser converts keys to lowercase
+    actual = cfg.get("required_nozzle_hrc")
     return (
         _str_norm(actual) == _str_norm(expected_value),
         actual,
