@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "seam_position_aligned",
+      "input_3mf": "seam_position_aligned.3mf",
+      "expected_seam_position": "aligned"
+    },
+    {
+      "project_name": "seam_position_nearest",
+      "input_3mf": "seam_position_nearest.3mf",
+      "expected_seam_position": "nearest"
+    },
+    {
+      "project_name": "seam_position_random",
+      "input_3mf": "seam_position_random.3mf",
+      "expected_seam_position": "random"
+    }
+  ]
+}
