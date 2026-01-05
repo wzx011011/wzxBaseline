@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "staggered_inner_seams_False",
+      "input_3mf": "staggered_inner_seams_False.3mf",
+      "expected_staggered": false
+    },
+    {
+      "project_name": "staggered_inner_seams_True",
+      "input_3mf": "staggered_inner_seams_True.3mf",
+      "expected_staggered": true
+    }
+  ]
+}
