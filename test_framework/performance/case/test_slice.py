@@ -4,9 +4,10 @@ import/slice/export performance with CrealityPrint.
 Config via env:
     FEISHU_APP_ID / FEISHU_APP_SECRET / FEISHU_APP_TOKEN / FEISHU_TABLE_ID
     [FEISHU_VIEW_ID] [FEISHU_FILE_FIELD] [FEISHU_DOWNLOAD_DIR]
-Results are appended to artifacts/feishu_slice_report.csv.
+Results are appended to performance/data/feishu_slice_report.csv.
 """
 
+import csv
 import imp
 import json
 import os
@@ -84,6 +85,12 @@ def _collect_feishu_cases() -> List[Dict]:
     if _truthy_env("FEISHU_USE_MANIFEST_ONLY"):
         try:
             cases = _load_manifest_cases()
+            
+            # Apply DEBUG mode limit if needed
+            if _truthy_env("DEBUG"):
+                print(f"DEBUG mode enabled: limiting to 10 manifest cases (from {len(cases)} total)")
+                cases = cases[:10]
+            
             _FEISHU_CASES = cases
             if not cases:
                 _FEISHU_ERROR = "Manifest found but no valid entries."
@@ -112,6 +119,12 @@ def _collect_feishu_cases() -> List[Dict]:
     )
     try:
         files = downloader.download_all()
+        
+        # Apply DEBUG mode limit if needed
+        if _truthy_env("DEBUG"):
+            print(f"DEBUG mode enabled: limiting to 10 Feishu cases (from {len(files)} total)")
+            files = files[:1]
+        
         _FEISHU_CASES = files
         if not files:
             _FEISHU_ERROR = "No 3MF attachments found in Feishu table."
@@ -292,7 +305,6 @@ def engine_session_send_cmd(engine_injector_perf):
         try:
             fut = engine_injector_perf.submit(command, payload, timeout=recvcmd_timeout)
             resp = fut.result(timeout=recvcmd_timeout)
-            print(resp)
             resp_bytes = f"{command}_respone;{json.dumps(resp)}".encode("utf-8")
             return True, "ok", resp_bytes
         except TimeoutError:
@@ -303,6 +315,43 @@ def engine_session_send_cmd(engine_injector_perf):
             return False, "error", str(exc).encode("utf-8")
 
     return send_cmd_handle
+
+
+@pytest.fixture(scope="session")
+def baseline_data():
+    """
+    Load baseline data from feishu_slice_report.csv at test startup.
+    """
+    baseline_path = Path("performance") / "data" / "feishu_slice_report.csv"
+    baseline_data = {}
+    
+    if baseline_path.exists():
+        print(f"Loading baseline data from {baseline_path}...")
+        # Try different encodings to handle various file formats
+        encodings = ["utf-8", "gbk", "latin-1"]
+        
+        for encoding in encodings:
+            try:
+                with open(baseline_path, "r", encoding=encoding) as f:
+                    reader = csv.DictReader(f)
+                    for row in reader:
+                        # Use filename as key for comparison
+                        filename = Path(row["file"]).name
+                        baseline_data[filename] = row
+                print(f"✓ Loaded {len(baseline_data)} baseline records with encoding: {encoding}")
+                break
+            except UnicodeDecodeError:
+                print(f"Failed to read with encoding {encoding}, trying next...")
+            except Exception as e:
+                print(f"Error reading baseline file: {e}")
+                break
+        
+        if not baseline_data:
+            print(f"Failed to read baseline file with any encoding")
+    else:
+        print(f"Baseline file not found: {baseline_path}")
+    
+    return baseline_data
 
 
 def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
@@ -425,21 +474,130 @@ def test_feishu_slice(
     feishu_case,
     engine_session_send_cmd,
     tmp_path,
+    baseline_data,  # Use the fixture for baseline data
 ):
     if not _FEISHU_CASES:
         pytest.skip(_FEISHU_ERROR or "Feishu dataset not configured.")
 
     send_cmd_handle = engine_session_send_cmd
     model_path = Path(feishu_case["path"]).resolve()  # Ensure absolute path
-    #model_path = Path("C:\\work\\C3DBaseline\\test_framework\\artifacts\\feishu_3mf\\baby-groot.3mf")
+    #model_path = Path("C:\work\C3DBaseline\test_framework\artifacts\feishu_3mf\baby-groot.3mf")
     print(f"Testing Feishu 3MF slicing: {model_path}")
     result = _run_slice_flow(send_cmd_handle, model_path, tmp_path)
     result["record_id"] = feishu_case.get("record_id")
 
-    report_path = Path("artifacts") / "feishu_slice_report.csv"
-    _write_report_line(report_path, result)
-
+    # Get current filename for comparison
+    current_filename = model_path.name
+    
+    # Update baseline data with current result
+    baseline_row_data = {
+        "record_id": str(result["record_id"]) if result["record_id"] else "",
+        "file": str(model_path),
+        "import_ms": str(result["import_ms"]),
+        "slice_ms": str(result["slice_ms"]),
+        "export_ms": str(result["export_ms"]),
+        "import_ok": str(result["import_ok"]),
+        "slice_ok": str(result["slice_ok"]),
+        "export_ok": str(result["export_ok"]),
+        "crashed": str(result["crashed"]),
+        "error": result["error"] or "",
+        "gcode_path": str(result["gcode_path"]) if result["gcode_path"] else ""
+    }
+    
+    # Check if record exists in baseline for comparison
+    if current_filename in baseline_data:
+        # Compare with baseline
+        baseline_row = baseline_data[current_filename]
+        print(f"Comparing with baseline for {current_filename}...")
+        
+        # Assert key metrics match baseline
+        assert result["crashed"] == (baseline_row["crashed"] == "TRUE"), f"Crashed status mismatch with baseline for {current_filename}"
+        assert result["import_ok"] == (baseline_row["import_ok"] == "TRUE"), f"Import status mismatch with baseline for {current_filename}"
+        assert result["slice_ok"] == (baseline_row["slice_ok"] == "TRUE"), f"Slice status mismatch with baseline for {current_filename}"
+        assert result["export_ok"] == (baseline_row["export_ok"] == "TRUE"), f"Export status mismatch with baseline for {current_filename}"
+        
+        print(f"✓ All metrics match baseline for {current_filename}")
+    else:
+    # Always update the baseline data with current result
+        print(f"Updating baseline data for {current_filename}...")
+        baseline_data[current_filename] = baseline_row_data
+    
+    # Always assert basic success regardless of baseline
     assert not result["crashed"], f"App crashed when handling {model_path}"
     assert result["import_ok"], f"Import failed for {model_path}: {result['error']}"
     assert result["slice_ok"], f"Slice failed for {model_path}: {result['error']}"
     assert result["export_ok"], f"Export failed for {model_path}: {result['error']}"
+
+
+@pytest.fixture(scope="session", autouse=True)
+def write_report_to_feishu_after_tests(baseline_data):
+    """
+    Write the feishu_slice_report.csv to a new Feishu table after all tests are completed.
+    """
+    yield  # This is the test execution phase
+    
+    # This runs after all tests are completed
+    report_path = Path("performance") / "data" / "feishu_slice_report.csv"
+    
+    # Write all baseline data to CSV file
+    if baseline_data:
+        print(f"\n=== Writing all baseline data to CSV ===")
+        print(f"Writing to: {report_path}")
+        
+        # Create directory if it doesn't exist
+        report_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # Write CSV header
+        header = [
+            "record_id",
+            "file",
+            "import_ms",
+            "slice_ms",
+            "export_ms",
+            "import_ok",
+            "slice_ok",
+            "export_ok",
+            "crashed",
+            "error",
+            "gcode_path",
+        ]
+        
+        with open(report_path, "w", encoding="utf-8") as f:
+            f.write(",".join(header) + "\n")
+            
+            # Write all baseline records
+            for filename, record in baseline_data.items():
+                # Ensure all fields are present and in order
+                row = []
+                for field in header:
+                    row.append(record.get(field, ""))
+                # Join and write the row
+                f.write(",".join(row) + "\n")
+        
+        print(f"✓ Wrote {len(baseline_data)} records to {report_path}")
+        
+        # Check if Feishu configuration is available to write to Feishu table
+        from test_framework.performance.utils.feishu_downloader import load_feishu_config, FeishuDownloader
+        cfg = load_feishu_config()
+        
+        if cfg:
+            try:
+                downloader = FeishuDownloader(
+                    app_id=cfg["app_id"],
+                    app_secret=cfg["app_secret"],
+                    app_token=cfg["app_token"],
+                    table_id=cfg["table_id"],
+                    view_id=cfg.get("view_id"),
+                    file_field=cfg.get("file_field", "文件"),
+                    download_dir=cfg.get("download_dir") or Path("artifacts") / "feishu_3mf",
+                )
+                
+                # Write CSV to a new Feishu table
+                downloader.write_csv_to_feishu(report_path, table_name_prefix="test")
+                print("=== Feishu table creation completed ===")
+            except Exception as e:
+                print(f"Failed to write to Feishu: {e}")
+        else:
+            print("Feishu configuration not available, skipping Feishu table creation.")
+    else:
+        print(f"No baseline data to write.")

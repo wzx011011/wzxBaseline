@@ -1,10 +1,11 @@
 pipeline {
-  agent { label 'windows' }
+  agent { label params.AGENT_LABEL }
   options {
     timestamps()
     disableConcurrentBuilds()
   }
   parameters {
+    string(name: 'AGENT_LABEL', defaultValue: 'windows', description: 'Jenkins agent label to run the pipeline on')
     string(name: 'JOB_NAME', defaultValue: 'CrealityPrint_Release_Package', description: 'Jenkins job name to download from')
     string(name: 'BUILD_ID', defaultValue: '1234', description: 'Jenkins build number')
     string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')

@@ -1,9 +1,10 @@
+import csv
 import json
 import os
 import time
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional, Union
+from typing import Any, Dict, Iterable, List, Optional, Union
 
 import requests
 
@@ -470,3 +471,153 @@ class FeishuDownloader:
                 }
             )
         return results
+        
+    def create_table(self, table_name: str, fields: List[Dict[str, str]]) -> str:
+        """
+        Create a new table in the current bitable.
+        Fields format: [{"name": "field_name", "type": "field_type"}]
+        Supported types: text, number, checkbox, date, etc.
+        """
+        self._ensure_token()
+        app_token = self._resolve_app_token_if_needed()
+        
+        url = f"{BASE_URL}/bitable/v1/apps/{app_token}/tables"
+        headers = self._headers()
+        headers["Content-Type"] = "application/json"
+        
+        # Map field types to Feishu API numeric field types
+        # According to Feishu API docs, valid types are: 1,2,3,4,5,7,11,13,15,17,18,20,21,22,23,1001,1002,1003,1004,1005
+        type_map = {
+            "text": 1,        # 文本
+            "number": 2,      # 数字
+            "checkbox": 3,    # 复选框
+            "date": 5,        # 日期
+            "url": 13,        # URL
+            "duration": 23    # 时长
+        }
+        
+        # Prepare field configurations
+        feishu_fields = []
+        for field in fields:
+            field_type = field["type"]
+            feishu_type = type_map.get(field_type, "text")
+            feishu_fields.append({
+                "field_name": field["name"],
+                "type": feishu_type,
+                "property": {}
+            })
+        
+        # Create table request
+        payload = {
+            "table": {
+                "name": table_name,
+                "fields": feishu_fields
+            }
+        }
+        
+        resp = self.session.post(url, headers=headers, json=payload, timeout=20)
+        if not resp.ok:
+            raise RuntimeError(f"Create table failed: HTTP {resp.status_code} {resp.reason}; body={resp.text}")
+        
+        payload = resp.json()
+        if payload.get("code") != 0:
+            raise RuntimeError(f"Create table failed: {payload}")
+        
+        table_id = payload.get("data", {}).get("table", {}).get("table_id")
+        if not table_id:
+            raise RuntimeError(f"Create table failed: table_id not returned")
+        
+        print(f"Created new table: {table_name} with ID: {table_id}")
+        return table_id
+    
+    def add_records(self, table_id: str, records: List[Dict[str, Any]]) -> None:
+        """
+        Add multiple records to a table.
+        Records format: [{"field1": "value1", "field2": "value2", ...}]
+        """
+        self._ensure_token()
+        app_token = self._resolve_app_token_if_needed()
+        
+        url = f"{BASE_URL}/bitable/v1/apps/{app_token}/tables/{table_id}/records/batch_create"
+        headers = self._headers()
+        headers["Content-Type"] = "application/json"
+        
+        # Prepare records for Feishu API
+        feishu_records = []
+        for record in records:
+            fields = {}
+            for field_name, value in record.items():
+                # Convert value to appropriate type
+                if isinstance(value, bool):
+                    fields[field_name] = value
+                elif isinstance(value, (int, float)):
+                    fields[field_name] = value
+                else:
+                    fields[field_name] = str(value)
+            
+            feishu_records.append({"fields": fields})
+        
+        # Batch create records
+        payload = {
+            "records": feishu_records
+        }
+        
+        resp = self.session.post(url, headers=headers, json=payload, timeout=60)
+        if not resp.ok:
+            raise RuntimeError(f"Add records failed: HTTP {resp.status_code} {resp.reason}; body={resp.text}")
+        
+        payload = resp.json()
+        if payload.get("code") != 0:
+            raise RuntimeError(f"Add records failed: {payload}")
+        
+        created_count = payload.get("data", {}).get("records_created", 0)
+        print(f"Added {created_count} records to table {table_id}")
+    
+    def write_csv_to_feishu(self, csv_path: Union[Path, str], table_name_prefix: str = "test") -> str:
+        """
+        Read CSV file and write its data to a new Feishu table.
+        Returns the created table ID.
+        """
+        csv_path = Path(csv_path)
+        if not csv_path.exists():
+            raise FileNotFoundError(f"CSV file not found: {csv_path}")
+        
+        # Generate table name with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        table_name = f"{table_name_prefix}_{timestamp}"
+        
+        # Read CSV data
+        with open(csv_path, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            csv_data = list(reader)
+        
+        if not csv_data:
+            raise ValueError(f"CSV file is empty: {csv_path}")
+        
+        # Determine field types
+        fields = []
+        header = list(csv_data[0].keys())
+        
+        for field_name in header:
+            # Try to determine field type
+            field_type = "text"
+            sample_values = [row[field_name] for row in csv_data if row[field_name]]
+            
+            if sample_values:
+                # Check if all values are numeric
+                if all(v.replace(".", "").replace("-", "").isdigit() for v in sample_values):
+                    field_type = "number"
+                # Check if all values are boolean
+                elif all(v.lower() in ["true", "false"] for v in sample_values):
+                    field_type = "checkbox"
+            
+            fields.append({"name": field_name, "type": field_type})
+        
+        # Create table
+        table_id = self.create_table(table_name, fields)
+        
+        # Add records
+        self.add_records(table_id, csv_data)
+        
+        print(f"Successfully wrote {len(csv_data)} records from {csv_path} to Feishu table: {table_name}")
+        return table_id
