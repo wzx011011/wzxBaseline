@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "only_one_wall_first_layer_enabled",
+      "input_3mf": "process/quality/wall_and_surfaces/only_one_wall_first_layer/only_one_wall_first_layer_enabled.3mf",
+      "expected_only_one_wall_first_layer": true
+    },
+    {
+      "project_name": "only_one_wall_first_layer_disabled",
+      "input_3mf": "process/quality/wall_and_surfaces/only_one_wall_first_layer/only_one_wall_first_layer_disabled.3mf",
+      "expected_only_one_wall_first_layer": false
+    }
+  ]
+}

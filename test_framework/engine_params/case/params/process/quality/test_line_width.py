@@ -11,6 +11,8 @@ import pytest
 from engine_params.src.gcode.process.quality.line_width_check import (
     parse_initial_layer_line_width,
     parse_line_width_from_type,
+    parse_line_width,
+    parse_internal_solid_infill_line_width,
 )
 from engine_params.src.gcode.constants import ExtrusionType
 
@@ -158,3 +160,25 @@ def test_support_line_width(slice_and_export: Path,
     assert ok, (
         f"support_line_width expected {expected_line_width}, details: {details}"
     )
+
+
+# ================== line_width ==================
+@pytest.mark.engine_params
+def test_line_width(slice_and_export: Path, expected_line_width: float):
+    """测试 line_width 参数 - L1: CONFIG_BLOCK"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_line_width(gcode_path, expected_line_width)
+    assert ok, f"line_width expected {expected_line_width}, actual {actual}, details: {details}"
+
+
+# ================== internal_solid_infill_line_width ==================
+@pytest.mark.engine_params
+def test_internal_solid_infill_line_width(slice_and_export: Path, expected_internal_solid_infill_line_width: float):
+    """测试 internal_solid_infill_line_width 参数 - L1: CONFIG_BLOCK"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_internal_solid_infill_line_width(gcode_path, expected_internal_solid_infill_line_width)
+    assert ok, f"internal_solid_infill_line_width expected {expected_internal_solid_infill_line_width}, actual {actual}, details: {details}"

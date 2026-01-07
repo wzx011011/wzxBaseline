@@ -180,3 +180,266 @@ def parse_scarf_joint_flow_ratio(
     }
     
     return (ok, actual_ratio, details)
+
+
+# ============= 新增 L1 校验函数 =============
+
+def _parse_bool_value(raw_value: Any, param_name: str) -> Tuple[bool, bool | None, dict]:
+    """通用布尔值解析函数"""
+    actual_value = None
+    if isinstance(raw_value, bool):
+        actual_value = raw_value
+    elif isinstance(raw_value, (int, float)):
+        actual_value = bool(int(raw_value))
+    elif isinstance(raw_value, str):
+        raw_str = raw_value.lower().strip()
+        if raw_str in ("1", "true", "yes", "enabled"):
+            actual_value = True
+        elif raw_str in ("0", "false", "no", "disabled"):
+            actual_value = False
+    
+    if actual_value is None:
+        return (False, None, {"error": f"无法解析 {param_name} 布尔值: {raw_value}"})
+    
+    return (True, actual_value, {})
+
+
+def parse_seam_slope_conditional(
+    gcode_path: Path | str,
+    expected_value: bool
+) -> Tuple[bool, bool | None, dict]:
+    """检测条件斜坡参数 (seam_slope_conditional) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("seam_slope_conditional")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 seam_slope_conditional 参数"})
+    
+    parse_ok, actual_value, parse_details = _parse_bool_value(raw_value, "seam_slope_conditional")
+    if not parse_ok:
+        return (False, None, parse_details)
+    
+    ok = actual_value == expected_value
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_seam_slope_entire_loop(
+    gcode_path: Path | str,
+    expected_value: bool
+) -> Tuple[bool, bool | None, dict]:
+    """检测整圈斜坡参数 (seam_slope_entire_loop) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("seam_slope_entire_loop")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 seam_slope_entire_loop 参数"})
+    
+    parse_ok, actual_value, parse_details = _parse_bool_value(raw_value, "seam_slope_entire_loop")
+    if not parse_ok:
+        return (False, None, parse_details)
+    
+    ok = actual_value == expected_value
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_seam_slope_inner_walls(
+    gcode_path: Path | str,
+    expected_value: bool
+) -> Tuple[bool, bool | None, dict]:
+    """检测内墙斜坡参数 (seam_slope_inner_walls) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("seam_slope_inner_walls")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 seam_slope_inner_walls 参数"})
+    
+    parse_ok, actual_value, parse_details = _parse_bool_value(raw_value, "seam_slope_inner_walls")
+    if not parse_ok:
+        return (False, None, parse_details)
+    
+    ok = actual_value == expected_value
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_seam_slope_min_length(
+    gcode_path: Path | str,
+    expected_value: float,
+    tolerance: float = 0.1
+) -> Tuple[bool, float | None, dict]:
+    """检测最小斜坡长度参数 (seam_slope_min_length) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("seam_slope_min_length")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 seam_slope_min_length 参数"})
+    
+    try:
+        actual_value = float(raw_value)
+        ok = abs(actual_value - expected_value) <= tolerance
+    except (ValueError, TypeError) as e:
+        return (False, None, {"error": f"无法解析 seam_slope_min_length 值: {raw_value}", "exception": str(e)})
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "tolerance": tolerance,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_seam_slope_start_height(
+    gcode_path: Path | str,
+    expected_value: float,
+    tolerance: float = 0.01
+) -> Tuple[bool, float | None, dict]:
+    """检测斜坡起始高度参数 (seam_slope_start_height) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("seam_slope_start_height")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 seam_slope_start_height 参数"})
+    
+    try:
+        actual_value = float(raw_value)
+        ok = abs(actual_value - expected_value) <= tolerance
+    except (ValueError, TypeError) as e:
+        return (False, None, {"error": f"无法解析 seam_slope_start_height 值: {raw_value}", "exception": str(e)})
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "tolerance": tolerance,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_seam_slope_steps(
+    gcode_path: Path | str,
+    expected_value: int
+) -> Tuple[bool, int | None, dict]:
+    """检测斜坡步数参数 (seam_slope_steps) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("seam_slope_steps")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 seam_slope_steps 参数"})
+    
+    try:
+        actual_value = int(raw_value)
+        ok = actual_value == expected_value
+    except (ValueError, TypeError) as e:
+        return (False, None, {"error": f"无法解析 seam_slope_steps 值: {raw_value}", "exception": str(e)})
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_scarf_angle_threshold(
+    gcode_path: Path | str,
+    expected_value: float,
+    tolerance: float = 0.1
+) -> Tuple[bool, float | None, dict]:
+    """检测斜接角度阈值参数 (scarf_angle_threshold) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("scarf_angle_threshold")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 scarf_angle_threshold 参数"})
+    
+    try:
+        actual_value = float(raw_value)
+        ok = abs(actual_value - expected_value) <= tolerance
+    except (ValueError, TypeError) as e:
+        return (False, None, {"error": f"无法解析 scarf_angle_threshold 值: {raw_value}", "exception": str(e)})
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "tolerance": tolerance,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_scarf_joint_speed(
+    gcode_path: Path | str,
+    expected_value: float,
+    tolerance: float = 0.1
+) -> Tuple[bool, float | None, dict]:
+    """检测斜接速度参数 (scarf_joint_speed) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("scarf_joint_speed")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 scarf_joint_speed 参数"})
+    
+    try:
+        actual_value = float(raw_value)
+        ok = abs(actual_value - expected_value) <= tolerance
+    except (ValueError, TypeError) as e:
+        return (False, None, {"error": f"无法解析 scarf_joint_speed 值: {raw_value}", "exception": str(e)})
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "tolerance": tolerance,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_scarf_overhang_threshold(
+    gcode_path: Path | str,
+    expected_value: float,
+    tolerance: float = 0.1
+) -> Tuple[bool, float | None, dict]:
+    """检测斜接悬垂阈值参数 (scarf_overhang_threshold) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("scarf_overhang_threshold")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 scarf_overhang_threshold 参数"})
+    
+    try:
+        actual_value = float(raw_value)
+        ok = abs(actual_value - expected_value) <= tolerance
+    except (ValueError, TypeError) as e:
+        return (False, None, {"error": f"无法解析 scarf_overhang_threshold 值: {raw_value}", "exception": str(e)})
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "tolerance": tolerance,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)

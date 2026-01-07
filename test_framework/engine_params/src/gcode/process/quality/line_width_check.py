@@ -422,6 +422,65 @@ def parse_initial_layer_line_width(
     )
 
 
+# ============= 新增 L1 校验函数 =============
+
+def parse_line_width(
+    gcode_path: Path | str,
+    expected_value: float,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[float], Dict[str, object]]:
+    """检测默认线宽参数 (line_width) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("line_width")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 line_width 参数"})
+    
+    try:
+        actual_value = float(raw_value)
+        ok = abs(actual_value - expected_value) <= tolerance
+    except (ValueError, TypeError) as e:
+        return (False, None, {"error": f"无法解析 line_width 值: {raw_value}", "exception": str(e)})
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "tolerance": tolerance,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_internal_solid_infill_line_width(
+    gcode_path: Path | str,
+    expected_value: float,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[float], Dict[str, object]]:
+    """检测内部实心填充线宽参数 (internal_solid_infill_line_width) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("internal_solid_infill_line_width")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 internal_solid_infill_line_width 参数"})
+    
+    try:
+        actual_value = float(raw_value)
+        ok = abs(actual_value - expected_value) <= tolerance
+    except (ValueError, TypeError) as e:
+        return (False, None, {"error": f"无法解析 internal_solid_infill_line_width 值: {raw_value}", "exception": str(e)})
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "tolerance": tolerance,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
 if __name__ == "__main__":
     w = compute_line_width(1.37489, 18.186, 0.2, 1.75, 0.95)
     print(w)
+

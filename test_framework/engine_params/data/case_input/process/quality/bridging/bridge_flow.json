@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "bridge_flow_0.95",
+      "input_3mf": "process/quality/bridging/bridge_flow/bridge_flow_0.95.3mf",
+      "expected_bridge_flow": 0.95
+    },
+    {
+      "project_name": "bridge_flow_1.0",
+      "input_3mf": "process/quality/bridging/bridge_flow/bridge_flow_1.0.3mf",
+      "expected_bridge_flow": 1.0
+    },
+    {
+      "project_name": "bridge_flow_1.1",
+      "input_3mf": "process/quality/bridging/bridge_flow/bridge_flow_1.1.3mf",
+      "expected_bridge_flow": 1.1
+    }
+  ]
+}

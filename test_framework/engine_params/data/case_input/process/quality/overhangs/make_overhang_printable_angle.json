@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "make_overhang_printable_angle_45deg",
+      "input_3mf": "process/quality/overhangs/make_overhang_printable_angle/make_overhang_printable_angle_45deg.3mf",
+      "expected_make_overhang_printable_angle": 45
+    },
+    {
+      "project_name": "make_overhang_printable_angle_55deg",
+      "input_3mf": "process/quality/overhangs/make_overhang_printable_angle/make_overhang_printable_angle_55deg.3mf",
+      "expected_make_overhang_printable_angle": 55
+    },
+    {
+      "project_name": "make_overhang_printable_angle_65deg",
+      "input_3mf": "process/quality/overhangs/make_overhang_printable_angle/make_overhang_printable_angle_65deg.3mf",
+      "expected_make_overhang_printable_angle": 65
+    }
+  ]
+}

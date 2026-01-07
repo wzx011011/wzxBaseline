@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "scarf_overhang_threshold_0mm",
+      "input_3mf": "process/quality/seam/scarf_overhang_threshold/scarf_overhang_threshold_0mm.3mf",
+      "expected_scarf_overhang_threshold": 0
+    },
+    {
+      "project_name": "scarf_overhang_threshold_10mm",
+      "input_3mf": "process/quality/seam/scarf_overhang_threshold/scarf_overhang_threshold_10mm.3mf",
+      "expected_scarf_overhang_threshold": 10
+    },
+    {
+      "project_name": "scarf_overhang_threshold_20mm",
+      "input_3mf": "process/quality/seam/scarf_overhang_threshold/scarf_overhang_threshold_20mm.3mf",
+      "expected_scarf_overhang_threshold": 20
+    }
+  ]
+}

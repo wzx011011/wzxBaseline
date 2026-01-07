@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "seam_slope_inner_walls_enabled",
+      "input_3mf": "process/quality/seam/seam_slope_inner_walls/seam_slope_inner_walls_enabled.3mf",
+      "expected_seam_slope_inner_walls": true
+    },
+    {
+      "project_name": "seam_slope_inner_walls_disabled",
+      "input_3mf": "process/quality/seam/seam_slope_inner_walls/seam_slope_inner_walls_disabled.3mf",
+      "expected_seam_slope_inner_walls": false
+    }
+  ]
+}

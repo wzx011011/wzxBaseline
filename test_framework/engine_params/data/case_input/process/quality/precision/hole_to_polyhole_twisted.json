@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "hole_to_polyhole_twisted_enabled",
+      "input_3mf": "process/quality/precision/hole_to_polyhole_twisted/hole_to_polyhole_twisted_enabled.3mf",
+      "expected_hole_to_polyhole_twisted": true
+    },
+    {
+      "project_name": "hole_to_polyhole_twisted_disabled",
+      "input_3mf": "process/quality/precision/hole_to_polyhole_twisted/hole_to_polyhole_twisted_disabled.3mf",
+      "expected_hole_to_polyhole_twisted": false
+    }
+  ]
+}

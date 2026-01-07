@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "counterbore_hole_bridging_none",
+      "input_3mf": "process/quality/bridging/counterbore_hole_bridging/counterbore_hole_bridging_none.3mf",
+      "expected_counterbore_hole_bridging": "none"
+    },
+    {
+      "project_name": "counterbore_hole_bridging_sparse_infill",
+      "input_3mf": "process/quality/bridging/counterbore_hole_bridging/counterbore_hole_bridging_sparse_infill.3mf",
+      "expected_counterbore_hole_bridging": "sparse_infill"
+    }
+  ]
+}

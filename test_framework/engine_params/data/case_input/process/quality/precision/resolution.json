@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "resolution_0.01mm",
+      "input_3mf": "process/quality/precision/resolution/resolution_0.01mm.3mf",
+      "expected_resolution": 0.01
+    },
+    {
+      "project_name": "resolution_0.012mm",
+      "input_3mf": "process/quality/precision/resolution/resolution_0.012mm.3mf",
+      "expected_resolution": 0.012
+    },
+    {
+      "project_name": "resolution_0.02mm",
+      "input_3mf": "process/quality/precision/resolution/resolution_0.02mm.3mf",
+      "expected_resolution": 0.02
+    }
+  ]
+}

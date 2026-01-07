@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "bridge_speed_20",
+      "input_3mf": "process/quality/bridging/bridge_speed/bridge_speed_20.3mf",
+      "expected_bridge_speed": 20
+    },
+    {
+      "project_name": "bridge_speed_25",
+      "input_3mf": "process/quality/bridging/bridge_speed/bridge_speed_25.3mf",
+      "expected_bridge_speed": 25
+    },
+    {
+      "project_name": "bridge_speed_30",
+      "input_3mf": "process/quality/bridging/bridge_speed/bridge_speed_30.3mf",
+      "expected_bridge_speed": 30
+    }
+  ]
+}

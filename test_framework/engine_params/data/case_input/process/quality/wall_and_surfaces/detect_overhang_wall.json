@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "detect_overhang_wall_enabled",
+      "input_3mf": "process/quality/wall_and_surfaces/detect_overhang_wall/detect_overhang_wall_enabled.3mf",
+      "expected_detect_overhang_wall": true
+    },
+    {
+      "project_name": "detect_overhang_wall_disabled",
+      "input_3mf": "process/quality/wall_and_surfaces/detect_overhang_wall/detect_overhang_wall_disabled.3mf",
+      "expected_detect_overhang_wall": false
+    }
+  ]
+}

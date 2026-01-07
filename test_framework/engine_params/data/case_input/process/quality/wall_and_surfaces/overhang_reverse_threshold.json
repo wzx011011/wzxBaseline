@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "overhang_reverse_threshold_40percent",
+      "input_3mf": "process/quality/wall_and_surfaces/overhang_reverse_threshold/overhang_reverse_threshold_40percent.3mf",
+      "expected_overhang_reverse_threshold": "40%"
+    },
+    {
+      "project_name": "overhang_reverse_threshold_50percent",
+      "input_3mf": "process/quality/wall_and_surfaces/overhang_reverse_threshold/overhang_reverse_threshold_50percent.3mf",
+      "expected_overhang_reverse_threshold": "50%"
+    },
+    {
+      "project_name": "overhang_reverse_threshold_60percent",
+      "input_3mf": "process/quality/wall_and_surfaces/overhang_reverse_threshold/overhang_reverse_threshold_60percent.3mf",
+      "expected_overhang_reverse_threshold": "60%"
+    }
+  ]
+}

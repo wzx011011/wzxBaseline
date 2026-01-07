@@ -563,3 +563,234 @@ def parse_bottom_solid_infill_flow_ratio(
     }
 
     return ok, ratio, details
+
+
+# ============= 新增 L1 校验函数 =============
+
+def _parse_bool_value(raw: str) -> bool:
+    """将配置中的布尔值字符串转为 bool"""
+    s = str(raw).strip().lower()
+    return s in ("1", "true", "yes", "enabled")
+
+
+def parse_min_width_top_surface(
+    gcode_path: Path | str,
+    expected_value: str,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[str], Dict[str, object]]:
+    """检测最小顶面宽度参数 (min_width_top_surface) - L1: CONFIG_BLOCK
+    
+    注意: 此参数存储为百分比字符串 (如 "75%")
+    """
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("min_width_top_surface")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 min_width_top_surface 参数"})
+    
+    actual_value = str(raw_value).strip()
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_only_one_wall_first_layer(
+    gcode_path: Path | str,
+    expected_value: bool,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """检测首层仅一层墙参数 (only_one_wall_first_layer) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("only_one_wall_first_layer")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 only_one_wall_first_layer 参数"})
+    
+    actual_value = _parse_bool_value(raw_value)
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_detect_thin_wall(
+    gcode_path: Path | str,
+    expected_value: bool,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """检测薄壁检测参数 (detect_thin_wall) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("detect_thin_wall")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 detect_thin_wall 参数"})
+    
+    actual_value = _parse_bool_value(raw_value)
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_detect_overhang_wall(
+    gcode_path: Path | str,
+    expected_value: bool,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """检测悬垂墙检测参数 (detect_overhang_wall) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("detect_overhang_wall")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 detect_overhang_wall 参数"})
+    
+    actual_value = _parse_bool_value(raw_value)
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_overhang_reverse(
+    gcode_path: Path | str,
+    expected_value: bool,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """检测悬垂反向参数 (overhang_reverse) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("overhang_reverse")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 overhang_reverse 参数"})
+    
+    actual_value = _parse_bool_value(raw_value)
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_overhang_reverse_internal_only(
+    gcode_path: Path | str,
+    expected_value: bool,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """检测悬垂反向仅内部参数 (overhang_reverse_internal_only) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("overhang_reverse_internal_only")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 overhang_reverse_internal_only 参数"})
+    
+    actual_value = _parse_bool_value(raw_value)
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_overhang_reverse_threshold(
+    gcode_path: Path | str,
+    expected_value: str,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[str], Dict[str, object]]:
+    """检测悬垂反向阈值参数 (overhang_reverse_threshold) - L1: CONFIG_BLOCK
+    
+    注意: 此参数存储为百分比字符串 (如 "50%")
+    """
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("overhang_reverse_threshold")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 overhang_reverse_threshold 参数"})
+    
+    actual_value = str(raw_value).strip()
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_wipe_on_loops(
+    gcode_path: Path | str,
+    expected_value: bool,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """检测环路擦拭参数 (wipe_on_loops) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("wipe_on_loops")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 wipe_on_loops 参数"})
+    
+    actual_value = _parse_bool_value(raw_value)
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_wipe_before_external_loop(
+    gcode_path: Path | str,
+    expected_value: bool,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """检测外环前擦拭参数 (wipe_before_external_loop) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("wipe_before_external_loop")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 wipe_before_external_loop 参数"})
+    
+    actual_value = _parse_bool_value(raw_value)
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+

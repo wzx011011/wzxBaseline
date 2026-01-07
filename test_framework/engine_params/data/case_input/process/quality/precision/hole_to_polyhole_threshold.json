@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "hole_to_polyhole_threshold_0.01mm",
+      "input_3mf": "process/quality/precision/hole_to_polyhole_threshold/hole_to_polyhole_threshold_0.01mm.3mf",
+      "expected_hole_to_polyhole_threshold": 0.01
+    },
+    {
+      "project_name": "hole_to_polyhole_threshold_0.02mm",
+      "input_3mf": "process/quality/precision/hole_to_polyhole_threshold/hole_to_polyhole_threshold_0.02mm.3mf",
+      "expected_hole_to_polyhole_threshold": 0.02
+    }
+  ]
+}

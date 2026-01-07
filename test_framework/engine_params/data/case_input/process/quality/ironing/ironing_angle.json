@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "ironing_angle_0deg",
+      "input_3mf": "process/quality/ironing/ironing_angle/ironing_angle_0deg.3mf",
+      "expected_ironing_angle": 0
+    },
+    {
+      "project_name": "ironing_angle_45deg",
+      "input_3mf": "process/quality/ironing/ironing_angle/ironing_angle_45deg.3mf",
+      "expected_ironing_angle": 45
+    },
+    {
+      "project_name": "ironing_angle_90deg",
+      "input_3mf": "process/quality/ironing/ironing_angle/ironing_angle_90deg.3mf",
+      "expected_ironing_angle": 90
+    }
+  ]
+}

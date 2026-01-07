@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "seam_slope_min_length_0mm",
+      "input_3mf": "process/quality/seam/seam_slope_min_length/seam_slope_min_length_0mm.3mf",
+      "expected_seam_slope_min_length": 0
+    },
+    {
+      "project_name": "seam_slope_min_length_10mm",
+      "input_3mf": "process/quality/seam/seam_slope_min_length/seam_slope_min_length_10mm.3mf",
+      "expected_seam_slope_min_length": 10
+    },
+    {
+      "project_name": "seam_slope_min_length_20mm",
+      "input_3mf": "process/quality/seam/seam_slope_min_length/seam_slope_min_length_20mm.3mf",
+      "expected_seam_slope_min_length": 20
+    }
+  ]
+}

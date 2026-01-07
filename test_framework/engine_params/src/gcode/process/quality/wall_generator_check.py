@@ -167,3 +167,196 @@ def parse_wall_generator(
     }
 
     return kind, details
+
+
+# ============= 新增 L1 校验函数 =============
+
+def parse_wall_transition_angle(
+    gcode_path: Path | str,
+    expected_value: float,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[float], Dict[str, object]]:
+    """检测墙壁过渡角度参数 (wall_transition_angle) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("wall_transition_angle")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 wall_transition_angle 参数"})
+    
+    try:
+        actual_value = float(raw_value)
+        ok = abs(actual_value - expected_value) <= tolerance
+    except (ValueError, TypeError) as e:
+        return (False, None, {"error": f"无法解析 wall_transition_angle 值: {raw_value}", "exception": str(e)})
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "tolerance": tolerance,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_wall_transition_filter_deviation(
+    gcode_path: Path | str,
+    expected_value: str,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[str], Dict[str, object]]:
+    """检测墙壁过渡滤波偏差参数 (wall_transition_filter_deviation) - L1: CONFIG_BLOCK
+    
+    注意: 此参数存储为百分比字符串 (如 "25%")
+    """
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("wall_transition_filter_deviation")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 wall_transition_filter_deviation 参数"})
+    
+    actual_value = str(raw_value).strip()
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_wall_transition_length(
+    gcode_path: Path | str,
+    expected_value: str,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[str], Dict[str, object]]:
+    """检测墙壁过渡长度参数 (wall_transition_length) - L1: CONFIG_BLOCK
+    
+    注意: 此参数存储为百分比字符串 (如 "100%")
+    """
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("wall_transition_length")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 wall_transition_length 参数"})
+    
+    actual_value = str(raw_value).strip()
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_wall_distribution_count(
+    gcode_path: Path | str,
+    expected_value: int,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[int], Dict[str, object]]:
+    """检测墙壁分布数量参数 (wall_distribution_count) - L1: CONFIG_BLOCK"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("wall_distribution_count")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 wall_distribution_count 参数"})
+    
+    try:
+        actual_value = int(raw_value)
+        ok = (actual_value == expected_value)
+    except (ValueError, TypeError) as e:
+        return (False, None, {"error": f"无法解析 wall_distribution_count 值: {raw_value}", "exception": str(e)})
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_min_feature_size(
+    gcode_path: Path | str,
+    expected_value: str,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[str], Dict[str, object]]:
+    """检测最小特征尺寸参数 (min_feature_size) - L1: CONFIG_BLOCK
+    
+    注意: 此参数存储为百分比字符串 (如 "25%")
+    """
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("min_feature_size")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 min_feature_size 参数"})
+    
+    actual_value = str(raw_value).strip()
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_min_bead_width(
+    gcode_path: Path | str,
+    expected_value: str,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[str], Dict[str, object]]:
+    """检测最小珠宽度参数 (min_bead_width) - L1: CONFIG_BLOCK
+    
+    注意: 此参数存储为百分比字符串 (如 "85%")
+    """
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("min_bead_width")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 min_bead_width 参数"})
+    
+    actual_value = str(raw_value).strip()
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_initial_layer_min_bead_width(
+    gcode_path: Path | str,
+    expected_value: str,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[str], Dict[str, object]]:
+    """检测首层最小珠宽度参数 (initial_layer_min_bead_width) - L1: CONFIG_BLOCK
+    
+    注意: 此参数存储为百分比字符串 (如 "85%")
+    """
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("initial_layer_min_bead_width")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 initial_layer_min_bead_width 参数"})
+    
+    actual_value = str(raw_value).strip()
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+

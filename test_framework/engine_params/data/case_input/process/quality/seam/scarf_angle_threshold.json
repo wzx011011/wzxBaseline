@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "scarf_angle_threshold_0deg",
+      "input_3mf": "process/quality/seam/scarf_angle_threshold/scarf_angle_threshold_0deg.3mf",
+      "expected_scarf_angle_threshold": 0
+    },
+    {
+      "project_name": "scarf_angle_threshold_30deg",
+      "input_3mf": "process/quality/seam/scarf_angle_threshold/scarf_angle_threshold_30deg.3mf",
+      "expected_scarf_angle_threshold": 30
+    },
+    {
+      "project_name": "scarf_angle_threshold_60deg",
+      "input_3mf": "process/quality/seam/scarf_angle_threshold/scarf_angle_threshold_60deg.3mf",
+      "expected_scarf_angle_threshold": 60
+    }
+  ]
+}

@@ -11,6 +11,15 @@ from engine_params.src.gcode.process.quality.seam_check import (
     parse_staggered_inner_seams,
     parse_seam_slope_type,
     parse_scarf_joint_flow_ratio,
+    parse_seam_slope_conditional,
+    parse_seam_slope_entire_loop,
+    parse_seam_slope_inner_walls,
+    parse_seam_slope_min_length,
+    parse_seam_slope_start_height,
+    parse_seam_slope_steps,
+    parse_scarf_angle_threshold,
+    parse_scarf_joint_speed,
+    parse_scarf_overhang_threshold,
 )
 
 
@@ -89,3 +98,102 @@ def test_wipe_speed(slice_and_export: Path, expected_has_wipe: bool) -> None:
     )
     assert wipe_cfg is not None, "未在 G-code 中检测到 wipe"
     # TODO: 完成 wipe 相关的具体断言逻辑
+
+
+# ================== seam_slope_conditional ==================
+@pytest.mark.engine_params
+def test_seam_slope_conditional(slice_and_export: Path, expected_seam_slope_conditional: bool):
+    """测试 seam_slope_conditional 参数"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_seam_slope_conditional(gcode_path, expected_seam_slope_conditional)
+    assert ok, f"seam_slope_conditional expected {expected_seam_slope_conditional}, actual {actual}, details: {details}"
+
+
+# ================== seam_slope_entire_loop ==================
+@pytest.mark.engine_params
+def test_seam_slope_entire_loop(slice_and_export: Path, expected_seam_slope_entire_loop: bool):
+    """测试 seam_slope_entire_loop 参数"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_seam_slope_entire_loop(gcode_path, expected_seam_slope_entire_loop)
+    assert ok, f"seam_slope_entire_loop expected {expected_seam_slope_entire_loop}, actual {actual}, details: {details}"
+
+
+# ================== seam_slope_inner_walls ==================
+@pytest.mark.engine_params
+def test_seam_slope_inner_walls(slice_and_export: Path, expected_seam_slope_inner_walls: bool):
+    """测试 seam_slope_inner_walls 参数"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_seam_slope_inner_walls(gcode_path, expected_seam_slope_inner_walls)
+    assert ok, f"seam_slope_inner_walls expected {expected_seam_slope_inner_walls}, actual {actual}, details: {details}"
+
+
+# ================== seam_slope_min_length ==================
+@pytest.mark.engine_params
+def test_seam_slope_min_length(slice_and_export: Path, expected_seam_slope_min_length: float):
+    """测试 seam_slope_min_length 参数"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_seam_slope_min_length(gcode_path, expected_seam_slope_min_length)
+    assert ok, f"seam_slope_min_length expected {expected_seam_slope_min_length}, actual {actual}, details: {details}"
+
+
+# ================== seam_slope_start_height ==================
+@pytest.mark.engine_params
+def test_seam_slope_start_height(slice_and_export: Path, expected_seam_slope_start_height: float):
+    """测试 seam_slope_start_height 参数"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_seam_slope_start_height(gcode_path, expected_seam_slope_start_height)
+    assert ok, f"seam_slope_start_height expected {expected_seam_slope_start_height}, actual {actual}, details: {details}"
+
+
+# ================== seam_slope_steps ==================
+@pytest.mark.engine_params
+def test_seam_slope_steps(slice_and_export: Path, expected_seam_slope_steps: float):
+    """测试 seam_slope_steps 参数"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_seam_slope_steps(gcode_path, expected_seam_slope_steps)
+    assert ok, f"seam_slope_steps expected {expected_seam_slope_steps}, actual {actual}, details: {details}"
+
+
+# ================== scarf_angle_threshold ==================
+@pytest.mark.engine_params
+def test_scarf_angle_threshold(slice_and_export: Path, expected_scarf_angle_threshold: float):
+    """测试 scarf_angle_threshold 参数"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_scarf_angle_threshold(gcode_path, expected_scarf_angle_threshold)
+    assert ok, f"scarf_angle_threshold expected {expected_scarf_angle_threshold}, actual {actual}, details: {details}"
+
+
+# ================== scarf_joint_speed ==================
+@pytest.mark.engine_params
+def test_scarf_joint_speed(slice_and_export: Path, expected_scarf_joint_speed: float):
+    """测试 scarf_joint_speed 参数"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_scarf_joint_speed(gcode_path, expected_scarf_joint_speed)
+    assert ok, f"scarf_joint_speed expected {expected_scarf_joint_speed}, actual {actual}, details: {details}"
+
+
+# ================== scarf_overhang_threshold ==================
+@pytest.mark.engine_params
+def test_scarf_overhang_threshold(slice_and_export: Path, expected_scarf_overhang_threshold: float):
+    """测试 scarf_overhang_threshold 参数"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_scarf_overhang_threshold(gcode_path, expected_scarf_overhang_threshold)
+    assert ok, f"scarf_overhang_threshold expected {expected_scarf_overhang_threshold}, actual {actual}, details: {details}"

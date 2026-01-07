@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "overhang_reverse_internal_only_enabled",
+      "input_3mf": "process/quality/wall_and_surfaces/overhang_reverse_internal_only/overhang_reverse_internal_only_enabled.3mf",
+      "expected_overhang_reverse_internal_only": true
+    },
+    {
+      "project_name": "overhang_reverse_internal_only_disabled",
+      "input_3mf": "process/quality/wall_and_surfaces/overhang_reverse_internal_only/overhang_reverse_internal_only_disabled.3mf",
+      "expected_overhang_reverse_internal_only": false
+    }
+  ]
+}

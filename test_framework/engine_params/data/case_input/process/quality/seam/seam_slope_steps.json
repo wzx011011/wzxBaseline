@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "project_name": "seam_slope_steps_0",
+      "input_3mf": "process/quality/seam/seam_slope_steps/seam_slope_steps_0.3mf",
+      "expected_seam_slope_steps": 0
+    },
+    {
+      "project_name": "seam_slope_steps_5",
+      "input_3mf": "process/quality/seam/seam_slope_steps/seam_slope_steps_5.3mf",
+      "expected_seam_slope_steps": 5
+    },
+    {
+      "project_name": "seam_slope_steps_10",
+      "input_3mf": "process/quality/seam/seam_slope_steps/seam_slope_steps_10.3mf",
+      "expected_seam_slope_steps": 10
+    }
+  ]
+}
