@@ -83,7 +83,7 @@ def main() -> int:
     if extracted_dir:
         maybe_exe = find_slicer_exe(extracted_dir)
         if maybe_exe:
-            env[f"SLICER_EXE_{platform_key}"] = str(maybe_exe)
+            env[f"CREALITY_PRINTER_PATH"] = str(maybe_exe)
             slicer_exe = maybe_exe
 
     test_command = args.test_command
