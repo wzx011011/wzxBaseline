@@ -71,6 +71,28 @@ def test_resources_path(pytestconfig):
     rootdir = pytestconfig.rootdir
     return os.path.join(rootdir, "_resources_")
 
+
+@pytest.fixture(scope="session", autouse=True)
+def cleanup_allure_results():
+    """
+    Clean up allure-results directories before test session starts.
+    """
+    import shutil
+    
+    # Define allure-results directories to clean
+    allure_dirs = [
+        Path(__file__).resolve().parent / "allure-results",
+        Path(__file__).resolve().parent.parent / "allure-results"
+    ]
+    
+    # Clean each directory if it exists
+    for dir_path in allure_dirs:
+        if dir_path.exists():
+            print(f"[INFO] Cleaning up allure-results directory: {dir_path}")
+            shutil.rmtree(dir_path)
+        else:
+            print(f"[INFO] allure-results directory not found: {dir_path}")
+
 ############ Creality Printer 操作 #########
 @pytest.fixture(scope="session")
 def open_creality_printer():
