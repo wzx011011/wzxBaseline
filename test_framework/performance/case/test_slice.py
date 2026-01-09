@@ -350,7 +350,7 @@ def baseline_data():
                         # Use filename as key for comparison
                         filename = Path(row["file"]).name
                         baseline_data[filename] = row
-                print(f"✓ Loaded {len(baseline_data)} baseline records with encoding: {encoding}")
+                print(f"OK Loaded {len(baseline_data)} baseline records with encoding: {encoding}")
                 break
             except UnicodeDecodeError:
                 print(f"Failed to read with encoding {encoding}, trying next...")
@@ -528,7 +528,7 @@ def test_feishu_slice(
         assert result["slice_ok"] == (baseline_row["slice_ok"] == "TRUE"), f"Slice status mismatch with baseline for {current_filename}"
         assert result["export_ok"] == (baseline_row["export_ok"] == "TRUE"), f"Export status mismatch with baseline for {current_filename}"
         
-        print(f"✓ All metrics match baseline for {current_filename}")
+        print(f"OK All metrics match baseline for {current_filename}")
     else:
     # Always update the baseline data with current result
         print(f"Updating baseline data for {current_filename}...")
@@ -586,7 +586,7 @@ def write_report_to_feishu_after_tests(baseline_data):
                 # Join and write the row
                 f.write(",".join(row) + "\n")
         
-        print(f"✓ Wrote {len(baseline_data)} records to {report_path}")
+        print(f"OK Wrote {len(baseline_data)} records to {report_path}")
         
         # Check if Feishu configuration is available to write to Feishu table
         from test_framework.performance.utils.feishu_downloader import load_feishu_config, FeishuDownloader
