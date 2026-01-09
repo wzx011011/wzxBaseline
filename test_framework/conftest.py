@@ -75,33 +75,24 @@ def test_resources_path(pytestconfig):
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_allure_results():
     """
-    Clean up allure-results directories before test session starts.
+    Ensure allure-results directories exist before test session starts.
+    Do not clean the directory as allure-pytest plugin will handle this with --alluredir option.
     """
     import os
-    import shutil
     
-    # Define allure-results directories to clean
+    # Define allure-results directories to create
     allure_dirs = [
         Path(__file__).resolve().parent / "allure-results",
         Path(__file__).resolve().parent.parent / "allure-results"
     ]
     
-    # Clean each directory if it exists
+    # Ensure each directory exists
     for dir_path in allure_dirs:
-        if dir_path.exists():
-            print(f"[INFO] Cleaning files in allure-results directory: {dir_path}")
-            # Create directory if it doesn't exist
+        if not dir_path.exists():
+            print(f"[INFO] Creating allure-results directory: {dir_path}")
             dir_path.mkdir(parents=True, exist_ok=True)
-            # Remove all files in the directory
-            for item in dir_path.iterdir():
-                if item.is_file():
-                    item.unlink()
-                elif item.is_dir():
-                    shutil.rmtree(item)
-        else:
-            print(f"[INFO] allure-results directory not found: {dir_path}")
-            # Create the directory if it doesn't exist
-            dir_path.mkdir(parents=True, exist_ok=True)
+        # else:
+        #     print(f"[INFO] allure-results directory already exists: {dir_path}")
 
 ############ Creality Printer 操作 #########
 @pytest.fixture(scope="session")
