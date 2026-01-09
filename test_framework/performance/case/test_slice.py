@@ -8,7 +8,6 @@ Results are appended to performance/data/feishu_slice_report.csv.
 """
 
 import csv
-import imp
 import json
 import os
 import time
@@ -237,8 +236,21 @@ def _require_path(key: str) -> str:
 
 
 @pytest.fixture(scope="session")
-def engine_manager_perf():
-    exe_path = _require_path("CREALITY_PRINTER_PATH")
+def engine_manager_perf(pytestconfig):
+    # Check if --slicer-exe is provided via command line
+    slicer_exe = pytestconfig.getoption("--slicer-exe")
+    
+    if slicer_exe:
+        # Use the provided path from command line
+        exe_path = slicer_exe
+        # Validate the path exists
+        if not Path(exe_path).exists():
+            pytest.skip(f"--slicer-exe points to non-existing path: {exe_path}")
+    else:
+        # Fall back to environment variable via _require_path
+        exe_path = _require_path("CREALITY_PRINTER_PATH")
+    
+    # Resolve to absolute path
     exe_path = str(Path(exe_path).resolve())
     host = os.getenv("SLICER_TEST_HOST", "127.0.0.1")
     port = int(os.getenv("SLICER_TEST_PORT", "12345"))

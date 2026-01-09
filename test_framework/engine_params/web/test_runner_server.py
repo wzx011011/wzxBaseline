@@ -29,6 +29,7 @@ else:
     print(f"[警告] 未找到 .env 文件: {env_path}", flush=True)
 
 class TestRunnerHandler(BaseHTTPRequestHandler):
+    __test__ = False  # 告诉pytest不要将这个类作为测试类收集
     # 用于存储测试进程和输出队列
     test_process = None
     output_queue = queue.Queue()

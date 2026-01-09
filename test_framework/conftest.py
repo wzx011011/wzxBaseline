@@ -77,6 +77,7 @@ def cleanup_allure_results():
     """
     Clean up allure-results directories before test session starts.
     """
+    import os
     import shutil
     
     # Define allure-results directories to clean
@@ -88,10 +89,19 @@ def cleanup_allure_results():
     # Clean each directory if it exists
     for dir_path in allure_dirs:
         if dir_path.exists():
-            print(f"[INFO] Cleaning up allure-results directory: {dir_path}")
-            shutil.rmtree(dir_path)
+            print(f"[INFO] Cleaning files in allure-results directory: {dir_path}")
+            # Create directory if it doesn't exist
+            dir_path.mkdir(parents=True, exist_ok=True)
+            # Remove all files in the directory
+            for item in dir_path.iterdir():
+                if item.is_file():
+                    item.unlink()
+                elif item.is_dir():
+                    shutil.rmtree(item)
         else:
             print(f"[INFO] allure-results directory not found: {dir_path}")
+            # Create the directory if it doesn't exist
+            dir_path.mkdir(parents=True, exist_ok=True)
 
 ############ Creality Printer 操作 #########
 @pytest.fixture(scope="session")
@@ -374,6 +384,30 @@ def discover_and_load_meta_files():
         baseline_data[module_name] = data
     return baseline_data
 
+def pytest_addoption(parser):
+    """
+    Add custom command-line options for pytest.
+    """
+    # --slicer-exe option is already defined in pytest_engine_params.py
+
+
 def pytest_configure(config):
     # update_baseline() # 更新基准数据
     config.baseline_data = discover_and_load_meta_files() # 加载baseline元数据
+
+
+@pytest.fixture
+def clean_gcode_param(request):
+    """
+    Provide --clean-gcode parameter only for tests marked with engine_params.
+    Returns True/False if the marker is present, otherwise None.
+    """
+    # Check if test has engine_params marker
+    has_engine_marker = any(mark.name == "engine_params" for mark in request.node.iter_markers())
+    
+    if has_engine_marker:
+        # Return the value of --clean-gcode option
+        return request.config.getoption("--clean-gcode")
+    
+    # Return None for tests without engine_params marker
+    return None
