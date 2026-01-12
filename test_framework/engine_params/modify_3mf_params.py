@@ -107,8 +107,9 @@ def modify_3mf_params(
             if not isinstance(diff_settings, list):
                 diff_settings = []
             
-            # 移除空字符串
-            diff_settings = [s for s in diff_settings if s.strip()]
+            # 不要移除空字符串，保持原有结构
+            # 空字符串在3MF中有特定意义，表示占位或分类
+
             
             # 6. 修改参数
             if verbose:
@@ -116,21 +117,34 @@ def modify_3mf_params(
             
             for key, value in params.items():
                 old_value = config_data.get(key, '<不存在>')
-                config_data[key] = value
+                
+                # 保持原类型：如果原值是数组，新值也应该是数组
+                if isinstance(old_value, list):
+                    config_data[key] = [value]
+                else:
+                    config_data[key] = value
                 
                 # 添加到 different_settings_to_system（如果还不在列表中）
                 if key not in diff_settings:
                     diff_settings.append(key)
                 
                 if verbose:
-                    print(f"   {key}: {old_value} → {value}")
+                    print(f"   {key}: {old_value} → {config_data[key]}")
             
             # 7. 更新 different_settings_to_system
-            # 确保列表有3个元素（切片器格式要求）
-            while len(diff_settings) < 3:
+            # 如果列表为空或参数不在列表中，需要添加
+            # 保持原有长度，如果原来有4个元素就保持4个
+            original_length = max(len(diff_settings), 3)  # 至少3个元素
+            
+            for key in params.keys():
+                if key not in diff_settings:
+                    diff_settings.append(key)
+            
+            # 补充空字符串到原有长度
+            while len(diff_settings) < original_length:
                 diff_settings.append("")
             
-            config_data['different_settings_to_system'] = diff_settings[:3]  # 只保留前3个
+            config_data['different_settings_to_system'] = diff_settings
             
             # 8. 写回配置文件（格式化 JSON）
             config_file.write_text(
