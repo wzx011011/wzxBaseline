@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "support_remove_small_overhang_disabled",
+      "project_name": "disabled",
       "input_3mf": "support_remove_small_overhang_disabled.3mf",
       "expected_value": 0
     },
     {
-      "project_name": "support_remove_small_overhang_enabled",
+      "project_name": "enabled",
       "input_3mf": "support_remove_small_overhang_enabled.3mf",
       "expected_value": 1
     }

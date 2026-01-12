@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "seam_slope_conditional_enabled",
-      "input_3mf": "process/quality/seam/seam_slope_conditional/seam_slope_conditional_enabled.3mf",
+      "project_name": "enabled",
+      "input_3mf": "seam_slope_conditional_enabled.3mf",
       "expected_seam_slope_conditional": true
     },
     {
-      "project_name": "seam_slope_conditional_disabled",
-      "input_3mf": "process/quality/seam/seam_slope_conditional/seam_slope_conditional_disabled.3mf",
+      "project_name": "disabled",
+      "input_3mf": "seam_slope_conditional_disabled.3mf",
       "expected_seam_slope_conditional": false
     }
   ]

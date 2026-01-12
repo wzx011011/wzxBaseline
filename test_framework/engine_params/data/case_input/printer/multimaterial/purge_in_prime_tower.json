@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "purge_in_prime_tower_false",
+      "project_name": "false",
       "input_3mf": "purge_in_prime_tower_false.3mf",
       "expected_value": false
     }

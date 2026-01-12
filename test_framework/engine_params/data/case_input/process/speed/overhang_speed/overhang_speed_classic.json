@@ -1,10 +1,10 @@
 {
-    "cases": [
-        {
-            "project_name": "overhang_speed_classic_true",
-            "input_3mf": "overhang_speed_classic_true.3mf",
-            "expected_overhang_speed_classic": true,
-            "tolerance": 1e-6
-        }
-    ]
+  "cases": [
+    {
+      "project_name": "true",
+      "input_3mf": "overhang_speed_classic_true.3mf",
+      "expected_overhang_speed_classic": true,
+      "tolerance": 1e-06
+    }
+  ]
 }

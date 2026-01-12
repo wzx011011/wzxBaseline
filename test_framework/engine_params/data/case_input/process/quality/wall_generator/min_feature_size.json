@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "min_feature_size_20percent",
-      "input_3mf": "process/quality/wall_generator/min_feature_size/min_feature_size_20percent.3mf",
+      "project_name": "20percent",
+      "input_3mf": "min_feature_size_20percent.3mf",
       "expected_min_feature_size": "20%"
     },
     {
-      "project_name": "min_feature_size_25percent",
-      "input_3mf": "process/quality/wall_generator/min_feature_size/min_feature_size_25percent.3mf",
+      "project_name": "25percent",
+      "input_3mf": "min_feature_size_25percent.3mf",
       "expected_min_feature_size": "25%"
     },
     {
-      "project_name": "min_feature_size_30percent",
-      "input_3mf": "process/quality/wall_generator/min_feature_size/min_feature_size_30percent.3mf",
+      "project_name": "30percent",
+      "input_3mf": "min_feature_size_30percent.3mf",
       "expected_min_feature_size": "30%"
     }
   ]

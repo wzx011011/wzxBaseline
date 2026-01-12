@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "thick_bridges_enabled",
-      "input_3mf": "process/quality/bridging/thick_bridges/thick_bridges_enabled.3mf",
+      "project_name": "enabled",
+      "input_3mf": "thick_bridges_enabled.3mf",
       "expected_thick_bridges": true
     },
     {
-      "project_name": "thick_bridges_disabled",
-      "input_3mf": "process/quality/bridging/thick_bridges/thick_bridges_disabled.3mf",
+      "project_name": "disabled",
+      "input_3mf": "thick_bridges_disabled.3mf",
       "expected_thick_bridges": false
     }
   ]

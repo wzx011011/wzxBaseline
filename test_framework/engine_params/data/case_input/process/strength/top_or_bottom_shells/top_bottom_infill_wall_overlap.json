@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "top_bottom_infill_wall_overlap_100",
+      "project_name": "100",
       "input_3mf": "top_bottom_infill_wall_overlap_100percentage.3mf",
       "baseline_gcode": "top_bottom_infill_wall_overlap_100percentage.gcode"
     }

@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "high_current_on_filament_swap_false",
+      "project_name": "false",
       "input_3mf": "high_current_on_filament_swap_false.3mf",
       "expected_value": false
     }

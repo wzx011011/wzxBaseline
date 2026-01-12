@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "hole_to_polyhole_enabled",
-      "input_3mf": "process/quality/precision/hole_to_polyhole/hole_to_polyhole_enabled.3mf",
+      "project_name": "enabled",
+      "input_3mf": "hole_to_polyhole_enabled.3mf",
       "expected_hole_to_polyhole": true
     },
     {
-      "project_name": "hole_to_polyhole_disabled",
-      "input_3mf": "process/quality/precision/hole_to_polyhole/hole_to_polyhole_disabled.3mf",
+      "project_name": "disabled",
+      "input_3mf": "hole_to_polyhole_disabled.3mf",
       "expected_hole_to_polyhole": false
     }
   ]

@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "filament_diameter_1.75",
+      "project_name": "1.75",
       "input_3mf": "filament_diameter_1.75.3mf",
       "expected_value": "1.75"
     },
     {
-      "project_name": "filament_diameter_2.85",
+      "project_name": "2.85",
       "input_3mf": "filament_diameter_2.85.3mf",
       "expected_value": "2.85"
     }

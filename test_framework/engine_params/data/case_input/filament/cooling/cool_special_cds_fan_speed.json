@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "cool_special_cds_fan_speed_0",
+      "project_name": "0",
       "input_3mf": "cool_special_cds_fan_speed_0.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "cool_special_cds_fan_speed_50",
+      "project_name": "50",
       "input_3mf": "cool_special_cds_fan_speed_50.3mf",
       "expected_value": "50"
     },
     {
-      "project_name": "cool_special_cds_fan_speed_100",
+      "project_name": "100",
       "input_3mf": "cool_special_cds_fan_speed_100.3mf",
       "expected_value": "100"
     }

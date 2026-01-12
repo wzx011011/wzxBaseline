@@ -1,16 +1,16 @@
 {
-    "cases": [
-        {
-            "project_name": "detect_thin_wall_enabled",
-            "input_3mf": "detect_thin_wall_enabled.3mf",
-            "expected_detect_thin_wall": true,
-            "tolerance": 0.01
-        },
-        {
-            "project_name": "detect_thin_wall_disabled",
-            "input_3mf": "detect_thin_wall_disabled.3mf",
-            "expected_detect_thin_wall": false,
-            "tolerance": 0.01
-        }
-    ]
+  "cases": [
+    {
+      "project_name": "enabled",
+      "input_3mf": "detect_thin_wall_enabled.3mf",
+      "expected_detect_thin_wall": true,
+      "tolerance": 0.01
+    },
+    {
+      "project_name": "disabled",
+      "input_3mf": "detect_thin_wall_disabled.3mf",
+      "expected_detect_thin_wall": false,
+      "tolerance": 0.01
+    }
+  ]
 }

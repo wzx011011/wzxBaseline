@@ -1,32 +1,32 @@
 {
   "cases": [
     {
-      "project_name": "support_interface_pattern_auto",
+      "project_name": "auto",
       "input_3mf": "support_interface_pattern_auto.3mf",
       "expected_value": "auto"
     },
     {
-      "project_name": "support_interface_pattern_rectilinear",
+      "project_name": "rectilinear",
       "input_3mf": "support_interface_pattern_rectilinear.3mf",
       "expected_value": "rectilinear"
     },
     {
-      "project_name": "support_interface_pattern_concentric",
+      "project_name": "concentric",
       "input_3mf": "support_interface_pattern_concentric.3mf",
       "expected_value": "concentric"
     },
     {
-      "project_name": "support_interface_pattern_rectilinear_interlaced",
+      "project_name": "rectilinear_interlaced",
       "input_3mf": "support_interface_pattern_rectilinear_interlaced.3mf",
       "expected_value": "rectilinear_interlaced"
     },
     {
-      "project_name": "support_interface_pattern_grid",
+      "project_name": "grid",
       "input_3mf": "support_interface_pattern_grid.3mf",
       "expected_value": "grid"
     },
     {
-      "project_name": "support_interface_pattern_monotonicline",
+      "project_name": "monotonicline",
       "input_3mf": "support_interface_pattern_monotonicline.3mf",
       "expected_value": "monotonicline"
     }

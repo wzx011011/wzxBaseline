@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "ironing_flow_10percent",
-      "input_3mf": "process/quality/ironing/ironing_flow/ironing_flow_10percent.3mf",
+      "project_name": "10percent",
+      "input_3mf": "ironing_flow_10percent.3mf",
       "expected_ironing_flow": "10%"
     },
     {
-      "project_name": "ironing_flow_15percent",
-      "input_3mf": "process/quality/ironing/ironing_flow/ironing_flow_15percent.3mf",
+      "project_name": "15percent",
+      "input_3mf": "ironing_flow_15percent.3mf",
       "expected_ironing_flow": "15%"
     },
     {
-      "project_name": "ironing_flow_20percent",
-      "input_3mf": "process/quality/ironing/ironing_flow/ironing_flow_20percent.3mf",
+      "project_name": "20percent",
+      "input_3mf": "ironing_flow_20percent.3mf",
       "expected_ironing_flow": "20%"
     }
   ]

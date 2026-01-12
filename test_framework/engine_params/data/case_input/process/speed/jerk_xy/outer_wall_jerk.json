@@ -1,10 +1,10 @@
 {
-    "cases": [
-        {
-            "project_name": "outer_wall_jerk_10",
-            "expected_outer_wall_jerk": 10.0,
-            "input_3mf": "outer_wall_jerk_10.3mf",
-            "tolerance": 1e-6
-        }
-    ]
+  "cases": [
+    {
+      "project_name": "10",
+      "expected_outer_wall_jerk": 10.0,
+      "input_3mf": "outer_wall_jerk_10.3mf",
+      "tolerance": 1e-06
+    }
+  ]
 }

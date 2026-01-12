@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "filament_notes_empty",
+      "project_name": "empty",
       "input_3mf": "filament_notes_empty.3mf",
       "expected_value": ""
     }

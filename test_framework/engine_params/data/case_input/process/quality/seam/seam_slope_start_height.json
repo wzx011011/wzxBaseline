@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "seam_slope_start_height_0mm",
-      "input_3mf": "process/quality/seam/seam_slope_start_height/seam_slope_start_height_0mm.3mf",
+      "project_name": "0mm",
+      "input_3mf": "seam_slope_start_height_0mm.3mf",
       "expected_seam_slope_start_height": 0
     },
     {
-      "project_name": "seam_slope_start_height_0.5mm",
-      "input_3mf": "process/quality/seam/seam_slope_start_height/seam_slope_start_height_0.5mm.3mf",
+      "project_name": "0.5mm",
+      "input_3mf": "seam_slope_start_height_0.5mm.3mf",
       "expected_seam_slope_start_height": 0.5
     },
     {
-      "project_name": "seam_slope_start_height_1.0mm",
-      "input_3mf": "process/quality/seam/seam_slope_start_height/seam_slope_start_height_1.0mm.3mf",
+      "project_name": "1.0mm",
+      "input_3mf": "seam_slope_start_height_1.0mm.3mf",
       "expected_seam_slope_start_height": 1.0
     }
   ]

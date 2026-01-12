@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "single_extruder_multi_material_false",
+      "project_name": "false",
       "input_3mf": "single_extruder_multi_material_false.3mf",
       "expected_value": true
     }

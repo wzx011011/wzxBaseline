@@ -1,8 +1,8 @@
 {
   "cases": [
     {
-      "project_name": "internal_solid_infill_line_width_0.4mm",
-      "input_3mf": "process/quality/line_width/internal_solid_infill_line_width/internal_solid_infill_line_width_0.4mm.3mf",
+      "project_name": "0.4mm",
+      "input_3mf": "internal_solid_infill_line_width_0.4mm.3mf",
       "expected_internal_solid_infill_line_width": 0.4,
       "extrusion_types": [
         "ExtrusionType.INTERNAL_SOLID_INFILL"
@@ -11,8 +11,8 @@
       "tolerance": "0.001"
     },
     {
-      "project_name": "internal_solid_infill_line_width_0.45mm",
-      "input_3mf": "process/quality/line_width/internal_solid_infill_line_width/internal_solid_infill_line_width_0.45mm.3mf",
+      "project_name": "0.45mm",
+      "input_3mf": "internal_solid_infill_line_width_0.45mm.3mf",
       "expected_internal_solid_infill_line_width": 0.45,
       "extrusion_types": [
         "ExtrusionType.INTERNAL_SOLID_INFILL"
@@ -21,8 +21,8 @@
       "tolerance": "0.001"
     },
     {
-      "project_name": "internal_solid_infill_line_width_0.5mm",
-      "input_3mf": "process/quality/line_width/internal_solid_infill_line_width/internal_solid_infill_line_width_0.5mm.3mf",
+      "project_name": "0.5mm",
+      "input_3mf": "internal_solid_infill_line_width_0.5mm.3mf",
       "expected_internal_solid_infill_line_width": 0.5,
       "extrusion_types": [
         "ExtrusionType.INTERNAL_SOLID_INFILL"

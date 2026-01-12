@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "xy_contour_compensation_shrink",
+      "project_name": "shrink",
       "input_3mf": "xy_contour_compensation_001.3mf",
       "baseline_gcode": "baselline_xy_compensation.gcode",
       "expected_offset": 2.0,

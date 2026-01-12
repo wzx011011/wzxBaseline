@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "min_skirt_length_100mm",
+      "project_name": "100mm",
       "input_3mf": "min_skirt_length_100mm.3mf",
       "expected_value": 100.0
     },
     {
-      "project_name": "min_skirt_length_250mm",
+      "project_name": "250mm",
       "input_3mf": "min_skirt_length_250mm.3mf",
       "expected_value": 250.0
     },
     {
-      "project_name": "min_skirt_length_500mm",
+      "project_name": "500mm",
       "input_3mf": "min_skirt_length_500mm.3mf",
       "expected_value": 500.0
     }

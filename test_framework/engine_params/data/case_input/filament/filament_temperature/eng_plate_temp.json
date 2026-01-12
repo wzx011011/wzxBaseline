@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "eng_plate_temp_50",
+      "project_name": "50",
       "input_3mf": "eng_plate_temp_50.3mf",
       "expected_value": "50"
     },
     {
-      "project_name": "eng_plate_temp_60",
+      "project_name": "60",
       "input_3mf": "eng_plate_temp_60.3mf",
       "expected_value": "60"
     }

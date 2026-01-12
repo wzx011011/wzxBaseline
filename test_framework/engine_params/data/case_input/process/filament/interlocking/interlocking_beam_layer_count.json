@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "interlocking_beam_layer_count_1",
+      "project_name": "1",
       "input_3mf": "interlocking_beam_layer_count_1.3mf",
       "expected_value": 1
     },
     {
-      "project_name": "interlocking_beam_layer_count_2",
+      "project_name": "2",
       "input_3mf": "interlocking_beam_layer_count_2.3mf",
       "expected_value": 2
     },
     {
-      "project_name": "interlocking_beam_layer_count_3",
+      "project_name": "3",
       "input_3mf": "interlocking_beam_layer_count_3.3mf",
       "expected_value": 3
     }

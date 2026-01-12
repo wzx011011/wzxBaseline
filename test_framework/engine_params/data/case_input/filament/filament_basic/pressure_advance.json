@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "pressure_advance_0.0",
+      "project_name": "0.0",
       "input_3mf": "pressure_advance_0.0.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "pressure_advance_0.02",
+      "project_name": "0.02",
       "input_3mf": "pressure_advance_0.02.3mf",
       "expected_value": "0.02"
     },
     {
-      "project_name": "pressure_advance_0.05",
+      "project_name": "0.05",
       "input_3mf": "pressure_advance_0.05.3mf",
       "expected_value": "0.05"
     }

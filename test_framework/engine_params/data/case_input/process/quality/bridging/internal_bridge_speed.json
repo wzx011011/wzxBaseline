@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "internal_bridge_speed_100percent",
-      "input_3mf": "process/quality/bridging/internal_bridge_speed/internal_bridge_speed_100percent.3mf",
+      "project_name": "100percent",
+      "input_3mf": "internal_bridge_speed_100percent.3mf",
       "expected_internal_bridge_speed": "100%"
     },
     {
-      "project_name": "internal_bridge_speed_150percent",
-      "input_3mf": "process/quality/bridging/internal_bridge_speed/internal_bridge_speed_150percent.3mf",
+      "project_name": "150percent",
+      "input_3mf": "internal_bridge_speed_150percent.3mf",
       "expected_internal_bridge_speed": "150%"
     }
   ]

@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "filament_vendor_Creality",
+      "project_name": "Creality",
       "input_3mf": "filament_vendor_Creality.3mf",
       "expected_value": "Creality"
     },
     {
-      "project_name": "filament_vendor_Generic",
+      "project_name": "Generic",
       "input_3mf": "filament_vendor_Generic.3mf",
       "expected_value": "Generic"
     }

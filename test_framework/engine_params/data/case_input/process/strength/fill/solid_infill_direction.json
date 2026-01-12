@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "solid_infill_direction_0_degree",
+      "project_name": "0_degree",
       "input_3mf": "solid_infill_direction_0degree.3mf",
       "expected_angle": 0.0
     }

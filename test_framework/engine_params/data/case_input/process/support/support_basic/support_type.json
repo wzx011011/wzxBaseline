@@ -1,22 +1,22 @@
 {
   "cases": [
     {
-      "project_name": "support_type_normal_auto",
+      "project_name": "normal_auto",
       "input_3mf": "support_type_normal_auto.3mf",
       "expected_value": "normal(auto)"
     },
     {
-      "project_name": "support_type_tree_auto",
+      "project_name": "tree_auto",
       "input_3mf": "support_type_tree_auto.3mf",
       "expected_value": "tree(auto)"
     },
     {
-      "project_name": "support_type_normal_manual",
+      "project_name": "normal_manual",
       "input_3mf": "support_type_normal_manual.3mf",
       "expected_value": "normal(manual)"
     },
     {
-      "project_name": "support_type_tree_manual",
+      "project_name": "tree_manual",
       "input_3mf": "support_type_tree_manual.3mf",
       "expected_value": "tree(manual)"
     }

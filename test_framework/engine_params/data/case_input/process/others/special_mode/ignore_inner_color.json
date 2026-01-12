@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "ignore_inner_color_disabled",
+      "project_name": "disabled",
       "input_3mf": "ignore_inner_color_disabled.3mf",
       "expected_value": false
     },
     {
-      "project_name": "ignore_inner_color_enabled",
+      "project_name": "enabled",
       "input_3mf": "ignore_inner_color_enabled.3mf",
       "expected_value": true
     }

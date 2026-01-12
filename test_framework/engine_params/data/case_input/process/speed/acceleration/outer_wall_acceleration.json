@@ -1,10 +1,10 @@
 {
-    "cases": [
-        {
-            "project_name": "outer_wall_acceleration_8888",
-            "expected_outer_wall_acceleration": 8888.0,
-            "input_3mf": "outer_wall_acceleration_8888.3mf",
-            "tolerance": 1e-6
-        }
-    ]
+  "cases": [
+    {
+      "project_name": "8888",
+      "expected_outer_wall_acceleration": 8888.0,
+      "input_3mf": "outer_wall_acceleration_8888.3mf",
+      "tolerance": 1e-06
+    }
+  ]
 }

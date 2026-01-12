@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "min_bead_width_80percent",
-      "input_3mf": "process/quality/wall_generator/min_bead_width/min_bead_width_80percent.3mf",
+      "project_name": "80percent",
+      "input_3mf": "min_bead_width_80percent.3mf",
       "expected_min_bead_width": "80%"
     },
     {
-      "project_name": "min_bead_width_85percent",
-      "input_3mf": "process/quality/wall_generator/min_bead_width/min_bead_width_85percent.3mf",
+      "project_name": "85percent",
+      "input_3mf": "min_bead_width_85percent.3mf",
       "expected_min_bead_width": "85%"
     },
     {
-      "project_name": "min_bead_width_90percent",
-      "input_3mf": "process/quality/wall_generator/min_bead_width/min_bead_width_90percent.3mf",
+      "project_name": "90percent",
+      "input_3mf": "min_bead_width_90percent.3mf",
       "expected_min_bead_width": "90%"
     }
   ]

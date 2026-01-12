@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "retraction_minimum_travel_2",
+      "project_name": "2",
       "input_3mf": "retraction_minimum_travel_2.3mf",
       "expected_value": 2
     },
     {
-      "project_name": "retraction_minimum_travel_5",
+      "project_name": "5",
       "input_3mf": "retraction_minimum_travel_5.3mf",
       "expected_value": 5
     }

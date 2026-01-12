@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "line_width_0.4mm",
-      "input_3mf": "process/quality/line_width/line_width/line_width_0.4mm.3mf",
+      "project_name": "0.4mm",
+      "input_3mf": "line_width_0.4mm.3mf",
       "expected_line_width": 0.4
     },
     {
-      "project_name": "line_width_0.5mm",
-      "input_3mf": "process/quality/line_width/line_width/line_width_0.5mm.3mf",
+      "project_name": "0.5mm",
+      "input_3mf": "line_width_0.5mm.3mf",
       "expected_line_width": 0.5
     },
     {
-      "project_name": "line_width_0.6mm",
-      "input_3mf": "process/quality/line_width/line_width/line_width_0.6mm.3mf",
+      "project_name": "0.6mm",
+      "input_3mf": "line_width_0.6mm.3mf",
       "expected_line_width": 0.6
     }
   ]

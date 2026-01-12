@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "wall_generator_arachne",
+      "project_name": "arachne",
       "input_3mf": "wall_generator_001.3mf",
       "expected_generator": "arachne",
       "consistency_threshold": 0.9
     },
     {
-      "project_name": "wall_generator_classic",
+      "project_name": "classic",
       "input_3mf": "wall_generator_002.3mf",
       "expected_generator": "classic",
       "consistency_threshold": 0.9

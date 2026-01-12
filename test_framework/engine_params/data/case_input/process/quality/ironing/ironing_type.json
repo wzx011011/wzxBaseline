@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "ironing_type_no_ironing",
-      "input_3mf": "process/quality/ironing/ironing_type/ironing_type_no_ironing.3mf",
+      "project_name": "no_ironing",
+      "input_3mf": "ironing_type_no_ironing.3mf",
       "expected_ironing_type": "no_ironing"
     },
     {
-      "project_name": "ironing_type_top_surface",
-      "input_3mf": "process/quality/ironing/ironing_type/ironing_type_top_surface.3mf",
+      "project_name": "top_surface",
+      "input_3mf": "ironing_type_top_surface.3mf",
       "expected_ironing_type": "top_surface"
     },
     {
-      "project_name": "ironing_type_all_solid",
-      "input_3mf": "process/quality/ironing/ironing_type/ironing_type_all_solid.3mf",
+      "project_name": "all_solid",
+      "input_3mf": "ironing_type_all_solid.3mf",
       "expected_ironing_type": "all_solid"
     }
   ]

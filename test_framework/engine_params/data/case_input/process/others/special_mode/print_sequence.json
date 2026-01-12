@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "print_sequence_by_layer",
+      "project_name": "by_layer",
       "input_3mf": "print_sequence_by_layer.3mf",
       "expected_value": "by layer"
     },
     {
-      "project_name": "print_sequence_by_object",
+      "project_name": "by_object",
       "input_3mf": "print_sequence_by_object.3mf",
       "expected_value": "by object"
     }

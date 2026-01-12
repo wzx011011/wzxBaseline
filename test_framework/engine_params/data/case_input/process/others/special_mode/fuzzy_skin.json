@@ -1,22 +1,22 @@
 {
   "cases": [
     {
-      "project_name": "fuzzy_skin_none",
+      "project_name": "none",
       "input_3mf": "fuzzy_skin_none.3mf",
       "expected_value": "none"
     },
     {
-      "project_name": "fuzzy_skin_external",
+      "project_name": "external",
       "input_3mf": "fuzzy_skin_external.3mf",
       "expected_value": "external"
     },
     {
-      "project_name": "fuzzy_skin_all",
+      "project_name": "all",
       "input_3mf": "fuzzy_skin_all.3mf",
       "expected_value": "allwalls"
     },
     {
-      "project_name": "fuzzy_skin_all_walls",
+      "project_name": "all_walls",
       "input_3mf": "fuzzy_skin_all_walls.3mf",
       "expected_value": "all"
     }

@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "filament_stamping_loading_speed_20",
+      "project_name": "20",
       "input_3mf": "filament_stamping_loading_speed_20.3mf",
       "expected_value": "20"
     },
     {
-      "project_name": "filament_stamping_loading_speed_40",
+      "project_name": "40",
       "input_3mf": "filament_stamping_loading_speed_40.3mf",
       "expected_value": "40"
     },
     {
-      "project_name": "filament_stamping_loading_speed_60",
+      "project_name": "60",
       "input_3mf": "filament_stamping_loading_speed_60.3mf",
       "expected_value": "60"
     }

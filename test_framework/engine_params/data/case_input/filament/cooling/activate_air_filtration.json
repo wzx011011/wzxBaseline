@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "activate_air_filtration_false",
+      "project_name": "false",
       "input_3mf": "activate_air_filtration_false.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "activate_air_filtration_true",
+      "project_name": "true",
       "input_3mf": "activate_air_filtration_true.3mf",
       "expected_value": "1"
     }

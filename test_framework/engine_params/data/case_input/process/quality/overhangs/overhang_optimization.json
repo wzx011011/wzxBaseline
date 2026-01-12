@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "overhang_optimization_enabled",
-      "input_3mf": "process/quality/overhangs/overhang_optimization/overhang_optimization_enabled.3mf",
+      "project_name": "enabled",
+      "input_3mf": "overhang_optimization_enabled.3mf",
       "expected_overhang_optimization": true
     },
     {
-      "project_name": "overhang_optimization_disabled",
-      "input_3mf": "process/quality/overhangs/overhang_optimization/overhang_optimization_disabled.3mf",
+      "project_name": "disabled",
+      "input_3mf": "overhang_optimization_disabled.3mf",
       "expected_overhang_optimization": false
     }
   ]

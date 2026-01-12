@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "printing_by_object_gcode_empty",
+      "project_name": "empty",
       "input_3mf": "printing_by_object_gcode_empty.3mf",
       "expected_value": ""
     }

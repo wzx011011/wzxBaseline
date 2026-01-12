@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "activate_chamber_temp_control_false",
+      "project_name": "false",
       "input_3mf": "activate_chamber_temp_control_false.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "activate_chamber_temp_control_true",
+      "project_name": "true",
       "input_3mf": "activate_chamber_temp_control_true.3mf",
       "expected_value": "1"
     }

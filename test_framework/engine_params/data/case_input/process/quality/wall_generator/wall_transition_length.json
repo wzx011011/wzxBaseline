@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "wall_transition_length_80percent",
-      "input_3mf": "process/quality/wall_generator/wall_transition_length/wall_transition_length_80percent.3mf",
+      "project_name": "80percent",
+      "input_3mf": "wall_transition_length_80percent.3mf",
       "expected_wall_transition_length": "80%"
     },
     {
-      "project_name": "wall_transition_length_100percent",
-      "input_3mf": "process/quality/wall_generator/wall_transition_length/wall_transition_length_100percent.3mf",
+      "project_name": "100percent",
+      "input_3mf": "wall_transition_length_100percent.3mf",
       "expected_wall_transition_length": "100%"
     },
     {
-      "project_name": "wall_transition_length_120percent",
-      "input_3mf": "process/quality/wall_generator/wall_transition_length/wall_transition_length_120percent.3mf",
+      "project_name": "120percent",
+      "input_3mf": "wall_transition_length_120percent.3mf",
       "expected_wall_transition_length": "120%"
     }
   ]

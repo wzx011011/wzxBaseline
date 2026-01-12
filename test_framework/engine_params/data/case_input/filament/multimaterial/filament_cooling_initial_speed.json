@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "filament_cooling_initial_speed_5",
+      "project_name": "5",
       "input_3mf": "filament_cooling_initial_speed_5.3mf",
       "expected_value": "5"
     },
     {
-      "project_name": "filament_cooling_initial_speed_8",
+      "project_name": "8",
       "input_3mf": "filament_cooling_initial_speed_8.3mf",
       "expected_value": "8"
     },
     {
-      "project_name": "filament_cooling_initial_speed_12",
+      "project_name": "12",
       "input_3mf": "filament_cooling_initial_speed_12.3mf",
       "expected_value": "12"
     }

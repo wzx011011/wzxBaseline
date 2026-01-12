@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "material_flow_temp_graph_empty",
+      "project_name": "empty",
       "input_3mf": "material_flow_temp_graph_empty.3mf",
       "expected_value": ""
     }

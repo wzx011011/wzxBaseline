@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "scarf_joint_speed_0",
-      "input_3mf": "process/quality/seam/scarf_joint_speed/scarf_joint_speed_0.3mf",
+      "project_name": "0",
+      "input_3mf": "scarf_joint_speed_0.3mf",
       "expected_scarf_joint_speed": 0
     },
     {
-      "project_name": "scarf_joint_speed_30",
-      "input_3mf": "process/quality/seam/scarf_joint_speed/scarf_joint_speed_30.3mf",
+      "project_name": "30",
+      "input_3mf": "scarf_joint_speed_30.3mf",
       "expected_scarf_joint_speed": 30
     },
     {
-      "project_name": "scarf_joint_speed_50",
-      "input_3mf": "process/quality/seam/scarf_joint_speed/scarf_joint_speed_50.3mf",
+      "project_name": "50",
+      "input_3mf": "scarf_joint_speed_50.3mf",
       "expected_scarf_joint_speed": 50
     }
   ]

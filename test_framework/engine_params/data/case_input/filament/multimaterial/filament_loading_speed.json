@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "filament_loading_speed_20",
+      "project_name": "20",
       "input_3mf": "filament_loading_speed_20.3mf",
       "expected_value": "20"
     },
     {
-      "project_name": "filament_loading_speed_30",
+      "project_name": "30",
       "input_3mf": "filament_loading_speed_30.3mf",
       "expected_value": "30"
     },
     {
-      "project_name": "filament_loading_speed_50",
+      "project_name": "50",
       "input_3mf": "filament_loading_speed_50.3mf",
       "expected_value": "50"
     }

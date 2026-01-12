@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "pellet_modded_printer_false",
+      "project_name": "false",
       "input_3mf": "pellet_modded_printer_false.3mf",
       "expected_value": false
     },
     {
-      "project_name": "pellet_modded_printer_true",
+      "project_name": "true",
       "input_3mf": "pellet_modded_printer_true.3mf",
       "expected_value": true
     }

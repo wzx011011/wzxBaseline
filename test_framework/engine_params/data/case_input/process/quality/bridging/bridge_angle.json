@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "bridge_angle_0deg",
-      "input_3mf": "process/quality/bridging/bridge_angle/bridge_angle_0deg.3mf",
+      "project_name": "0deg",
+      "input_3mf": "bridge_angle_0deg.3mf",
       "expected_bridge_angle": 0
     },
     {
-      "project_name": "bridge_angle_45deg",
-      "input_3mf": "process/quality/bridging/bridge_angle/bridge_angle_45deg.3mf",
+      "project_name": "45deg",
+      "input_3mf": "bridge_angle_45deg.3mf",
       "expected_bridge_angle": 45
     },
     {
-      "project_name": "bridge_angle_90deg",
-      "input_3mf": "process/quality/bridging/bridge_angle/bridge_angle_90deg.3mf",
+      "project_name": "90deg",
+      "input_3mf": "bridge_angle_90deg.3mf",
       "expected_bridge_angle": 90
     }
   ]

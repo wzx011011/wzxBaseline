@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "brim_object_gap_0mm",
+      "project_name": "0mm",
       "input_3mf": "brim_object_gap_0mm.3mf",
       "expected_value": 0.0
     },
     {
-      "project_name": "brim_object_gap_0.1mm",
+      "project_name": "0.1mm",
       "input_3mf": "brim_object_gap_0.1mm.3mf",
       "expected_value": 0.1
     },
     {
-      "project_name": "brim_object_gap_0.5mm",
+      "project_name": "0.5mm",
       "input_3mf": "brim_object_gap_0.5mm.3mf",
       "expected_value": 0.5
     }

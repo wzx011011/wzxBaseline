@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "print_order_default",
+      "project_name": "default",
       "input_3mf": "print_order_default.3mf",
       "expected_value": "default"
     },
     {
-      "project_name": "print_order_as_object_list",
+      "project_name": "as_object_list",
       "input_3mf": "print_order_as_object_list.3mf",
       "expected_value": "as_obj_list"
     }

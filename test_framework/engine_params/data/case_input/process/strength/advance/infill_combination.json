@@ -1,10 +1,10 @@
 {
-    "cases": [
-        {
-            "project_name": "infill_combination_04_019",
-            "input_3mf": "infill_combination_04_019.3mf",
-            "expected_infill_combination": true,
-            "expected_interval": 2
-        }
-    ]
+  "cases": [
+    {
+      "project_name": "04_019",
+      "input_3mf": "infill_combination_04_019.3mf",
+      "expected_infill_combination": true,
+      "expected_interval": 2
+    }
+  ]
 }

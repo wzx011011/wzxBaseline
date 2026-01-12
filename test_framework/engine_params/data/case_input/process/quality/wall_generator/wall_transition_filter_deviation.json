@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "wall_transition_filter_deviation_20percent",
-      "input_3mf": "process/quality/wall_generator/wall_transition_filter_deviation/wall_transition_filter_deviation_20percent.3mf",
+      "project_name": "20percent",
+      "input_3mf": "wall_transition_filter_deviation_20percent.3mf",
       "expected_wall_transition_filter_deviation": "20%"
     },
     {
-      "project_name": "wall_transition_filter_deviation_25percent",
-      "input_3mf": "process/quality/wall_generator/wall_transition_filter_deviation/wall_transition_filter_deviation_25percent.3mf",
+      "project_name": "25percent",
+      "input_3mf": "wall_transition_filter_deviation_25percent.3mf",
       "expected_wall_transition_filter_deviation": "25%"
     },
     {
-      "project_name": "wall_transition_filter_deviation_30percent",
-      "input_3mf": "process/quality/wall_generator/wall_transition_filter_deviation/wall_transition_filter_deviation_30percent.3mf",
+      "project_name": "30percent",
+      "input_3mf": "wall_transition_filter_deviation_30percent.3mf",
       "expected_wall_transition_filter_deviation": "30%"
     }
   ]

@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "reduce_infill_retraction_disabled",
+      "project_name": "disabled",
       "input_3mf": "reduce_infill_retraction_disabled.3mf",
       "expected_value": false
     },
     {
-      "project_name": "reduce_infill_retraction_enabled",
+      "project_name": "enabled",
       "input_3mf": "reduce_infill_retraction_enabled.3mf",
       "expected_value": true
     }

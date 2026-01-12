@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "time_lapse_gcode_empty",
+      "project_name": "empty",
       "input_3mf": "time_lapse_gcode_empty.3mf",
       "expected_value": ""
     }

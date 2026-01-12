@@ -1,16 +1,16 @@
 {
-    "cases": [
-        {
-            "project_name": "slowdown_for_curled_perimeters_true",
-            "input_3mf": "slowdown_for_curled_perimeters_true.3mf",
-            "expected_slowdown_for_curled_perimeters": true,
-            "tolerance": 1e-6
-        },
-        {
-            "project_name": "slowdown_for_curled_perimeters_false",
-            "input_3mf": "slowdown_for_curled_perimeters_false.3mf",
-            "expected_slowdown_for_curled_perimeters": false,
-            "tolerance": 1e-6
-        }
-    ]
+  "cases": [
+    {
+      "project_name": "true",
+      "input_3mf": "slowdown_for_curled_perimeters_true.3mf",
+      "expected_slowdown_for_curled_perimeters": true,
+      "tolerance": 1e-06
+    },
+    {
+      "project_name": "false",
+      "input_3mf": "slowdown_for_curled_perimeters_false.3mf",
+      "expected_slowdown_for_curled_perimeters": false,
+      "tolerance": 1e-06
+    }
+  ]
 }

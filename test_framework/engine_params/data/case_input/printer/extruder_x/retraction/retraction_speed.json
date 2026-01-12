@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "retraction_speed_30",
+      "project_name": "30",
       "input_3mf": "retraction_speed_30.3mf",
       "expected_value": 30
     },
     {
-      "project_name": "retraction_speed_45",
+      "project_name": "45",
       "input_3mf": "retraction_speed_45.3mf",
       "expected_value": 45
     },
     {
-      "project_name": "retraction_speed_60",
+      "project_name": "60",
       "input_3mf": "retraction_speed_60.3mf",
       "expected_value": 60
     }

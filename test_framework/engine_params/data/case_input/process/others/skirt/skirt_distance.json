@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "skirt_distance_3mm",
+      "project_name": "3mm",
       "input_3mf": "skirt_distance_3mm.3mf",
       "expected_value": 3.0
     },
     {
-      "project_name": "skirt_distance_6mm",
+      "project_name": "6mm",
       "input_3mf": "skirt_distance_6mm.3mf",
       "expected_value": 6.0
     },
     {
-      "project_name": "skirt_distance_12mm",
+      "project_name": "12mm",
       "input_3mf": "skirt_distance_12mm.3mf",
       "expected_value": 12.0
     }

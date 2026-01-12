@@ -1,10 +1,10 @@
 {
-    "cases": [
-        {
-            "project_name": "max_volumetric_extrusion_rate_slope_segment_length_1",
-            "input_3mf": "max_volumetric_extrusion_rate_slope_segment_length_1.3mf",
-            "expected_max_volumetric_extrusion_rate_slope_segment_length": 0.89,
-            "tolerance": 1e-6
-        }
-    ]
+  "cases": [
+    {
+      "project_name": "1",
+      "input_3mf": "max_volumetric_extrusion_rate_slope_segment_length_1.3mf",
+      "expected_max_volumetric_extrusion_rate_slope_segment_length": 0.89,
+      "tolerance": 1e-06
+    }
+  ]
 }

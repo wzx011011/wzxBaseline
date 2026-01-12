@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "bridge_density_80percent",
-      "input_3mf": "process/quality/bridging/bridge_density/bridge_density_80percent.3mf",
+      "project_name": "80percent",
+      "input_3mf": "bridge_density_80percent.3mf",
       "expected_bridge_density": "80%"
     },
     {
-      "project_name": "bridge_density_100percent",
-      "input_3mf": "process/quality/bridging/bridge_density/bridge_density_100percent.3mf",
+      "project_name": "100percent",
+      "input_3mf": "bridge_density_100percent.3mf",
       "expected_bridge_density": "100%"
     }
   ]

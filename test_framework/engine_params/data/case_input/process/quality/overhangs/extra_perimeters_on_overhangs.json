@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "extra_perimeters_on_overhangs_enabled",
-      "input_3mf": "process/quality/overhangs/extra_perimeters_on_overhangs/extra_perimeters_on_overhangs_enabled.3mf",
+      "project_name": "enabled",
+      "input_3mf": "extra_perimeters_on_overhangs_enabled.3mf",
       "expected_extra_perimeters_on_overhangs": true
     },
     {
-      "project_name": "extra_perimeters_on_overhangs_disabled",
-      "input_3mf": "process/quality/overhangs/extra_perimeters_on_overhangs/extra_perimeters_on_overhangs_disabled.3mf",
+      "project_name": "disabled",
+      "input_3mf": "extra_perimeters_on_overhangs_disabled.3mf",
       "expected_extra_perimeters_on_overhangs": false
     }
   ]

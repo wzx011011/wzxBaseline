@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "support_base_pattern_tree_default",
+      "project_name": "default",
       "input_3mf": "support_base_pattern_tree_default.3mf",
       "expected_value": "default"
     },
     {
-      "project_name": "support_base_pattern_tree_grid",
+      "project_name": "grid",
       "input_3mf": "support_base_pattern_tree_grid.3mf",
       "expected_value": "rectilinear-grid"
     }

@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "tree_hybrid_cross_height_0",
+      "project_name": "0",
       "input_3mf": "tree_hybrid_cross_height_0.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "tree_hybrid_cross_height_5",
+      "project_name": "5",
       "input_3mf": "tree_hybrid_cross_height_5.3mf",
       "expected_value": "5"
     },
     {
-      "project_name": "tree_hybrid_cross_height_10",
+      "project_name": "10",
       "input_3mf": "tree_hybrid_cross_height_10.3mf",
       "expected_value": "10"
     }

@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "change_filament_gcode_default",
+      "project_name": "default",
       "input_3mf": "change_filament_gcode_default.3mf",
       "expected_value": "G2 Z"
     }

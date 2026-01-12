@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "filament_unloading_speed_start_10",
+      "project_name": "10",
       "input_3mf": "filament_unloading_speed_start_10.3mf",
       "expected_value": "10"
     },
     {
-      "project_name": "filament_unloading_speed_start_20",
+      "project_name": "20",
       "input_3mf": "filament_unloading_speed_start_20.3mf",
       "expected_value": "20"
     },
     {
-      "project_name": "filament_unloading_speed_start_30",
+      "project_name": "30",
       "input_3mf": "filament_unloading_speed_start_30.3mf",
       "expected_value": "30"
     }

@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "wipe_on_loops_enabled",
-      "input_3mf": "process/quality/wall_and_surfaces/wipe_on_loops/wipe_on_loops_enabled.3mf",
+      "project_name": "enabled",
+      "input_3mf": "wipe_on_loops_enabled.3mf",
       "expected_wipe_on_loops": true
     },
     {
-      "project_name": "wipe_on_loops_disabled",
-      "input_3mf": "process/quality/wall_and_surfaces/wipe_on_loops/wipe_on_loops_disabled.3mf",
+      "project_name": "disabled",
+      "input_3mf": "wipe_on_loops_disabled.3mf",
       "expected_wipe_on_loops": false
     }
   ]

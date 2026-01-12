@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "chamber_temperature_0",
+      "project_name": "0",
       "input_3mf": "chamber_temperature_0.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "chamber_temperature_35",
+      "project_name": "35",
       "input_3mf": "chamber_temperature_35.3mf",
       "expected_value": "35"
     },
     {
-      "project_name": "chamber_temperature_50",
+      "project_name": "50",
       "input_3mf": "chamber_temperature_50.3mf",
       "expected_value": "50"
     }

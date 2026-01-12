@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "wipe_before_external_loop_enabled",
-      "input_3mf": "process/quality/wall_and_surfaces/wipe_before_external_loop/wipe_before_external_loop_enabled.3mf",
+      "project_name": "enabled",
+      "input_3mf": "wipe_before_external_loop_enabled.3mf",
       "expected_wipe_before_external_loop": true
     },
     {
-      "project_name": "wipe_before_external_loop_disabled",
-      "input_3mf": "process/quality/wall_and_surfaces/wipe_before_external_loop/wipe_before_external_loop_disabled.3mf",
+      "project_name": "disabled",
+      "input_3mf": "wipe_before_external_loop_disabled.3mf",
       "expected_wipe_before_external_loop": false
     }
   ]

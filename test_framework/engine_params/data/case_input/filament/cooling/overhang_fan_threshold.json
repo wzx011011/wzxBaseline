@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "overhang_fan_threshold_25",
+      "project_name": "25",
       "input_3mf": "overhang_fan_threshold_25.3mf",
       "expected_value": "25%"
     },
     {
-      "project_name": "overhang_fan_threshold_50",
+      "project_name": "50",
       "input_3mf": "overhang_fan_threshold_50.3mf",
       "expected_value": "50%"
     },
     {
-      "project_name": "overhang_fan_threshold_75",
+      "project_name": "75",
       "input_3mf": "overhang_fan_threshold_75.3mf",
       "expected_value": "75%"
     }

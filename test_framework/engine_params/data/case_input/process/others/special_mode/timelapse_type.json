@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "timelapse_type_traditional",
+      "project_name": "traditional",
       "input_3mf": "timelapse_type_traditional.3mf",
       "expected_value": 0
     },
     {
-      "project_name": "timelapse_type_smooth",
+      "project_name": "smooth",
       "input_3mf": "timelapse_type_smooth.3mf",
       "expected_value": 1
     },
     {
-      "project_name": "timelapse_type_close",
+      "project_name": "close",
       "input_3mf": "timelapse_type_close.3mf",
       "expected_value": -1
     }

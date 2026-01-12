@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "machine_max_acceleration_retracting_5000",
+      "project_name": "5000",
       "input_3mf": "machine_max_acceleration_retracting_5000.3mf",
       "expected_value": 5000
     }

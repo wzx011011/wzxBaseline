@@ -1,16 +1,16 @@
 {
-    "cases": [
-        {
-            "project_name": "enable_overhang_speed_false",
-            "input_3mf": "enable_overhang_speed_false.3mf",
-            "expected_enable_overhang_speed": false,
-            "tolerance": 1e-6
-        },
-        {
-            "project_name": "enable_overhang_speed_true",
-            "input_3mf": "enable_overhang_speed_true.3mf",
-            "expected_enable_overhang_speed": true,
-            "tolerance": 1e-6
-        }
-    ]
+  "cases": [
+    {
+      "project_name": "false",
+      "input_3mf": "enable_overhang_speed_false.3mf",
+      "expected_enable_overhang_speed": false,
+      "tolerance": 1e-06
+    },
+    {
+      "project_name": "true",
+      "input_3mf": "enable_overhang_speed_true.3mf",
+      "expected_enable_overhang_speed": true,
+      "tolerance": 1e-06
+    }
+  ]
 }

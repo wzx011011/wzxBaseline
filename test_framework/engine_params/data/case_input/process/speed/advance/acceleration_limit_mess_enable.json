@@ -1,14 +1,14 @@
 {
-    "cases": [
-        {
-            "project_name": "acceleration_limit_mess_enable_case1",
-            "input_3mf": "acceleration_limit_mess_enable_case1.3mf",
-            "expected_acceleration_limit_mess_enable": true,
-            "acceleration_limit_mess": "[[0,0.1,30,600]]",
-            "material_diameter": 1.75,
-            "material_density": 100.0,
-            "speed_tolerance": 1,
-            "acc_tolerance": 10
-        }
-    ]
+  "cases": [
+    {
+      "project_name": "case1",
+      "input_3mf": "acceleration_limit_mess_enable_case1.3mf",
+      "expected_acceleration_limit_mess_enable": true,
+      "acceleration_limit_mess": "[[0,0.1,30,600]]",
+      "material_diameter": 1.75,
+      "material_density": 100.0,
+      "speed_tolerance": 1,
+      "acc_tolerance": 10
+    }
+  ]
 }

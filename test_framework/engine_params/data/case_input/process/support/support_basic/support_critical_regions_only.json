@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "support_critical_regions_only_disabled",
+      "project_name": "disabled",
       "input_3mf": "support_critical_regions_only_disabled.3mf",
       "expected_value": 0
     },
     {
-      "project_name": "support_critical_regions_only_enabled",
+      "project_name": "enabled",
       "input_3mf": "support_critical_regions_only_enabled.3mf",
       "expected_value": 1
     }

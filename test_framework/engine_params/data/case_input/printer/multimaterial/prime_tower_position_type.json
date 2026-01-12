@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "prime_tower_position_type_middle",
+      "project_name": "middle",
       "input_3mf": "prime_tower_position_type_middle.3mf",
       "expected_value": "middle upper"
     }

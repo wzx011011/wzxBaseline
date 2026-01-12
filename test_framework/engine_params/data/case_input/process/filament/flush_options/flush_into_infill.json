@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "flush_into_infill_enabled",
+      "project_name": "enabled",
       "input_3mf": "flush_into_infill_on.3mf",
       "expected_value": true
     },
     {
-      "project_name": "flush_into_infill_disabled",
+      "project_name": "disabled",
       "input_3mf": "flush_into_infill_off.3mf",
       "expected_value": false
     }

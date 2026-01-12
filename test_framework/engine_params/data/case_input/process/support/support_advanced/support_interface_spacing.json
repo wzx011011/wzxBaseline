@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "support_interface_spacing_0.3",
+      "project_name": "0.3",
       "input_3mf": "support_interface_spacing_0.3.3mf",
       "expected_value": "0.3"
     },
     {
-      "project_name": "support_interface_spacing_0.5",
+      "project_name": "0.5",
       "input_3mf": "support_interface_spacing_0.5.3mf",
       "expected_value": "0.5"
     },
     {
-      "project_name": "support_interface_spacing_0",
+      "project_name": "0",
       "input_3mf": "support_interface_spacing_0.3mf",
       "expected_value": "0"
     }

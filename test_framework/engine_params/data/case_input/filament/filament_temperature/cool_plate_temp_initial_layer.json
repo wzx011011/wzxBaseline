@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "cool_plate_temp_initial_layer_25",
+      "project_name": "25",
       "input_3mf": "cool_plate_temp_initial_layer_25.3mf",
       "expected_value": "25"
     },
     {
-      "project_name": "cool_plate_temp_initial_layer_35",
+      "project_name": "35",
       "input_3mf": "cool_plate_temp_initial_layer_35.3mf",
       "expected_value": "35"
     }

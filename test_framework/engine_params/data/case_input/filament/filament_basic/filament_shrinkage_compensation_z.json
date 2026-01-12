@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "filament_shrinkage_compensation_z_99",
+      "project_name": "99",
       "input_3mf": "filament_shrinkage_compensation_z_99.3mf",
       "expected_value": "99%"
     },
     {
-      "project_name": "filament_shrinkage_compensation_z_100",
+      "project_name": "100",
       "input_3mf": "filament_shrinkage_compensation_z_100.3mf",
       "expected_value": "100%"
     },
     {
-      "project_name": "filament_shrinkage_compensation_z_101",
+      "project_name": "101",
       "input_3mf": "filament_shrinkage_compensation_z_101.3mf",
       "expected_value": "101%"
     }

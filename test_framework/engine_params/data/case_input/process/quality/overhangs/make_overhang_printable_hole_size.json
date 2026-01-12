@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "make_overhang_printable_hole_size_0mm",
-      "input_3mf": "process/quality/overhangs/make_overhang_printable_hole_size/make_overhang_printable_hole_size_0mm.3mf",
+      "project_name": "0mm",
+      "input_3mf": "make_overhang_printable_hole_size_0mm.3mf",
       "expected_make_overhang_printable_hole_size": 0
     },
     {
-      "project_name": "make_overhang_printable_hole_size_5mm",
-      "input_3mf": "process/quality/overhangs/make_overhang_printable_hole_size/make_overhang_printable_hole_size_5mm.3mf",
+      "project_name": "5mm",
+      "input_3mf": "make_overhang_printable_hole_size_5mm.3mf",
       "expected_make_overhang_printable_hole_size": 5
     },
     {
-      "project_name": "make_overhang_printable_hole_size_10mm",
-      "input_3mf": "process/quality/overhangs/make_overhang_printable_hole_size/make_overhang_printable_hole_size_10mm.3mf",
+      "project_name": "10mm",
+      "input_3mf": "make_overhang_printable_hole_size_10mm.3mf",
       "expected_make_overhang_printable_hole_size": 10
     }
   ]

@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "precise_outer_wall_enabled",
-      "input_3mf": "process/quality/precision/precise_outer_wall/precise_outer_wall_enabled.3mf",
+      "project_name": "enabled",
+      "input_3mf": "precise_outer_wall_enabled.3mf",
       "expected_precise_outer_wall": true
     },
     {
-      "project_name": "precise_outer_wall_disabled",
-      "input_3mf": "process/quality/precision/precise_outer_wall/precise_outer_wall_disabled.3mf",
+      "project_name": "disabled",
+      "input_3mf": "precise_outer_wall_disabled.3mf",
       "expected_precise_outer_wall": false
     }
   ]

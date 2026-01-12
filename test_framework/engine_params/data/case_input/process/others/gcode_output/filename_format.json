@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "filename_format_default",
+      "project_name": "default",
       "input_3mf": "filename_format_default.3mf",
       "expected_value": "{input_filename_base}.gcode",
       "note": "此参数无法通过 G-code 内容校验，需要文件系统层面验证"

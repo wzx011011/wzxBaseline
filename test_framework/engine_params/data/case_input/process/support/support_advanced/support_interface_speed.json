@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "support_interface_speed_60",
+      "project_name": "60",
       "input_3mf": "support_interface_speed_60.3mf",
       "expected_value": "60"
     },
     {
-      "project_name": "support_interface_speed_80",
+      "project_name": "80",
       "input_3mf": "support_interface_speed_80.3mf",
       "expected_value": "80"
     },
     {
-      "project_name": "support_interface_speed_100",
+      "project_name": "100",
       "input_3mf": "support_interface_speed_100.3mf",
       "expected_value": "100"
     }

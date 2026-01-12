@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "gap_fill_target_nowhere",
+      "project_name": "nowhere",
       "input_3mf": "gap_fill_target_001.3mf",
       "expected_target": "NOWHERE"
     }

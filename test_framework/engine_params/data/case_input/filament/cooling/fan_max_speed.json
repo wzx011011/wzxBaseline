@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "fan_max_speed_50",
+      "project_name": "50",
       "input_3mf": "fan_max_speed_50.3mf",
       "expected_value": "50"
     },
     {
-      "project_name": "fan_max_speed_80",
+      "project_name": "80",
       "input_3mf": "fan_max_speed_80.3mf",
       "expected_value": "80"
     },
     {
-      "project_name": "fan_max_speed_100",
+      "project_name": "100",
       "input_3mf": "fan_max_speed_100.3mf",
       "expected_value": "100"
     }

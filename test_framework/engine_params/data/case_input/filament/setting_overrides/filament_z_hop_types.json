@@ -2,7 +2,7 @@
   "cases": [
     {
       "input_3mf": "template_model.3mf",
-      "project_name": "filament_z_hop_types_default",
+      "project_name": "default",
       "expected_value": "Slope Lift"
     }
   ]

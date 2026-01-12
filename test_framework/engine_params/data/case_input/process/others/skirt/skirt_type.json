@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "skirt_type_combined",
+      "project_name": "combined",
       "input_3mf": "skirt_type_combined.3mf",
       "expected_value": "combined"
     }

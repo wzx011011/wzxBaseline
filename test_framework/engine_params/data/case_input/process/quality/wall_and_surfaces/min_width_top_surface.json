@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "min_width_top_surface_150percent",
-      "input_3mf": "process/quality/wall_and_surfaces/min_width_top_surface/min_width_top_surface_150percent.3mf",
+      "project_name": "150percent",
+      "input_3mf": "min_width_top_surface_150percent.3mf",
       "expected_min_width_top_surface": "150%"
     },
     {
-      "project_name": "min_width_top_surface_200percent",
-      "input_3mf": "process/quality/wall_and_surfaces/min_width_top_surface/min_width_top_surface_200percent.3mf",
+      "project_name": "200percent",
+      "input_3mf": "min_width_top_surface_200percent.3mf",
       "expected_min_width_top_surface": "200%"
     },
     {
-      "project_name": "min_width_top_surface_250percent",
-      "input_3mf": "process/quality/wall_and_surfaces/min_width_top_surface/min_width_top_surface_250percent.3mf",
+      "project_name": "250percent",
+      "input_3mf": "min_width_top_surface_250percent.3mf",
       "expected_min_width_top_surface": "250%"
     }
   ]

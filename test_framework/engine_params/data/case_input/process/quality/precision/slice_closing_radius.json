@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "slice_closing_radius_0.03mm",
-      "input_3mf": "process/quality/precision/slice_closing_radius/slice_closing_radius_0.03mm.3mf",
+      "project_name": "0.03mm",
+      "input_3mf": "slice_closing_radius_0.03mm.3mf",
       "expected_slice_closing_radius": 0.03
     },
     {
-      "project_name": "slice_closing_radius_0.049mm",
-      "input_3mf": "process/quality/precision/slice_closing_radius/slice_closing_radius_0.049mm.3mf",
+      "project_name": "0.049mm",
+      "input_3mf": "slice_closing_radius_0.049mm.3mf",
       "expected_slice_closing_radius": 0.049
     },
     {
-      "project_name": "slice_closing_radius_0.06mm",
-      "input_3mf": "process/quality/precision/slice_closing_radius/slice_closing_radius_0.06mm.3mf",
+      "project_name": "0.06mm",
+      "input_3mf": "slice_closing_radius_0.06mm.3mf",
       "expected_slice_closing_radius": 0.06
     }
   ]

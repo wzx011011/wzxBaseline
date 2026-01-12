@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "required_nozzle_HRC_0",
+      "project_name": "0",
       "input_3mf": "required_nozzle_HRC_0.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "required_nozzle_HRC_40",
+      "project_name": "40",
       "input_3mf": "required_nozzle_HRC_40.3mf",
       "expected_value": "40"
     },
     {
-      "project_name": "required_nozzle_HRC_60",
+      "project_name": "60",
       "input_3mf": "required_nozzle_HRC_60.3mf",
       "expected_value": "60"
     }

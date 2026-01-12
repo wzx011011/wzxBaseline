@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "independent_support_layer_height_0",
+      "project_name": "0",
       "input_3mf": "independent_support_layer_height_0.3mf",
       "expected_value": 0
     },
     {
-      "project_name": "independent_support_layer_height_1",
+      "project_name": "1",
       "input_3mf": "independent_support_layer_height_1.3mf",
       "expected_value": 1
     }

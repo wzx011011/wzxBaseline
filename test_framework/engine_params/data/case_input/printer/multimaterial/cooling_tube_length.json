@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "cooling_tube_length_0",
+      "project_name": "0",
       "input_3mf": "cooling_tube_length_0.3mf",
       "expected_value": 0
     }

@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "z_hop_0",
+      "project_name": "0",
       "input_3mf": "z_hop_0.3mf",
       "expected_value": 0
     },
     {
-      "project_name": "z_hop_0.2",
+      "project_name": "0.2",
       "input_3mf": "z_hop_0.2.3mf",
       "expected_value": 0.2
     },
     {
-      "project_name": "z_hop_0.4",
+      "project_name": "0.4",
       "input_3mf": "z_hop_0.4.3mf",
       "expected_value": 0.4
     }

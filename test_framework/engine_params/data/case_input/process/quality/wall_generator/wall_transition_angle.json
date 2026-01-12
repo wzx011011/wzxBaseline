@@ -1,18 +1,18 @@
 {
   "cases": [
     {
-      "project_name": "wall_transition_angle_5deg",
-      "input_3mf": "process/quality/wall_generator/wall_transition_angle/wall_transition_angle_5deg.3mf",
+      "project_name": "5deg",
+      "input_3mf": "wall_transition_angle_5deg.3mf",
       "expected_wall_transition_angle": 5
     },
     {
-      "project_name": "wall_transition_angle_10deg",
-      "input_3mf": "process/quality/wall_generator/wall_transition_angle/wall_transition_angle_10deg.3mf",
+      "project_name": "10deg",
+      "input_3mf": "wall_transition_angle_10deg.3mf",
       "expected_wall_transition_angle": 10
     },
     {
-      "project_name": "wall_transition_angle_15deg",
-      "input_3mf": "process/quality/wall_generator/wall_transition_angle/wall_transition_angle_15deg.3mf",
+      "project_name": "15deg",
+      "input_3mf": "wall_transition_angle_15deg.3mf",
       "expected_wall_transition_angle": 15
     }
   ]

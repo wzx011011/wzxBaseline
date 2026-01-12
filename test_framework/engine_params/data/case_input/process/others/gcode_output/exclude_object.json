@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "exclude_object_disabled",
+      "project_name": "disabled",
       "input_3mf": "exclude_object_disabled.3mf",
       "expected_value": false
     },
     {
-      "project_name": "exclude_object_enabled",
+      "project_name": "enabled",
       "input_3mf": "exclude_object_enabled.3mf",
       "expected_value": true
     }

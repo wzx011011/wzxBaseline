@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "wall_sequence_inner_outer_inner",
+      "project_name": "inner_outer_inner",
       "input_3mf": "cube_inner_outer_inner_wallSeq.3mf",
       "expected_sequence": "inner-outer-inner wall"
     }

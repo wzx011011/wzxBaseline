@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "extruders_count_1",
+      "project_name": "1",
       "input_3mf": "extruders_count_1.3mf",
       "expected_value": 1
     }

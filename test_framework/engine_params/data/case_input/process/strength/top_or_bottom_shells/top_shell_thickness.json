@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "top_shell_thickness_1point805",
+      "project_name": "1point805",
       "input_3mf": "top_shell_thickness_1point805.3mf",
       "expected_top_shell_thickness": 1.805
     }

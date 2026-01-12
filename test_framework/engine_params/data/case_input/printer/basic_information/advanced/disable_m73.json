@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "disable_m73_false",
+      "project_name": "false",
       "input_3mf": "disable_m73_false.3mf",
       "expected_value": false
     },
     {
-      "project_name": "disable_m73_true",
+      "project_name": "true",
       "input_3mf": "disable_m73_true.3mf",
       "expected_value": true
     }

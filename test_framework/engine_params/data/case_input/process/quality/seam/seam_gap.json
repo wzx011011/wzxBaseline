@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "seam_gap_0",
+      "project_name": "0",
       "input_3mf": "seam_gap_0.3mf",
       "expected_seam_gap": 0.0
     },
     {
-      "project_name": "seam_gap_0.15",
+      "project_name": "0.15",
       "input_3mf": "seam_gap_0.15.3mf",
       "expected_seam_gap": 0.15
     }

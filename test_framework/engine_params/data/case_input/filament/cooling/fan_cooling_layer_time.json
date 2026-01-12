@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "fan_cooling_layer_time_5",
+      "project_name": "5",
       "input_3mf": "fan_cooling_layer_time_5.3mf",
       "expected_value": "5"
     },
     {
-      "project_name": "fan_cooling_layer_time_10",
+      "project_name": "10",
       "input_3mf": "fan_cooling_layer_time_10.3mf",
       "expected_value": "10"
     },
     {
-      "project_name": "fan_cooling_layer_time_20",
+      "project_name": "20",
       "input_3mf": "fan_cooling_layer_time_20.3mf",
       "expected_value": "20"
     }

@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "retract_length_toolchange_2",
+      "project_name": "2",
       "input_3mf": "retract_length_toolchange_2.3mf",
       "expected_value": 2
     },
     {
-      "project_name": "retract_length_toolchange_5",
+      "project_name": "5",
       "input_3mf": "retract_length_toolchange_5.3mf",
       "expected_value": 5
     }

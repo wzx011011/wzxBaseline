@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "change_extrusion_role_gcode_empty",
+      "project_name": "empty",
       "input_3mf": "change_extrusion_role_gcode_empty.3mf",
       "expected_value": ""
     }

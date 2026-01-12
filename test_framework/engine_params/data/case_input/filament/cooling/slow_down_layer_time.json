@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "slow_down_layer_time_15",
+      "project_name": "15",
       "input_3mf": "slow_down_layer_time_15.3mf",
       "expected_value": "15"
     },
     {
-      "project_name": "slow_down_layer_time_30",
+      "project_name": "30",
       "input_3mf": "slow_down_layer_time_30.3mf",
       "expected_value": "30"
     },
     {
-      "project_name": "slow_down_layer_time_45",
+      "project_name": "45",
       "input_3mf": "slow_down_layer_time_45.3mf",
       "expected_value": "45"
     }

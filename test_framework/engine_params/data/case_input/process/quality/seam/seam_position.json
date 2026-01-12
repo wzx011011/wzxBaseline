@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "seam_position_aligned",
+      "project_name": "aligned",
       "input_3mf": "seam_position_aligned.3mf",
       "expected_seam_position": "aligned"
     },
     {
-      "project_name": "seam_position_nearest",
+      "project_name": "nearest",
       "input_3mf": "seam_position_nearest.3mf",
       "expected_seam_position": "nearest"
     },
     {
-      "project_name": "seam_position_random",
+      "project_name": "random",
       "input_3mf": "seam_position_random.3mf",
       "expected_seam_position": "random"
     }

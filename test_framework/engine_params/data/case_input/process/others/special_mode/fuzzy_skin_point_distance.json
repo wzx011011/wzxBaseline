@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "fuzzy_skin_point_distance_0.5mm",
+      "project_name": "0.5mm",
       "input_3mf": "fuzzy_skin_point_distance_0.5mm.3mf",
       "expected_value": 0.5
     },
     {
-      "project_name": "fuzzy_skin_point_distance_0.8mm",
+      "project_name": "0.8mm",
       "input_3mf": "fuzzy_skin_point_distance_0.8mm.3mf",
       "expected_value": 0.8
     },
     {
-      "project_name": "fuzzy_skin_point_distance_1.5mm",
+      "project_name": "1.5mm",
       "input_3mf": "fuzzy_skin_point_distance_1.5mm.3mf",
       "expected_value": 1.5
     }

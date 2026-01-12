@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "machine_max_acceleration_travel_20000",
+      "project_name": "20000",
       "input_3mf": "machine_max_acceleration_travel_20000.3mf",
       "expected_value": 20000
     }

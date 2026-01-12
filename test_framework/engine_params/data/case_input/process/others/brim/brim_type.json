@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "brim_type_auto_brim",
+      "project_name": "auto_brim",
       "input_3mf": "brim_type_auto_brim.3mf",
       "expected_value": "auto_brim"
     },
     {
-      "project_name": "brim_type_outer_only",
+      "project_name": "outer_only",
       "input_3mf": "brim_type_outer_only.3mf",
       "expected_value": "outer_only"
     },
     {
-      "project_name": "brim_type_outer_and_inner",
+      "project_name": "outer_and_inner",
       "input_3mf": "brim_type_outer_and_inner.3mf",
       "expected_value": "outer_and_inner"
     }

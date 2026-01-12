@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "make_overhang_printable_enabled",
-      "input_3mf": "process/quality/overhangs/make_overhang_printable/make_overhang_printable_enabled.3mf",
+      "project_name": "enabled",
+      "input_3mf": "make_overhang_printable_enabled.3mf",
       "expected_make_overhang_printable": true
     },
     {
-      "project_name": "make_overhang_printable_disabled",
-      "input_3mf": "process/quality/overhangs/make_overhang_printable/make_overhang_printable_disabled.3mf",
+      "project_name": "disabled",
+      "input_3mf": "make_overhang_printable_disabled.3mf",
       "expected_make_overhang_printable": false
     }
   ]

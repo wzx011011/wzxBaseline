@@ -1,10 +1,10 @@
 {
-    "cases": [
-        {
-            "project_name": "smooth_speed_discontinuity_area_on",
-            "input_3mf": "smooth_speed_discontinuity_area_on.3mf",
-            "expected_smooth_speed_discontinuity_area": true,
-            "tolerance": 1e-6
-        }
-    ]
+  "cases": [
+    {
+      "project_name": "on",
+      "input_3mf": "smooth_speed_discontinuity_area_on.3mf",
+      "expected_smooth_speed_discontinuity_area": true,
+      "tolerance": 1e-06
+    }
+  ]
 }

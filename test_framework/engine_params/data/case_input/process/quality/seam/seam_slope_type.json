@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "seam_slope_type_none",
+      "project_name": "none",
       "input_3mf": "seam_slope_type_none.3mf",
       "expected_slope_type": "none"
     },
     {
-      "project_name": "seam_slope_type_linear",
+      "project_name": "linear",
       "input_3mf": "seam_slope_type_linear.3mf",
       "expected_slope_type": "linear"
     }

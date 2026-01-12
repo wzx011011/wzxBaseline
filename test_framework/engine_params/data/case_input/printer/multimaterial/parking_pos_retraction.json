@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "parking_pos_retraction_0",
+      "project_name": "0",
       "input_3mf": "parking_pos_retraction_0.3mf",
       "expected_value": 0
     }

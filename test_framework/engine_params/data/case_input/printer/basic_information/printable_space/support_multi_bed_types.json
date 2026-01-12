@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "support_multi_bed_types_enabled",
+      "project_name": "enabled",
       "input_3mf": "support_multi_bed_types_true.3mf",
       "expected_value": true
     },
     {
-      "project_name": "support_multi_bed_types_disabled",
+      "project_name": "disabled",
       "input_3mf": "support_multi_bed_types_false.3mf",
       "expected_value": false
     }

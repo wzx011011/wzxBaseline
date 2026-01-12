@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "enable_support_disabled",
+      "project_name": "disabled",
       "input_3mf": "support_disabled.3mf",
       "expected_value": 0
     },
     {
-      "project_name": "enable_support_enabled",
+      "project_name": "enabled",
       "input_3mf": "support_enabled.3mf",
       "expected_value": 1
     }

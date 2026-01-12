@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "machine_start_gcode_default",
+      "project_name": "default",
       "input_3mf": "machine_start_gcode_default.3mf",
       "expected_value": "START_PRINT"
     }

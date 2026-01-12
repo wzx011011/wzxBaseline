@@ -1,23 +1,23 @@
 {
   "cases": [
     {
-      "project_name": "cooling_slowdown_logic_uniform_cooling",
-      "input_3mf": "cooling_slowdown_logic_uniform_cooling.3mf",
+      "project_name": "uniform_cooling",
+      "input_3mf": "uniform_cooling.3mf",
       "expected_value": "uniform_cooling"
     },
     {
-      "project_name": "cooling_slowdown_logic_consistent_surface",
-      "input_3mf": "cooling_slowdown_logic_consistent_surface.3mf",
+      "project_name": "consistent_surface",
+      "input_3mf": "consistent_surface.3mf",
       "expected_value": "consistent_surface"
     },
     {
-      "project_name": "cooling_slowdown_logic_cooling_slowdown_non_slow_outer_wall",
-      "input_3mf": "cooling_slowdown_logic_cooling_slowdown_non_slow_outer_wall.3mf",
+      "project_name": "non_slow_outer_wall",
+      "input_3mf": "non_slow_outer_wall.3mf",
       "expected_value": "cooling_slowdown_non_slow_outer_wall"
     },
     {
-      "project_name": "cooling_slowdown_logic_cooling_slowdown_smart_zone",
-      "input_3mf": "cooling_slowdown_logic_cooling_slowdown_smart_zone.3mf",
+      "project_name": "smart_zone",
+      "input_3mf": "smart_zone.3mf",
       "expected_value": "cooling_slowdown_smart_zone"
     }
   ]

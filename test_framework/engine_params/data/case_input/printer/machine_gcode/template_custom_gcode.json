@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "template_custom_gcode_empty",
+      "project_name": "empty",
       "input_3mf": "template_custom_gcode_empty.3mf",
       "expected_value": ""
     }

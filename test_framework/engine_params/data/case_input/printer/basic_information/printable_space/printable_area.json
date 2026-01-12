@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "printable_area_220x220",
+      "project_name": "220x220",
       "input_3mf": "printable_area_220x220.3mf",
       "expected_value": "0x0,220x0,220x220,0x220"
     },
     {
-      "project_name": "printable_area_300x200",
+      "project_name": "300x200",
       "input_3mf": "printable_area_300x200.3mf",
       "expected_value": "0x0,300x0,300x200,0x200"
     },
     {
-      "project_name": "printable_area_256x256",
+      "project_name": "256x256",
       "input_3mf": "printable_area_256x256.3mf",
       "expected_value": "0x0,256x0,256x256,0x256"
     }

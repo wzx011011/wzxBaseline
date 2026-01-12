@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "filament_soluble_false",
+      "project_name": "false",
       "input_3mf": "filament_soluble_false.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "filament_soluble_true",
+      "project_name": "true",
       "input_3mf": "filament_soluble_true.3mf",
       "expected_value": "1"
     }

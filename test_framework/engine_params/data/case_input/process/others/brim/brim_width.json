@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "brim_width_3mm",
+      "project_name": "3mm",
       "input_3mf": "brim_width_3mm.3mf",
       "expected_value": 3.0
     },
     {
-      "project_name": "brim_width_5mm",
+      "project_name": "5mm",
       "input_3mf": "brim_width_5mm.3mf",
       "expected_value": 5.0
     },
     {
-      "project_name": "brim_width_10mm",
+      "project_name": "10mm",
       "input_3mf": "brim_width_10mm.3mf",
       "expected_value": 10.0
     }
