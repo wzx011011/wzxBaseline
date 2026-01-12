@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "small_area_infill_flow_compensation_disabled",
+      "input_3mf": "process/quality/wall_and_surfaces/small_area_infill_flow_compensation/small_area_infill_flow_compensation_disabled.3mf",
+      "expected_small_area_infill_flow_compensation": false
+    },
+    {
+      "project_name": "small_area_infill_flow_compensation_enabled",
+      "input_3mf": "process/quality/wall_and_surfaces/small_area_infill_flow_compensation/small_area_infill_flow_compensation_enabled.3mf",
+      "expected_small_area_infill_flow_compensation": true
+    }
+  ]
+}

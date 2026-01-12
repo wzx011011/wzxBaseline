@@ -33,7 +33,7 @@
 
 6. **执行测试**：使用切片器路径 C:/Program Files/Creality/Creality Print 7.0 Beta/CrealityPrint.exe
    
-7. **资料**：所有的参数结构在这里：process_parameters.md
+7. **资料**：所有的参数结构在这里：printer_parameters_validation.md，filament_parameters_validation.md，process_parameters_validation.md
 
 
 ## 忽略测试用例 (ignored_tests.json)
@@ -86,7 +86,7 @@ pytest engine_params/case/params/printer/multimaterial/test_multimaterial.py -v
 一级分类为 printer
 请帮我添加一个 prime_tower_brim_width 参数的测试用例：
 1. 使用的策略用{一级分类}_parameters_validation.md文件总结的策略
-2. 要准备哪些gcode或者3mf文件提前告诉我，需要的3mf从template_model.3mf拷贝
+2. 需要的3mf从generate_3mf.py脚本生成
 3. 目录结构：放在 {一级分类}/{分类} 下
 4. 校验逻辑：简单对比型，对比配置值与期望值
 5. 测试用例：设计 2-3 个不同值的用例

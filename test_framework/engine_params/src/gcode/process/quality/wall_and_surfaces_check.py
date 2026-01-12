@@ -573,6 +573,47 @@ def _parse_bool_value(raw: str) -> bool:
     return s in ("1", "true", "yes", "enabled")
 
 
+def _parse_array_value(raw: str | list) -> list:
+    """将配置中的数组值解析为列表
+    
+    配置中的数组可能以两种形式存储：
+    1. 已经是 list 类型（直接返回）
+    2. 字符串形式（需要解析）: 'item1; item2; item3' 或 '["item1", "\\nitem2", ...]'
+    """
+    if isinstance(raw, list):
+        return raw
+    
+    if not isinstance(raw, str):
+        return []
+    
+    s = raw.strip()
+    
+    # 尝试解析 JSON 格式的数组
+    if s.startswith('[') and s.endswith(']'):
+        try:
+            import json
+            return json.loads(s)
+        except:
+            pass
+    
+    # 按分号分隔（G-code 配置格式）
+    if ';' in s:
+        items = []
+        for item in s.split(';'):
+            item = item.strip()
+            # 移除引号包裹
+            if item.startswith('"') and item.endswith('"'):
+                item = item[1:-1]
+            # 移除转义的 \n
+            item = item.replace('\\n', '').strip()
+            if item:
+                items.append(item)
+        return items
+    
+    # 单个元素
+    return [s] if s else []
+
+
 def parse_min_width_top_surface(
     gcode_path: Path | str,
     expected_value: str,
@@ -793,4 +834,74 @@ def parse_wipe_before_external_loop(
         "method": "L1 - CONFIG_BLOCK"
     }
     return (ok, actual_value, details)
+
+
+def parse_small_area_infill_flow_compensation(
+    gcode_path: Path | str,
+    expected_value: bool,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """检测小面积填充流量补偿参数 (small_area_infill_flow_compensation) - L1: CONFIG_BLOCK
+    
+    该参数用于控制是否对小面积填充区域进行流量补偿，以改善打印质量。
+    当启用时，切片器会自动调整小面积区域的挤出流量。
+    """
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("small_area_infill_flow_compensation")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 small_area_infill_flow_compensation 参数"})
+    
+    actual_value = _parse_bool_value(raw_value)
+    ok = (actual_value == expected_value)
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "method": "L1 - CONFIG_BLOCK"
+    }
+    return (ok, actual_value, details)
+
+
+def parse_small_area_infill_flow_compensation_model(
+    gcode_path: Path | str,
+    expected_value: list,
+    tolerance: float = 0.01
+) -> Tuple[bool, Optional[list], Dict[str, object]]:
+    """检测小面积填充流量补偿模型参数 (small_area_infill_flow_compensation_model) - L1: CONFIG_BLOCK
+    
+    该参数定义了小面积流量补偿的曲线模型，是一个数组，存储面积与流量比例的映射关系。
+    格式: ["0,0", "\n0.2,0.4444", "\n0.4,0.6145", ...]
+    每个元素表示 "面积,流量比例" 的对应关系。
+    """
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    
+    raw_value = config.get("small_area_infill_flow_compensation_model")
+    if raw_value is None:
+        return (False, None, {"error": "未在 G-code 配置中找到 small_area_infill_flow_compensation_model 参数"})
+    
+    # 使用统一的数组解析函数
+    actual_value = _parse_array_value(raw_value)
+    
+    # 对比数组长度和内容
+    ok = (len(actual_value) == len(expected_value))
+    if ok:
+        # 逐个对比数组元素
+        for i, (actual, expected) in enumerate(zip(actual_value, expected_value)):
+            if str(actual).strip() != str(expected).strip():
+                ok = False
+                break
+    
+    details = {
+        "config_value": actual_value,
+        "expected": expected_value,
+        "length_match": len(actual_value) == len(expected_value),
+        "actual_length": len(actual_value),
+        "expected_length": len(expected_value),
+        "method": "L1 - CONFIG_BLOCK (Array)"
+    }
+    return (ok, actual_value, details)
+
 

@@ -66,20 +66,82 @@ pip install -r requirements.txt
 你只需写好测试函数和参数 JSON，pytest + conftest.py 会自动完成参数注入、模型切片、G-code 生成、断言校验等全流程，无需手动干预。
 
 
+## 工程文档说明
+
+### 核心文档 (test_framework/engine_params/)
+
+#### **[readme.md](engine_params/readme.md)**
+- **作用**：测试用例开发指南
+- **内容**：
+  - 添加新参数测试用例的 Prompt 模板
+  - 忽略测试用例配置说明 (ignored_tests.json)
+  - 示例 Prompt 和最佳实践
+- **使用场景**：编写新测试用例时的参考手册
+
+#### **[generate_3mf.py](engine_params/generate_3mf.py)**（已废弃，使用 modify_3mf_params.py 替代）
+- **作用**：旧版 3MF 文件生成脚本
+- **问题**：只修改配置文件末尾的键值对，不更新 JSON 中的参数值
+- **状态**：不推荐使用
+
+#### **[modify_3mf_params.py](engine_params/modify_3mf_params.py)**（推荐）
+- **作用**：通用 3MF 参数修改工具
+- **特性**：
+  - ✅ 正确修改 JSON 格式配置
+  - ✅ 自动更新 `different_settings_to_system` 标记数组
+  - ✅ 支持批量修改多个参数
+  - ✅ 保持 3MF 文件结构完整
+- **用法**：
+  ```bash
+  # 单个参数
+  python modify_3mf_params.py template.3mf output.3mf --param key=value
+  
+  # 多个参数
+  python modify_3mf_params.py template.3mf output.3mf \
+      --param small_area_infill_flow_compensation=1 \
+      --param detect_thin_wall=0 \
+      --param wall_loops=3
+  ```
+- **使用场景**：生成测试用例所需的 3MF 文件
+
+#### **参数验证文档**
+
+**[printer_parameters_validation.md](engine_params/printer_parameters_validation.md)**
+- **作用**：打印机参数验证策略文档
+- **内容**：printer 分类下所有参数的验证方法和测试策略
+- **使用场景**：添加 printer 相关测试用例时查阅
+
+**[filament_parameters_validation.md](engine_params/filament_parameters_validation.md)**
+- **作用**：耗材参数验证策略文档
+- **内容**：filament 分类下所有参数的验证方法和测试策略
+- **使用场景**：添加 filament 相关测试用例时查阅
+
+**[process_parameters_validation.md](engine_params/process_parameters_validation.md)**
+- **作用**：工艺参数验证策略文档
+- **内容**：process 分类下所有参数的验证方法和测试策略
+- **使用场景**：添加 process 相关测试用例时查阅
+
+### 文档使用流程
+
+1. **规划阶段**：查看 `*_parameters_validation.md` 确定参数的验证策略（L1/L2/L3 级别）
+2. **开发阶段**：参考 `readme.md` 中的模板编写测试代码
+3. **文件生成**：使用 `modify_3mf_params.py` 生成测试所需的 3MF 文件
+
+---
+
 ## 添加新参数测试用例的 Prompt 模板
 请帮我添加一个 {参数名} 参数的测试用例，要求如下：
 
 1. **参考 C3DSlicer 源码**：读取 E:\wzx\C3DSlicer\C3DSlicer 路径下的工程，了解该参数的定义和使用方式
 
-2. **目录结构**：
-   - 测试文件：engine_params/case/params/{分类}/{test_文件名}.py
-   - 校验函数：engine_params/src/gcode/{分类}/{文件名}_check.py
-   - JSON配置：engine_params/data/case_input/{分类}/{子分类}/{参数名}.json
-   - 模型目录：engine_params/data/models/{分类}/{子分类}/{参数名}/{参数名}_{参数值}.3mf
+2. **目录结构**： **一级分类 是printer,filament,process之一**
+   - 测试文件：engine_params/case/params/{一级分类}/{分类}/{test_组名称}.py
+   - 校验函数：engine_params/src/gcode/{一级分类}/{分类}/{组名称}_check.py
+   - JSON配置：engine_params/data/case_input/{一级分类}/{分类}/{组名称}/{参数名}.json
+   - 模型目录：engine_params/data/models/{一级分类}/{分类}/{组名称}/{参数名}/参数名_期望值.3mf
 
 3. **校验逻辑**：
-   - 简单对比型：仅对比 G-code 配置中的参数值与期望值是否一致
-   - 复杂校验型：需要解析 G-code 中的挤出块、坐标等进行验证
+   - 简单对比型（L1 级别）：仅对比 G-code 配置中的参数值与期望值是否一致
+   - 复杂校验型（L2/L3 级别）：需要解析 G-code 中的挤出块、坐标等进行验证
 
 4. **参数信息**（需要从源码中获取）：
    - 参数类型（coFloat/coInt/coBool/coEnum等）
@@ -88,6 +150,7 @@ pip install -r requirements.txt
    - 参数含义
 
 5. **测试用例配置**（JSON格式）：
+   ```json
    {
      "cases": [
        {
@@ -97,17 +160,48 @@ pip install -r requirements.txt
        }
      ]
    }
+   ```
 
 6. **执行测试**：使用切片器路径 C:/Program Files/Creality/Creality Print 7.0 Beta/CrealityPrint.exe
    
-7. **资料**：所有的参数结构在这里：process_parameters.md
+7. **资料**：所有的参数结构在这里：printer_parameters_validation.md，filament_parameters_validation.md，process_parameters_validation.md
 
 
 ## 示例 Prompt
+
+### 示例 1：简单对比型参数（L1 级别）
+```
+一级分类为 printer
 请帮我添加一个 prime_tower_brim_width 参数的测试用例：
-1. 使用的策略用multimaterial_others_validation_design.md文件总结的策略
-2. 要准备哪些gcode或者3mf文件提前告诉我，等我准备好再执行下一步
-3. 目录结构：放在 filament/prime_tower 分类下
-4. 校验逻辑：简单对比型，对比配置值与期望值
+1. 使用的策略用 printer_parameters_validation.md 文件总结的策略
+2. 使用 modify_3mf_params.py 生成 3MF 文件
+3. 目录结构：放在 printer/{分类} 下
+4. 校验逻辑：简单对比型（L1），对比配置值与期望值
 5. 测试用例：设计 2-3 个不同值的用例
 6. 执行测试验证
+```
+
+### 示例 2：复杂校验型参数（L2/L3 级别）
+```
+一级分类为 process
+请帮我添加一个 wall_sequence 参数的测试用例：
+1. 使用的策略用 process_parameters_validation.md 文件总结的策略
+2. 使用 modify_3mf_params.py 生成 3MF 文件
+3. 目录结构：放在 process/quality/wall_and_surfaces 下
+4. 校验逻辑：复杂校验型（L2），需要解析 G-code 中的 TYPE 标记顺序
+5. 测试用例：设计 3 个不同打印顺序的用例
+6. 执行测试验证
+```
+
+### 示例 3：完整工作流
+```
+请帮我为 small_area_infill_flow_compensation 参数添加测试用例：
+1. 查询 process_parameters_validation.md 确认验证策略（L1 - CONFIG_BLOCK）
+2. 使用 modify_3mf_params.py 生成两个 3MF 文件：
+   - enabled: --param small_area_infill_flow_compensation=1
+   - disabled: --param small_area_infill_flow_compensation=0
+3. 创建 JSON 配置文件（标准格式）
+4. 在 wall_and_surfaces_check.py 中添加 parse_small_area_infill_flow_compensation()
+5. 在 test_wall_and_surfaces.py 中添加 test_small_area_infill_flow_compensation()
+6. 运行测试验证
+```

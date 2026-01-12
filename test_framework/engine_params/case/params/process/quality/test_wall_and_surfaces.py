@@ -222,3 +222,40 @@ def test_wipe_before_external_loop(slice_and_export: Path, expected_wipe_before_
 
     ok, actual, details = parse_wipe_before_external_loop(gcode_path, expected_wipe_before_external_loop)
     assert ok, f"wipe_before_external_loop expected {expected_wipe_before_external_loop}, actual {actual}, details: {details}"
+
+
+# ================== small_area_infill_flow_compensation ==================
+@pytest.mark.engine_params
+def test_small_area_infill_flow_compensation(slice_and_export: Path, expected_small_area_infill_flow_compensation: bool):
+    """测试 small_area_infill_flow_compensation 参数
+    
+    该参数控制是否对小面积填充区域进行流量补偿。
+    - 启用时：切片器会自动调整小面积区域的挤出流量，改善打印质量
+    - 禁用时：使用标准流量，不进行额外补偿
+    """
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_small_area_infill_flow_compensation(gcode_path, expected_small_area_infill_flow_compensation)
+    assert ok, f"small_area_infill_flow_compensation expected {expected_small_area_infill_flow_compensation}, actual {actual}, details: {details}"
+
+
+# ================== small_area_infill_flow_compensation_model ==================
+@pytest.mark.engine_params
+def test_small_area_infill_flow_compensation_model(slice_and_export: Path, expected_small_area_infill_flow_compensation_model: list):
+    """测试 small_area_infill_flow_compensation_model 参数
+    
+    该参数定义小面积流量补偿的曲线模型，是一个数组参数，存储面积与流量比例的映射关系。
+    格式: ["0,0", "\n0.2,0.4444", "\n0.4,0.6145", ...]
+    - 数组中每个元素表示 "面积,流量比例" 的对应关系
+    - 切片器根据此曲线动态调整不同面积区域的流量补偿
+    
+    注意：当前切片器版本存在已知限制 - 数组类型参数无法通过 3MF 文件自定义，
+    即使在 different_settings_to_system 中标记也不会生效。因此测试用例暂时只
+    验证 template_model.3mf 中的默认值。
+    """
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual, details = parse_small_area_infill_flow_compensation_model(gcode_path, expected_small_area_infill_flow_compensation_model)
+    assert ok, f"small_area_infill_flow_compensation_model expected {expected_small_area_infill_flow_compensation_model}, actual {actual}, details: {details}"
