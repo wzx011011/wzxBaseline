@@ -1,0 +1,15 @@
+{
+  "param_name": "wall_filament",
+  "cases": [
+    {
+      "project_name": "wall_filament_1",
+      "input_3mf": "wall_filament_1.3mf",
+      "expected_value": "1"
+    },
+    {
+      "project_name": "wall_filament_2",
+      "input_3mf": "wall_filament_2.3mf",
+      "expected_value": "2"
+    }
+  ]
+}
