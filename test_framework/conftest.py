@@ -10,30 +10,6 @@ from pathlib import Path
 # 将项目根目录添加到Python路径，以便测试可以正确导入模块
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-def _load_env_from_file() -> None:
-    """
-    Lightweight .env loader (no external dependency).
-    Only sets keys that are not already in os.environ.
-    """
-    env_path = Path(__file__).resolve().parent.parent / ".env"
-    print(f"load env from {env_path}")
-    if not env_path.exists():
-        return
-    for line in env_path.read_text(encoding="utf-8").splitlines():
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        if "=" not in line:
-            continue
-        key, val = line.split("=", 1)
-        key = key.strip()
-        val = val.strip().strip('"').strip("'")
-        if key and key not in os.environ:
-            os.environ[key] = val
-
-# 在pytest启动时加载环境变量
-_load_env_from_file()
-
 import git
 import pytest
 import pyautogui
@@ -47,21 +23,59 @@ from pyautogui import ImageNotFoundException
 # CREALITY_PRINTER_THEME
 
 def creality_printer_path():
-    """return creality printer path.
+    """return creality printer path with auto-detection.
+    Priority: CREALITY_PRINTER_PATH env var > auto-detection > fail
     """
+    # 1. Try environment variable
     path = os.getenv("CREALITY_PRINTER_PATH")
+    
+    # 2. Auto-detect common paths
     if not path:
-        pytest.fail("CREALITY_PRINTER_PATH not set! Please set it first!")
+        common_paths = [
+            "C:/Program Files/Creality/Creality Print 7.0 Beta/CrealityPrint.exe",
+            "C:/Program Files/Creality/Creality Print/CrealityPrint.exe",
+            str(Path.home() / "AppData/Local/Programs/Creality/CrealityPrint.exe"),
+            "E:/wzx/C3DSlicer/C3DSlicer/build_unified/src/Release/CrealityPrint.exe",
+        ]
+        
+        for candidate in common_paths:
+            if os.path.exists(candidate):
+                path = candidate
+                print(f"[INFO] Auto-detected CrealityPrint at: {path}")
+                break
+    
+    if not path:
+        pytest.fail("CREALITY_PRINTER_PATH not set and auto-detection failed! "
+                   "Please set environment variable or install CrealityPrint in standard location.")
+    
     if not os.path.exists(path):
         pytest.fail(f"software not exist: {path}")
+    
     return path
 
 def log_path():
+    """return creality printer log path with auto-detection.
+    Priority: CREALITY_PRINTER_LOG_PATH env var > auto-detection > fail
+    """
+    # 1. Try environment variable
     path = os.getenv("CREALITY_PRINTER_LOG_PATH")
+    
+    # 2. Auto-detect based on username
     if not path:
-        pytest.fail("CREALITY_PRINTER_LOG_PATH not set! Please set it first!")
+        username = os.getenv("USERNAME") or os.getenv("USER")
+        if username:
+            candidate = f"C:/Users/{username}/AppData/Local/creality/creality-print"
+            if os.path.exists(candidate):
+                path = candidate
+                print(f"[INFO] Auto-detected log path at: {path}")
+    
+    if not path:
+        pytest.fail("CREALITY_PRINTER_LOG_PATH not set and auto-detection failed! "
+                   "Please set environment variable.")
+    
     if not os.path.exists(path):
         pytest.fail(f"log path not exist: {path}")
+    
     return os.path.join(path, "creality.tlog")
 
 @pytest.fixture(scope="session", autouse=True)
