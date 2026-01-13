@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "8888",
+      "project_name": "internal_solid_infill_acceleration_8888",
       "expected_internal_solid_infill_acceleration": 8888.0,
       "input_3mf": "internal_solid_infill_acceleration_8888.3mf",
       "tolerance": 1e-06

@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "0",
+      "project_name": "raft_layers_0",
       "input_3mf": "raft_layers_0.3mf",
       "expected_value": 0
     },
     {
-      "project_name": "2",
+      "project_name": "raft_layers_2",
       "input_3mf": "raft_layers_2.3mf",
       "expected_value": 2
     },
     {
-      "project_name": "4",
+      "project_name": "raft_layers_4",
       "input_3mf": "raft_layers_4.3mf",
       "expected_value": 4
     }

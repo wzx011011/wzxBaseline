@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "10",
+      "project_name": "slow_down_min_speed_10",
       "input_3mf": "slow_down_min_speed_10.3mf",
       "expected_value": "10"
     },
     {
-      "project_name": "20",
+      "project_name": "slow_down_min_speed_20",
       "input_3mf": "slow_down_min_speed_20.3mf",
       "expected_value": "20"
     },
     {
-      "project_name": "30",
+      "project_name": "slow_down_min_speed_30",
       "input_3mf": "slow_down_min_speed_30.3mf",
       "expected_value": "30"
     }

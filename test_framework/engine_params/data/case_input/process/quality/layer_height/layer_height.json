@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "0_24",
+      "project_name": "layer_height_0_24",
       "input_3mf": "layer_height_0.24mm.3mf",
       "expected_layer_height": 0.24
     },
     {
-      "project_name": "0_32",
+      "project_name": "layer_height_0_32",
       "input_3mf": "layer_height_0.32mm.3mf",
       "expected_layer_height": 0.32
     }

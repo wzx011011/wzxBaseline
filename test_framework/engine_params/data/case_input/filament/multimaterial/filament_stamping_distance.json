@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "20",
+      "project_name": "filament_stamping_distance_20",
       "input_3mf": "filament_stamping_distance_20.3mf",
       "expected_value": "20"
     },
     {
-      "project_name": "30",
+      "project_name": "filament_stamping_distance_30",
       "input_3mf": "filament_stamping_distance_30.3mf",
       "expected_value": "30"
     },
     {
-      "project_name": "45",
+      "project_name": "filament_stamping_distance_45",
       "input_3mf": "filament_stamping_distance_45.3mf",
       "expected_value": "45"
     }

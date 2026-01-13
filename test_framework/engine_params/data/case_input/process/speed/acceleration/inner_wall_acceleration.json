@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "8888",
+      "project_name": "inner_wall_acceleration_8888",
       "expected_inner_wall_acceleration": 8888.0,
       "input_3mf": "inner_wall_acceleration_8888.3mf",
       "tolerance": 1e-06

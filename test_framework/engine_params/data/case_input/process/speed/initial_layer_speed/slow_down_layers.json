@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "5",
+      "project_name": "slow_down_layers_5",
       "expected_slow_down_layers": 5,
       "input_3mf": "slow_down_layers_5.3mf",
       "tolerance": 1e-06

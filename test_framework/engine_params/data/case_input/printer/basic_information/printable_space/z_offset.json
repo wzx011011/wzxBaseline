@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "0",
+      "project_name": "z_offset_0",
       "input_3mf": "z_offset_0.3mf",
       "expected_value": 0
     },

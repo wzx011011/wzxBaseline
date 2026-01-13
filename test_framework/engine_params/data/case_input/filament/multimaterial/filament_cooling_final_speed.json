@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "20",
+      "project_name": "filament_cooling_final_speed_20",
       "input_3mf": "filament_cooling_final_speed_20.3mf",
       "expected_value": "20"
     },
     {
-      "project_name": "25",
+      "project_name": "filament_cooling_final_speed_25",
       "input_3mf": "filament_cooling_final_speed_25.3mf",
       "expected_value": "25"
     },
     {
-      "project_name": "30",
+      "project_name": "filament_cooling_final_speed_30",
       "input_3mf": "filament_cooling_final_speed_30.3mf",
       "expected_value": "30"
     }

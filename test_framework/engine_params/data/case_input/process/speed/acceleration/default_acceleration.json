@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "8888",
+      "project_name": "default_acceleration_8888",
       "expected_default_acceleration": 8888.0,
       "input_3mf": "default_acceleration_8888.3mf",
       "tolerance": 1e-06

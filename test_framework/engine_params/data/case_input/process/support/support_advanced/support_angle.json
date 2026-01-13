@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "0",
+      "project_name": "support_angle_0",
       "input_3mf": "support_angle_0.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "30",
+      "project_name": "support_angle_30",
       "input_3mf": "support_angle_30.3mf",
       "expected_value": "30"
     },
     {
-      "project_name": "45",
+      "project_name": "support_angle_45",
       "input_3mf": "support_angle_45.3mf",
       "expected_value": "45"
     }

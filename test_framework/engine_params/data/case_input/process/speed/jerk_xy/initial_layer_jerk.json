@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "10",
+      "project_name": "initial_layer_jerk_10",
       "expected_initial_layer_jerk": 10.0,
       "input_3mf": "initial_layer_jerk_10.3mf",
       "tolerance": 1e-06

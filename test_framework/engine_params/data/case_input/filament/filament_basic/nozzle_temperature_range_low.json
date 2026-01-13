@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "180",
+      "project_name": "nozzle_temperature_range_low_180",
       "input_3mf": "nozzle_temperature_range_low_180.3mf",
       "expected_value": "180"
     },
     {
-      "project_name": "200",
+      "project_name": "nozzle_temperature_range_low_200",
       "input_3mf": "nozzle_temperature_range_low_200.3mf",
       "expected_value": "200"
     },
     {
-      "project_name": "230",
+      "project_name": "nozzle_temperature_range_low_230",
       "input_3mf": "nozzle_temperature_range_low_230.3mf",
       "expected_value": "230"
     }

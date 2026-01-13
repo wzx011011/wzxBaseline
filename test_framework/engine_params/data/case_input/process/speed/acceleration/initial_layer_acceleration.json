@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "500",
+      "project_name": "initial_layer_acceleration_500",
       "expected_initial_layer_acceleration": 500.0,
       "input_3mf": "initial_layer_acceleration_500.3mf",
       "tolerance": 1e-06

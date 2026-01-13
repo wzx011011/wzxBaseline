@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "0",
+      "project_name": "support_filament_0",
       "input_3mf": "support_filament_0.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "1",
+      "project_name": "support_filament_1",
       "input_3mf": "support_filament_1.3mf",
       "expected_value": "1"
     }

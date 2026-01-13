@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "10",
+      "project_name": "travel_jerk_10",
       "expected_travel_jerk": 10.0,
       "input_3mf": "travel_jerk_10.3mf"
     }

@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "001",
+      "project_name": "outer_wall_line_width_001",
       "input_3mf": "outer_wall_line_width_001.3mf",
       "expected_line_width": 0.44
     }

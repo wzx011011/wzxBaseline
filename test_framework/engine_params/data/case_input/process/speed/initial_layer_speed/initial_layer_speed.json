@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "80",
+      "project_name": "initial_layer_speed_80",
       "expected_initial_layer_speed": 80.0,
       "input_3mf": "initial_layer_speed_80.3mf",
       "tolerance": 1e-06

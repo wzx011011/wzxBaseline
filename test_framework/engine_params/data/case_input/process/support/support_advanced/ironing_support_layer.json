@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "0",
+      "project_name": "ironing_support_layer_0",
       "input_3mf": "ironing_support_layer_0.3mf",
       "expected_value": 0
     },
     {
-      "project_name": "1",
+      "project_name": "ironing_support_layer_1",
       "input_3mf": "ironing_support_layer_1.3mf",
       "expected_value": 1
     }

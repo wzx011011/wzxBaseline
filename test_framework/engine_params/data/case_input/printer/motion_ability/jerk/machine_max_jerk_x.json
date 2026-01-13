@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "20",
+      "project_name": "machine_max_jerk_x_20",
       "input_3mf": "machine_max_jerk_x_20.3mf",
       "expected_value": 20
     }

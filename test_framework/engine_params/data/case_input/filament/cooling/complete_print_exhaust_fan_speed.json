@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "0",
+      "project_name": "complete_print_exhaust_fan_speed_0",
       "input_3mf": "complete_print_exhaust_fan_speed_0.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "50",
+      "project_name": "complete_print_exhaust_fan_speed_50",
       "input_3mf": "complete_print_exhaust_fan_speed_50.3mf",
       "expected_value": "50"
     },
     {
-      "project_name": "100",
+      "project_name": "complete_print_exhaust_fan_speed_100",
       "input_3mf": "complete_print_exhaust_fan_speed_100.3mf",
       "expected_value": "100"
     }

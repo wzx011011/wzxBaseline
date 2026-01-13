@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "0.35",
+      "project_name": "support_object_xy_distance_0.35",
       "input_3mf": "support_object_xy_distance_0.35.3mf",
       "expected_value": "0.35"
     },
     {
-      "project_name": "0.2",
+      "project_name": "support_object_xy_distance_0.2",
       "input_3mf": "support_object_xy_distance_0.2.3mf",
       "expected_value": "0.2"
     },
     {
-      "project_name": "0.6",
+      "project_name": "support_object_xy_distance_0.6",
       "input_3mf": "support_object_xy_distance_0.6.3mf",
       "expected_value": "0.6"
     }

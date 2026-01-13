@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "0.08",
+      "project_name": "min_layer_height_0.08",
       "input_3mf": "min_layer_height_0.08.3mf",
       "expected_value": 0.08
     },
     {
-      "project_name": "0.1",
+      "project_name": "min_layer_height_0.1",
       "input_3mf": "min_layer_height_0.1.3mf",
       "expected_value": 0.1
     },
     {
-      "project_name": "0.12",
+      "project_name": "min_layer_height_0.12",
       "input_3mf": "min_layer_height_0.12.3mf",
       "expected_value": 0.12
     }

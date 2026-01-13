@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "0",
+      "project_name": "close_fan_the_first_x_layers_0",
       "input_3mf": "close_fan_the_first_x_layers_0.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "1",
+      "project_name": "close_fan_the_first_x_layers_1",
       "input_3mf": "close_fan_the_first_x_layers_1.3mf",
       "expected_value": "1"
     },
     {
-      "project_name": "3",
+      "project_name": "close_fan_the_first_x_layers_3",
       "input_3mf": "close_fan_the_first_x_layers_3.3mf",
       "expected_value": "3"
     }

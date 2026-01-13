@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "1",
+      "project_name": "skirt_loops_1",
       "input_3mf": "skirt_loops_1.3mf",
       "expected_value": 1
     },
     {
-      "project_name": "2",
+      "project_name": "skirt_loops_2",
       "input_3mf": "skirt_loops_2.3mf",
       "expected_value": 2
     },
     {
-      "project_name": "3",
+      "project_name": "skirt_loops_3",
       "input_3mf": "skirt_loops_3.3mf",
       "expected_value": 3
     }

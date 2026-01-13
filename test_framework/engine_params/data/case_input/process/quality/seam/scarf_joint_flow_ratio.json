@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "0.8",
+      "project_name": "scarf_joint_flow_ratio_0.8",
       "input_3mf": "scarf_joint_flow_ratio_0.8.3mf",
       "expected_flow_ratio": 0.8
     },
     {
-      "project_name": "1.0",
+      "project_name": "scarf_joint_flow_ratio_1.0",
       "input_3mf": "scarf_joint_flow_ratio_1.0.3mf",
       "expected_flow_ratio": 1.0
     },
     {
-      "project_name": "1.2",
+      "project_name": "scarf_joint_flow_ratio_1.2",
       "input_3mf": "scarf_joint_flow_ratio_1.2.3mf",
       "expected_flow_ratio": 1.2
     }

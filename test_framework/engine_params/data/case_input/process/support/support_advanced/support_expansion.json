@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "0",
+      "project_name": "support_expansion_0",
       "input_3mf": "support_expansion_0.3mf",
       "expected_value": "0"
     },
     {
-      "project_name": "2",
+      "project_name": "support_expansion_2",
       "input_3mf": "support_expansion_2.3mf",
       "expected_value": "2"
     }

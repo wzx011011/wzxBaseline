@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "10000",
+      "project_name": "minimum_sparse_infill_area_10000",
       "input_3mf": "minimum_sparse_infill_area_10000.3mf",
       "expected_has_sp_infill": false
     }

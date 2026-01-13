@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "1",
+      "project_name": "skirt_height_1",
       "input_3mf": "skirt_height_1.3mf",
       "expected_value": 1
     },
     {
-      "project_name": "3",
+      "project_name": "skirt_height_3",
       "input_3mf": "skirt_height_3.3mf",
       "expected_value": 3
     },
     {
-      "project_name": "5",
+      "project_name": "skirt_height_5",
       "input_3mf": "skirt_height_5.3mf",
       "expected_value": 5
     }

@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "100",
+      "project_name": "machine_max_speed_e_100",
       "input_3mf": "machine_max_speed_e_100.3mf",
       "expected_value": 100
     }

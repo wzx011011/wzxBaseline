@@ -1,22 +1,22 @@
 {
   "cases": [
     {
-      "project_name": "0.25",
+      "project_name": "support_interface_min_area_0.25",
       "input_3mf": "support_interface_min_area_0.25.3mf",
       "expected_value": "0.25"
     },
     {
-      "project_name": "5",
+      "project_name": "support_interface_min_area_5",
       "input_3mf": "support_interface_min_area_5.3mf",
       "expected_value": "5"
     },
     {
-      "project_name": "10",
+      "project_name": "support_interface_min_area_10",
       "input_3mf": "support_interface_min_area_10.3mf",
       "expected_value": "10"
     },
     {
-      "project_name": "20",
+      "project_name": "support_interface_min_area_20",
       "input_3mf": "support_interface_min_area_20.3mf",
       "expected_value": "20"
     }

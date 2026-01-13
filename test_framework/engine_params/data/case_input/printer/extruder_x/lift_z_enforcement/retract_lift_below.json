@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "199",
+      "project_name": "retract_lift_below_199",
       "input_3mf": "retract_lift_below_199.3mf",
       "expected_value": 199
     },
     {
-      "project_name": "150",
+      "project_name": "retract_lift_below_150",
       "input_3mf": "retract_lift_below_150.3mf",
       "expected_value": 150
     }

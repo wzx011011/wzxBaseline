@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "10",
+      "project_name": "infill_jerk_10",
       "expected_infill_jerk": 10.0,
       "input_3mf": "infill_jerk_10.3mf",
       "tolerance": 1e-06

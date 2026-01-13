@@ -1,13 +1,13 @@
 {
   "cases": [
     {
-      "project_name": "45",
+      "project_name": "bridge_angle_45",
       "input_3mf": "bridge_angle_45degree.3mf",
       "expected_bridge_angle": 45.0,
       "baseline_gcode": null
     },
     {
-      "project_name": "180",
+      "project_name": "bridge_angle_180",
       "input_3mf": "bridge_angle_180degree.3mf",
       "expected_bridge_angle": 180.0,
       "baseline_gcode": null

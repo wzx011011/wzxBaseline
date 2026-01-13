@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "0",
+      "project_name": "machine_load_filament_time_0",
       "input_3mf": "machine_load_filament_time_0.3mf",
       "expected_value": 0
     },
     {
-      "project_name": "119",
+      "project_name": "machine_load_filament_time_119",
       "input_3mf": "machine_load_filament_time_119.3mf",
       "expected_value": 119
     }

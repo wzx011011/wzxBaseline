@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "70",
+      "project_name": "textured_plate_temp_initial_layer_70",
       "input_3mf": "textured_plate_temp_initial_layer_70.3mf",
       "expected_value": "70"
     },
     {
-      "project_name": "80",
+      "project_name": "textured_plate_temp_initial_layer_80",
       "input_3mf": "textured_plate_temp_initial_layer_80.3mf",
       "expected_value": "80"
     }

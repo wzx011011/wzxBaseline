@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "200",
+      "project_name": "nozzle_volume_200",
       "input_3mf": "nozzle_volume_200.3mf",
       "expected_value": 200
     }

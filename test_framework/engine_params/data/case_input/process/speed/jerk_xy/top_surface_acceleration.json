@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "10",
+      "project_name": "top_surface_acceleration_10",
       "expected_top_surface_acceleration": 10.0,
       "input_3mf": "top_surface_acceleration_10.3mf",
       "tolerance": 1e-06

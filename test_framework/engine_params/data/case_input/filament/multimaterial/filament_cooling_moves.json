@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "2",
+      "project_name": "filament_cooling_moves_2",
       "input_3mf": "filament_cooling_moves_2.3mf",
       "expected_value": "2"
     },
     {
-      "project_name": "4",
+      "project_name": "filament_cooling_moves_4",
       "input_3mf": "filament_cooling_moves_4.3mf",
       "expected_value": "4"
     },
     {
-      "project_name": "6",
+      "project_name": "filament_cooling_moves_6",
       "input_3mf": "filament_cooling_moves_6.3mf",
       "expected_value": "6"
     }

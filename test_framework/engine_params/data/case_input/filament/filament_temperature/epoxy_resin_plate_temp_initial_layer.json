@@ -1,12 +1,12 @@
 {
   "cases": [
     {
-      "project_name": "30",
+      "project_name": "epoxy_resin_plate_temp_initial_layer_30",
       "input_3mf": "epoxy_resin_plate_temp_initial_layer_30.3mf",
       "expected_value": "30"
     },
     {
-      "project_name": "40",
+      "project_name": "epoxy_resin_plate_temp_initial_layer_40",
       "input_3mf": "epoxy_resin_plate_temp_initial_layer_40.3mf",
       "expected_value": "40"
     }

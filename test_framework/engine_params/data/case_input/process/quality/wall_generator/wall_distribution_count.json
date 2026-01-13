@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "1",
+      "project_name": "wall_distribution_count_1",
       "input_3mf": "wall_distribution_count_1.3mf",
       "expected_wall_distribution_count": 1
     },
     {
-      "project_name": "2",
+      "project_name": "wall_distribution_count_2",
       "input_3mf": "wall_distribution_count_2.3mf",
       "expected_wall_distribution_count": 2
     },
     {
-      "project_name": "3",
+      "project_name": "wall_distribution_count_3",
       "input_3mf": "wall_distribution_count_3.3mf",
       "expected_wall_distribution_count": 3
     }

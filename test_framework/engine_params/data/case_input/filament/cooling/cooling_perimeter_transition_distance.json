@@ -1,17 +1,17 @@
 {
   "cases": [
     {
-      "project_name": "1",
+      "project_name": "cooling_perimeter_transition_distance_1",
       "input_3mf": "cooling_perimeter_transition_distance_1.3mf",
       "expected_value": "1"
     },
     {
-      "project_name": "2",
+      "project_name": "cooling_perimeter_transition_distance_2",
       "input_3mf": "cooling_perimeter_transition_distance_2.3mf",
       "expected_value": "2"
     },
     {
-      "project_name": "5",
+      "project_name": "cooling_perimeter_transition_distance_5",
       "input_3mf": "cooling_perimeter_transition_distance_5.3mf",
       "expected_value": "5"
     }

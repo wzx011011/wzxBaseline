@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "project_name": "10",
+      "project_name": "default_jerk_10",
       "expected_default_jerk": 10.0,
       "input_3mf": "default_jerk_10.3mf",
       "tolerance": 1e-06
