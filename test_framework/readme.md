@@ -1,133 +1,140 @@
-# 前置准备
+# 切片引擎参数自动化测试框架
 
-## 1. 安装依赖
+## 一、快速开始
 
+### 1. 安装依赖
 ```bash
 pip install -r requirements.txt
 ```
 
-## 2. 设置环境变量
-
-执行脚本 test_framework\docs\generate_env.py，生成 .env 文件，配置切片器路径等环境变量。
-
-## 3. 手动配置C3DSlicer工程路径
-
-## 示例 Prompt
-
-### 示例 1：简单对比型参数（L1 级别）
+### 2. 配置环境变量
+```bash
+cd test_framework
+python generate_env.py
 ```
-一级分类为 printer
-请帮我添加一个 prime_tower_brim_width 参数的测试用例：
-1. 使用的策略用 printer_parameters_validation.md 文件总结的策略
-2. 使用 modify_3mf_params.py 生成 3MF 文件
-3. 目录结构：放在 printer/{分类} 下
-4. 校验逻辑：简单对比型（L1），对比配置值与期望值
-5. 测试用例：设计 2-3 个不同值的用例
+自动检测 CrealityPrint.exe 路径，生成 `.env` 文件。
+
+### 3. 运行测试
+```bash
+$env:PYTHONPATH="e:\wzx\C3DBaseline\test_framework"
+pytest engine_params/case/params/{path}/test_{name}.py::test_{param} -v
+```
+
+---
+
+## 二、目录结构
+
+```
+engine_params/
+├── data/
+│   ├── case_input/{一级分类}/{分类}/{组名称}/{参数名}.json    # 测试配置
+│   └── models/{一级分类}/{分类}/{组名称}/{参数名}/            # 3MF模型文件
+│       ├── {参数名}_值1.3mf
+│       ├── {参数名}_值2.3mf
+│       └── baseline_值1.gcode                                # L3级别基线文件
+├── src/gcode/{一级分类}/{分类}/{组名称}_check.py              # 校验函数
+└── case/params/{一级分类}/{分类}/test_{组名称}.py             # 测试代码
+```
+
+**一级分类**：`printer` / `filament` / `process`
+
+---
+
+## 三、添加测试用例步骤
+
+### Step 1: 创建 JSON 配置
+```json
+{
+  "cases": [
+    {
+      "project_name": "参数名_值1",
+      "input_3mf": "参数名_值1.3mf",
+      "expected_value": 值1,
+      "baseline_gcode": "baseline_值1.gcode"  // L3级别需要，用于对比基线
+    },
+    {
+      "project_name": "参数名_值2", 
+      "input_3mf": "参数名_值2.3mf",
+      "expected_value": 值2
+    }
+  ]
+}
+```
+
+### Step 2: 生成 3MF 文件
+```bash
+cd engine_params
+python generate_3mf.py --json-file data/case_input/{path}/{param}.json
+```
+
+### Step 3: 编写校验函数 (`*_check.py`)
+```python
+def parse_{参数名}(gcode_path: Path) -> Any:
+    """从 G-code 中解析参数值"""
+    # L1: 从 CONFIG_BLOCK 提取
+    # L2/L3: 解析 G-code 指令
+    return actual_value
+```
+
+### Step 4: 编写测试函数 (`test_*.py`)
+```python
+@pytest.mark.engine_params
+def test_{参数名}(slice_and_export: Path, expected_value):
+    actual = parse_{参数名}(slice_and_export)
+    assert actual == expected_value
+```
+
+### Step 5: 执行测试
+```bash
+pytest engine_params/case/params/{path}/test_{name}.py::test_{param} -v
+```
+
+---
+
+## 四、校验级别说明
+
+| 级别 | 说明 | 校验方式 |
+|------|------|----------|
+| L1 | 简单对比 | 从 CONFIG_BLOCK 提取值，直接对比 |
+| L2 | G-code 解析 | 解析 TYPE 标记、坐标、挤出量等 |
+| L3 | 复杂逻辑 | 层间关系、路径顺序、多参数联动 |
+
+---
+
+## 五、工具脚本
+
+| 脚本 | 用途 |
+|------|------|
+| `generate_env.py` | 自动检测环境，生成 .env 文件 |
+| `generate_3mf.py` | 根据 JSON 批量生成 3MF 文件 |
+| `modify_3mf_params.py` | 生成单个 3MF 文件 |
+| `get_test_path.py` | 根据 project_name 查找完整路径 |
+
+---
+
+## 六、Prompt 模板
+
+```
+请帮我添加一个 {参数名} 参数的测试用例：
+
+1. 一级分类：printer / filament / process
+2. 参考源码：E:\wzx\C3DSlicer\C3DSlicer\src\libslic3r\PrintConfig.cpp
+3. 参考策略：{一级分类}_parameters_validation.md
+4. 校验级别：L1(简单对比) / L2(G-code解析) / L3(复杂逻辑)
+5. 测试用例：设计 2-3 个不同值
 6. 执行测试验证
 ```
 
-### 示例 2：复杂校验型参数（L2/L3 级别）
-```
-一级分类为 process
-请帮我添加一个 wall_sequence 参数的测试用例：
-1. 使用的策略用 process_parameters_validation.md 文件总结的策略
-2. 使用 modify_3mf_params.py 生成 3MF 文件
-3. 目录结构：放在 process/quality/wall_and_surfaces 下
-4. 校验逻辑：复杂校验型（L2），需要解析 G-code 中的 TYPE 标记顺序
-5. 测试用例：设计 3 个不同打印顺序的用例
-6. 执行测试验证
-```
+---
 
-### 示例 3：完整工作流
+## 七、自动化原理
+
 ```
-请帮我为 small_area_infill_flow_compensation 参数添加测试用例：
-1. 查询 process_parameters_validation.md 确认验证策略（L1 - CONFIG_BLOCK）
-2. 使用 modify_3mf_params.py 生成两个 3MF 文件：
-   - enabled: --param small_area_infill_flow_compensation=1
-   - disabled: --param small_area_infill_flow_compensation=0
-3. 创建 JSON 配置文件（标准格式）
-4. 在 wall_and_surfaces_check.py 中添加 parse_small_area_infill_flow_compensation()
-5. 在 test_wall_and_surfaces.py 中添加 test_small_area_infill_flow_compensation()
-6. 运行测试验证
+JSON配置 → pytest_generate_tests 参数化
+    ↓
+3MF模型 → slice_and_export fixture 切片
+    ↓
+G-code → 校验函数解析 → 断言验证
 ```
 
-## 自动化测试流程说明
-
-### 1. 测试用例参数准备
-- 每个测试函数（如 `test_internal_bridge_flow`）声明参数（如 `slice_and_export`, `expected_ratio`, `baseline_gcode`, `tol`）。
-- 测试参数由 `pytest_generate_tests` 钩子自动从对应的 JSON 文件（如 `engine_params/data/case_input/quality/bridging/internal_bridge_flow.json`）读取，并参数化到测试函数。
-
----
-
-### 2. 模型与基线文件准备
-- JSON 文件中指定的 3MF 模型、基线 G-code 文件等，会自动解析为绝对路径，传递给测试用例。
----
-
-### 3. G-code 生成（slice_and_export fixture）
-- `slice_and_export` fixture 会：
-  1. 调用 slicer 软件加载 3MF 模型。
-  2. 触发切片操作。
-  3. 导出 G-code 文件到指定路径。
-  4. 使用 watchdog 等待 G-code 文件写入完成。
-  5. 返回 G-code 路径给测试函数。
-
----
-
-### 4. 测试函数执行
-- 测试函数拿到参数（如 G-code 路径、期望值等），调用实际的解析/校验函数（如 `parse_internal_bridge_flow`），进行断言。
-
----
-
-### 5. pytest 自动化管理
-- pytest 负责发现测试、参数化、执行、收集结果。
-- 你可以通过命令行参数（如 `--slicer-exe`）指定 slicer 路径，或用 `-m engine_params` 只运行带标记的测试。
-
----
-
-### 6. 结果输出与清理
-- pytest 输出测试结果。
-- 可选参数（如 `--clean-gcode`）自动清理生成的 G-code 文件。
-
----
-
-**总结：**  
-你只需写好测试函数和参数 JSON，pytest + conftest.py 会自动完成参数注入、模型切片、G-code 生成、断言校验等全流程，无需手动干预。
-
-
-## 添加新参数测试用例的 Prompt 模板
-请帮我添加一个 {参数名} 参数的测试用例，要求如下：
-
-1. **参考 C3DSlicer 源码**：读取 E:\wzx\C3DSlicer\C3DSlicer 路径下的工程，了解该参数的定义和使用方式
-
-2. **目录结构**： **一级分类 是printer,filament,process之一**
-   - 测试文件：engine_params/case/params/{一级分类}/{分类}/{test_组名称}.py
-   - 校验函数：engine_params/src/gcode/{一级分类}/{分类}/{组名称}_check.py
-   - JSON配置：engine_params/data/case_input/{一级分类}/{分类}/{组名称}/{参数名}.json
-   - 模型目录：engine_params/data/models/{一级分类}/{分类}/{组名称}/{参数名}/参数名_期望值.3mf
-
-3. **校验逻辑**：
-   - 简单对比型（L1 级别）：仅对比 G-code 配置中的参数值与期望值是否一致
-   - 复杂校验型（L2/L3 级别）：需要解析 G-code 中的挤出块、坐标等进行验证
-
-4. **参数信息**（需要从源码中获取）：
-   - 参数类型（coFloat/coInt/coBool/coEnum等）
-   - 最小值/最大值
-   - 默认值
-   - 参数含义
-
-5. **测试用例配置**（JSON格式）：
-   ```json
-   {
-     "cases": [
-       {
-         "project_name": "用例描述",
-         "input_3mf": "模型文件名.3mf",
-         "expected_xxx": 期望值
-       }
-     ]
-   }
-   ```
-
-6. **执行测试**：使用切片器路径 C:/Program Files/Creality/Creality Print 7.0 Beta/CrealityPrint.exe
-   
-7. **资料**：所有的参数结构在这里：printer_parameters_validation.md，filament_parameters_validation.md，process_parameters_validation.md
+pytest + conftest.py 自动完成：参数注入、模型切片、G-code 生成、断言校验。

@@ -79,7 +79,9 @@ def parse_alternate_extra_wall(
         gcode_path: Path | str,
         expected_on: bool,
         *,
-        target_oid: Optional[int] = 0
+        target_oid: Optional[int] = 0,
+        check_config: bool = True,
+        check_dependencies: bool = True
 ) -> Tuple[bool, str, List[Tuple[int, str, Dict[str, Any]]]]:
     """
     校验alternate_extra_wall功能是否正确。
@@ -92,19 +94,104 @@ def parse_alternate_extra_wall(
     当expected_on=False时：
     - 所有层的内墙数目应该保持一致
     
+    参数:
+      check_config: 是否检查参数配置
+      check_dependencies: 是否检查依赖条件和冲突
+    
     返回:
-      ok: 是否所有相邻层的内墙数目变化符合预期。
+      ok: 是否所有校验项都通过（配置、依赖、效果）。
       message: 结果消息。
       bad_layers: [(layer_idx, reason, details)]
     """
+    bad_layers: List[Tuple[int, str, Dict[str, Any]]] = []
+    
+    # 1. 配置检查（如果启用）
+    if check_config:
+        try:
+            with open(gcode_path, 'r', encoding='utf-8') as f:
+                gcode_content = f.read()
+        except Exception as e:
+            bad_layers.append((-1, "config-read-error", {"error": str(e)}))
+            return False, "Failed to read gcode file for config check", bad_layers
+        
+        # 检查参数配置
+        import re
+        pattern = r';.*alternate_extra_wall\s*=\s*(0|1|false|true)'
+        matches = re.findall(pattern, gcode_content, re.IGNORECASE)
+        
+        if matches:
+            config_value = matches[0].lower() in ['1', 'true']
+            if config_value != expected_on:
+                bad_layers.append((-1, "config-mismatch", {
+                    "config_value": config_value,
+                    "expected_on": expected_on
+                }))
+        elif expected_on:
+            # 期望开启但未找到配置
+            bad_layers.append((-1, "config-not-found", {
+                "expected_on": expected_on
+            }))
+    
+    # 2. 依赖检查（如果启用）
+    if check_dependencies and expected_on:
+        try:
+            with open(gcode_path, 'r', encoding='utf-8') as f:
+                gcode_content = f.read()
+        except Exception:
+            pass  # 已在config检查中处理
+        else:
+            import re
+            
+            # 检查前置条件
+            wall_loops_match = re.search(r';.*wall_loops\s*=\s*([0-9]+)', gcode_content, re.IGNORECASE)
+            spiral_mode_match = re.search(r';.*spiral_mode\s*=\s*(0|1|false|true)', gcode_content, re.IGNORECASE)
+            infill_density_match = re.search(r';.*sparse_infill_density\s*=\s*([0-9.]+)', gcode_content, re.IGNORECASE)
+            shell_thickness_match = re.search(r';.*ensure_vertical_shell_thickness\s*=\s*([a-zA-Z]+)', gcode_content, re.IGNORECASE)
+            
+            # 检查wall_loops > 0
+            if wall_loops_match:
+                wall_loops = int(wall_loops_match.group(1))
+                if wall_loops <= 0:
+                    bad_layers.append((-1, "dependency-wall-loops", {
+                        "wall_loops": wall_loops,
+                        "required": "> 0"
+                    }))
+            
+            # 检查非spiral_mode
+            if spiral_mode_match:
+                spiral_mode = spiral_mode_match.group(1).lower() in ['1', 'true']
+                if spiral_mode:
+                    bad_layers.append((-1, "dependency-spiral-mode", {
+                        "spiral_mode": spiral_mode,
+                        "conflict": "alternate_extra_wall conflicts with spiral_mode"
+                    }))
+            
+            # 检查sparse_infill_density > 0
+            if infill_density_match:
+                infill_density = float(infill_density_match.group(1))
+                if infill_density <= 0:
+                    bad_layers.append((-1, "dependency-infill-density", {
+                        "sparse_infill_density": infill_density,
+                        "required": "> 0"
+                    }))
+            
+            # 检查ensure_vertical_shell_thickness冲突
+            if shell_thickness_match:
+                shell_thickness = shell_thickness_match.group(1)
+                if shell_thickness.lower() == "evstall":
+                    bad_layers.append((-1, "dependency-shell-thickness", {
+                        "ensure_vertical_shell_thickness": shell_thickness,
+                        "conflict": "alternate_extra_wall conflicts with ensure_vertical_shell_thickness=All"
+                    }))
+    
+    # 3. 效果检查（原有逻辑）
     parser = GCodeParserEx(gcode_path)
     # 使用get_type_contours_per_layer获取每层的内墙轮廓
     layers = parser.get_type_contours_per_layer(types=[ExtrusionType.INNER_WALL], workers=0)
 
     if not layers:
-        return False, "no-contours", [(-1, "no-contours", {})]
-
-    bad_layers: List[Tuple[int, str, Dict[str, Any]]] = []
+        bad_layers.append((-1, "no-contours", {}))
+        return False, "no-contours", bad_layers
     last_inner_count = None
 
     # 遍历所有层
@@ -169,14 +256,24 @@ def parse_alternate_extra_wall(
     ok = len(bad_layers) == 0
     if ok:
         if expected_on:
-            message = "All layers have correct alternating inner wall pattern"
+            message = "All validations passed: config, dependencies, and alternating pattern"
         else:
-            message = "All layers have consistent inner wall count"
+            message = "All validations passed: config and consistent wall count"
     else:
-        if expected_on:
-            message = "Some layers have incorrect inner wall pattern"
-        else:
-            message = "Some layers have inconsistent inner wall count"
+        # 分类错误类型
+        config_errors = [e for e in bad_layers if e[1].startswith('config-')]
+        dependency_errors = [e for e in bad_layers if e[1].startswith('dependency-')]
+        effect_errors = [e for e in bad_layers if not e[1].startswith(('config-', 'dependency-'))]
+        
+        error_parts = []
+        if config_errors:
+            error_parts.append(f"config errors ({len(config_errors)})")
+        if dependency_errors:
+            error_parts.append(f"dependency errors ({len(dependency_errors)})")
+        if effect_errors:
+            error_parts.append(f"effect errors ({len(effect_errors)})")
+        
+        message = f"Validation failed: {', '.join(error_parts)}"
     
     return ok, message, bad_layers
 

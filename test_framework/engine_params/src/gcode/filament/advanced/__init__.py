@@ -1,6 +1,6 @@
 """Advanced parameters validation functions."""
 
-from .advanced_check import (
+from .gcode_check import (
     parse_filament_start_gcode,
     parse_filament_end_gcode,
     parse_filament_notes,

@@ -1,4 +1,4 @@
-"""
+﻿"""
 Common utilities for filament parameter validation.
 """
 
@@ -21,3 +21,4 @@ def values_equal(actual: Any, expected: Any) -> bool:
     norm_actual = str_norm(actual)
     norm_expected = str_norm(expected)
     return norm_actual == norm_expected
+
