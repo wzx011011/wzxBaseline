@@ -8,8 +8,9 @@ pipeline {
     cron('0 1 * * *') // 每天凌晨1点
   }
   parameters {
-    string(name: 'BRANCH', defaultValue: 'release-1130', description: 'Jenkins parameter BRANCH (optional)')
-    string(name: 'TAG_NAME', defaultValue: '7.0.0', description: 'Tag name to pass to builds (optional)')
+    string(name: 'BRANCH', defaultValue: 'release-260130', description: 'Jenkins parameter BRANCH (optional)')
+    string(name: 'WEB_BRANCH', defaultValue: 'release-260130', description: 'Jenkins parameter BRANCH (optional)')
+    string(name: 'TAG_NAME', defaultValue: '7.0.1', description: 'Tag name to pass to builds (optional)')
     string(name: 'RTYPE', defaultValue: 'Beta', description: 'Release type to pass to builds (optional)')
     booleanParam(name: 'RUN_TESTS', defaultValue: true, description: 'Whether to run tests')
   }
@@ -23,6 +24,7 @@ pipeline {
     TAG_NAME = "${TAG_NAME}"
     RTYPE = "${RTYPE}"
     BRANCH = "${BRANCH}"
+    WEB_BRANCH = "${WEB_BRANCH}"
     POWERSHELL_HOME = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
     PYTHONHOME = "C:\\Users\\cx2056\\AppData\\Local\\Programs\\Python\\Python310"
     PATH = "C:\\Windows\\System32;C:\\Program Files\\Git\\bin;C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Users\\cx2056\\AppData\\Local\\Programs\\Python\\Python310;${PATH}"
@@ -71,7 +73,7 @@ if /I "%RUN_TESTS%"=="false" (
 )
 
 REM Run orchestrator
-python ci\\jenkins_release_orchestrator.py --platforms windows macos_x86 macos_arm64 linux --artifacts-dir "%ARTIFACTS_DIR%" --branch "%BRANCH%" --tag-name "%TAG_NAME%" --rtype "%RTYPE%" %SKIP_FLAG%
+python ci\\jenkins_release_orchestrator.py --platforms windows macos_x86 macos_arm64 linux --artifacts-dir "%ARTIFACTS_DIR%" --branch "%BRANCH%" --web-branch "%WEB_BRANCH%" --tag-name "%TAG_NAME%" --rtype "%RTYPE%" %SKIP_FLAG%
 endlocal
 '''
         }
