@@ -20,7 +20,11 @@ from engine_params.src.gcode.process.quality.seam_check import (
     parse_scarf_angle_threshold,
     parse_scarf_joint_speed,
     parse_scarf_overhang_threshold,
-)
+    parse_seam_position_aligned_L3,
+    parse_seam_position_back_L3,
+    parse_seam_position_nearest_L3,
+    parse_seam_position_assemble_zgap_L3,
+    parse_seam_position_random_L3,)
 
 
 # ================== seam_position ==================
@@ -197,3 +201,68 @@ def test_scarf_overhang_threshold(slice_and_export: Path, expected_scarf_overhan
 
     ok, actual, details = parse_scarf_overhang_threshold(gcode_path, expected_scarf_overhang_threshold)
     assert ok, f"scarf_overhang_threshold expected {expected_scarf_overhang_threshold}, actual {actual}, details: {details}"
+
+
+# ================== seam_position_aligned_L3 ==================
+@pytest.mark.engine_params
+def test_seam_position_aligned_L3(slice_and_export: Path, baseline_gcode: Path):
+    """测试 seam_position 参数 aligned 字段的 L3 级别快照对比"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual_match, details = parse_seam_position_aligned_L3(
+        gcode_path, baseline_gcode, expected_match=True
+    )
+    assert ok, f"seam_position_aligned_L3 expected match True, actual match {actual_match}, details: {details}"
+
+
+# ================== seam_position_back_L3 ==================
+@pytest.mark.engine_params
+def test_seam_position_back_L3(slice_and_export: Path, baseline_gcode: Path):
+    """测试 seam_position 参数 back 字段的 L3 级别快照对比"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual_match, details = parse_seam_position_back_L3(
+        gcode_path, baseline_gcode, expected_match=True
+    )
+    assert ok, f"seam_position_back_L3 expected match True, actual match {actual_match}, details: {details}"
+
+
+# ================== seam_position_nearest_L3 ==================
+@pytest.mark.engine_params
+def test_seam_position_nearest_L3(slice_and_export: Path, baseline_gcode: Path):
+    """测试 seam_position 参数 nearest 字段的 L3 级别快照对比"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual_match, details = parse_seam_position_nearest_L3(
+        gcode_path, baseline_gcode, expected_match=True
+    )
+    assert ok, f"seam_position_nearest_L3 expected match True, actual match {actual_match}, details: {details}"
+
+
+# ================== seam_position_assemble_zgap_L3 ==================
+@pytest.mark.engine_params
+def test_seam_position_assemble_zgap_L3(slice_and_export: Path, baseline_gcode: Path):
+    """测试 seam_position 参数 assemble_zgap 字段的 L3 级别快照对比"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual_match, details = parse_seam_position_assemble_zgap_L3(
+        gcode_path, baseline_gcode, expected_match=True
+    )
+    assert ok, f"seam_position_assemble_zgap_L3 expected match True, actual match {actual_match}, details: {details}"
+
+
+# ================== seam_position_random_L3 ==================
+@pytest.mark.engine_params
+def test_seam_position_random_L3(slice_and_export: Path, baseline_gcode: Path):
+    """测试 seam_position 参数 random 字段的 L3 级别快照对比"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual_match, details = parse_seam_position_random_L3(
+        gcode_path, baseline_gcode, expected_match=True
+    )
+    assert ok, f"seam_position_random_L3 expected match True, actual match {actual_match}, details: {details}"

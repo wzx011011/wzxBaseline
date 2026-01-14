@@ -1,0 +1,9 @@
+{
+  "cases": [
+    {
+      "project_name": "seam_position_back_L3_快照对比测试",
+      "input_3mf": "test_seam_position_back_L3/3DBenchy_back.3mf",
+      "baseline_gcode": "test_seam_position_back_L3/3DBenchy_baseline_back.gcode"
+    }
+  ]
+}

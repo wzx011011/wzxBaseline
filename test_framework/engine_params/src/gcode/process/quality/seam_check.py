@@ -443,3 +443,280 @@ def parse_scarf_overhang_threshold(
         "method": "L1 - CONFIG_BLOCK"
     }
     return (ok, actual_value, details)
+
+
+def parse_seam_position_aligned_L3(
+    gcode_path: Path,
+    baseline_gcode: Path,
+    expected_match: bool = True
+) -> Tuple[bool, bool, dict]:
+    """
+    检测 EXCLUDE_OBJECT_START 到 EXCLUDE_OBJECT_END 之间数据的 L3 级别快照对比
+    
+    对比测试 G-code 和基准 G-code 中指定对象的 EXCLUDE_OBJECT 数据
+    
+    参数:
+        gcode_path: 测试 G-code 文件路径
+        baseline_gcode: 基准 G-code 文件路径
+        expected_match: 期望是否匹配
+    
+    返回:
+        (是否通过, 实际匹配结果, 详细信息)
+    """
+    # 导入 EXCLUDE_OBJECT 比较功能
+    from ...GCodeCompExcludeObject import GCodeCompExcludeObject
+    
+    # 创建比较器实例并比较 EXCLUDE_OBJECT 数据（默认对象ID=0）
+    comparator = GCodeCompExcludeObject()
+    actual_match, details = comparator.compare_exclude_object_data(
+        baseline_gcode=baseline_gcode,
+        test_gcode=gcode_path,
+        object_id=0
+    )
+    
+    # 判断是否通过测试
+    ok = actual_match == expected_match
+    
+    # 构建返回的详细信息
+    result_details = {
+        "baseline_file": str(baseline_gcode),
+        "test_file": str(gcode_path),
+        "object_id": 0,
+        "expected_match": expected_match,
+        "actual_match": actual_match,
+        "detection_level": "L3 - EXCLUDE_OBJECT 数据快照对比"
+    }
+    
+    # 合并比较结果详情
+    if "total_lines" in details:
+        result_details["total_lines"] = details["total_lines"]
+    if "mismatch_count" in details:
+        result_details["mismatch_count"] = details["mismatch_count"]
+    if "mismatches" in details:
+        result_details["mismatches"] = details["mismatches"]
+    if "error" in details:
+        result_details["error"] = details["error"]
+    
+
+    
+    return (ok, actual_match, result_details)
+
+
+def parse_seam_position_random_L3(
+    gcode_path: Path,
+    baseline_gcode: Path,
+    expected_match: bool = True
+) -> Tuple[bool, bool, dict]:
+    """
+    检测 random 参数的 EXCLUDE_OBJECT_START 到 EXCLUDE_OBJECT_END 之间数据的 L3 级别快照对比
+    
+    对比测试 G-code 和基准 G-code 中指定对象的 EXCLUDE_OBJECT 数据
+    
+    参数:
+        gcode_path: 测试 G-code 文件路径
+        baseline_gcode: 基准 G-code 文件路径
+        expected_match: 期望是否匹配
+    
+    返回:
+        (是否通过, 实际匹配结果, 详细信息)
+    """
+    # 导入 EXCLUDE_OBJECT 比较功能
+    from ...GCodeCompExcludeObject import GCodeCompExcludeObject
+    
+    # 创建比较器实例并比较 EXCLUDE_OBJECT 数据（默认对象ID=0）
+    comparator = GCodeCompExcludeObject()
+    actual_match, details = comparator.compare_exclude_object_data(
+        baseline_gcode=baseline_gcode,
+        test_gcode=gcode_path,
+        object_id=0
+    )
+    
+    # 判断是否通过测试
+    ok = actual_match == expected_match
+    
+    # 构建返回的详细信息
+    result_details = {
+        "baseline_file": str(baseline_gcode),
+        "test_file": str(gcode_path),
+        "object_id": 0,
+        "expected_match": expected_match,
+        "actual_match": actual_match,
+        "detection_level": "L3 - EXCLUDE_OBJECT 数据快照对比"
+    }
+    
+    # 合并比较结果详情
+    if "total_lines" in details:
+        result_details["total_lines"] = details["total_lines"]
+    if "mismatch_count" in details:
+        result_details["mismatch_count"] = details["mismatch_count"]
+    if "mismatches" in details:
+        result_details["mismatches"] = details["mismatches"]
+    if "error" in details:
+        result_details["error"] = details["error"]
+    
+    return (ok, actual_match, result_details)
+
+
+def parse_seam_position_assemble_zgap_L3(
+    gcode_path: Path,
+    baseline_gcode: Path,
+    expected_match: bool = True
+) -> Tuple[bool, bool, dict]:
+    """
+    检测 assemble_zgap 参数的 EXCLUDE_OBJECT_START 到 EXCLUDE_OBJECT_END 之间数据的 L3 级别快照对比
+    
+    对比测试 G-code 和基准 G-code 中指定对象的 EXCLUDE_OBJECT 数据
+    
+    参数:
+        gcode_path: 测试 G-code 文件路径
+        baseline_gcode: 基准 G-code 文件路径
+        expected_match: 期望是否匹配
+    
+    返回:
+        (是否通过, 实际匹配结果, 详细信息)
+    """
+    # 导入 EXCLUDE_OBJECT 比较功能
+    from ...GCodeCompExcludeObject import GCodeCompExcludeObject
+    
+    # 创建比较器实例并比较 EXCLUDE_OBJECT 数据（默认对象ID=0）
+    comparator = GCodeCompExcludeObject()
+    actual_match, details = comparator.compare_exclude_object_data(
+        baseline_gcode=baseline_gcode,
+        test_gcode=gcode_path,
+        object_id=0
+    )
+    
+    # 判断是否通过测试
+    ok = actual_match == expected_match
+    
+    # 构建返回的详细信息
+    result_details = {
+        "baseline_file": str(baseline_gcode),
+        "test_file": str(gcode_path),
+        "object_id": 0,
+        "expected_match": expected_match,
+        "actual_match": actual_match,
+        "detection_level": "L3 - EXCLUDE_OBJECT 数据快照对比"
+    }
+    
+    # 合并比较结果详情
+    if "total_lines" in details:
+        result_details["total_lines"] = details["total_lines"]
+    if "mismatch_count" in details:
+        result_details["mismatch_count"] = details["mismatch_count"]
+    if "mismatches" in details:
+        result_details["mismatches"] = details["mismatches"]
+    if "error" in details:
+        result_details["error"] = details["error"]
+    
+    return (ok, actual_match, result_details)
+
+
+def parse_seam_position_nearest_L3(
+    gcode_path: Path,
+    baseline_gcode: Path,
+    expected_match: bool = True
+) -> Tuple[bool, bool, dict]:
+    """
+    检测 nearest 参数的 EXCLUDE_OBJECT_START 到 EXCLUDE_OBJECT_END 之间数据的 L3 级别快照对比
+    
+    对比测试 G-code 和基准 G-code 中指定对象的 EXCLUDE_OBJECT 数据
+    
+    参数:
+        gcode_path: 测试 G-code 文件路径
+        baseline_gcode: 基准 G-code 文件路径
+        expected_match: 期望是否匹配
+    
+    返回:
+        (是否通过, 实际匹配结果, 详细信息)
+    """
+    # 导入 EXCLUDE_OBJECT 比较功能
+    from ...GCodeCompExcludeObject import GCodeCompExcludeObject
+    
+    # 创建比较器实例并比较 EXCLUDE_OBJECT 数据（默认对象ID=0）
+    comparator = GCodeCompExcludeObject()
+    actual_match, details = comparator.compare_exclude_object_data(
+        baseline_gcode=baseline_gcode,
+        test_gcode=gcode_path,
+        object_id=0
+    )
+    
+    # 判断是否通过测试
+    ok = actual_match == expected_match
+    
+    # 构建返回的详细信息
+    result_details = {
+        "baseline_file": str(baseline_gcode),
+        "test_file": str(gcode_path),
+        "object_id": 0,
+        "expected_match": expected_match,
+        "actual_match": actual_match,
+        "detection_level": "L3 - EXCLUDE_OBJECT 数据快照对比"
+    }
+    
+    # 合并比较结果详情
+    if "total_lines" in details:
+        result_details["total_lines"] = details["total_lines"]
+    if "mismatch_count" in details:
+        result_details["mismatch_count"] = details["mismatch_count"]
+    if "mismatches" in details:
+        result_details["mismatches"] = details["mismatches"]
+    if "error" in details:
+        result_details["error"] = details["error"]
+    
+    return (ok, actual_match, result_details)
+
+
+def parse_seam_position_back_L3(
+    gcode_path: Path,
+    baseline_gcode: Path,
+    expected_match: bool = True
+) -> Tuple[bool, bool, dict]:
+    """
+    检测 back 参数的 EXCLUDE_OBJECT_START 到 EXCLUDE_OBJECT_END 之间数据的 L3 级别快照对比
+    
+    对比测试 G-code 和基准 G-code 中指定对象的 EXCLUDE_OBJECT 数据
+    
+    参数:
+        gcode_path: 测试 G-code 文件路径
+        baseline_gcode: 基准 G-code 文件路径
+        expected_match: 期望是否匹配
+    
+    返回:
+        (是否通过, 实际匹配结果, 详细信息)
+    """
+    # 导入 EXCLUDE_OBJECT 比较功能
+    from ...GCodeCompExcludeObject import GCodeCompExcludeObject
+    
+    # 创建比较器实例并比较 EXCLUDE_OBJECT 数据（默认对象ID=0）
+    comparator = GCodeCompExcludeObject()
+    actual_match, details = comparator.compare_exclude_object_data(
+        baseline_gcode=baseline_gcode,
+        test_gcode=gcode_path,
+        object_id=0
+    )
+    
+    # 判断是否通过测试
+    ok = actual_match == expected_match
+    
+    # 构建返回的详细信息
+    result_details = {
+        "baseline_file": str(baseline_gcode),
+        "test_file": str(gcode_path),
+        "object_id": 0,
+        "expected_match": expected_match,
+        "actual_match": actual_match,
+        "detection_level": "L3 - EXCLUDE_OBJECT 数据快照对比"
+    }
+    
+    # 合并比较结果详情
+    if "total_lines" in details:
+        result_details["total_lines"] = details["total_lines"]
+    if "mismatch_count" in details:
+        result_details["mismatch_count"] = details["mismatch_count"]
+    if "mismatches" in details:
+        result_details["mismatches"] = details["mismatches"]
+    if "error" in details:
+        result_details["error"] = details["error"]
+    
+    return (ok, actual_match, result_details)
