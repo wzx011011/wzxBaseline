@@ -358,8 +358,8 @@ def parse_filament_vendor(gcode_content):
 
 def parse_default_filament_colour(gcode_content):
     """
-    鏍￠獙鑰楁潗棰滆壊鍙傛暟
-    鍙傛暟: default_filament_colour (coString)
+    校验耗材颜色参数
+    参数: default_filament_colour (coString)
     """
     result = {
         "parameter": "default_filament_colour",
@@ -371,6 +371,7 @@ def parse_default_filament_colour(gcode_content):
     
     import re
     
+    # 只匹配 default_filament_colour，因为这是G-code中实际输出的参数名
     pattern = r';.*default_filament_colour\s*=\s*([^\n;]+)'
     matches = re.findall(pattern, gcode_content, re.IGNORECASE)
     
@@ -378,7 +379,7 @@ def parse_default_filament_colour(gcode_content):
         result["found"] = True
         result["value"] = matches[0].strip('"\'')
         
-        # 绠€鍗曠殑棰滆壊鏍煎紡妫€鏌?
+        # 简单的颜色格式检查
         color_value = result["value"]
         if color_value and not (color_value.startswith('#') or color_value.lower() in ['red', 'blue', 'green', 'black', 'white']):
             result["errors"].append(f"default_filament_colour '{color_value}' may not be a valid color format")
@@ -387,8 +388,14 @@ def parse_default_filament_colour(gcode_content):
 
 def parse_pressure_advance(gcode_content):
     """
-    鏍￠獙鍘嬪姏琛ュ伩鍊煎弬鏁?
-    鍙傛暟: pressure_advance (coFloat, 0.0-2.0)
+    校验压力补偿值参数
+    参数: pressure_advance (coFloat, 0.0-2.0)
+    
+    支持多种G-code格式:
+    1. M900 K值 (Marlin Linear Advance)
+    2. SET_PRESSURE_ADVANCE ADVANCE=值 (Klipper) 
+    3. M572 D0 S值 (RepRap firmware)
+    4. 注释中的 pressure_advance=值
     """
     result = {
         "parameter": "pressure_advance",
@@ -400,22 +407,55 @@ def parse_pressure_advance(gcode_content):
     
     import re
     
-    pattern = r';.*pressure_advance\s*=\s*([0-9.]+)'
-    matches = re.findall(pattern, gcode_content, re.IGNORECASE)
+    # 多种pressure advance命令模式，按优先级排序
+    patterns = [
+        # Marlin Linear Advance: M900 K0.02
+        (r'M900\s+K([0-9.]+)', "M900 K命令"),
+        # Klipper: SET_PRESSURE_ADVANCE ADVANCE=0.02  
+        (r'SET_PRESSURE_ADVANCE\s+ADVANCE=([0-9.]+)', "Klipper SET_PRESSURE_ADVANCE命令"),
+        # RepRap firmware: M572 D0 S0.02
+        (r'M572\s+D\d+\s+S([0-9.]+)', "RepRap M572命令"),
+        # 注释中的配置: ; pressure_advance = 0.02
+        (r';.*pressure_advance\s*=\s*([0-9.]+)', "注释配置"),
+    ]
     
-    if matches:
+    found_values = []
+    
+    for pattern, description in patterns:
+        matches = re.findall(pattern, gcode_content, re.IGNORECASE)
+        if matches:
+            for match in matches:
+                try:
+                    value = float(match)
+                    found_values.append((value, description))
+                except ValueError:
+                    result["errors"].append(f"Invalid pressure_advance value in {description}: {match}")
+    
+    if found_values:
         result["found"] = True
-        try:
-            result["value"] = float(matches[0])
-            
-            # 鏍￠獙鑼冨洿 0.0-2.0
-            if result["value"] < 0.0 or result["value"] > 2.0:
-                result["validation"] = False
-                result["errors"].append(f"pressure_advance {result['value']} out of range (0.0-2.0)")
-                
-        except ValueError:
+        # 使用最后一个找到的值（通常是最终设置）
+        result["value"], source = found_values[-1]
+        result["source"] = source
+        
+        # 校验范围 0.0-2.0
+        if result["value"] < 0.0 or result["value"] > 2.0:
             result["validation"] = False
-            result["errors"].append("pressure_advance must be a valid number")
+            result["errors"].append(f"pressure_advance {result['value']} out of range (0.0-2.0)")
+    else:
+        # 如果没有找到任何命令，可能是被禁用或设为0
+        # 检查是否有M900 K0或类似的禁用命令
+        disable_patterns = [
+            r'M900\s+K0(?:\.0*)?(?:\s|$)',  # M900 K0
+            r'SET_PRESSURE_ADVANCE\s+ADVANCE=0(?:\.0*)?(?:\s|$)',  # SET_PRESSURE_ADVANCE ADVANCE=0
+            r'M572\s+D\d+\s+S0(?:\.0*)?(?:\s|$)',  # M572 D0 S0
+        ]
+        
+        for pattern in disable_patterns:
+            if re.search(pattern, gcode_content, re.IGNORECASE):
+                result["found"] = True
+                result["value"] = 0.0
+                result["source"] = "禁用命令"
+                break
     
     return result
 

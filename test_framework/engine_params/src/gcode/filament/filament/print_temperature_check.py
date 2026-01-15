@@ -123,19 +123,26 @@ def parse_material_flow_temp_graph(gcode_content):
     
     import re
     
-    # 鏌ユ壘娓╁害娴侀噺鍥捐〃鏁版嵁
-    pattern = r';.*material_flow_temp_graph\s*=\s*([^\n;]+)'
+    # 查找温度流量图表数据
+    pattern = r';.*material_flow_temp_graph\s*=\s*([^\n;]*)'
     matches = re.findall(pattern, gcode_content, re.IGNORECASE)
     
     if matches:
         result["found"] = True
-        result["value"] = matches[0].strip('"\'')
+        # 去除引号和首尾空格
+        raw_value = matches[0].strip('"\'').strip()
         
-        # L3绾у埆鏍￠獙锛氱畝鍗曠殑鏍煎紡妫€鏌?
+        # 如果值为空字符串，则设为空值
+        if not raw_value:
+            result["value"] = ""
+        else:
+            result["value"] = raw_value
+        
+        # L3级别校验：简单的格式检查
         if result["value"] and len(result["value"]) > 0:
-            # 妫€鏌ユ槸鍚︽槸鍚堢悊鐨勫浘琛ㄦ暟鎹牸寮忥紙鍙互鏄疛SON鎴栧叾浠栨牸寮忥級
+            # 检查是否是合理的图表数据格式（可以是JSON或其他格式）
             try:
-                # 杩欓噷鍙互娣诲姞鏇村鏉傜殑鍥捐〃鏁版嵁楠岃瘉閫昏緫
+                # 这里可以添加更复杂的图表数据验证逻辑
                 pass
             except:
                 result["validation"] = False

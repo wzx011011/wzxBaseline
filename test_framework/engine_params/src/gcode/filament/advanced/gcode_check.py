@@ -9,11 +9,19 @@ from pathlib import Path
 from typing import Tuple, Dict, Any
 from engine_params.src.gcode.GCodeParserEx import GCodeParserEx
 
+# Alias for backward compatibility
+GCodeParser = GCodeParserEx
+
 
 def _str_norm(v: Any) -> str | None:
     """Normalize string value, removing surrounding quotes and whitespace."""
     if v is None:
         return None
+    
+    # Handle ParsedConfig objects by getting their value
+    if hasattr(v, 'value'):
+        v = v.value
+    
     s = str(v).strip()
     # Remove surrounding quotes if present (e.g., '""' -> '')
     if len(s) >= 2 and s.startswith('"') and s.endswith('"'):

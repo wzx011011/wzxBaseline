@@ -9,6 +9,9 @@ from pathlib import Path
 from typing import Tuple, Dict, Any
 from engine_params.src.gcode.GCodeParserEx import GCodeParserEx
 
+# Alias for backward compatibility
+GCodeParser = GCodeParserEx
+
 
 def _str_norm(v: Any) -> str | None:
     """Normalize value for comparison. Treats None and 'nil' as equivalent."""

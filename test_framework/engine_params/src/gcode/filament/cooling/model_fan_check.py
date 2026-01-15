@@ -94,7 +94,7 @@ def parse_cooling_slowdown_logic(gcode_path: Path, expected_value: str) -> Tuple
     cfg = parser.load_config()
     actual = cfg.get("cooling_slowdown_logic")
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        _str_norm(actual.value if hasattr(actual, 'value') else actual) == _str_norm(expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Cooling slowdown logic: {actual}"},
     )
@@ -141,8 +141,13 @@ def parse_overhang_fan_threshold(gcode_path: Path, expected_value: str) -> Tuple
     parser = GCodeParserEx(gcode_path)
     cfg = parser.load_config()
     actual = cfg.get("overhang_fan_threshold")
+    # 对于百分比，处理ParsedConfig对象并格式化为百分比字符串
+    if hasattr(actual, 'is_percent') and actual.is_percent:
+        actual_value = f"{int(actual.value * 100)}%"
+    else:
+        actual_value = str(actual.value if hasattr(actual, 'value') else actual)
     return (
-        _str_norm(actual) == _str_norm(expected_value),
+        actual_value == expected_value,
         actual,
         {"detection_method": "Level 1 - Config", "message": f"Overhang fan threshold: {actual}"},
     )
