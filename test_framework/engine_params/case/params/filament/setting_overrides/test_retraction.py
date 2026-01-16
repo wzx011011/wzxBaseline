@@ -13,6 +13,7 @@ from engine_params.src.gcode.filament.setting_overrides.retraction_check import 
     parse_filament_retract_restart_extra,
     parse_filament_retraction_minimum_travel,
     parse_filament_retract_when_changing_layer,
+    parse_filament_retract_when_changing_layer_behavior,
     parse_filament_wipe,
     parse_filament_wipe_distance,
     parse_filament_retract_before_wipe,
@@ -103,10 +104,16 @@ def test_filament_retraction_minimum_travel(slice_and_export: Path, expected_val
 
 @pytest.mark.engine_params
 def test_filament_retract_when_changing_layer(slice_and_export: Path, expected_value: str):
-    """Test filament_retract_when_changing_layer parameter (Level 1 - Config)"""
+    """Test filament_retract_when_changing_layer parameter (Level 1 - Config + Level 2 - Behavior)"""
     gcode_path = slice_and_export
-    ok, actual, details = parse_filament_retract_when_changing_layer(gcode_path, expected_value)
-    assert ok, f"filament_retract_when_changing_layer expected {expected_value}, got {actual}: {details}"
+    
+    # Level 1: Config validation
+    ok1, actual1, details1 = parse_filament_retract_when_changing_layer(gcode_path, expected_value)
+    assert ok1, f"Level 1 - filament_retract_when_changing_layer config expected {expected_value}, got {actual1}: {details1}"
+    
+    # Level 2: G-code behavior validation
+    ok2, actual2, details2 = parse_filament_retract_when_changing_layer_behavior(gcode_path, expected_value)
+    assert ok2, f"Level 2 - filament_retract_when_changing_layer behavior validation failed. Expected {expected_value}, analysis: {actual2}. Details: {details2}"
 
 
 @pytest.mark.engine_params

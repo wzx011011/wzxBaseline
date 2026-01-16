@@ -2,8 +2,16 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Dict, Tuple
+from functools import lru_cache
 
 from engine_params.src.gcode.GCodeParser import GCodeParser
+
+
+@lru_cache(maxsize=128)
+def _load_gcode_config(gcode_path: Path) -> Dict[str, Any]:
+    """Cached config loading to avoid repeated parsing of same file."""
+    parser = GCodeParser(gcode_path)
+    return parser.load_config()
 
 
 def _parse_config_value(
@@ -11,8 +19,18 @@ def _parse_config_value(
     key: str,
     expected_value: Any,
 ) -> Tuple[bool, Any, Dict[str, Any]]:
-    parser = GCodeParser(gcode_path)
-    cfg = parser.load_config()
+    """
+    Generic config parameter parser for Level 1 - Config parameters.
+    
+    Args:
+        gcode_path: Path to the G-code file
+        key: Configuration key to extract
+        expected_value: Expected parameter value
+        
+    Returns:
+        Tuple of (validation_passed, actual_value, details)
+    """
+    cfg = _load_gcode_config(gcode_path)
 
     actual = cfg.get(key)
     if actual is None and key not in cfg:
@@ -88,6 +106,79 @@ def parse_retraction_minimum_travel(gcode_path: Path, expected_value: float | in
 
 def parse_retract_when_changing_layer(gcode_path: Path, expected_value: int):
     return _parse_config_value(gcode_path, "retract_when_changing_layer", expected_value)
+
+
+def parse_retract_when_changing_layer_behavior(gcode_path: Path, expected_value: int) -> Tuple[bool, Any, Dict[str, Any]]:
+    """Test retract_when_changing_layer G-code behavior (Level 2 - G-code Analysis)"""
+    import re
+    
+    try:
+        with open(gcode_path, 'r', encoding='utf-8') as f:
+            gcode_content = f.read()
+        
+        # 查找Z轴移动和回抽的配合模式
+        z_moves = list(re.finditer(r'G[01]\s+.*Z([0-9.]+)', gcode_content, re.IGNORECASE))
+        
+        z_move_retracts = 0
+        total_z_moves = 0
+        
+        for z_match in z_moves:
+            z_value = float(z_match.group(1))
+            # 检查Z移动前50行内是否有回抽命令
+            start_search = max(0, z_match.start() - 1000)
+            search_region = gcode_content[start_search:z_match.start()]
+            
+            # 查找回抽命令
+            retract_patterns = [
+                r'G1\s+.*E-[0-9.]+',
+                r'G10',
+                r'G1\s+F[0-9]+\s+E-[0-9.]+'
+            ]
+            
+            found_retract = False
+            for pattern in retract_patterns:
+                if re.search(pattern, search_region, re.IGNORECASE):
+                    found_retract = True
+                    break
+            
+            if found_retract:
+                z_move_retracts += 1
+            total_z_moves += 1
+        
+        # 判断行为
+        config_enabled = expected_value == 1
+        
+        if config_enabled:
+            behavior_correct = z_move_retracts > total_z_moves * 0.5 if total_z_moves else False
+            message = f"Enabled: {z_move_retracts}/{total_z_moves} Z-moves with retraction"
+        else:
+            behavior_correct = z_move_retracts <= total_z_moves * 0.3 if total_z_moves else True
+            message = f"Disabled: {z_move_retracts}/{total_z_moves} Z-moves with retraction"
+        
+        return (
+            behavior_correct,
+            f"{z_move_retracts}/{total_z_moves}",
+            {
+                "detection_method": "Level 2 - G-code Analysis",
+                "message": message,
+                "raw_data": {
+                    "z_moves": total_z_moves,
+                    "retract_count": z_move_retracts,
+                    "expected_enabled": config_enabled
+                }
+            }
+        )
+        
+    except Exception as e:
+        return (
+            False,
+            None,
+            {
+                "detection_method": "Level 2 - G-code Analysis",
+                "message": f"G-code analysis failed: {str(e)}",
+                "raw_data": {"error": str(e)}
+            }
+        )
 
 
 def parse_wipe(gcode_path: Path, expected_value: int):

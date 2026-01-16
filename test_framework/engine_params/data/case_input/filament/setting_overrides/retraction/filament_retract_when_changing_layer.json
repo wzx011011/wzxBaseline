@@ -1,9 +1,14 @@
 {
   "cases": [
     {
-      "input_3mf": "template_model.3mf",
-      "project_name": "default",
-      "expected_value": "nil"
+      "input_3mf": "retract_enabled.3mf",
+      "project_name": "enabled",
+      "expected_value": "true"
+    },
+    {
+      "input_3mf": "retract_disabled.3mf",
+      "project_name": "disabled",
+      "expected_value": "false"
     }
   ]
 }

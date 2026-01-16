@@ -9,6 +9,7 @@ from engine_params.src.gcode.printer.extruder_x.extruder_x_check import (
     parse_retract_before_wipe,
     parse_retract_restart_extra,
     parse_retract_when_changing_layer,
+    parse_retract_when_changing_layer_behavior,
     parse_retraction_length,
     parse_retraction_minimum_travel,
     parse_retraction_speed,
@@ -94,10 +95,20 @@ def test_retraction_minimum_travel(slice_and_export: Path, expected_value):
 
 @pytest.mark.engine_params
 def test_retract_when_changing_layer(slice_and_export: Path, expected_value: int):
-    ok, actual, details = parse_retract_when_changing_layer(slice_and_export, expected_value)
-    assert ok, (
-        f"retract_when_changing_layer validation failed. Expected {expected_value}, got {actual}. "
-        f"Details: {details['message']}"
+    """Test retract_when_changing_layer parameter (Level 1 - Config + Level 2 - Behavior)"""
+    
+    # Level 1: Config validation
+    ok1, actual1, details1 = parse_retract_when_changing_layer(slice_and_export, expected_value)
+    assert ok1, (
+        f"Level 1 - retract_when_changing_layer config validation failed. Expected {expected_value}, got {actual1}. "
+        f"Details: {details1}"
+    )
+    
+    # Level 2: G-code behavior validation
+    ok2, actual2, details2 = parse_retract_when_changing_layer_behavior(slice_and_export, expected_value)
+    assert ok2, (
+        f"Level 2 - retract_when_changing_layer behavior validation failed. Expected {expected_value}, analysis: {actual2}. "
+        f"Details: {details2}"
     )
 
 
