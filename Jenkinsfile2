@@ -14,7 +14,7 @@ pipeline {
     string(name: 'ALLURE_CMD', defaultValue: 'Allure', description: 'Allure commandline tool name (Global Tool); leave empty to use default')
   }
   environment {
-    
+    POWERSHELL_HOME = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
   }
   stages {
     stage('Checkout') {
