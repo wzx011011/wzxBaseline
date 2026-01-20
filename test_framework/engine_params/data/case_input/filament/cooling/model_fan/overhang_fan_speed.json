@@ -2,7 +2,7 @@
   "cases": [
     {
       "project_name": "overhang_fan_speed_100",
-      "input_3mf": "template_model.3mf",
+      "input_3mf": "overhang_fan_speed_100.3mf",
       "expected_value": "100"
     }
   ]

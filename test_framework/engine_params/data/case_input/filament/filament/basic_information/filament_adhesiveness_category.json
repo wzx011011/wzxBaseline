@@ -2,8 +2,8 @@
   "cases": [
     {
       "project_name": "default",
-      "input_3mf": "template_model.3mf",
-      "expected_value": "0"
+      "input_3mf": "filament_adhesiveness_category_100.3mf",
+      "expected_value": "100"
     }
   ]
 }

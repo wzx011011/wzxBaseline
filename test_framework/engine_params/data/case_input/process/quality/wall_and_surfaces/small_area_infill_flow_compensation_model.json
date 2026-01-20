@@ -2,7 +2,7 @@
   "cases": [
     {
       "project_name": "template_default",
-      "input_3mf": "template_model.3mf",
+      "input_3mf": "small_area_infill_flow_compensation_model_default.3mf",
       "expected_small_area_infill_flow_compensation_model": [
         "0,0",
         "0.2,0.4444",

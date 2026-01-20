@@ -2,7 +2,7 @@
   "cases": [
     {
       "project_name": "default",
-      "input_3mf": "template_model.3mf",
+      "input_3mf": "support_material_interface_fan_speed_-1.3mf",
       "expected_value": "-1"
     }
   ]

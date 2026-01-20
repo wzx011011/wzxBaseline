@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "input_3mf": "template_model.3mf",
+      "input_3mf": "filament_z_hop_nil.3mf",
       "project_name": "default",
       "expected_value": "nil"
     }
