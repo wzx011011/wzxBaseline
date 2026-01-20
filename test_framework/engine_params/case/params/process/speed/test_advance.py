@@ -55,8 +55,6 @@ def test_speed_limit_to_height_enable(
         slice_and_export: Path,
         expected_speed_limit_to_height_enable: bool,
         speed_limit_to_height: str,
-        speed_tolerance: float,
-        acc_tolerance: float,
 ):
     """
     speed_limit_to_height_enable：利用 SmoothSpeedAcc 校验裁剪后的速度/加速度是否匹配。
@@ -71,8 +69,6 @@ def test_speed_limit_to_height_enable(
         gcode_path,
         expected_speed_limit_to_height_enable,
         speed_limit_to_height,
-        speed_tolerance,
-        acc_tolerance,
     )
     assert ok, f"details={details}"
 

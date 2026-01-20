@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {
+      "project_name": "first_layer_print_sequence_case1",
+      "input_3mf": "first_layer_print_sequence_case1.3mf",
+      "expected_first_layer_print_sequence": [1, 2, 3]
+    },
+    {
+      "project_name": "first_layer_print_sequence_case2", 
+      "input_3mf": "first_layer_print_sequence_case2.3mf",
+      "expected_first_layer_print_sequence": [3, 1, 2]
+    }
+  ]
+}

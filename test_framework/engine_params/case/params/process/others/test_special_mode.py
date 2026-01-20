@@ -34,6 +34,7 @@ from engine_params.src.gcode.process.others.special_mode_check import (
     parse_fuzzy_skin_point_distance,
     parse_fuzzy_skin_thickness,
     parse_fuzzy_skin_first_layer,
+    parse_first_layer_print_sequence,
 )
 
 
@@ -371,3 +372,24 @@ def test_fuzzy_skin_first_layer(
     assert ok, (
         f"fuzzy_skin_first_layer expected {expected_value}, actual {actual_value}, details: {details}"
     )
+
+
+# ================== first_layer_print_sequence ==================
+
+@pytest.mark.engine_params
+def test_first_layer_print_sequence(
+        slice_and_export: Path,
+        expected_first_layer_print_sequence: list[int],
+):
+    """
+    first_layer_print_sequence：检测首层耗材打印顺序
+    - 验证G-code中首层的耗材使用顺序是否符合配置
+    """
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, actual_sequence, details = parse_first_layer_print_sequence(
+        gcode_path,
+        expected_first_layer_print_sequence,
+    )
+    assert ok, f"details={details}"

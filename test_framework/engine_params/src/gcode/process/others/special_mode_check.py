@@ -736,3 +736,83 @@ def parse_fuzzy_skin_first_layer(
         details["message"] = f"Level 1 失败: expected={expected_value}, config={detected_value}"
     
     return ok, detected_value, details
+
+
+def parse_first_layer_print_sequence(
+        gcode_path: Path | str,
+        expected_sequence: list[int],
+) -> Tuple[bool, list[int], Dict[str, object]]:
+    """
+    first_layer_print_sequence 校验：检测首层耗材打印顺序
+    
+    Args:
+        gcode_path: G-code 文件路径
+        expected_sequence: 期望的首层耗材打印顺序（例如 [1,2,3]）
+    
+    Returns:
+        (是否通过, 检测到的顺序, 详细信息)
+    """
+    path_obj = Path(gcode_path)
+    parser = GCodeParser(path_obj)
+    
+    try:
+        # 从配置中读取 first_layer_print_sequence
+        cfg = parser.load_config() or {}
+        config_sequence = cfg.get("first_layer_print_sequence")
+        
+        # 如果配置中有值，直接比较配置值
+        if config_sequence is not None:
+            try:
+                if hasattr(config_sequence, 'values'):
+                    detected_sequence = list(config_sequence.values)
+                elif hasattr(config_sequence, 'value'):
+                    detected_sequence = list(config_sequence.value) if config_sequence.value else []
+                else:
+                    # 处理数值类型（如 0 表示默认/自动）
+                    if isinstance(config_sequence, (int, float)):
+                        if config_sequence == 0:
+                            detected_sequence = []  # 0 表示自动/默认
+                        else:
+                            detected_sequence = [int(config_sequence)]
+                    elif isinstance(config_sequence, (list, tuple)):
+                        detected_sequence = list(config_sequence)
+                    elif isinstance(config_sequence, str):
+                        # 尝试解析逗号分隔的字符串
+                        if ',' in config_sequence:
+                            detected_sequence = [int(x.strip()) for x in config_sequence.split(',') if x.strip().isdigit()]
+                        else:
+                            detected_sequence = [int(config_sequence)] if config_sequence.isdigit() else []
+                    else:
+                        detected_sequence = []
+            except Exception as e:
+                detected_sequence = []
+        else:
+            detected_sequence = []
+        
+        # 比较期望值和检测值
+        ok = detected_sequence == expected_sequence
+        
+        details: Dict[str, object] = {
+            "gcode_path": str(gcode_path),
+            "expected_sequence": expected_sequence,
+            "config_sequence": config_sequence,
+            "detected_sequence": detected_sequence,
+            "detection_method": "配置对比",
+        }
+        
+        if ok:
+            details["message"] = f"首层耗材打印顺序匹配: {detected_sequence}"
+        else:
+            details["message"] = f"首层耗材打印顺序不匹配: expected={expected_sequence}, actual={detected_sequence}"
+        
+        return ok, detected_sequence, details
+        
+    except Exception as e:
+        details = {
+            "gcode_path": str(gcode_path),
+            "expected_sequence": expected_sequence,
+            "error": str(e),
+            "detection_method": "配置读取失败",
+            "message": f"解析失败: {e}"
+        }
+        return False, [], details

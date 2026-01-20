@@ -9,6 +9,11 @@
       "project_name": "enabled",
       "input_3mf": "support_on_build_plate_only_enabled.3mf",
       "expected_value": 1
+    },
+    {
+      "project_name": "hybrid_tree_enabled",
+      "input_3mf": "support_on_build_plate_only_hybrid_tree.3mf",
+      "expected_value": 1
     }
   ]
 }

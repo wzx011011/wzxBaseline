@@ -104,7 +104,7 @@ def test_support_on_build_plate_only(
     slice_and_export: Path,
     expected_value: str,
 ):
-    """Test support_on_build_plate_only parameter (Level 2 - Feature Detection)"""
+    """Test support_on_build_plate_only parameter (Level 2 - Behavior Analysis)"""
     gcode_path = slice_and_export
     ok, actual, details = parse_support_on_build_plate_only(gcode_path, expected_value)
     

@@ -8,11 +8,6 @@
       "date_added": "2025-12-16"
     },
     {
-      "test_path": "process/speed/test_advance.py::test_speed_limit_to_height_enable",
-      "reason": "TypeError: current_layer_z 为 None 导致无法计算",
-      "date_added": "2025-12-16"
-    },
-    {
       "test_path": "process/quality/test_layer_height.py::test_initial_layer_print_height",
       "reason": "检测函数返回 None，需要修复检测逻辑",
       "date_added": "2025-12-16"

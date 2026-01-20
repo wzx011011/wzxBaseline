@@ -284,6 +284,7 @@ def parse_filament_retract_when_changing_layer_behavior(gcode_path: Path, expect
                     # 调试：前几个层的详细信息
                     if i <= 5:
                         # DEBUG: print(f"Layer {i}: {retract_type} retract, travel_distance={travel_distance:.2f}, threshold={min_travel}")
+                        pass
                     
                     break
         

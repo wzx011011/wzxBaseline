@@ -4,6 +4,11 @@
       "project_name": "3loops",
       "input_3mf": "wall_loops_001.3mf",
       "expected_wall_loops": 3
+    },
+    {
+      "project_name": "arachne_0loops",
+      "input_3mf": "wall_loops_arachne_0.3mf",
+      "expected_wall_loops": 0
     }
   ]
 }

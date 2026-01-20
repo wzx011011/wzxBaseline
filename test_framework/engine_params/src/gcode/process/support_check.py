@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Tuple, Dict, Any, List
 import re
 from engine_params.src.gcode.GCodeParser import GCodeParser
+from engine_params.src.gcode.GCodeParserEx import GCodeParserEx
 from engine_params.src.gcode.constants import ExtrusionType
 
 
@@ -142,36 +143,131 @@ def parse_support_threshold_angle(gcode_path: Path, expected_value: str) -> Tupl
 
 def parse_support_on_build_plate_only(gcode_path: Path, expected_value) -> Tuple[bool, Any, Dict]:
     """
-    Test support_on_build_plate_only parameter (Level 1 - Config)
+    Test support_on_build_plate_only parameter (Level 2 - Behavior Analysis)
     
-    Verification: Read from G-code config block
+    验证支撑是否真的只在构建板上生成：
+    - Level 1: 检查配置参数
+    - Level 2: 分析支撑生成行为，检测是否有悬空支撑结构
     """
+    # Level 1: 配置参数检查
     parser = GCodeParser(gcode_path)
     cfg = parser.load_config()
-    actual = cfg.get("support_on_build_plate_only")
+    config_value = cfg.get("support_on_build_plate_only")
     
-    # Normalize expected value to int for comparison
+    # 标准化期望值
     if isinstance(expected_value, bool):
+        expected_enabled = expected_value
         expected_int = 1 if expected_value else 0
     elif isinstance(expected_value, int):
+        expected_enabled = expected_value != 0
         expected_int = expected_value
     else:
-        expected_int = 1 if str(expected_value).lower() in ["true", "1", "yes"] else 0
+        expected_enabled = str(expected_value).lower() in ["true", "1", "yes"]
+        expected_int = 1 if expected_enabled else 0
     
-    actual_int = _to_int_maybe(actual)
-    if actual_int is not None:
-        match = actual_int == expected_int
-    else:
-        match = _str_norm(actual) == _str_norm(expected_value)
+    config_int = _to_int_maybe(config_value)
+    config_match = config_int == expected_int if config_int is not None else False
     
-    return (
-        match,
-        actual,
-        {
-            "detection_method": "Level 1 - Config",
-            "message": f"Support on build plate only: {actual}",
+    # Level 2: 支撑行为分析
+    try:
+        parser_ex = GCodeParserEx(gcode_path)
+        
+        # 获取层高信息
+        layer_heights = parser_ex.get_layer_z_values()
+        first_layer_height = layer_heights[0] if layer_heights else 0.2
+        
+        # 获取支撑路径
+        support_layers = parser_ex.get_type_contours_per_layer([
+            ExtrusionType.SUPPORT.value,
+            ExtrusionType.SUPPORT_INTERFACE.value
+        ])
+        
+        # 分析支撑生成模式
+        floating_supports = []
+        build_plate_supports = []
+        total_support_layers = 0
+        
+        for layer_idx, contours in enumerate(support_layers):
+            if contours:  # 有支撑
+                total_support_layers += 1
+                z_height = layer_heights[layer_idx] if layer_idx < len(layer_heights) else first_layer_height * (layer_idx + 1)
+                
+                # 判断是否为构建板支撑（从底部开始）
+                if z_height <= first_layer_height * 1.1:  # 允许小误差
+                    build_plate_supports.append(layer_idx)
+                else:
+                    # 检查此层是否有连续的下层支撑
+                    has_support_below = _has_continuous_support_below(layer_idx, support_layers, max_gap=2)
+                    if not has_support_below:
+                        floating_supports.append(layer_idx)
+        
+        # 行为分析结果
+        actual_build_plate_only = len(floating_supports) == 0
+        behavior_match = actual_build_plate_only == expected_enabled
+        
+        # 综合判断：配置和行为都要匹配
+        final_match = config_match and behavior_match
+        
+        details = {
+            "detection_method": "Level 2 - Behavior Analysis",
+            "config_value": config_value,
+            "config_match": config_match,
+            "behavior_analysis": {
+                "build_plate_only_detected": actual_build_plate_only,
+                "total_support_layers": total_support_layers,
+                "build_plate_supports": len(build_plate_supports),
+                "floating_supports_count": len(floating_supports),
+                "floating_layers": floating_supports[:5] if floating_supports else [],  # 只显示前5个
+            },
+            "behavior_match": behavior_match,
+            "message": f"Support on build plate only - Config: {config_value}, Behavior: {actual_build_plate_only}"
         }
-    )
+        
+        return final_match, actual_build_plate_only, details
+        
+    except Exception as e:
+        # 降级到 Level 1
+        return (
+            config_match,
+            config_value,
+            {
+                "detection_method": "Level 1 - Config (Level 2 failed)",
+                "message": f"Support on build plate only: {config_value}",
+                "level2_error": str(e)
+            }
+        )
+
+
+def _has_continuous_support_below(layer_idx: int, support_layers: List, max_gap: int = 2) -> bool:
+    """
+    检查指定层下方是否有连续的支撑结构
+    
+    Args:
+        layer_idx: 当前层索引
+        support_layers: 所有层的支撑数据
+        max_gap: 允许的最大间隙层数
+    
+    Returns:
+        bool: 是否有连续支撑
+    """
+    if layer_idx == 0:
+        return True  # 首层默认连接构建板
+    
+    # 向下查找连续支撑
+    gap_count = 0
+    for check_idx in range(layer_idx - 1, -1, -1):
+        if check_idx < len(support_layers) and support_layers[check_idx]:
+            # 找到支撑，重置间隙计数
+            gap_count = 0
+            if check_idx == 0:  # 连接到构建板
+                return True
+        else:
+            # 没有支撑，增加间隙计数
+            gap_count += 1
+            if gap_count > max_gap:
+                return False  # 间隙太大，认为是悬空支撑
+    
+    return False  # 没有连接到构建板
 
 
 def parse_support_critical_regions_only(gcode_path: Path, expected_value: str) -> Tuple[bool, Any, Dict]:
