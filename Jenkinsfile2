@@ -14,13 +14,7 @@ pipeline {
     string(name: 'ALLURE_CMD', defaultValue: 'Allure', description: 'Allure commandline tool name (Global Tool); leave empty to use default')
   }
   environment {
-    JAVA_HOME = "C:\\Program Files\\Java\\jdk-25"
-    PYTHONUNBUFFERED = '1'
-    JENKINS_BASE_URL = "${JENKINS_URL}"
-    ARTIFACTS_DIR = "artifacts"
-    POWERSHELL_HOME = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
-    PYTHONHOME = "C:\\Users\\cx2056\\AppData\\Local\\Programs\\Python\\Python310"
-    PATH = "C:\\Windows\\System32;C:\\allure-2.36.0\\bin\\;C:\\Program Files\\Git\\bin;C:\\Windows\\System32\\WindowsPowerShell\\v1.0;C:\\Users\\cx2056\\AppData\\Local\\Programs\\Python\\Python310;${PATH}"
+    
   }
   stages {
     stage('Checkout') {

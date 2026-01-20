@@ -24,6 +24,7 @@ from test_framework.engine_params.src.slicerctl.session import (
 from test_framework.engine_params.conftest import wait_for_file_written
 from test_framework.engine_params.src.slicerctl.constants import SLICE_BTN_ID
 from test_framework.performance.utils.feishu_downloader import (
+    BASE_URL,
     FeishuDownloader,
     load_feishu_config,
 )
@@ -460,7 +461,6 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     )
     print(output_gcode.exists())
     #sleep 1s
-    time.sleep(1)
     result["export_ok"] = export_ret["ok"] and output_gcode.exists()
     result["export_ms"] = round(export_ret["elapsed_ms"], 2)
     result["crashed"] = result["crashed"] or export_ret["crashed"]
@@ -582,83 +582,138 @@ def write_report_to_feishu_after_tests(baseline_data):
                 # Ensure all fields are present and in order
                 row = []
                 for field in header:
-                    row.append(record.get(field, ""))
+                    # Convert all values to string to avoid TypeError during join
+                    row.append(str(record.get(field, "")))
                 # Join and write the row
                 f.write(",".join(row) + "\n")
         
         print(f"OK Wrote {len(baseline_data)} records to {report_path}")
+    
+    # Check if report file exists
+    if not report_path.exists():
+        print(f"Report file not found: {report_path}")
+        return
+    
+    # Load Feishu configuration
+    from test_framework.performance.utils.feishu_downloader import load_feishu_config, FeishuDownloader
+    cfg = load_feishu_config()
+    if not cfg:
+        print("Feishu configuration not found, skipping Feishu table write.")
+        return
+    
+    # Initialize FeishuDownloader
+    downloader = FeishuDownloader(
+        app_id=cfg["app_id"],
+        app_secret=cfg["app_secret"],
+        app_token="M9WDbtXTralb4vs0GwKcNLD7nnc",
+        table_id=cfg["table_id"],
+        view_id=cfg.get("view_id"),
+        file_field=cfg.get("file_field", "文件"),
+        download_dir=cfg.get("download_dir") or Path("artifacts") / "feishu_3mf",
+    )
+    
+    try:
+        # Get table_id for test_log table
+        print("Finding test_log table...")
+        test_log_table_id = downloader.get_table_id_by_name("test_log")
+        print(f"Found test_log table with ID: {test_log_table_id}")
         
-        # Check if Feishu configuration is available to write to Feishu table
-        from test_framework.performance.utils.feishu_downloader import load_feishu_config, FeishuDownloader
-        cfg = load_feishu_config()
-        
-        if cfg:
-            try:
-                downloader = FeishuDownloader(
-                    app_id=cfg["app_id"],
-                    app_secret=cfg["app_secret"],
-                    app_token=cfg["app_token"],
-                    table_id=cfg["table_id"],
-                    view_id=cfg.get("view_id"),
-                    file_field=cfg.get("file_field", "文件"),
-                    download_dir=cfg.get("download_dir") or Path("artifacts") / "feishu_3mf",
-                )
-                
-                # Read CSV data and add current date column
-                import csv
-                from datetime import datetime
-                
-                current_date = datetime.now().strftime("%Y-%m-%d")
-                csv_path = Path(report_path)
-                
-                with open(csv_path, "r", encoding="utf-8") as f:
-                    reader = csv.DictReader(f)
-                    csv_data = list(reader)
-                
-                # Add current date to each record
-                for row in csv_data:
-                    row["test_date"] = current_date
-                
-                # Use existing test_log table or create it if not exists
-                test_log_table_name = "test_log"
-                
-                try:
-                    # Get test_log table ID if it exists
-                    test_log_table_id = downloader.get_table_id_by_name(test_log_table_name)
-                    print(f"Found test_log table with ID: {test_log_table_id}")
-                except RuntimeError:
-                    # Create test_log table if it doesn't exist
-                    print(f"test_log table not found, creating new table...")
-                    
-                    # Determine field types based on CSV data
-                    fields = []
-                    if csv_data:
-                        header = list(csv_data[0].keys())
-                        for field_name in header:
-                            # Try to determine field type
-                            field_type = "text"
-                            sample_values = [row[field_name] for row in csv_data if row[field_name]]
-                            
-                            if sample_values:
-                                # Check if all values are numeric
-                                if all(v.replace(".", "").replace("-", "").isdigit() for v in sample_values):
-                                    field_type = "number"
-                                # Check if all values are boolean
-                                elif all(v.lower() in ["true", "false"] for v in sample_values):
-                                    field_type = "checkbox"
-                            
-                            fields.append({"name": field_name, "type": field_type})
-                    
-                    # Create test_log table
-                    test_log_table_id = downloader.create_table(test_log_table_name, fields)
-                    print(f"Created test_log table with ID: {test_log_table_id}")
-                
-                # Add records to test_log table
-                downloader.add_records(test_log_table_id, csv_data)
-                print(f"=== Added {len(csv_data)} records to test_log table ===")
-            except Exception as e:
-                print(f"Failed to write to Feishu: {e}")
+        # Get test_log table fields to know which fields we can write to
+        print("Getting test_log table fields...")
+        downloader._ensure_token()
+        app_token = downloader._resolve_app_token_if_needed()
+        fields_url = f"{BASE_URL}/bitable/v1/apps/{app_token}/tables/{test_log_table_id}/fields"
+        headers = downloader._headers()
+        resp = downloader._get_with_retry(fields_url, headers=headers, timeout=20)
+        resp.raise_for_status()
+        fields_data = resp.json()
+        if fields_data.get("code") != 0:
+            raise RuntimeError(f"Failed to get table fields: {fields_data}")
+        table_fields = fields_data.get("data", {}).get("items", [])
+        available_field_names = [field.get("field_name") for field in table_fields]
+        print(f"Available fields in test_log table: {available_field_names}")
+    except RuntimeError as e:
+        # Table not found, create a new table with date suffix
+        if "not found" in str(e).lower():
+            print(f"test_log table not found, creating new table: {e}")
+            from datetime import datetime
+            current_date = datetime.now().strftime("%Y%m%d")
+            new_table_name = f"test_log_{current_date}"
+            print(f"Creating new table: {new_table_name}")
+            
+            # Define table fields - include all possible fields from CSV
+            # Use field_name instead of name as required by Feishu API
+            # Feishu API field types:
+            # 1: Text, 2: Number, 3: Single select, 5: Date, 17: Attachment
+            table_fields = [
+                {"field_name": "record_id", "type": 1},  # Text
+                {"field_name": "file", "type": 1},       # Text
+                {"field_name": "import_ms", "type": 2},  # Number
+                {"field_name": "slice_ms", "type": 2},   # Number
+                {"field_name": "export_ms", "type": 2},  # Number
+                {"field_name": "import_ok", "type": 1},  # Text
+                {"field_name": "slice_ok", "type": 1},   # Text
+                {"field_name": "export_ok", "type": 1},  # Text
+                {"field_name": "crashed", "type": 1},    # Text
+                {"field_name": "error", "type": 1},      # Text
+                {"field_name": "gcode_path", "type": 1}  # Text
+            ]
+            
+            # Create the new table
+            test_log_table_id = downloader.create_table(new_table_name, table_fields)
+            print(f"Successfully created new table: {new_table_name} with ID: {test_log_table_id}")
+            
+            # Use the newly created fields
+            available_field_names = [field["name"] for field in table_fields]
+            print(f"Available fields in new table: {available_field_names}")
         else:
-            print("Feishu configuration not available, skipping Feishu table creation.")
-    else:
-        print(f"No baseline data to write.")
+            # Other runtime errors, re-raise
+            raise
+        
+        # Read CSV data
+        print(f"Reading CSV data from: {report_path}")
+        with open(report_path, "r", encoding="utf-8") as f:
+            import csv
+            reader = csv.DictReader(f)
+            csv_data = list(reader)
+        
+        if not csv_data:
+            print(f"No data found in CSV file: {report_path}")
+            return
+        
+        print(f"Found {len(csv_data)} records in CSV file")
+        
+        # Convert CSV data to Feishu records - only include available fields
+        feishu_records = []
+        for row in csv_data:
+            # Create record with only fields that exist in the table
+            feishu_record = {}
+            for field, value in row.items():
+                # Skip empty values and fields not in the table
+                if value and field in available_field_names:
+                    feishu_record[field] = value
+            
+            # If no valid fields found, skip this record
+            if not feishu_record:
+                print(f"No valid fields found for record: {row}")
+                continue
+            
+            feishu_records.append(feishu_record)
+        
+        if not feishu_records:
+            print("No valid records to write to Feishu.")
+            return
+        
+        # Add records to test_log table
+        print(f"Adding {len(feishu_records)} records to test_log table...")
+        downloader.add_records(test_log_table_id, feishu_records)
+        
+        print(f"✓ Successfully added {len(feishu_records)} record(s) to test_log table")
+        print("✓ Feishu report write completed successfully")
+        
+    except Exception as e:
+        print(f"\n✗ Error writing to Feishu table: {e}")
+        print(f"Detailed error: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return

@@ -1,0 +1,2 @@
+record_id,file,import_ms,slice_ms,export_ms,import_ok,slice_ok,export_ok,crashed,error,gcode_path
+,C:\work\C3DBaseline\test_framework\artifacts\feishu_3mf\6573a9695c96a7ddc068a072.3mf,3444.33,None,None,True,False,False,False,8,
