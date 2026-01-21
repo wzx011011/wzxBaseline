@@ -371,6 +371,7 @@ class FeishuDownloader:
         # Download files from each record
         downloaded_files = []
         for record in records:
+            record_id = record.get("record_id") or ""
             file_info = record.get("fields", {}).get(self.file_field, {})
             
             # Handle case where file_info is an array (multiple files in one field)
@@ -387,7 +388,13 @@ class FeishuDownloader:
                         file_path = self.download_dir / file_name
                         try:
                             self._download_file(file_url, file_path)
-                            downloaded_files.append({"path": str(file_path), "name": file_name})
+                            downloaded_files.append(
+                                {
+                                    "path": str(file_path),
+                                    "name": file_name,
+                                    "record_id": record_id,
+                                }
+                            )
                         except Exception as e:
                             self.logger.error(f"Failed to download file {file_name} from URL {file_url}: {e}")
             # Handle case where file_info is a single file object
@@ -402,7 +409,13 @@ class FeishuDownloader:
                 file_path = self.download_dir / file_name
                 try:
                     self._download_file(file_url, file_path)
-                    downloaded_files.append({"path": str(file_path), "name": file_name})
+                    downloaded_files.append(
+                        {
+                            "path": str(file_path),
+                            "name": file_name,
+                            "record_id": record_id,
+                        }
+                    )
                 except Exception as e:
                     self.logger.error(f"Failed to download file {file_name} from URL {file_url}: {e}")
         

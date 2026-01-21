@@ -1,2 +1,2 @@
 record_id,file,import_ms,slice_ms,export_ms,import_ok,slice_ok,export_ok,crashed,error,gcode_path
-,C:\work\C3DBaseline\test_framework\artifacts\feishu_3mf\6573a9695c96a7ddc068a072.3mf,3444.33,None,None,True,False,False,False,8,
+recMJAhBqP,C:\work\C3DBaseline\test_framework\artifacts\feishu_3mf\6573a9695c96a7ddc068a072.3mf,4114.88,857.05,1541.5,True,True,True,False,,C:\Users\cx2056\AppData\Local\Temp\pytest-of-cx2056\pytest-109\test_feishu_slice_6573a9695c960\6573a9695c96a7ddc068a072.gcode.3mf

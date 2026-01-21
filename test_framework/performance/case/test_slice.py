@@ -340,7 +340,6 @@ def baseline_data():
     
     if baseline_path.exists():
         print(f"Loading baseline data from {baseline_path}...")
-        # Try different encodings to handle various file formats
         encodings = ["utf-8", "gbk", "latin-1"]
         
         for encoding in encodings:
@@ -348,9 +347,13 @@ def baseline_data():
                 with open(baseline_path, "r", encoding=encoding) as f:
                     reader = csv.DictReader(f)
                     for row in reader:
-                        # Use filename as key for comparison
-                        filename = Path(row["file"]).name
-                        baseline_data[filename] = row
+                        record_id = (row.get("record_id") or "").strip()
+                        file_value = row.get("file") or ""
+                        filename = Path(file_value).name if file_value else ""
+                        key = record_id or filename
+                        if not key:
+                            continue
+                        baseline_data[key] = row
                 print(f"OK Loaded {len(baseline_data)} baseline records with encoding: {encoding}")
                 break
             except UnicodeDecodeError:
@@ -498,10 +501,9 @@ def test_feishu_slice(
     result = _run_slice_flow(send_cmd_handle, model_path, tmp_path)
     result["record_id"] = feishu_case.get("record_id")
 
-    # Get current filename for comparison
     current_filename = model_path.name
+    key = str(result["record_id"]) if result["record_id"] else current_filename
     
-    # Update baseline data with current result
     baseline_row_data = {
         "record_id": str(result["record_id"]) if result["record_id"] else "",
         "file": str(model_path),
@@ -516,23 +518,21 @@ def test_feishu_slice(
         "gcode_path": str(result["gcode_path"]) if result["gcode_path"] else ""
     }
     
-    # Check if record exists in baseline for comparison
-    if current_filename in baseline_data:
+    if key in baseline_data:
         # Compare with baseline
-        baseline_row = baseline_data[current_filename]
-        print(f"Comparing with baseline for {current_filename}...")
+        baseline_row = baseline_data[key]
+        print(f"Comparing with baseline for {key}...")
         
         # Assert key metrics match baseline
-        assert result["crashed"] == (baseline_row["crashed"] == "TRUE"), f"Crashed status mismatch with baseline for {current_filename}"
-        assert result["import_ok"] == (baseline_row["import_ok"] == "TRUE"), f"Import status mismatch with baseline for {current_filename}"
-        assert result["slice_ok"] == (baseline_row["slice_ok"] == "TRUE"), f"Slice status mismatch with baseline for {current_filename}"
-        assert result["export_ok"] == (baseline_row["export_ok"] == "TRUE"), f"Export status mismatch with baseline for {current_filename}"
+        assert result["crashed"] == (baseline_row["crashed"] == "True"), f"Crashed status mismatch with baseline for {key}"
+        assert result["import_ok"] == (baseline_row["import_ok"] == "True"), f"Import status mismatch with baseline for {key}"
+        assert result["slice_ok"] == (baseline_row["slice_ok"] == "True"), f"Slice status mismatch with baseline for {key}"
+        assert result["export_ok"] == (baseline_row["export_ok"] == "True"), f"Export status mismatch with baseline for {key}"
         
-        print(f"OK All metrics match baseline for {current_filename}")
+        print(f"OK All metrics match baseline for {key}")
     else:
-    # Always update the baseline data with current result
-        print(f"Updating baseline data for {current_filename}...")
-        baseline_data[current_filename] = baseline_row_data
+        print(f"Updating baseline data for {key}...")
+        baseline_data[key] = baseline_row_data
     
     # Always assert basic success regardless of baseline
     #assert not result["crashed"], f"App crashed when handling {model_path}"
