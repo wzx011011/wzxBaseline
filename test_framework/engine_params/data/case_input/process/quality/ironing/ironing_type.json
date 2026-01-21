@@ -3,17 +3,20 @@
     {
       "project_name": "no_ironing",
       "input_3mf": "ironing_type_no_ironing.3mf",
-      "expected_ironing_type": "no_ironing"
+      "expected_ironing_type": "no no ironing",
+      "expected_value": false
     },
     {
       "project_name": "top_surface",
       "input_3mf": "ironing_type_top_surface.3mf",
-      "expected_ironing_type": "top_surface"
+      "expected_ironing_type": "top",
+      "expected_value": true
     },
     {
       "project_name": "all_solid",
       "input_3mf": "ironing_type_all_solid.3mf",
-      "expected_ironing_type": "all_solid"
+      "expected_ironing_type": "solid",
+      "expected_value": true
     }
   ]
 }

@@ -14,7 +14,7 @@ from engine_params.src.gcode.process.quality.ironing_check import (
 
 @pytest.mark.engine_params
 def test_ironing_type(slice_and_export: Path,
-                      expected_ironing_type: bool):
+                      expected_value: bool):
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
     result:list[dict[int, list[bytes | str]]] = parse_ironing_type(gcode_path)
@@ -24,7 +24,7 @@ def test_ironing_type(slice_and_export: Path,
             has_ironing_type = any(blocks)
         if has_ironing_type:
             break
-    assert has_ironing_type
+    assert has_ironing_type == expected_value
 
     # return any(bool(layer_blocks) for layer_blocks in blocks_per_layer)
     # assert result == expected_ironing_type,f"result={result},but expected {expected_ironing_type}!"

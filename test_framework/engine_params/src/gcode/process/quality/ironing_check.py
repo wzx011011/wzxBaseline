@@ -8,6 +8,9 @@ from pathlib import Path
 from typing import Tuple, Dict, Any, Optional
 
 from engine_params.src.gcode.GCodeParser import GCodeParser
+from engine_params.src.gcode.process.quality.ironing_type_check import (
+    parse_ironing_type as _parse_ironing_type_l2_impl,
+)
 
 
 # ============= 新增 L1 校验函数 =============
@@ -164,17 +167,16 @@ def parse_ironing_angle(
     return (ok, actual_value, details)
 
 
-# ============= 原有 L2 校验函数（保留用于特征检测） =============
+def parse_ironing_type(
+    gcode_path: Path | str,
+    expected_value: str
+) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    return parse_ironing_type_l1(gcode_path, expected_value)
 
-def parse_ironing_type(gcode_path: str | Path, *, workers: int = 0) -> list[dict[int, list[bytes | str]]]:
-    """
-    L2 级别：检测 Ironing 特征是否存在于 Gcode 中
-    现在只能检查存在性，TODO，类型还不能检查
-    """
-    parser = GCodeParser(gcode_path)
-    blocks_per_layer = parser.get_extrusion_blocks_per_layer(
-        "Ironing", include_wipe=True, decode=False, workers=4
-    )
-    # 只要某一层非空，就说明存在 Ironing 段
-    # return any(bool(layer_blocks) for layer_blocks in blocks_per_layer)
-    return blocks_per_layer
+
+def parse_ironing_type_l2(
+    gcode_path: Path | str,
+    *,
+    workers: int = 0,
+) -> list[dict[int, list[bytes | str]]]:
+    return _parse_ironing_type_l2_impl(gcode_path, workers=workers)

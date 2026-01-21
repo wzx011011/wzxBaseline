@@ -431,7 +431,11 @@ def parse_scarf_overhang_threshold(
         return (False, None, {"error": "未在 G-code 配置中找到 scarf_overhang_threshold 参数"})
     
     try:
-        actual_value = float(raw_value)
+        if isinstance(raw_value, str) and raw_value.endswith("%"):
+            num = raw_value[:-1].strip()
+            actual_value = float(num)
+        else:
+            actual_value = float(raw_value)
         ok = abs(actual_value - expected_value) <= tolerance
     except (ValueError, TypeError) as e:
         return (False, None, {"error": f"无法解析 scarf_overhang_threshold 值: {raw_value}", "exception": str(e)})
