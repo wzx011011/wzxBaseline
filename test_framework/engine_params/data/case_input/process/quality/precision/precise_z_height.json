@@ -1,19 +1,14 @@
 {
   "cases": [
     {
-      "project_name": "0mm",
-      "input_3mf": "precise_z_height_0mm.3mf",
-      "expected_precise_z_height": 0
+      "project_name": "enabled",
+      "input_3mf": "precise_z_height_enabled.3mf",
+      "expected_precise_z_height": true
     },
     {
-      "project_name": "0.1mm",
-      "input_3mf": "precise_z_height_0.1mm.3mf",
-      "expected_precise_z_height": 0.1
-    },
-    {
-      "project_name": "0.2mm",
-      "input_3mf": "precise_z_height_0.2mm.3mf",
-      "expected_precise_z_height": 0.2
+      "project_name": "disabled",
+      "input_3mf": "precise_z_height_disabled.3mf",
+      "expected_precise_z_height": false
     }
   ]
 }
