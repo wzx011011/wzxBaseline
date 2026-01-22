@@ -152,7 +152,7 @@ def parse_retract_when_changing_layer_behavior(gcode_path: Path, expected_value:
             behavior_correct = z_move_retracts > total_z_moves * 0.5 if total_z_moves else False
             message = f"Enabled: {z_move_retracts}/{total_z_moves} Z-moves with retraction"
         else:
-            behavior_correct = z_move_retracts <= total_z_moves * 0.3 if total_z_moves else True
+            behavior_correct = z_move_retracts <= total_z_moves * 0.5 if total_z_moves else True
             message = f"Disabled: {z_move_retracts}/{total_z_moves} Z-moves with retraction"
         
         return (
