@@ -5,18 +5,29 @@ import requests
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Any
+from urllib.parse import urlparse
 
 # Base URL for Feishu API
 BASE_URL = "https://open.feishu.cn/open-apis"
 
+def _parse_feishu_table_url(url: str) -> Optional[str]:
+    try:
+        parsed = urlparse(url)
+    except Exception:
+        return None
+    path = parsed.path or ""
+    path = path.strip("/")
+    if not path:
+        return None
+    parts = path.split("/")
+    token = parts[-1]
+    return token or None
+
+
 def load_feishu_config() -> Optional[Dict[str, str]]:
-    """
-    Load Feishu configuration from environment variables.
-    """
-    required_keys = ["app_id", "app_secret", "app_token", "table_id"]
+    required_keys = ["app_id", "app_secret", "table_id"]
     cfg = {}
     
-    # Try to load from .env file if it exists
     env_path = Path(__file__).resolve().parent.parent.parent.parent / ".env"
     if env_path.exists():
         with open(env_path, "r", encoding="utf-8") as f:
@@ -31,7 +42,6 @@ def load_feishu_config() -> Optional[Dict[str, str]]:
                     if key and key not in os.environ:
                         os.environ[key] = val
     
-    # Load from environment variables
     for key in required_keys:
         env_key = f"FEISHU_{key.upper()}"
         if env_key in os.environ:
@@ -39,7 +49,16 @@ def load_feishu_config() -> Optional[Dict[str, str]]:
         else:
             return None
     
-    # Optional configs
+    table_url_env = "FEISHU_TABLE_URL"
+    app_token = None
+    if table_url_env in os.environ:
+        app_token = _parse_feishu_table_url(os.environ[table_url_env])
+    if not app_token and "FEISHU_APP_TOKEN" in os.environ:
+        app_token = os.environ["FEISHU_APP_TOKEN"]
+    if not app_token:
+        return None
+    cfg["app_token"] = app_token
+    
     for key in ["view_id", "file_field", "download_dir"]:
         env_key = f"FEISHU_{key.upper()}"
         if env_key in os.environ:
@@ -193,7 +212,7 @@ class FeishuDownloader:
 
         self._ensure_token()
         # Check if it's a base token (from feishu.cn/base/xxx) or already a valid app_token
-        # First, try to use it directly as app_token
+        # First, try to use it directly as app_token and verify response code == 0
         url = f"{BASE_URL}/bitable/v1/apps/{self.app_token}/tables"
         try:
             resp = self._get_with_retry(
@@ -201,10 +220,11 @@ class FeishuDownloader:
                 headers=self._headers(),
                 timeout=10,
             )
-            # If the request succeeds, it means this is already a valid app_token
             if resp.ok:
-                self._resolved_app_token = self.app_token
-                return self._resolved_app_token
+                payload = resp.json()
+                if isinstance(payload, dict) and payload.get("code") == 0:
+                    self._resolved_app_token = self.app_token
+                    return self._resolved_app_token
         except Exception as e:
             print(f"Direct app_token access failed: {e}")
             # This is expected if the token is a wiki token or base token
@@ -221,15 +241,14 @@ class FeishuDownloader:
             
             if resp.ok:
                 payload = resp.json()
-                data = payload.get("data", {}) if isinstance(payload, dict) else {}
-                node = data.get("node", {}) if isinstance(data, dict) else {}
-                obj_type = node.get("obj_type")
-                obj_token = node.get("obj_token")
-                
-                if obj_type in ("bitable", 4) and obj_token:
-                    # This is a bitable node, use the obj_token as app_token
-                    self._resolved_app_token = obj_token
-                    return self._resolved_app_token
+                if isinstance(payload, dict) and payload.get("code") == 0:
+                    data = payload.get("data", {})
+                    node = data.get("node", {}) if isinstance(data, dict) else {}
+                    obj_type = node.get("obj_type")
+                    obj_token = node.get("obj_token")
+                    if obj_type in ("bitable", 4) and obj_token:
+                        self._resolved_app_token = obj_token
+                        return self._resolved_app_token
         except Exception as e:
             print(f"Wiki token resolve failed: {e}")
             # This is expected if the token is a base token
