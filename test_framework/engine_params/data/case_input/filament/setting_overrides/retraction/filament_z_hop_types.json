@@ -4,6 +4,21 @@
       "input_3mf": "filament_z_hop_types_slope_lift.3mf",
       "project_name": "default",
       "expected_value": "Slope Lift"
+    },
+    {
+      "input_3mf": "filament_z_hop_types_normal_lift.3mf",
+      "project_name": "normal",
+      "expected_value": "Normal Lift"
+    },
+    {
+      "input_3mf": "filament_z_hop_types_auto_lift.3mf",
+      "project_name": "auto",
+      "expected_value": "Auto Lift"
+    },
+    {
+      "input_3mf": "filament_z_hop_types_spiral_lift.3mf",
+      "project_name": "spiral",
+      "expected_value": "Spiral Lift"
     }
   ]
 }

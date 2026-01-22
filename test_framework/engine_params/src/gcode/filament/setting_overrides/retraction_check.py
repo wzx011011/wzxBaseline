@@ -58,7 +58,7 @@ def _parse_config_parameter(gcode_path: Path, param_name: str, expected_value: s
     display = display_name or param_name.replace('_', ' ').title()
     
     return (
-        _values_equal(actual, expected_value),
+        _values_equal(actual.value, expected_value),
         actual,
         {"detection_method": "Level 1 - Config", "message": f"{display}: {actual}"},
     )
