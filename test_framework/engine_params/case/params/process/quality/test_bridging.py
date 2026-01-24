@@ -100,7 +100,7 @@ def test_thick_bridges(slice_and_export: Path, expected_thick_bridges: bool):
 
 # ================== dont_filter_internal_bridges ==================
 @pytest.mark.engine_params
-def test_dont_filter_internal_bridges(slice_and_export: Path, expected_dont_filter_internal_bridges: bool):
+def test_dont_filter_internal_bridges(slice_and_export: Path, expected_dont_filter_internal_bridges: str):
     """测试 dont_filter_internal_bridges 参数"""
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()

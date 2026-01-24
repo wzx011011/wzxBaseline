@@ -3,7 +3,7 @@
     {
       "project_name": "no_ironing",
       "input_3mf": "ironing_type_no_ironing.3mf",
-      "expected_ironing_type": "no no ironing",
+      "expected_ironing_type": "no ironing",
       "expected_value": false
     },
     {

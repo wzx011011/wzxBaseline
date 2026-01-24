@@ -25,6 +25,7 @@ pipeline {
         bat '''
 python -m pip install -U pip
 python -m pip install -r requirements.txt
+if exist allure-results rd /s /q allure-results
 '''
       }
     }

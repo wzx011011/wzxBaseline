@@ -1,14 +1,19 @@
 {
   "cases": [
     {
-      "project_name": "enabled",
-      "input_3mf": "dont_filter_internal_bridges_enabled.3mf",
-      "expected_dont_filter_internal_bridges": true
+      "project_name": "limited",
+      "input_3mf": "dont_filter_internal_bridges_limited.3mf",
+      "expected_dont_filter_internal_bridges": "limited"
+    },
+    {
+      "project_name": "nofilter",
+      "input_3mf": "dont_filter_internal_bridges_nofilter.3mf",
+      "expected_dont_filter_internal_bridges": "nofilter"
     },
     {
       "project_name": "disabled",
       "input_3mf": "dont_filter_internal_bridges_disabled.3mf",
-      "expected_dont_filter_internal_bridges": false
+      "expected_dont_filter_internal_bridges": "disabled"
     }
   ]
 }

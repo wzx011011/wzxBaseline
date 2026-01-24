@@ -228,9 +228,7 @@ def parse_dont_filter_internal_bridges(
     if raw_value is None:
         return (False, None, {"error": "未在 G-code 配置中找到 dont_filter_internal_bridges 参数"})
     
-    parse_ok, actual_value, parse_details = _parse_bool_value(raw_value, "dont_filter_internal_bridges")
-    if not parse_ok:
-        return (False, None, parse_details)
+    actual_value = str(raw_value).strip().lower()
     
     ok = actual_value == expected_value
     details = {

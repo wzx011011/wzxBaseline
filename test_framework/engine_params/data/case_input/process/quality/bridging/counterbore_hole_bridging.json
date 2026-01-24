@@ -6,9 +6,15 @@
       "expected_counterbore_hole_bridging": "none"
     },
     {
-      "project_name": "sparse_infill",
-      "input_3mf": "counterbore_hole_bridging_sparse_infill.3mf",
-      "expected_counterbore_hole_bridging": "sparse_infill"
+      "project_name": "partiallybridge",
+      "input_3mf": "counterbore_hole_bridging_partiallybridge.3mf",
+      "expected_counterbore_hole_bridging": "partiallybridge"
+    }
+    ,
+    {
+      "project_name": "sacrificiallayer",
+      "input_3mf": "counterbore_hole_bridging_sacrificiallayer.3mf",
+      "expected_counterbore_hole_bridging": "sacrificiallayer"
     }
   ]
 }
