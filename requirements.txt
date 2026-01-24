@@ -24,3 +24,4 @@ ruamel.yaml==0.18.16
 watchdog==6.0.0
 allure-pytest==2.15.2
 python-dotenv>=1.0.0
+opencv-python==4.10.0.86
