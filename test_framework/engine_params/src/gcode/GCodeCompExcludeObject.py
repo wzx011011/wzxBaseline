@@ -92,9 +92,13 @@ class GCodeCompExcludeObject:
                             in_object = False
                             current_object = None
                     
-                    # 如果在对象范围内，收集数据行
                     if in_object and line and not line.startswith(";"):
-                        data_lines.append(line)
+                        parts = line.split()
+                        if not parts:
+                            continue
+                        command = parts[0].upper()
+                        if command in {"G1", "G2", "G3"}:
+                            data_lines.append(line)
                     
                     if nl == -1:
                         break
