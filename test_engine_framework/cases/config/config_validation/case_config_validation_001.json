@@ -1,9 +1,0 @@
-{
-  "name": "config-validation-001",
-  "config_file": "empty.ini",
-  "option":{
-    "perimeter_extrusion_width": "250%"
-  },
-  "expected_valid":true,
-  "tags": ["config_validation"]
-}

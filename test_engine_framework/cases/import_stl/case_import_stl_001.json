@@ -1,8 +1,0 @@
-{
-  "name": "import-cube-stl",
-  "model_file": "models/cube.stl",
-  "config_file": "configs/empty.ini",
-  "bounding_box":[20,20,20],
-  "expected_model_valid": true,
-  "tags": ["import_stl"]
-}

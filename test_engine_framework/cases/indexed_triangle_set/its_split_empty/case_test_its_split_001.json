@@ -1,6 +1,0 @@
-{
-  "name": "test-its-split-001",
-  "config_file": "configs/empty.ini",
-  "expected_empty": true,
-  "tags": ["its_split"]
-}

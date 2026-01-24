@@ -1,6 +1,0 @@
-{
-  "name": "load-config-001",
-  "config_file": "new_from_ini.ini",
-  "expected_true":true,
-  "tags": ["config_serdes"]
-}

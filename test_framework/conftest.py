@@ -390,10 +390,14 @@ def discover_and_load_meta_files():
     return baseline_data
 
 def pytest_addoption(parser):
-    """
-    Add custom command-line options for pytest.
-    """
-    # --slicer-exe option is already defined in pytest_engine_params.py
+    group = parser.getgroup("installation")
+    group.addoption(
+        "--installer-path",
+        action="store",
+        dest="installer_path",
+        default="",
+        help="Path to NSIS installer for installation_suite",
+    )
 
 
 def pytest_configure(config):

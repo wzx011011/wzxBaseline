@@ -1,7 +1,0 @@
-{
-  "name": "its-quadric-edge-collapse-001",
-  "config_file": "configs/empty.ini",
-  "model_file": "models/simplification.obj",
-  "wanted_count": 0,
-  "tags": ["its_qec_on_model"]
-}

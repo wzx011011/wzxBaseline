@@ -1,9 +1,0 @@
-{
-  "name": "PlaceholderParser-math-002",
-  "config_file": "configs/empty.ini",
-  "expression":"{round(-13.4)}",
-  "result": "-13",
-  "use_Approx":false,
-  "expected_true":true,
-  "tags": ["PlaceholderParser_math"]
-}

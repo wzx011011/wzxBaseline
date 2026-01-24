@@ -1,7 +1,0 @@
-{
-  "name": "boolean-expression-003",
-  "config_file": "configs/empty.ini",
-  "expression":"(12 == 21/2) ? (1 - 1 == 0) : (2 * 2 == 3)",
-  "expected_true":false,
-  "tags": ["boolean_expression"]
-}

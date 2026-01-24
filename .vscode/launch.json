@@ -15,7 +15,7 @@
                 "-s",
                 "--capture=no",
                 "--gcode-root=${workspaceFolder}/output",
-                "${file}"
+                "${file}::test_seam_position_aligned_L3"
             ],
             "console": "integratedTerminal"
         },
