@@ -10,7 +10,7 @@ pipeline {
     string(name: 'BUILD_ID', defaultValue: '1307', description: 'Jenkins build number')
     string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
     string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
-    string(name: 'TEST_COMMAND', defaultValue: '', description: 'Override test command (optional)')
+    string(name: 'TEST_COMMAND', defaultValue: 'engine_params or performance', description: 'Override test command (optional)')
     string(name: 'ALLURE_CMD', defaultValue: 'Allure', description: 'Allure commandline tool name (Global Tool); leave empty to use default')
   }
   environment {
