@@ -49,7 +49,8 @@ class GCodeCompExcludeObject:
         返回:
             List[str]: 对象数据行列表（不包含标记行）
         """
-        data_lines = []
+        data_lines: List[str] = []
+        last_g1_line: Optional[str] = None
         
         with gcode_path.open("rb") as f:
             with mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ) as mm:
@@ -78,6 +79,7 @@ class GCodeCompExcludeObject:
                         if obj_id == object_id:
                             current_object = obj_id
                             in_object = True
+                            last_g1_line = None
                             # 移动到下一行开始
                             pos = line_end + 1 if nl != -1 else len(mm)
                             continue
@@ -91,19 +93,21 @@ class GCodeCompExcludeObject:
                         if obj_id == current_object:
                             in_object = False
                             current_object = None
+                            last_g1_line = None
                     
-                    if in_object and line and not line.startswith(";"):
-                        parts = line.split()
-                        if not parts:
-                            continue
-                        command = parts[0].upper()
-                        if command in {"G1", "G2", "G3"}:
-                            data_lines.append(line)
+                    if in_object and line:
+                        stripped = line.strip()
+                        if stripped.startswith(";TYPE:Outer wall"):
+                            if last_g1_line is not None:
+                                data_lines.append(last_g1_line)
+                        if not stripped.startswith(";"):
+                            cmd, params = self._parse_gcode_line(stripped)
+                            if cmd.upper() == "G1" and "X" in params and "Y" in params:
+                                last_g1_line = stripped
                     
                     if nl == -1:
                         break
                     pos = nl + 1
-        
         return data_lines
     
     def compare_exclude_object_data(
@@ -197,6 +201,7 @@ class GCodeCompExcludeObject:
         return 0
     
     def _compare_gcode_lines(self, line1: str, line2: str) -> bool:
+        # print(f"[EXCLUDE_OBJECT_COMPARE] baseline='{line1}' test='{line2}'")
         """比较两个G-code指令行是否相同"""
         # 简单字符串比较（适用于非数值指令）
         if line1 == line2:
