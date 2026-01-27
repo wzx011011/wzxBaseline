@@ -71,7 +71,7 @@ WINDOW_WIDTH = 1600
 WINDOW_HEIGHT = 900
 
 CAPTURE_REGIONS = {
-    "settings_title": (939, 805, 195, 78),
+    "settings_title": (1000, 805, 195, 78),
     "menu_file": (9, 36, 270, 222),
     "home_title": (242, 53, 559, 95),
     "device_title": (10, 85, 188, 37),
@@ -149,6 +149,7 @@ class AppClient:
         app_cfg = data.get("app") or {}
         app_cfg["language"] = code
         app_cfg["window_mainframe"] = "0; 0; 1600; 900; 0"
+        app_cfg["window_layout"] = "layout2|name=sidebar_printer;caption=;state=2099139;dir=4;layer=0;row=0;pos=0;prop=100000;bestw=400;besth=150;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=400;floath=150|name=sidebar;caption=;state=908;dir=2;layer=0;row=0;pos=0;prop=100000;bestw=380;besth=900;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|name=main;caption=;state=256;dir=5;layer=0;row=0;pos=0;prop=100000;bestw=20;besth=20;minw=-1;minh=-1;maxw=-1;maxh=-1;floatx=-1;floaty=-1;floatw=-1;floath=-1|dock_size(5,0,0)=20|dock_size(2,0,0)=380|"
         data["app"] = app_cfg
         main_json = json.dumps(data, ensure_ascii=False, indent=4)
         cfg.write_text(prefix + main_json + suffix, encoding="utf-8")
