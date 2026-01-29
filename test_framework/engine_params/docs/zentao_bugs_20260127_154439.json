@@ -1,0 +1,2160 @@
+{
+  "query_time": "2026-01-27T15:44:39.474520",
+  "total_bugs": 78,
+  "bugs": [
+    {
+      "title": "10735模型到擦拭塔外墙时无抬升",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打完模型在去打印擦拭塔外墙前无抬升动作，直接平移到擦拭塔外墙起点[结果][期望]打完模型回抽抬升后空走到擦拭塔外墙起点，且抬升方式由参数控制",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:20px;\">[步骤]</span></p><p><span style=\"font-size:20px;\">打完模型在去打印擦拭塔外墙前无抬升动作，直接平移到</span><span style=\"font-size:20px;\">擦拭塔外墙起点</span></p><p><a href=\"/zentao/file-read-22419.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-22419.png\" alt=\"file-read-22419.png\" width=\"700\"></a></p><p><span style=\"font-size:20px;\">[结果]</span></p><p></p><p><span style=\"font-size:20px;\">[期望]</span></p><p><span style=\"font-size:20px;\">打完模型回抽抬升后空走到</span><span style=\"font-size:20px;\">擦拭塔外墙起点，且抬升方式由参数控制</span></p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-22419.png",
+          "alt": "file-read-22419.png",
+          "title": ""
+        }
+      ],
+      "id": 10735,
+      "url": "https://zentao.creality.com/zentao/bug-view-10735.html",
+      "downloaded_images": [
+        "zentao_images\\bug_10735\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_10735/steps.html"
+    },
+    {
+      "title": "10736换完料后到擦拭塔前的抬升Z高度保护动作",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]换完料后到擦拭塔起点前会先抬升Z，作为高度保护动作（需求单https://zentao.creality.com/zentao/story-view-107.html），如下图新版本无抬升保护动作，直接平移到擦拭塔起点6.2.0正确情况如下[结果][期望]按照王文彬当时完成需求的方式修改",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:20px;\">[步骤]</span></p><p><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">换完料后到擦拭塔起点前会先抬升Z，作为高度保护动作（需求单</span><a target=\"_blank\" href=\"https://zentao.creality.com/zentao/story-view-107.html\" rel=\"noreferrer noopener\"><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">https://zentao.creality.com/zentao/story-view-107.html</span></a><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">），如下图新版本无抬升保护动作，直接平移到擦拭塔起点</span></p><p><a href=\"/zentao/file-read-22422.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-22422.png\" alt=\"file-read-22422.png\" width=\"700\"></a></p><p><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">6.2.0正确情况如下</span></p><p><a href=\"/zentao/file-read-22423.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-22423.png\" alt=\"file-read-22423.png\" width=\"700\"></a></p><p><span style=\"font-size:20px;\">[结果]</span></p><p></p><p><span style=\"font-size:20px;\">[期望]</span></p><p><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">按照王文彬当时完成需求的方式修改</span></p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-22422.png",
+          "alt": "file-read-22422.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-22423.png",
+          "alt": "file-read-22423.png",
+          "title": ""
+        }
+      ],
+      "id": 10736,
+      "url": "https://zentao.creality.com/zentao/bug-view-10736.html",
+      "downloaded_images": [
+        "zentao_images\\bug_10736\\image_1.png",
+        "zentao_images\\bug_10736\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_10736/steps.html"
+    },
+    {
+      "title": "10737打完擦拭塔填充后打擦拭塔外墙的情况下，在打完擦拭塔外墙后会有重复回抽",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打完擦拭塔填充后再打擦拭塔外墙的情况下，在打完擦拭塔外墙后会有重复回抽，在其它情况下（只打擦拭塔填充或只打擦拭塔外墙）打完擦拭塔后的回抽正常[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:20px;\">[步骤]</span></p><p><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打完擦拭塔填充后再打擦拭塔外墙的情况下，在打完擦拭塔外墙后会有重复回抽，在其它情况下（只打擦拭塔填充或只打擦拭塔外墙）打完擦拭塔后的回抽正常</span></p><p><a href=\"/zentao/file-read-22425.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-22425.png\" alt=\"file-read-22425.png\" width=\"700\"></a></p><p><span style=\"font-size:20px;\">[结果]</span></p><p></p><p><span style=\"font-size:20px;\">[期望]</span></p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-22425.png",
+          "alt": "file-read-22425.png",
+          "title": ""
+        }
+      ],
+      "id": 10737,
+      "url": "https://zentao.creality.com/zentao/bug-view-10737.html",
+      "downloaded_images": [
+        "zentao_images\\bug_10737\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_10737/steps.html"
+    },
+    {
+      "title": "10738擦拭塔外墙打印结束时回抽速度异常",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]擦拭塔外墙打印结束时回抽速度异常快，正常情况速度取设置的回抽速度[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔外墙打印结束时回抽速度异常快，正常情况速度取设置的回抽速度</span></p><p><span style=\"font-size:20px;\"><a href=\"/zentao/file-read-22427.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-22427.png\" alt=\"file-read-22427.png\" width=\"700\"></a></span></p><p><span style=\"font-size:20px;\">[结果]</span></p><p></p><p><span style=\"font-size:20px;\">[期望]</span></p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-22427.png",
+          "alt": "file-read-22427.png",
+          "title": ""
+        }
+      ],
+      "id": 10738,
+      "url": "https://zentao.creality.com/zentao/bug-view-10738.html",
+      "downloaded_images": [
+        "zentao_images\\bug_10738\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_10738/steps.html"
+    },
+    {
+      "title": "10753层间换色场景下擦嘴线/模型到擦拭塔重复装填",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]首层打印擦嘴线到擦拭塔时重复装填模型到到擦拭塔时重复装填[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:20px;\">[步骤]</span></p><p><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">首层打印擦嘴线到擦拭塔时重复装填</span></p><p><a href=\"/zentao/file-read-22473.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-22473.png\" alt=\"file-read-22473.png\" width=\"700\"></a></p><p><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">模型到</span><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">到擦拭塔时重复装填</span></p><p><a href=\"/zentao/file-read-22474.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-22474.png\" alt=\"file-read-22474.png\" width=\"700\"></a></p><p><span style=\"font-size:20px;\">[结果]</span></p><p></p><p><span style=\"font-size:20px;\">[期望]</span></p><p></p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-22473.png",
+          "alt": "file-read-22473.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-22474.png",
+          "alt": "file-read-22474.png",
+          "title": ""
+        }
+      ],
+      "id": 10753,
+      "url": "https://zentao.creality.com/zentao/bug-view-10753.html",
+      "downloaded_images": [
+        "zentao_images\\bug_10753\\image_1.png",
+        "zentao_images\\bug_10753\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_10753/steps.html"
+    },
+    {
+      "title": "10754层间换色场景擦拭塔到模型重复回抽",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色场景擦拭塔到模型重复回抽[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:20px;\">[步骤]</span></p><p><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色场景擦拭塔到模型重复回抽</span></p><p><span style=\"font-size:20px;\"><a href=\"/zentao/file-read-22477.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-22477.png\" alt=\"file-read-22477.png\" width=\"700\"></a></span></p><p><a href=\"/zentao/file-read-22478.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-22478.png\" alt=\"file-read-22478.png\" width=\"700\"></a></p><p><span style=\"font-size:20px;\">[结果]</span></p><p></p><p><span style=\"font-size:20px;\">[期望]</span></p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-22477.png",
+          "alt": "file-read-22477.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-22478.png",
+          "alt": "file-read-22478.png",
+          "title": ""
+        }
+      ],
+      "id": 10754,
+      "url": "https://zentao.creality.com/zentao/bug-view-10754.html",
+      "downloaded_images": [
+        "zentao_images\\bug_10754\\image_1.png",
+        "zentao_images\\bug_10754\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_10754/steps.html"
+    },
+    {
+      "title": "10755层间换色场景下擦拭塔缺口处擦嘴线路径悬空",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色场景下非换色层的擦拭塔路径有较大间隙，当下一层换色打印缺口处擦嘴线时路径完全悬空[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:20px;\">[步骤]</span></p><p><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色场景下非换色层的擦拭塔路径有较大间隙，当下一层换色打印</span><span style=\"font-size:20px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">缺口处擦嘴线时路径完全悬空</span></p><p><a href=\"/zentao/file-read-22481.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-22481.png\" alt=\"file-read-22481.png\" width=\"700\"></a></p><p><a href=\"/zentao/file-read-22482.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-22482.png\" alt=\"file-read-22482.png\" width=\"700\"></a></p><p><span style=\"font-size:20px;\">[结果]</span></p><p></p><p><span style=\"font-size:20px;\">[期望]</span></p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-22481.png",
+          "alt": "file-read-22481.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-22482.png",
+          "alt": "file-read-22482.png",
+          "title": ""
+        }
+      ],
+      "id": 10755,
+      "url": "https://zentao.creality.com/zentao/bug-view-10755.html",
+      "downloaded_images": [
+        "zentao_images\\bug_10755\\image_1.png",
+        "zentao_images\\bug_10755\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_10755/steps.html"
+    },
+    {
+      "title": "11182【引入】打印完模型空驶去打擦拭塔外墙前没抬升",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打印完模型空驶去打擦拭塔外墙前没抬升[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印完模型空驶去打擦拭塔外墙前没抬升</span></p><p><a href=\"/zentao/file-read-23598.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23598.png\" alt=\"file-read-23598.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[结果]</span></p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23598.png",
+          "alt": "file-read-23598.png",
+          "title": ""
+        }
+      ],
+      "id": 11182,
+      "url": "https://zentao.creality.com/zentao/bug-view-11182.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11182\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11182/steps.html"
+    },
+    {
+      "title": "11183【引入】打印完模型去打擦拭塔外墙前的空走路径多余",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]对比BBS直接空走到擦拭塔外墙起点装填，CP中打印完模型去打擦拭塔外墙前的空走有多余路径[结果][期望]打印完模型抬升，直接空驶去打擦拭塔外墙起点内侧附近装填，空走一小段距离到擦拭塔外墙起点",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">对比BBS直接空走到擦拭塔外墙起点装填，CP中</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印完模型去打擦拭塔外墙前的空走有多余路径</span></p><p><a href=\"/zentao/file-read-23600.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23600.png\" alt=\"file-read-23600.png\" width=\"700\"></a></p><p><a href=\"/zentao/file-read-23601.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23601.png\" alt=\"file-read-23601.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[结果]</span></p><p></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[期望]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印完模型</span><span style=\"font-size:13px;\">抬升，直接</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">空驶去打擦拭塔外墙起点内侧附近装填，</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">空走一小段距离到</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔外墙起点</span></p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23600.png",
+          "alt": "file-read-23600.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23601.png",
+          "alt": "file-read-23601.png",
+          "title": ""
+        }
+      ],
+      "id": 11183,
+      "url": "https://zentao.creality.com/zentao/bug-view-11183.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11183\\image_1.png",
+        "zentao_images\\bug_11183\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11183/steps.html"
+    },
+    {
+      "title": "11184【引入】打印完模型空驶去打擦拭塔外墙起点后无装填",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]对比BBS直接空驶去打擦拭塔外墙起点内侧附近先装填后空走一小段距离到擦拭塔外墙起点，CP打印完模型空驶去打擦拭塔外墙起点内侧附近无装填[结果]打印完模型抬升，直接空驶去打擦拭塔外墙起点内侧附近装填，空走一小段距离到擦拭塔外墙起点[期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">对比BBS直接</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">空驶去打擦拭塔外墙起点内侧附近先装填后空走一小段距离到</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔外墙起点</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">，CP</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印完模型</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">空驶去打擦拭塔外墙起点内侧附近无装填</span></p><p><a href=\"/zentao/file-read-23604.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23604.png\" alt=\"file-read-23604.png\" width=\"700\"></a></p><p><a href=\"/zentao/file-read-23603.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23603.png\" alt=\"file-read-23603.png\" width=\"700\"></a></p><p>[结果]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印完模型</span><span style=\"font-size:13px;\">抬升，直接</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">空驶去打擦拭塔外墙起点内侧附近装填，</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">空走一小段距离到</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔外墙起点</span></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23604.png",
+          "alt": "file-read-23604.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23603.png",
+          "alt": "file-read-23603.png",
+          "title": ""
+        }
+      ],
+      "id": 11184,
+      "url": "https://zentao.creality.com/zentao/bug-view-11184.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11184\\image_1.png",
+        "zentao_images\\bug_11184\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11184/steps.html"
+    },
+    {
+      "title": "11185【引入】打印完擦拭塔外墙后的回抽速度计算错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打印完擦拭塔外墙后的回抽速度计算错误，多乘了一次60[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印完擦拭塔外墙后的回抽速度计算错误，多乘了一次60</span></p><p><a href=\"/zentao/file-read-23606.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23606.png\" alt=\"file-read-23606.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23606.png",
+          "alt": "file-read-23606.png",
+          "title": ""
+        }
+      ],
+      "id": 11185,
+      "url": "https://zentao.creality.com/zentao/bug-view-11185.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11185\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11185/steps.html"
+    },
+    {
+      "title": "11187【引入】打印完擦拭塔外墙后有多余空走",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打印完擦拭塔外墙回抽后有多余空走，回抽后应当擦拭抬升[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印完擦拭塔外墙回抽后有多余空走，回抽后应当擦拭抬升</span></p><p><a href=\"/zentao/file-read-23609.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23609.png\" alt=\"file-read-23609.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23609.png",
+          "alt": "file-read-23609.png",
+          "title": ""
+        }
+      ],
+      "id": 11187,
+      "url": "https://zentao.creality.com/zentao/bug-view-11187.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11187\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11187/steps.html"
+    },
+    {
+      "title": "11188【引入】打印完擦拭塔外墙后无擦拭",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打印完擦拭塔外墙后只有回抽，无擦拭[结果][期望]打印完擦拭塔外墙后有回抽擦拭",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印完擦拭塔外墙后只有回抽，无擦拭</span></p><p><a href=\"/zentao/file-read-23611.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23611.png\" alt=\"file-read-23611.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印完擦拭塔外墙后有回抽擦拭</span></p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23611.png",
+          "alt": "file-read-23611.png",
+          "title": ""
+        }
+      ],
+      "id": 11188,
+      "url": "https://zentao.creality.com/zentao/bug-view-11188.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11188\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11188/steps.html"
+    },
+    {
+      "title": "11189【引入】完成换料后空走到擦拭塔时空走路径逻辑错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]完成换料后空走到擦拭塔时空走路径逻辑错误，正确逻辑如下图应当先平移到擦拭塔上，再降Z[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">完成换料后空走到擦拭塔时空走路径逻辑错误，正确逻辑如下图应当先平移到擦拭塔上，再降Z</span></p><p><a href=\"/zentao/file-read-23613.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23613.png\" alt=\"file-read-23613.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23613.png",
+          "alt": "file-read-23613.png",
+          "title": ""
+        }
+      ],
+      "id": 11189,
+      "url": "https://zentao.creality.com/zentao/bug-view-11189.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11189\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11189/steps.html"
+    },
+    {
+      "title": "11190【引入】完成换料后空走到擦拭塔缺口处没有擦嘴动作和擦嘴线",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]BBS在换色后会绕行到缺口，缺口处会有擦嘴动作和打印擦嘴线，CP没有[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span>BBS在换色后会绕行到缺口，缺口处会有擦嘴动作和打印擦嘴线，CP没有</span></p><p><a href=\"/zentao/file-read-23615.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23615.png\" alt=\"file-read-23615.png\" width=\"700\"></a></p><p><a href=\"/zentao/file-read-23616.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23616.png\" alt=\"file-read-23616.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23615.png",
+          "alt": "file-read-23615.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23616.png",
+          "alt": "file-read-23616.png",
+          "title": ""
+        }
+      ],
+      "id": 11190,
+      "url": "https://zentao.creality.com/zentao/bug-view-11190.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11190\\image_1.png",
+        "zentao_images\\bug_11190\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11190/steps.html"
+    },
+    {
+      "title": "11192【引入】擦拭塔中粘接性较差的耗材没有分区打印",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]擦拭塔中粘接性较差的耗材没有分区打印，PETG的分区会打印PLA[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔中粘接性较差的耗材没有分区打印，PETG的分区会打印PLA</span></p><p><a href=\"/zentao/file-read-23619.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23619.png\" alt=\"file-read-23619.png\" width=\"700\"></a></p><p><a href=\"/zentao/file-read-23620.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23620.png\" alt=\"file-read-23620.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[结果]</span></p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23619.png",
+          "alt": "file-read-23619.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23620.png",
+          "alt": "file-read-23620.png",
+          "title": ""
+        }
+      ],
+      "id": 11192,
+      "url": "https://zentao.creality.com/zentao/bug-view-11192.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11192\\image_1.png",
+        "zentao_images\\bug_11192\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11192/steps.html"
+    },
+    {
+      "title": "11193【引入】层间换色时打印换色层擦拭塔外墙前未抬升",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色场景，打印完当前颜色，在换色前需要先打印下一层擦拭塔外墙然后再去换色，此时未抬升，还是以当前高度打印，导致下一层擦拭塔外墙压层缺失。[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色场景，打印完当前颜色，在换色前需要先打印下一层擦拭塔外墙然后再去换色，此时未抬升，还是以当前高度打印，导致下一层</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔外墙压层缺失。</span></p><p><a href=\"/zentao/file-read-23625.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23625.png\" alt=\"file-read-23625.png\" width=\"700\"></a></p><p><a href=\"/zentao/file-read-23624.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23624.png\" alt=\"file-read-23624.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23625.png",
+          "alt": "file-read-23625.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23624.png",
+          "alt": "file-read-23624.png",
+          "title": ""
+        }
+      ],
+      "id": 11193,
+      "url": "https://zentao.creality.com/zentao/bug-view-11193.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11193\\image_1.png",
+        "zentao_images\\bug_11193\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11193/steps.html"
+    },
+    {
+      "title": "11194【引入】层间换色时层擦拭塔顶部未分区打印",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]粘接性较差的耗材之间层间换色时，层擦拭塔顶部从倒数第二次换色开始未按分区打印，擦拭塔截面收缩[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">粘接性较差的耗材之间层间换色时，层擦拭塔顶部从倒数第二次换色开始未按分区打印，擦拭塔截面收缩</span></p><p><a href=\"/zentao/file-read-23628.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23628.png\" alt=\"file-read-23628.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23628.png",
+          "alt": "file-read-23628.png",
+          "title": ""
+        }
+      ],
+      "id": 11194,
+      "url": "https://zentao.creality.com/zentao/bug-view-11194.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11194\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11194/steps.html"
+    },
+    {
+      "title": "11272【引入】换料后到擦拭塔有多余路径",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]换料后到擦拭塔有多余路径，擦拭塔缺口绕行空走路径多个地方有重复抬升降Z，路径逻辑错误。擦拭塔缺口绕行空走路径应该在Z高度保护动作（G0 Z0.6）之后[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">换料后到擦拭塔有多余路径，擦拭塔缺口绕行空走路径多个地方有重复抬升降Z，路径逻辑错误。</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔缺口绕行空走路径应该在Z高度保护动作（G0 Z0.6）之后</span></p><p><a href=\"/zentao/file-read-23870.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23870.png\" alt=\"file-read-23870.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23870.png",
+          "alt": "file-read-23870.png",
+          "title": ""
+        }
+      ],
+      "id": 11272,
+      "url": "https://zentao.creality.com/zentao/bug-view-11272.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11272\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11272/steps.html"
+    },
+    {
+      "title": "11279【引入】打完擦拭塔去打模型前无回抽",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打完擦拭塔外墙去打模型前无回抽，只有擦拭打完擦拭塔填充去打模型前无回抽，只有擦拭[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打完擦拭塔外墙去打模型前无回抽，只有擦拭</span></p><p><a href=\"/zentao/file-read-23894.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23894.png\" alt=\"file-read-23894.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打完擦拭塔填充去打模型前无回抽，只有擦拭</span></p><p><a href=\"/zentao/file-read-23987.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23987.png\" alt=\"file-read-23987.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[结果]</span></p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23894.png",
+          "alt": "file-read-23894.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23987.png",
+          "alt": "file-read-23987.png",
+          "title": ""
+        }
+      ],
+      "id": 11279,
+      "url": "https://zentao.creality.com/zentao/bug-view-11279.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11279\\image_1.png",
+        "zentao_images\\bug_11279\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11279/steps.html"
+    },
+    {
+      "title": "11280【引入】打完擦拭塔外墙去打模型前的擦拭路径偏移",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打完擦拭塔外墙去打模型前的擦拭路径偏移，应当与打印路径对齐[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打完擦拭塔外墙去打模型前的擦拭路径偏移，应当与打印路径对齐</span></p><p><a href=\"/zentao/file-read-23897.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-23897.png\" alt=\"file-read-23897.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-23897.png",
+          "alt": "file-read-23897.png",
+          "title": ""
+        }
+      ],
+      "id": 11280,
+      "url": "https://zentao.creality.com/zentao/bug-view-11280.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11280\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11280/steps.html"
+    },
+    {
+      "title": "11320【引入】打完擦拭塔去模型时没有抬升",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打完擦拭塔外墙去模型时没有抬升打完擦拭塔填充去模型时没有抬升[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打完擦拭塔外墙去模型时没有抬升</span></p><p><a href=\"/zentao/file-read-24026.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24026.png\" alt=\"file-read-24026.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打完擦拭塔填充去模型时没有抬升</span></p><p><a href=\"/zentao/file-read-24025.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24025.png\" alt=\"file-read-24025.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24026.png",
+          "alt": "file-read-24026.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24025.png",
+          "alt": "file-read-24025.png",
+          "title": ""
+        }
+      ],
+      "id": 11320,
+      "url": "https://zentao.creality.com/zentao/bug-view-11320.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11320\\image_1.png",
+        "zentao_images\\bug_11320\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11320/steps.html"
+    },
+    {
+      "title": "11327【引入】打完擦拭塔空走到模型后的装填量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打完擦拭塔空走到模型后的装填量错误，正常为0.8[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打完擦拭塔空走到模型后的装填量错误，正常为0.8</span></p><p><a href=\"/zentao/file-read-24046.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24046.png\" alt=\"file-read-24046.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24046.png",
+          "alt": "file-read-24046.png",
+          "title": ""
+        }
+      ],
+      "id": 11327,
+      "url": "https://zentao.creality.com/zentao/bug-view-11327.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11327\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11327/steps.html"
+    },
+    {
+      "title": "11329【引入】开启无稀疏层打印擦拭塔时装填错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]开启无稀疏层打印擦拭塔时应当Z轴先降到擦拭塔打印高度再装填[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">开启无稀疏层打印擦拭塔时应当Z轴先降到擦拭塔打印高度再装填</span></p><p><a href=\"/zentao/file-read-24054.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24054.png\" alt=\"file-read-24054.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24054.png",
+          "alt": "file-read-24054.png",
+          "title": ""
+        }
+      ],
+      "id": 11329,
+      "url": "https://zentao.creality.com/zentao/bug-view-11329.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11329\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11329/steps.html"
+    },
+    {
+      "title": "11339【引入】Z轴保护动作在擦拭塔缺口绕行路径之后",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]Z轴保护动作在擦拭塔缺口绕行路径之后，正确应该为Z轴保护动作在擦拭塔缺口绕行路径之前[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">Z轴保护动作在擦拭塔缺口绕行路径之后，正确应该为</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">Z轴保护动作在擦拭塔缺口绕行路径之前</span></p><p><a href=\"/zentao/file-read-24086.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24086.png\" alt=\"file-read-24086.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24086.png",
+          "alt": "file-read-24086.png",
+          "title": ""
+        }
+      ],
+      "id": 11339,
+      "url": "https://zentao.creality.com/zentao/bug-view-11339.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11339\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11339/steps.html"
+    },
+    {
+      "title": "11340【引入】擦拭塔上换料时无回抽",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]擦拭塔上换料时无回抽[结果]擦拭塔上换料前要有回抽擦拭[期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔上换料时无回抽</span></p><p><a href=\"/zentao/file-read-24090.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24090.png\" alt=\"file-read-24090.png\" width=\"700\"></a></p><p>[结果]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔上换料前要有回抽擦拭</span></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24090.png",
+          "alt": "file-read-24090.png",
+          "title": ""
+        }
+      ],
+      "id": 11340,
+      "url": "https://zentao.creality.com/zentao/bug-view-11340.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11340\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11340/steps.html"
+    },
+    {
+      "title": "11456模型到擦拭塔的抬升方式不受参数控制",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]模型到擦拭塔的抬升方式不受参数控制[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">模型到擦拭塔的抬升方式不受参数控制</span></p><p><a href=\"/zentao/file-read-24348.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24348.png\" alt=\"file-read-24348.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24348.png",
+          "alt": "file-read-24348.png",
+          "title": ""
+        }
+      ],
+      "id": 11456,
+      "url": "https://zentao.creality.com/zentao/bug-view-11456.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11456\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11456/steps.html"
+    },
+    {
+      "title": "11457擦拭塔上换料前有多余抬升",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]擦拭塔上换料前有多余抬升，换料前回抽擦拭后的抬升是由自定义gcode控制的，不要额外加抬升[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔上换料前有多余抬升，换料前回抽擦拭后的抬升是由自定义gcode控制的，不要额外加抬升</span></p><p><a href=\"/zentao/file-read-24351.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24351.png\" alt=\"file-read-24351.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24351.png",
+          "alt": "file-read-24351.png",
+          "title": ""
+        }
+      ],
+      "id": 11457,
+      "url": "https://zentao.creality.com/zentao/bug-view-11457.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11457\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11457/steps.html"
+    },
+    {
+      "title": "11459打完擦拭塔到模型前的回抽擦拭悬空",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打完擦拭塔到模型前会先抬升后回抽擦拭，多余的抬升导致回抽擦拭悬空，关联bugBUG #11457 擦拭塔上换料前有多余抬升 - Creality Print 6.x - 禅道[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打完擦拭塔到模型前会先抬升后回抽擦拭，多余的抬升导致</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">回抽擦拭</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">悬空，关联bu</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">g</span><a target=\"_blank\" href=\"https://zentao.creality.com/zentao/bug-view-11457.html\" rel=\"noreferrer noopener\"><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">BUG #11457 擦拭塔上换料前有多余抬升 - Creality Print 6.x - 禅道</span></a></p><p><a href=\"/zentao/file-read-24355.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24355.png\" alt=\"file-read-24355.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24355.png",
+          "alt": "file-read-24355.png",
+          "title": ""
+        }
+      ],
+      "id": 11459,
+      "url": "https://zentao.creality.com/zentao/bug-view-11459.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11459\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11459/steps.html"
+    },
+    {
+      "title": "11460不同类型耗材层内换色场景，换料前回抽量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]不同类型耗材层内换色场景，换料前回抽量错误。回抽量用下一个耗材的参数（1.2），擦拭用的当前耗材的参数（0.8×30%）[结果]回抽量用当前耗材的参数（0.8*70%），擦拭用的当前耗材的参数（0.8×30%）[期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">不同类型耗材层内换色场景，换料前回抽量错误。回抽量用下一个耗材的参数（1.2），擦拭用的当前耗材的参数（0.8×30%）</span></p><p><a href=\"/zentao/file-read-24359.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24359.png\" alt=\"file-read-24359.png\" width=\"700\"></a></p><p>[结果]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">回抽量用当前耗材的参数（0.8*70%），擦拭用的当前耗材的参数（0.8×30%）</span></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24359.png",
+          "alt": "file-read-24359.png",
+          "title": ""
+        }
+      ],
+      "id": 11460,
+      "url": "https://zentao.creality.com/zentao/bug-view-11460.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11460\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11460/steps.html"
+    },
+    {
+      "title": "11461擦拭塔抬升方式错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]擦拭塔抬升方式错误，不受参数控制[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔抬升方式错误，不受参数控制</span></p><p><a href=\"/zentao/file-read-24362.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24362.png\" alt=\"file-read-24362.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24362.png",
+          "alt": "file-read-24362.png",
+          "title": ""
+        }
+      ],
+      "id": 11461,
+      "url": "https://zentao.creality.com/zentao/bug-view-11461.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11461\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11461/steps.html"
+    },
+    {
+      "title": "11462不同类型耗材层内换色场景，擦拭塔填充的装填量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]不同类型耗材层内换色场景，擦拭塔填充的装填量错误。回抽+擦拭用当前耗材的参数（0.8），到擦拭塔填充时装填量用的下一个耗材的参数（1.2）[结果]回抽+擦拭用当前耗材的参数（0.8），到擦拭塔填充时装填量保持一致（0.8）[期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">不同类型耗材层内换色场景，擦拭塔填充的装填量错误。</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">回抽+擦拭用当前耗材的参数（0.8），到擦拭塔填充时装填量用的下一个耗材的参数（1.2）</span></p><p><a href=\"/zentao/file-read-24365.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24365.png\" alt=\"file-read-24365.png\" width=\"700\"></a></p><p>[结果]</p><p><span style=\"color:rgb(48,57,74);font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">回抽+擦拭用当前耗材的参数（0.8），到擦拭塔填充时装填量保持一致（0.8）</span></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24365.png",
+          "alt": "file-read-24365.png",
+          "title": ""
+        }
+      ],
+      "id": 11462,
+      "url": "https://zentao.creality.com/zentao/bug-view-11462.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11462\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11462/steps.html"
+    },
+    {
+      "title": "11463不同类型耗材层内换色场景，换料后擦拭塔擦嘴线处的装填量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]不同类型耗材层内换色场景，换料后擦拭塔擦嘴线处的装填量错误（1.04），正确应该为换料前的回抽长度（0.8）[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">不同类型耗材层内换色场景，换料后擦拭塔擦嘴线处的装填量错误（1.04），正确应该为换料前的回抽长度（0.8）</span></p><p><a href=\"/zentao/file-read-24368.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24368.png\" alt=\"file-read-24368.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24368.png",
+          "alt": "file-read-24368.png",
+          "title": ""
+        }
+      ],
+      "id": 11463,
+      "url": "https://zentao.creality.com/zentao/bug-view-11463.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11463\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11463/steps.html"
+    },
+    {
+      "title": "11464不同类型耗材层内换色场景，换料前重复回抽量",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤] 不同类型耗材层内换色场景，换料前重复回抽量[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\"> 不同类型耗材层内换色场景，换料前重复回抽量</span></p><p><a href=\"/zentao/file-read-24371.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24371.png\" alt=\"file-read-24371.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24371.png",
+          "alt": "file-read-24371.png",
+          "title": ""
+        }
+      ],
+      "id": 11464,
+      "url": "https://zentao.creality.com/zentao/bug-view-11464.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11464\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11464/steps.html"
+    },
+    {
+      "title": "11467层间换色场景，换料后到擦拭塔有多余路径",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]换料后到擦拭塔有多余路径，擦拭塔缺口绕行空走路径提前降Z，路径逻辑错误。[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"color:rgb(48,57,74);font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">换料后到擦拭塔有多余路径，擦拭塔缺口绕行空走路径提前降Z，路径逻辑错误。</span></p><p><a href=\"/zentao/file-read-24380.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24380.png\" alt=\"file-read-24380.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24380.png",
+          "alt": "file-read-24380.png",
+          "title": ""
+        }
+      ],
+      "id": 11467,
+      "url": "https://zentao.creality.com/zentao/bug-view-11467.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11467\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11467/steps.html"
+    },
+    {
+      "title": "11471层间换色场景，换色层擦拭塔打印顺序错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色场景，换色层擦拭塔打印顺序错误。先换色然后一次性打印擦拭塔外墙和填充正确应当换色前先打印擦拭塔外墙，换色后再打擦拭塔填充[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色场景，换色层擦拭塔打印顺序错误。先换色然后一次性打印擦拭塔外墙和填充</span></p><p><a href=\"/zentao/file-read-24385.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24385.png\" alt=\"file-read-24385.png\" width=\"700\"></a></p><p><a href=\"/zentao/file-read-24386.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24386.png\" alt=\"file-read-24386.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">正确应当换色前先打印擦拭塔外墙，换色后再打擦拭塔填充</span></p><p><a href=\"/zentao/file-read-24389.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24389.png\" alt=\"file-read-24389.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[结果]</span></p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24385.png",
+          "alt": "file-read-24385.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24386.png",
+          "alt": "file-read-24386.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24389.png",
+          "alt": "file-read-24389.png",
+          "title": ""
+        }
+      ],
+      "id": 11471,
+      "url": "https://zentao.creality.com/zentao/bug-view-11471.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11471\\image_1.png",
+        "zentao_images\\bug_11471\\image_2.png",
+        "zentao_images\\bug_11471\\image_3.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11471/steps.html"
+    },
+    {
+      "title": "11473打完擦拭塔填充后打印擦拭塔外墙时有多余装填",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打完擦拭塔填充后打印擦拭塔外墙时有多余装填[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打完擦拭塔填充后打印擦拭塔外墙时有多余装填</span></p><p><a href=\"/zentao/file-read-24397.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-24397.png\" alt=\"file-read-24397.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[结果]</span></p><p></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[期望]</span></p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-24397.png",
+          "alt": "file-read-24397.png",
+          "title": ""
+        }
+      ],
+      "id": 11473,
+      "url": "https://zentao.creality.com/zentao/bug-view-11473.html",
+      "downloaded_images": [
+        "zentao_images\\bug_11473\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_11473/steps.html"
+    },
+    {
+      "title": "13275【引入】CFS-C机型输出gcode异常",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]CFS-C机型输出gcode异常，换料自定义gcode路径超出平台[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">CFS-C机型输出gcode异常，换料自定义gcode路径超出平台</span></p><p><a href=\"/zentao/file-read-28856.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28856.png\" alt=\"file-read-28856.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[结果]</span></p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28856.png",
+          "alt": "file-read-28856.png",
+          "title": ""
+        }
+      ],
+      "id": 13275,
+      "url": "https://zentao.creality.com/zentao/bug-view-13275.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13275\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13275/steps.html"
+    },
+    {
+      "title": "13276【引入】CFS-C机型擦拭塔首层面积异常",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]CFS-C机型擦拭塔首层面积异常，首层面积变大[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">CFS-C机型擦拭塔首层面积异常，首层面积变大</span></p><p><a href=\"/zentao/file-read-28858.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28858.png\" alt=\"file-read-28858.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28858.png",
+          "alt": "file-read-28858.png",
+          "title": ""
+        }
+      ],
+      "id": 13276,
+      "url": "https://zentao.creality.com/zentao/bug-view-13276.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13276\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13276/steps.html"
+    },
+    {
+      "title": "13277【引入】层内换色，模型到打印擦拭塔外墙时缺装填",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层内换色，模型到打印擦拭塔外墙时缺装填[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层内换色，模型到打印擦拭塔外墙时缺装填</span></p><p><a href=\"/zentao/file-read-28864.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28864.png\" alt=\"file-read-28864.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28864.png",
+          "alt": "file-read-28864.png",
+          "title": ""
+        }
+      ],
+      "id": 13277,
+      "url": "https://zentao.creality.com/zentao/bug-view-13277.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13277\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13277/steps.html"
+    },
+    {
+      "title": "13278【引入】换料前的回抽动作异常",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]换料前的回抽动作异常，细节参考BUG #11075 【外部反馈】【需求】回抽擦拭后再进行一次回抽 - Creality Print 6.x - 禅道BUG #10770 换料前回抽异常 - Creality Print 6.x - 禅道[结果][期望]当设置的回抽长度（a）小于换料前回抽长度（b）时，换料前的总回抽量=换料前回抽长度（b）=回抽（b*擦拭前回抽量百分比）+擦拭回抽（b*（1-擦拭前回抽量百分比）*95%）+回抽（b*（1-擦拭前回抽量百分比）*5%）；当设置的回抽长度（a）大于换料前回抽长度（b）时，换料前的总回抽量=回抽长度（a）=回抽（a*擦拭前回抽量百分比）+擦拭回抽（a*（1-擦拭前回抽量百分比）*95%）+回抽（a*（1-擦拭前回抽量百分比）*5%）=换料前回抽长度+回抽",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">换料前的回抽动作异常，细节参</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">考</span><a target=\"_blank\" href=\"https://zentao.creality.com/zentao/bug-view-11075.html\" rel=\"noreferrer noopener\"><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">BUG #11075 【外部反馈】【需求】回抽擦拭后再进行一次回抽 - Creality Print 6.x - 禅道</span></a><a target=\"_blank\" href=\"https://zentao.creality.com/zentao/bug-view-10770.html\" rel=\"noreferrer noopener\"><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">BUG #10770 换料前回抽异常 - Creality Print 6.x - 禅道</span></a></p><p><a href=\"/zentao/file-read-28866.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28866.png\" alt=\"file-read-28866.png\" width=\"700\"></a></p><p><a href=\"/zentao/file-read-28867.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28867.png\" alt=\"file-read-28867.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[结果]</span></p><p></p><p>[期望]</p><p><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">当设置的回抽长度（a）小于换料前回抽长度（b）时，换料前的总回抽量=</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">换料前回抽长度（b）</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">=回抽（b*擦拭前回抽量百分比）+擦拭回抽（</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">b*（1-擦拭前回抽量百分比）*95%</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">）+回抽（</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">b*（1-擦拭前回抽量百分比）*5%</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">）；</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">当设置的回抽长度（a）大于换料前回抽长度（b）时，换料前的总回抽量=</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">回抽长度（a）</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">=回抽（a</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">*擦拭前回抽量百分比</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">）+擦拭回抽</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">（</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">a*（1-擦拭前回抽量百分比）*95%</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">）</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">+回抽</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">（a</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">*（1-擦拭前回抽量百分比）*5%</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">）</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">=</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">换料前回抽长度+</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">回抽</span></p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28866.png",
+          "alt": "file-read-28866.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28867.png",
+          "alt": "file-read-28867.png",
+          "title": ""
+        }
+      ],
+      "id": 13278,
+      "url": "https://zentao.creality.com/zentao/bug-view-13278.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13278\\image_1.png",
+        "zentao_images\\bug_13278\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13278/steps.html"
+    },
+    {
+      "title": "13279【引入】层内换色，换料后有多余回抽和抬升",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层内换色，换料后有多余回抽和多余抬升[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层内换色，换料后有多余回抽和多余抬升</span></p><p><a href=\"/zentao/file-read-28872.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28872.png\" alt=\"file-read-28872.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[结果]</span></p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28872.png",
+          "alt": "file-read-28872.png",
+          "title": ""
+        }
+      ],
+      "id": 13279,
+      "url": "https://zentao.creality.com/zentao/bug-view-13279.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13279\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13279/steps.html"
+    },
+    {
+      "title": "13282【引入】擦拭塔外墙缺口处回抽装填量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]擦拭塔外墙缺口处回抽装填量错误，正常应该与工艺参数中一致[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔外墙缺口处回抽装填量错误，正常应该与工艺参数中一致</span></p><p><a href=\"/zentao/file-read-28878.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28878.png\" alt=\"file-read-28878.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28878.png",
+          "alt": "file-read-28878.png",
+          "title": ""
+        }
+      ],
+      "id": 13282,
+      "url": "https://zentao.creality.com/zentao/bug-view-13282.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13282\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13282/steps.html"
+    },
+    {
+      "title": "13283【引入】擦嘴线回抽量和装填量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]擦嘴线回抽量和装填量错误，应当为工艺参数中设置的长度[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦嘴线回抽量和装填量错误</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">，应当为工艺参数中设置的长度</span></p><p><a href=\"/zentao/file-read-28889.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28889.png\" alt=\"file-read-28889.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28889.png",
+          "alt": "file-read-28889.png",
+          "title": ""
+        }
+      ],
+      "id": 13283,
+      "url": "https://zentao.creality.com/zentao/bug-view-13283.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13283\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13283/steps.html"
+    },
+    {
+      "title": "13285【引入】层内换色，第二层换料前有多余路径",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层内换色，第二层换料前有多余路径[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层内换色，第二层换料前有多余路径</span></p><p><a href=\"/zentao/file-read-28900.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28900.png\" alt=\"file-read-28900.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28900.png",
+          "alt": "file-read-28900.png",
+          "title": ""
+        }
+      ],
+      "id": 13285,
+      "url": "https://zentao.creality.com/zentao/bug-view-13285.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13285\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13285/steps.html"
+    },
+    {
+      "title": "13303【引入】不同类型耗材，层内换色场景，换料后打印完擦拭塔填充回抽量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]不同类型耗材，层内换色场景，换料后打印完擦拭塔填充回抽量错误（后面装填量正确），应该为当前打印耗材对应的回抽长度，实际使用的是上一个打印耗材对应的回抽长度。[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">不同类型耗材，层内换色场景，换料后打印完擦拭塔填充回抽量错误（后面装填量正确），应该为当前打印耗材对应的回抽长度，实际使用的是上一个</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印耗材对应的回抽长度</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">。</span></p><p><a href=\"/zentao/file-read-28947.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28947.png\" alt=\"file-read-28947.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28947.png",
+          "alt": "file-read-28947.png",
+          "title": ""
+        }
+      ],
+      "id": 13303,
+      "url": "https://zentao.creality.com/zentao/bug-view-13303.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13303\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13303/steps.html"
+    },
+    {
+      "title": "13309【引入】不同类型耗材，层内换色场景，换料后打印完擦拭塔填充和外墙回抽量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]不同类型耗材，层内换色场景，换料后打印完擦拭塔填充去打印外墙前回抽量错误，应该为当前打印耗材对应的回抽长度，实际使用的是上一个打印耗材对应的回抽长度。换料后打印完擦拭塔外墙回抽量错误，应该为当前打印耗材对应的回抽长度，实际使用的是上一个打印耗材对应的回抽长度。[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">不同类型耗材，层内换色场景，换料后打印完擦拭塔填充去打印外墙前回抽量错误，</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">应该为当前打印耗材对应的回抽长度，实际使用的是上一个</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印耗材对应的回抽长度</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">。</span></p><p><a href=\"/zentao/file-read-28957.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28957.png\" alt=\"file-read-28957.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">换料后打印完擦拭塔外墙回抽量错误，</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">应该为当前打印耗材对应的回抽长度，实际使用的是上一个</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印耗材对应的回抽长度</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">。</span></p><p><a href=\"/zentao/file-read-28958.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28958.png\" alt=\"file-read-28958.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28957.png",
+          "alt": "file-read-28957.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28958.png",
+          "alt": "file-read-28958.png",
+          "title": ""
+        }
+      ],
+      "id": 13309,
+      "url": "https://zentao.creality.com/zentao/bug-view-13309.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13309\\image_1.png",
+        "zentao_images\\bug_13309\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13309/steps.html"
+    },
+    {
+      "title": "13334【引入】层间换色，第一层打完擦嘴线，回抽空走后去打擦拭塔时缺装填",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色，第一层打完擦嘴线，回抽空走后去打擦拭塔时缺装填[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色，第一层打完擦嘴线，回抽空走后去打擦拭塔时缺装填</span></p><p><a href=\"/zentao/file-read-28994.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-28994.png\" alt=\"file-read-28994.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-28994.png",
+          "alt": "file-read-28994.png",
+          "title": ""
+        }
+      ],
+      "id": 13334,
+      "url": "https://zentao.creality.com/zentao/bug-view-13334.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13334\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13334/steps.html"
+    },
+    {
+      "title": "13344【引入】层间换色，非换色层，擦拭塔内远距离空走前无回抽擦拭",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色，非换色层，擦拭塔内远距离空走前无回抽擦拭[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色，非换色层，擦拭塔内远距离空走前无回抽擦拭</span></p><p><a href=\"/zentao/file-read-29008.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29008.png\" alt=\"file-read-29008.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29008.png",
+          "alt": "file-read-29008.png",
+          "title": ""
+        }
+      ],
+      "id": 13344,
+      "url": "https://zentao.creality.com/zentao/bug-view-13344.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13344\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13344/steps.html"
+    },
+    {
+      "title": "13346【引入】层间换色，换色层，打完擦拭塔填充去打模型前有多余抬升",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色，换色层，打完擦拭塔填充去打模型前有多余抬升[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色，换色层，打完擦拭塔填充去打模型前有多余抬升</span></p><p><a href=\"/zentao/file-read-29017.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29017.png\" alt=\"file-read-29017.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29017.png",
+          "alt": "file-read-29017.png",
+          "title": ""
+        }
+      ],
+      "id": 13346,
+      "url": "https://zentao.creality.com/zentao/bug-view-13346.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13346\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13346/steps.html"
+    },
+    {
+      "title": "13349【引入】层间换色，第二次换料前有多余路径",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色，第二次换料前有多余路径[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色，第二次换料前有多余路径</span></p><p><a href=\"/zentao/file-read-29021.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29021.png\" alt=\"file-read-29021.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29021.png",
+          "alt": "file-read-29021.png",
+          "title": ""
+        }
+      ],
+      "id": 13349,
+      "url": "https://zentao.creality.com/zentao/bug-view-13349.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13349\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13349/steps.html"
+    },
+    {
+      "title": "13352层间换色，第二次换料前应当先去打印擦拭塔外墙",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色，第二次换料前应当先去打印擦拭塔外墙，与第一次换色路径逻辑一致第一次换色前先打白色擦拭塔外墙，换色后打黄色擦拭塔填充第二次换色前会先空走到擦拭塔上方，然后再换料，正确应该换色前先打黄色擦拭塔外墙，换色后打白色擦拭塔填充。[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色，第二次换料前应当先去打印擦拭塔外墙，与第一次换色路径逻辑一致</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">第一次换色前先打白色擦拭塔外墙，换色后打黄色擦拭塔填充</span></p><p><a href=\"/zentao/file-read-29031.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29031.png\" alt=\"file-read-29031.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">第二次</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">换色前会先空走到擦拭塔上方，然后再换料</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">，</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">正确应该</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">换色前先打黄色擦拭塔外墙，换色后打白色擦拭塔填充。</span></p><p><a href=\"/zentao/file-read-29033.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29033.png\" alt=\"file-read-29033.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[结果]</span></p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29031.png",
+          "alt": "file-read-29031.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29033.png",
+          "alt": "file-read-29033.png",
+          "title": ""
+        }
+      ],
+      "id": 13352,
+      "url": "https://zentao.creality.com/zentao/bug-view-13352.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13352\\image_1.png",
+        "zentao_images\\bug_13352\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13352/steps.html"
+    },
+    {
+      "title": "13364【引入】层间换色，开启无稀疏层，换料后去打擦拭塔前有多余抬升",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色，开启无稀疏层，换料后去打擦拭塔前有多余抬升[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色，开启无稀疏层，换料后去打擦拭塔前有多余抬升</span></p><p><a href=\"/zentao/file-read-29067.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29067.png\" alt=\"file-read-29067.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29067.png",
+          "alt": "file-read-29067.png",
+          "title": ""
+        }
+      ],
+      "id": 13364,
+      "url": "https://zentao.creality.com/zentao/bug-view-13364.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13364\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13364/steps.html"
+    },
+    {
+      "title": "13366【引入】层间换色，开启无稀疏层，打完擦拭塔后去打印模型前有多余抬升",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色，开启无稀疏层，打完擦拭塔后去打印模型前有多余抬升，且梯形抬升动作异常，抬升高度错误会撞到模型正常结果[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色，开启无稀疏层，打完擦拭塔后去打印模型前有多余抬升，且梯形抬升动作异常，抬升高度错误会撞到模型</span></p><p><a href=\"/zentao/file-read-29073.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29073.png\" alt=\"file-read-29073.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">正常结果</span></p><p><a href=\"/zentao/file-read-29075.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29075.png\" alt=\"file-read-29075.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[结果]</span></p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29073.png",
+          "alt": "file-read-29073.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29075.png",
+          "alt": "file-read-29075.png",
+          "title": ""
+        }
+      ],
+      "id": 13366,
+      "url": "https://zentao.creality.com/zentao/bug-view-13366.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13366\\image_1.png",
+        "zentao_images\\bug_13366\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13366/steps.html"
+    },
+    {
+      "title": "13375【引入】不同类型耗材，层间换色，非换色层打完擦拭塔外墙后打印擦拭塔填充前缺装填",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]不同类型耗材，层间换色，非换色层打完擦拭塔外墙后，打印擦拭塔填充前缺装填[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">不同类型耗材，层间换色，非换色层打完擦拭塔外墙后，打印擦拭塔填充前缺装填</span></p><p><a href=\"/zentao/file-read-29095.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29095.png\" alt=\"file-read-29095.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29095.png",
+          "alt": "file-read-29095.png",
+          "title": ""
+        }
+      ],
+      "id": 13375,
+      "url": "https://zentao.creality.com/zentao/bug-view-13375.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13375\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13375/steps.html"
+    },
+    {
+      "title": "13377【引入】不同类型耗材，层间换色，非换色层打擦拭塔填充时缺回抽擦拭",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]不同类型耗材，层间换色，非换色层打擦拭塔填充时空走前缺回抽擦拭，但空走后却有装填[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">不同类型耗材，层间换色，非换色层打擦拭塔填充时空走前缺回抽擦拭，但空走后却有装填</span></p><p><a href=\"/zentao/file-read-29098.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29098.png\" alt=\"file-read-29098.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29098.png",
+          "alt": "file-read-29098.png",
+          "title": ""
+        }
+      ],
+      "id": 13377,
+      "url": "https://zentao.creality.com/zentao/bug-view-13377.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13377\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13377/steps.html"
+    },
+    {
+      "title": "13379【引入】不同类型耗材，层间换色场景，换料后打印完擦拭塔填充回抽量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]不同类型耗材，层间换色场景，换料后打印完擦拭塔填充回抽量错误[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">不同类型耗材，层间换色场景，换料后打印完擦拭塔填充回抽量错误</span></p><p><a href=\"/zentao/file-read-29103.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29103.png\" alt=\"file-read-29103.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29103.png",
+          "alt": "file-read-29103.png",
+          "title": ""
+        }
+      ],
+      "id": 13379,
+      "url": "https://zentao.creality.com/zentao/bug-view-13379.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13379\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13379/steps.html"
+    },
+    {
+      "title": "13381【引入】不同类型耗材，层间换色，非换色层打完擦拭塔填充去打模型时缺回抽擦拭",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]不同类型耗材，层间换色，非换色层打完擦拭塔填充去打模型时缺回抽擦拭[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">不同类型耗材，层间换色，非换色层打完擦拭塔填充去打模型时缺回抽擦拭</span></p><p><a href=\"/zentao/file-read-29106.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29106.png\" alt=\"file-read-29106.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29106.png",
+          "alt": "file-read-29106.png",
+          "title": ""
+        }
+      ],
+      "id": 13381,
+      "url": "https://zentao.creality.com/zentao/bug-view-13381.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13381\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13381/steps.html"
+    },
+    {
+      "title": "13384【引入】不同类型耗材，层间换色，换色层打完擦拭塔外墙去打模型时回抽量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]不同类型耗材，层间换色，换色层打完擦拭塔外墙去打模型时回抽量错误，装填量正确[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">不同类型耗材，层间换色，换色层打完擦拭塔外墙去打模型时回抽量错误，装填量正确</span></p><p><a href=\"/zentao/file-read-29112.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29112.png\" alt=\"file-read-29112.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29112.png",
+          "alt": "file-read-29112.png",
+          "title": ""
+        }
+      ],
+      "id": 13384,
+      "url": "https://zentao.creality.com/zentao/bug-view-13384.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13384\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13384/steps.html"
+    },
+    {
+      "title": "13395【引入】T指令拆解自定义gcode失效，无法正常吐料",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]T指令拆解自定义gcode失效，无法正常冲刷，冲刷量为0[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">T指令拆解自定义gcode失效，无法正常冲刷，冲刷量为0</span></p><p><a href=\"/zentao/file-read-29136.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29136.png\" alt=\"file-read-29136.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29136.png",
+          "alt": "file-read-29136.png",
+          "title": ""
+        }
+      ],
+      "id": 13395,
+      "url": "https://zentao.creality.com/zentao/bug-view-13395.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13395\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13395/steps.html"
+    },
+    {
+      "title": "13496层间换色场景，换料前回抽动作异常",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色场景，换料前回抽动作异常，关联问题BUG #13278 【引入】换料前的回抽动作异常 - Creality Print 6.x - 禅道https://zentao.creality.com/zentao/bug-view-11828.html，处理逻辑需要同时兼顾层间/层内换色场景[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色场景，换料前回抽动作异常，关联问题</span><a target=\"_blank\" href=\"https://zentao.creality.com/zentao/bug-view-13278.html\" rel=\"noreferrer noopener\"><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">BUG #13278 【引入】换料前的回抽动作异常 - Creality Print 6.x - 禅道</span></a><a target=\"_blank\" href=\"https://zentao.creality.com/zentao/bug-view-11828.html\" rel=\"noreferrer noopener\"><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">https://zentao.creality.com/zentao/bug-view-11828.html</span></a><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">，处理逻辑需要同时兼顾层间/层内换色场景</span></p><p><a href=\"/zentao/file-read-29308.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29308.png\" alt=\"file-read-29308.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29308.png",
+          "alt": "file-read-29308.png",
+          "title": ""
+        }
+      ],
+      "id": 13496,
+      "url": "https://zentao.creality.com/zentao/bug-view-13496.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13496\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13496/steps.html"
+    },
+    {
+      "title": "13511【引入】修改回抽量不生效",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打开3MF切片，打完模型去打擦拭塔时的装填量与设置的工艺参数一致但是，修改回抽量后重新切片，打完模型去打擦拭塔时的装填量还是之前设置的工艺参数，除非保存3MF后重新打开切片才正确[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打开3MF切片，打完模型去打擦拭塔时的装填量与设置的工艺参数一致</span></p><p><a href=\"/zentao/file-read-29343.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29343.png\" alt=\"file-read-29343.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">但是，修改回抽量后重新切片，</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打完模型去打擦拭塔时的装填量还是之前设置的工艺参数，除非保存3MF后重新打开切片才正确</span></p><p><a href=\"/zentao/file-read-29345.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29345.png\" alt=\"file-read-29345.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[结果]</span></p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29343.png",
+          "alt": "file-read-29343.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29345.png",
+          "alt": "file-read-29345.png",
+          "title": ""
+        }
+      ],
+      "id": 13511,
+      "url": "https://zentao.creality.com/zentao/bug-view-13511.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13511\\image_1.png",
+        "zentao_images\\bug_13511\\image_2.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13511/steps.html"
+    },
+    {
+      "title": "13533层间换色，开启无稀疏层，换料前模型到擦拭塔有重复装填",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤][结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p></p><p><a href=\"/zentao/file-read-29396.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29396.png\" alt=\"file-read-29396.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29396.png",
+          "alt": "file-read-29396.png",
+          "title": ""
+        }
+      ],
+      "id": 13533,
+      "url": "https://zentao.creality.com/zentao/bug-view-13533.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13533\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13533/steps.html"
+    },
+    {
+      "title": "13534【引入】不同类型耗材，层间换色场景，换色前擦拭塔上回抽量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]不同类型耗材，层间换色场景，换色前擦拭塔上回抽量错误。打印完擦拭塔外墙还需要打印擦拭塔填充，此时的回抽量应该取工艺参数设置的回抽量（1），而不是取换料前的回抽量（3）[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">不同类型耗材，层间换色场景，换色前擦拭塔上回抽量错误。打印完擦拭塔外墙还需要打印擦拭塔填充，此时的回抽量应该取工艺参数设置的回抽量（1），而不是取换料前的回抽量（3）</span></p><p><a href=\"/zentao/file-read-29406.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29406.png\" alt=\"file-read-29406.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29406.png",
+          "alt": "file-read-29406.png",
+          "title": ""
+        }
+      ],
+      "id": 13534,
+      "url": "https://zentao.creality.com/zentao/bug-view-13534.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13534\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13534/steps.html"
+    },
+    {
+      "title": "13537【引入】不同类型材料，层间换色，换色层，换色前擦拭塔回抽量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]不同类型材料，层间换色，换色层，换色前擦拭塔回抽量错误。擦拭塔还未打完，还需要打印擦拭塔填充，此时的回抽量应该取工艺参数设置的回抽量（1），而不是取换料前的回抽量（3）[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">不同类型材料，层间换色，换色层，换色前擦拭塔回抽量错误。</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔还未打完，还需要打印擦拭塔填充，此时的回抽量应该取工艺参数设置的回抽量（1），而不是取换料前的回抽量（3）</span></p><p><a href=\"/zentao/file-read-29414.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29414.png\" alt=\"file-read-29414.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29414.png",
+          "alt": "file-read-29414.png",
+          "title": ""
+        }
+      ],
+      "id": 13537,
+      "url": "https://zentao.creality.com/zentao/bug-view-13537.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13537\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13537/steps.html"
+    },
+    {
+      "title": "13555【引入】层间换色，换料前回抽量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色，换料前回抽量错误，只有编号为1的耗材在换料前的回抽量正确，取了工艺参数中回抽量和换料前回抽量中的最大值编号为1的耗材换料前回抽量其它编号的耗材换料前回抽量[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色，换料前回抽量错误，只有编号为1的耗材在换料前的回抽量正确，取了工艺参数中回抽量和换料前回抽量中的最大值</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">编号为1的耗材</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">换料前回抽量</span></p><p><a href=\"/zentao/file-read-29472.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29472.png\" alt=\"file-read-29472.png\" width=\"700\"></a></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">其它编号的耗材</span><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">换料前回抽量</span></p><p><a href=\"/zentao/file-read-29474.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29474.png\" alt=\"file-read-29474.png\" width=\"700\"></a></p><p><a href=\"/zentao/file-read-29475.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29475.png\" alt=\"file-read-29475.png\" width=\"700\"></a></p><p><a href=\"/zentao/file-read-29476.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29476.png\" alt=\"file-read-29476.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29472.png",
+          "alt": "file-read-29472.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29474.png",
+          "alt": "file-read-29474.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29475.png",
+          "alt": "file-read-29475.png",
+          "title": ""
+        },
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29476.png",
+          "alt": "file-read-29476.png",
+          "title": ""
+        }
+      ],
+      "id": 13555,
+      "url": "https://zentao.creality.com/zentao/bug-view-13555.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13555\\image_1.png",
+        "zentao_images\\bug_13555\\image_2.png",
+        "zentao_images\\bug_13555\\image_3.png",
+        "zentao_images\\bug_13555\\image_4.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13555/steps.html"
+    },
+    {
+      "title": "13570【引入】关闭方形擦拭塔，关闭外墙缺口，层内换色，打完擦拭塔后到模型无抬升",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]关闭方形擦拭塔，关闭外墙缺口，层内换色，打完擦拭塔后到模型无抬升，容易挂喷嘴[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">关闭方形擦拭塔，关闭外墙缺口，层内换色，打完擦拭塔后到模型无抬升，容易挂喷嘴</span></p><p><a href=\"/zentao/file-read-29522.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29522.png\" alt=\"file-read-29522.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29522.png",
+          "alt": "file-read-29522.png",
+          "title": ""
+        }
+      ],
+      "id": 13570,
+      "url": "https://zentao.creality.com/zentao/bug-view-13570.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13570\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13570/steps.html"
+    },
+    {
+      "title": "13607【引入】关闭方形擦拭塔，关闭外墙缺口，层内换色，打完擦拭塔后的回抽量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]关闭方形擦拭塔，关闭外墙缺口，层内换色，打完擦拭塔后的回抽量错误，此时的回抽量应该取工艺设置的回抽量，而不是取换料前的回抽量，且后面的装填量也相应出现错误[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">关闭方形擦拭塔，关闭外墙缺口，层内换色，打完擦拭塔后的回抽量错误，此时的回抽量应该取工艺设置的回抽量，而不是取换料前的回抽量，且后面的装填量也相应出现错误</span></p><p><a href=\"/zentao/file-read-29640.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29640.png\" alt=\"file-read-29640.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29640.png",
+          "alt": "file-read-29640.png",
+          "title": ""
+        }
+      ],
+      "id": 13607,
+      "url": "https://zentao.creality.com/zentao/bug-view-13607.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13607\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13607/steps.html"
+    },
+    {
+      "title": "13608【引入】层内换色，打完擦拭塔填充去打擦拭塔外墙时回抽量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层内换色，打完擦拭塔填充去打擦拭塔外墙时回抽量错误（3），应该去工艺参数中回抽长度（1），后面装填量正确[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层内换色，打完擦拭塔填充去打擦拭塔外墙时回抽量错误（3），应该去工艺参数中回抽长度（1），后面装填量正确</span></p><p><a href=\"/zentao/file-read-29651.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29651.png\" alt=\"file-read-29651.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29651.png",
+          "alt": "file-read-29651.png",
+          "title": ""
+        }
+      ],
+      "id": 13608,
+      "url": "https://zentao.creality.com/zentao/bug-view-13608.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13608\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13608/steps.html"
+    },
+    {
+      "title": "13621【引入】层内换色，打完模型去打擦拭塔前回抽量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色，打完模型去打擦拭塔前回抽量错误[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色，打完模型去打擦拭塔前回抽量错误</span></p><p><a href=\"/zentao/file-read-29702.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29702.png\" alt=\"file-read-29702.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29702.png",
+          "alt": "file-read-29702.png",
+          "title": ""
+        }
+      ],
+      "id": 13621,
+      "url": "https://zentao.creality.com/zentao/bug-view-13621.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13621\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13621/steps.html"
+    },
+    {
+      "title": "13624【引入】层间换色，换色层，打印完模型去换料前回抽动作异常",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色，换色层，打印完模型去换料前回抽动作异常，参考BUG #13496 层间换色场景，换料前回抽动作异常 - Creality Print 6.x - 禅道BUG #11828 层间换色场景，换料前回抽量和耗材回抽量没有取最大值 - Creality Print 6.x - 禅道[结果][期望]当设置的回抽长度（a）小于换料前回抽长度（b）时，换料前的总回抽量=换料前回抽长度（b）=回抽（b*擦拭前回抽量百分比）+擦拭回抽（b*（1-擦拭前回抽量百分比）*95%）+回抽（b*（1-擦拭前回抽量百分比）*5%）；当设置的回抽长度（a）大于换料前回抽长度（b）时，换料前的总回抽量=回抽长度（a）=回抽（a*擦拭前回抽量百分比）+擦拭回抽（a*（1-擦拭前回抽量百分比）*95%）+回抽（a*（1-擦拭前回抽量百分比）*5%）=换料前回抽长度+回抽",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色，换色层，打印完模型去换料前回抽动作异常，参考</span><a target=\"_blank\" href=\"https://zentao.creality.com/zentao/bug-view-13496.html\" rel=\"noreferrer noopener\"><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">BUG #13496 层间换色场景，换料前回抽动作异常 - Creality Print 6.x - 禅道</span></a><a target=\"_blank\" href=\"https://zentao.creality.com/zentao/bug-view-11828.html\" rel=\"noreferrer noopener\"><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">BUG #11828 层间换色场景，换料前回抽量和耗材回抽量没有取最大值 - Creality Print 6.x - 禅道</span></a></p><p><a href=\"/zentao/file-read-29708.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29708.png\" alt=\"file-read-29708.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p><p><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">当设置的回抽长度（a）小于换料前回抽长度（b）时，换料前的总回抽量=</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">换料前回抽长度（b）</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">=回抽（b*擦拭前回抽量百分比）+擦拭回抽（</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">b*（1-擦拭前回抽量百分比）*95%</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">）+回抽（</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">b*（1-擦拭前回抽量百分比）*5%</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">）；</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">当设置的回抽长度（a）大于换料前回抽长度（b）时，换料前的总回抽量=</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">回抽长度（a）</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">=回抽（a</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">*擦拭前回抽量百分比</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">）+擦拭回抽</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">（</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">a*（1-擦拭前回抽量百分比）*95%</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">）</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">+回抽</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">（a</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">*（1-擦拭前回抽量百分比）*5%</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">）</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">=</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">换料前回抽长度+</span><span style=\"color:rgb(48,57,74);font-size:13px;font-family:'-apple-system', 'Noto Sans', 'Helvetica Neue', Helvetica, 'Nimbus Sans L', Arial, 'Liberation Sans', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Source Han Sans CN', 'Microsoft YaHei', 'Wenquanyi Micro Hei', 'WenQuanYi Zen Hei', 'ST Heiti', SimHei, 'WenQuanYi Zen Hei Sharp', sans-serif;\">回抽</span></p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29708.png",
+          "alt": "file-read-29708.png",
+          "title": ""
+        }
+      ],
+      "id": 13624,
+      "url": "https://zentao.creality.com/zentao/bug-view-13624.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13624\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13624/steps.html"
+    },
+    {
+      "title": "13647【引入】层间换色，换色层，打完模型去打擦拭塔外墙时的回抽量错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色，换色层，打完模型去打擦拭塔外墙时的回抽量错误。[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色，换色层，打完模型去打擦拭塔外墙时的回抽量错误。</span></p><p><a href=\"/zentao/file-read-29780.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29780.png\" alt=\"file-read-29780.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29780.png",
+          "alt": "file-read-29780.png",
+          "title": ""
+        }
+      ],
+      "id": 13647,
+      "url": "https://zentao.creality.com/zentao/bug-view-13647.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13647\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13647/steps.html"
+    },
+    {
+      "title": "13653擦拭塔内部的空走速度未设置",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]擦拭塔内部的空走速度未设置，可以设置为前面打印路径的速度，空走后的装填速度要记得恢复[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔内部的空走速度未设置，可以设置为前面打印路径的速度，空走后的装填速度要记得恢复</span></p><p><a href=\"/zentao/file-read-29799.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29799.png\" alt=\"file-read-29799.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29799.png",
+          "alt": "file-read-29799.png",
+          "title": ""
+        }
+      ],
+      "id": 13653,
+      "url": "https://zentao.creality.com/zentao/bug-view-13653.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13653\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13653/steps.html"
+    },
+    {
+      "title": "13655打印擦嘴线前的路径问题",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打印擦嘴线前的空走路径，先到擦嘴线的起点再降Z[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打印擦嘴线前的空走路径，</span><span>先到擦嘴线的起点再降Z</span></p><p><a href=\"/zentao/file-read-29807.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29807.png\" alt=\"file-read-29807.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29807.png",
+          "alt": "file-read-29807.png",
+          "title": ""
+        }
+      ],
+      "id": 13655,
+      "url": "https://zentao.creality.com/zentao/bug-view-13655.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13655\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13655/steps.html"
+    },
+    {
+      "title": "13704【引入】打完擦拭塔填充，打外墙前装填逻辑错误",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]打完擦拭塔填充，打外墙前装填逻辑错误。应该回抽结束后先空走再装填，不是先装填再空走[结果]回抽结束后的空走位置丢失导致的问题[期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">打完擦拭塔填充，打外墙前装填逻辑错误。应该回抽结束后先空走再装填，不是先装填再空走</span></p><p><a href=\"/zentao/file-read-29950.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-29950.png\" alt=\"file-read-29950.png\" width=\"700\"></a></p><p>[结果]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">回抽结束后的空走位置丢失导致的问题</span></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-29950.png",
+          "alt": "file-read-29950.png",
+          "title": ""
+        }
+      ],
+      "id": 13704,
+      "url": "https://zentao.creality.com/zentao/bug-view-13704.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13704\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13704/steps.html"
+    },
+    {
+      "title": "13813【引入】擦拭塔到模型空走抬升异常",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]擦拭塔到模型空走抬升异常。打完擦拭塔到模型时，由于当前位置未加上擦拭距离，抬升后的坐标是基于擦拭前的坐标计算得到的梯形抬升坐标，所以抬升路径在XY平面的投影变成折线，正常为直线[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">擦拭塔到模型空走抬升异常。打完擦拭塔到模型时，由于当前位置未加上擦拭距离，抬升后的坐标是基于擦拭前的坐标计算得到的梯形抬升坐标，所以抬升路径在XY平面的投影变成折线，正常为直线</span></p><p><a href=\"/zentao/file-read-30121.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-30121.png\" alt=\"file-read-30121.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-30121.png",
+          "alt": "file-read-30121.png",
+          "title": ""
+        }
+      ],
+      "id": 13813,
+      "url": "https://zentao.creality.com/zentao/bug-view-13813.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13813\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13813/steps.html"
+    },
+    {
+      "title": "13826【引入】层间换色，开启无稀疏层，擦拭塔到模型无抬升",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]层间换色，开启无稀疏层，擦拭塔到模型无抬升[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p>[步骤]</p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">层间换色，开启无稀疏层，擦拭塔到模型无抬升</span></p><p><a href=\"/zentao/file-read-30167.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-30167.png\" alt=\"file-read-30167.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-30167.png",
+          "alt": "file-read-30167.png",
+          "title": ""
+        }
+      ],
+      "id": 13826,
+      "url": "https://zentao.creality.com/zentao/bug-view-13826.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13826\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13826/steps.html"
+    },
+    {
+      "title": "13851【引入】关闭擦拭塔缺口，换料后打印擦拭塔前有多余抬升",
+      "status": "",
+      "severity": "",
+      "priority": "",
+      "assignedTo": "",
+      "createdBy": "",
+      "createdDate": "",
+      "resolvedBy": "",
+      "resolution": "",
+      "steps": "[步骤]关闭擦拭塔缺口，换料后打印擦拭塔前有多余抬升[结果][期望]",
+      "stepsHtml": "<div class=\"article\"><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">[步骤]</span></p><p><span style=\"font-size:13px;font-family:PingFangSC, HiraginoSansGB, Roboto, Helvetica, Tahoma, sans-serif;\">关闭擦拭塔缺口，换料后打印擦拭塔前有多余抬升</span></p><p><a href=\"/zentao/file-read-30224.png\" style=\"display:inline-block;position:relative;overflow:hidden;max-height:720px\" target=\"_blank\"><img onload=\"setImageSize(this,0)\" src=\"/zentao/file-read-30224.png\" alt=\"file-read-30224.png\" width=\"700\"></a></p><p>[结果]</p><p></p><p>[期望]</p></div>",
+      "images": [
+        {
+          "src": "https://zentao.creality.com/zentao/file-read-30224.png",
+          "alt": "file-read-30224.png",
+          "title": ""
+        }
+      ],
+      "id": 13851,
+      "url": "https://zentao.creality.com/zentao/bug-view-13851.html",
+      "downloaded_images": [
+        "zentao_images\\bug_13851\\image_1.png"
+      ],
+      "stepsHtmlFile": "zentao_images/bug_13851/steps.html"
+    }
+  ]
+}

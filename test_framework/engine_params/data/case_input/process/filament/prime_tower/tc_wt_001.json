@@ -1,0 +1,31 @@
+{
+  "description": "TC-WT-001: 打完模型去擦拭塔前的抬升逻辑测试用例",
+  "bugs": ["10735", "11182", "11193", "11320", "13826"],
+  "level": "L2",
+  "param_name": "tc_wt_001",
+  "cases": [
+    {
+      "project_name": "tc_wt_001_normal_0.5mm",
+      "input_3mf": "tc_wt_001_normal_0.5mm.3mf",
+      "expected_value": "{\"z_hop\": 0.5, \"z_hop_type\": \"Normal Lift\"}",
+      "description": "普通抬升 0.5mm"
+    },
+    {
+      "project_name": "tc_wt_001_normal_1.0mm",
+      "input_3mf": "tc_wt_001_normal_1.0mm.3mf",
+      "expected_value": "{\"z_hop\": 1.0, \"z_hop_type\": \"Normal Lift\"}",
+      "description": "普通抬升 1.0mm"
+    },
+    {
+      "project_name": "tc_wt_001_slope_0.5mm",
+      "input_3mf": "tc_wt_001_slope_0.5mm.3mf",
+      "expected_value": "{\"z_hop\": 0.5, \"z_hop_type\": \"Slope Lift\"}",
+      "description": "斜形抬升 0.5mm"
+    }
+  ],
+  "notes": [
+    "需要多色/多材料模型才能触发擦拭塔生成",
+    "模型应足够大，确保有从模型到擦拭塔的转换",
+    "测试不同的 z_hop 高度和抬升方式组合"
+  ]
+}
