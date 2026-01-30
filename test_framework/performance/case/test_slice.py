@@ -11,6 +11,7 @@ import csv
 import json
 import os
 import time
+import zipfile
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 
@@ -138,6 +139,13 @@ def pytest_generate_tests(metafunc):
     if "feishu_case" not in metafunc.fixturenames:
         return
     cases = _collect_feishu_cases()
+    record_filter = os.getenv("FEISHU_RECORD_ID", "").strip()
+    if record_filter:
+        wanted = {s.strip() for s in record_filter.split(",") if s.strip()}
+        filtered = [c for c in cases if str(c.get("record_id") or "") in wanted]
+        if not filtered:
+            pytest.skip(f"No Feishu cases matching FEISHU_RECORD_ID={record_filter}", allow_module_level=True)
+        cases = filtered
     if not cases:
         if _FEISHU_ERROR:
             pytest.skip(_FEISHU_ERROR, allow_module_level=True)
@@ -463,8 +471,17 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         timeout=timeouts["export"],
     )
     print(output_gcode.exists())
-    #sleep 1s
-    result["export_ok"] = export_ret["ok"] and output_gcode.exists()
+    zip_ok = False
+    if output_gcode.exists():
+        try:
+            with zipfile.ZipFile(output_gcode, "r") as zf:
+                for name in zf.namelist():
+                    if name.lower().endswith(".gcode"):
+                        zip_ok = True
+                        break
+        except zipfile.BadZipFile:
+            zip_ok = False
+    result["export_ok"] = export_ret["ok"] and zip_ok
     result["export_ms"] = round(export_ret["elapsed_ms"], 2)
     result["crashed"] = result["crashed"] or export_ret["crashed"]
     result["gcode_path"] = str(output_gcode)
