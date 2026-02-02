@@ -310,24 +310,73 @@ def parse_tc_wt_001(
         if len(moves) < 3:
             continue
         
-        # 检查回抽
+        # 检查序列：应该是 回抽 → (可选的其他回抽) → Z抬升 → (可选的Z轴移动) → 空走 → (可选的Z下降) → 装填
+        # 关键验证点：
+        # 1. 第一个动作是回抽
+        # 2. 存在Z抬升
+        # 3. 抬升后有空走
+        # 4. 最终有装填
+        
+        # 检查第一个动作是回抽
         if moves[0].move_type != GCodeMoveType.RETRACTION:
             failures.append(
                 f"转换点{idx} 行{moves[0].line_num}: "
                 f"应先回抽，实际为{moves[0].move_type.value}"
             )
+            continue
         
-        # 检查抬升
-        if moves[1].move_type != GCodeMoveType.Z_HOP:
+        # 查找序列中的关键动作
+        has_z_hop = False
+        z_hop_move = None
+        has_travel_after_hop = False
+        has_unretract = False
+        is_slope_lift = False
+        
+        for i, move in enumerate(moves):
+            # 找到Z抬升
+            if move.move_type == GCodeMoveType.Z_HOP:
+                has_z_hop = True
+                z_hop_move = move
+                
+                # 检查是否是斜形抬升（Z_HOP同时有XY移动）
+                if move.x is not None or move.y is not None:
+                    is_slope_lift = True
+                    has_travel_after_hop = True  # 斜形抬升本身就包含了空走
+                else:
+                    # 非斜形抬升，检查Z抬升后是否有空走（可能中间有Z_DROP）
+                    for j in range(i + 1, len(moves)):
+                        if moves[j].move_type == GCodeMoveType.TRAVEL:
+                            has_travel_after_hop = True
+                            break
+                        elif moves[j].move_type == GCodeMoveType.EXTRUSION:
+                            # 如果遇到挤出，说明没有纯空走
+                            break
+            
+            # 找到装填
+            if move.move_type == GCodeMoveType.UNRETRACTION:
+                has_unretract = True
+        
+        # 验证完整序列
+        if not has_z_hop:
             failures.append(
-                f"转换点{idx} 行{moves[1].line_num}: "
-                f"回抽后应抬升，实际为{moves[1].move_type.value}"
+                f"转换点{idx}: 未找到Z抬升动作"
             )
-        else:
-            # 验证抬升高度 - 需要计算增量
+        
+        if has_z_hop and not has_travel_after_hop:
+            failures.append(
+                f"转换点{idx}: Z抬升后未找到空走动作（斜形抬升={is_slope_lift}）"
+            )
+        
+        if not has_unretract:
+            failures.append(
+                f"转换点{idx}: 序列末尾未找到装填动作"
+            )
+        
+        # 验证抬升高度
+        if z_hop_move and z_hop_move.z is not None:
             # 从parser的moves中找到这条指令的前一个Z值
-            move_idx = next(i for i, m in enumerate(parser.moves) if m.line_num == moves[1].line_num)
-            if move_idx > 0:
+            move_idx = next((i for i, m in enumerate(parser.moves) if m.line_num == z_hop_move.line_num), None)
+            if move_idx is not None and move_idx > 0:
                 prev_z = None
                 for i in range(move_idx - 1, -1, -1):
                     if parser.moves[i].z is not None:
@@ -335,20 +384,13 @@ def parse_tc_wt_001(
                         break
                 
                 if prev_z is not None:
-                    z_delta = moves[1].z - prev_z
+                    z_delta = z_hop_move.z - prev_z
                     # 高度验证：考虑层高影响，放宽到±0.2mm
                     if abs(z_delta - expected_hop) > 0.2:
                         failures.append(
-                            f"转换点{idx} 行{moves[1].line_num}: "
+                            f"转换点{idx} 行{z_hop_move.line_num}: "
                             f"抬升高度错误，期望{expected_hop}mm，实际增量{z_delta:.2f}mm"
                         )
-        
-        # 检查空走
-        if moves[2].move_type != GCodeMoveType.TRAVEL:
-            failures.append(
-                f"转换点{idx} 行{moves[2].line_num}: "
-                f"抬升后应空走，实际为{moves[2].move_type.value}"
-            )
     
     if failures:
         return False, transitions, {"failures": failures, "count": len(transitions)}
@@ -366,7 +408,9 @@ def find_model_to_tower_transitions(parser: WipeTowerGCodeParser) -> List[Dict[s
     
     判断依据：
     1. TYPE 注释从 "External perimeter" 等模型类型变为 "Wipe tower"
-    2. 回溯找到完整序列：回抽 → Z抬升 → 移动到塔
+    2. 回溯找到完整序列：回抽 → Z抬升 → 空走 → 装填
+    
+    注意：序列可能包含多个回抽、Z移动等中间步骤，需要提取完整的动作链
     """
     transitions = []
     in_model = False
@@ -388,58 +432,89 @@ def find_model_to_tower_transitions(parser: WipeTowerGCodeParser) -> List[Dict[s
                         if m.line_num < start_line
                     ]
                     
-                    # 回溯找到关键节点：
-                    # 1. 在原始GCode中找最后一个Z抬升命令（G1 Z... F30000）
-                    # 2. 找对应的parser move
-                    # 3. 再找之前的RETRACTION
+                    if not moves_before_type:
+                        in_tower = True
+                        in_model = False
+                        continue
                     
-                    key_moves = []
-                    z_hop_line = None
-                    z_hop_idx = None
-                    retract_idx = None
-                    
-                    # 从后向前在原始GCode中找Z抬升命令
+                    # 从后向前在原始GCode中找Z抬升命令（最后一个Z抬升）
                     # 特征：G1 Z{增加} F30000 或 G1 X... Y... Z{增加} F30000
                     import re
-                    for line_idx in range(start_line - 1, max(0, start_line - 50), -1):
-                        line = parser.lines[line_idx].strip()
+                    z_hop_line = None
+                    for line_idx in range(start_line - 1, max(0, start_line - 100), -1):
+                        line_text = parser.lines[line_idx].strip()
                         # 匹配 G1 ... Z... F30000 模式（抬升通常用高速F30000）
-                        if re.match(r'^G1\s+.*Z[\d.]+.*F30000', line):
-                            z_hop_line = line_idx
+                        if re.match(r'^G1\s+.*Z[\d.]+.*F30000', line_text):
+                            z_hop_line = line_idx + 1  # 转换为1-based行号
                             break
                     
-                    # 找到对应的parser move（最接近的那个）
-                    if z_hop_line is not None:
-                        for idx, move in enumerate(moves_before_type):
-                            if move.line_num >= z_hop_line:
-                                z_hop_idx = idx
-                                break
+                    if z_hop_line is None:
+                        # 没有找到Z抬升，可能是最后一层没有抬升，跳过此转换点
+                        in_tower = True
+                        in_model = False
+                        continue
                     
-                    if z_hop_idx is not None:
-                        # 找Z_HOP之前的RETRACTION（可能中间有WIPE）
-                        for idx in range(z_hop_idx - 1, max(0, z_hop_idx - 20), -1):
-                            if moves_before_type[idx].move_type == GCodeMoveType.RETRACTION:
-                                retract_idx = idx
-                                break
-                        
-                        # 构建完整序列：回抽 → Z抬升 → 移动到塔
-                        if retract_idx is not None:
-                            key_moves.append(moves_before_type[retract_idx])  # 回抽
-                        
-                        # 保存Z_HOP的move，同时记录原始GCode行号用于验证
-                        z_hop_move = moves_before_type[z_hop_idx]
-                        z_hop_move.z_hop_gcode_line = z_hop_line  # 添加属性记录真正的抬升命令行号
-                        key_moves.append(z_hop_move)  # Z抬升
-                        
-                        # 找Z_HOP之后的第一个TRAVEL（移动到塔）
-                        for idx in range(z_hop_idx + 1, len(moves_before_type)):
-                            if moves_before_type[idx].move_type == GCodeMoveType.TRAVEL:
-                                key_moves.append(moves_before_type[idx])
-                                break
+                    # 找到对应的Z_HOP move
+                    z_hop_idx = None
+                    for idx, move in enumerate(moves_before_type):
+                        if move.line_num == z_hop_line and move.move_type == GCodeMoveType.Z_HOP:
+                            z_hop_idx = idx
+                            break
                     
-                    # 只记录找到完整序列（有Z_HOP）的转换点
-                    # 必须有3个关键动作：回抽、Z抬升、空走
-                    if z_hop_idx is not None and len(key_moves) >= 3:
+                    if z_hop_idx is None:
+                        in_tower = True
+                        in_model = False
+                        continue
+                    
+                    # 从Z_HOP向前找第一个RETRACTION（可能中间有其他小回抽、wipe等）
+                    retract_idx = None
+                    for idx in range(z_hop_idx - 1, max(0, z_hop_idx - 30), -1):
+                        if moves_before_type[idx].move_type == GCodeMoveType.RETRACTION:
+                            retract_idx = idx
+                            break
+                    
+                    if retract_idx is None:
+                        in_tower = True
+                        in_model = False
+                        continue
+                    
+                    # 从Z_HOP向后找空走和装填
+                    travel_idx = None
+                    unretract_idx = None
+                    
+                    for idx in range(z_hop_idx + 1, min(len(moves_before_type), z_hop_idx + 20)):
+                        if travel_idx is None and moves_before_type[idx].move_type == GCodeMoveType.TRAVEL:
+                            travel_idx = idx
+                        if moves_before_type[idx].move_type == GCodeMoveType.UNRETRACTION:
+                            unretract_idx = idx
+                            break
+                    
+                    # 构建完整序列：从第一个回抽到装填的所有关键动作
+                    # 包括所有回抽、Z抬升、Z下降、空走、装填
+                    key_moves = []
+                    
+                    if retract_idx is not None and unretract_idx is not None:
+                        # 收集从第一个回抽到装填之间的所有关键动作
+                        for idx in range(retract_idx, unretract_idx + 1):
+                            move = moves_before_type[idx]
+                            # 只收集关键动作类型
+                            if move.move_type in [
+                                GCodeMoveType.RETRACTION,
+                                GCodeMoveType.Z_HOP,
+                                GCodeMoveType.Z_DROP,
+                                GCodeMoveType.TRAVEL,
+                                GCodeMoveType.UNRETRACTION
+                            ]:
+                                key_moves.append(move)
+                    
+                    # 只记录找到完整序列的转换点
+                    # 必须包含：至少1个回抽、1个Z抬升、1个空走、1个装填
+                    if (len(key_moves) >= 4 and 
+                        any(m.move_type == GCodeMoveType.RETRACTION for m in key_moves) and
+                        any(m.move_type == GCodeMoveType.Z_HOP for m in key_moves) and
+                        any(m.move_type == GCodeMoveType.TRAVEL for m in key_moves) and
+                        any(m.move_type == GCodeMoveType.UNRETRACTION for m in key_moves)):
+                        
                         transitions.append({
                             'start': start_line,
                             'moves': key_moves,

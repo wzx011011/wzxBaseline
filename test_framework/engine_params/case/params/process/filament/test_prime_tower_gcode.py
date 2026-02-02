@@ -11,6 +11,9 @@ import pytest
 from engine_params.src.gcode.process.filament.prime_tower_gcode_check import (
     parse_tc_wt_001,
 )
+from engine_params.src.gcode.process.filament.prime_tower_gcode_check_wt007 import (
+    parse_tc_wt_007,
+)
 
 
 # ============================================================
@@ -67,13 +70,81 @@ def test_tc_wt_001(
     if ok:
         print(f"  抬升高度: {details.get('z_hop')}mm")
         print(f"  抬升方式: {details.get('z_hop_type')}")
-        print(f"  结果: [PASS] ✓")
+        print(f"  结果: [PASS]")
     else:
         print(f"  失败原因:")
         for failure in details.get('failures', []):
             print(f"    - {failure}")
-        print(f"  结果: [FAIL] ✗")
+        print(f"  结果: [FAIL]")
     
     print("=" * 60)
     
     assert ok, f"TC-WT-001 校验失败: {details}"
+
+
+# ============================================================
+# TC-WT-007: �س�����װ��������
+# ============================================================
+
+@pytest.mark.engine_params
+def test_tc_wt_007(
+    slice_and_export: Path,
+    expected_value: str,
+) -> None:
+    '''
+    TC-WT-007: ��֤��ͬ�Ĳ����͵Ļس�/װ����
+    
+    Bug����: 11460, 11462, 11463, 13303, 13309, 13379, 13534, 13537, 13555
+    У�鼶��: L2 (������֤ + ����׷��)
+    
+    У���:
+    1. ����ǰ�Ļس�ʹ��from_tool����
+    2. ���Ϻ��װ��ʹ��to_tool����
+    3. װ���� = �س��� + extra����
+    
+    ������������ʾ��:
+    {
+      "cases": [
+        {
+          "project_name": "tc_wt_007_pla_tpu",
+          "input_3mf": "tc_wt_007_pla_tpu.3mf",
+          "expected_value": {
+            "tool_params": {
+              "T0": {"retraction_length": 5.0, "extra": 0.0},
+              "T1": {"retraction_length": 8.0, "extra": 0.5}
+            },
+            "from_tool": "T0",
+            "to_tool": "T1",
+            "check_points": ["before_change", "after_change"]
+          }
+        }
+      ]
+    }
+    '''
+    gcode_path = slice_and_export
+    assert gcode_path.exists(), f'GCode �ļ�������: {gcode_path}'
+    
+    ok, actual, details = parse_tc_wt_007(
+        gcode_path,
+        expected_value
+    )
+    
+    # ��ӡ��ϸ��Ϣ
+    print(f'\n=== TC-WT-007: �س�����װ�������� ===')
+    print(f'  GCode�ļ�: {gcode_path.name}')
+    print(f'  ��������: {expected_value}')
+    print(f'  ���ϵ�����: {details.get('tool_change_count', 0)} ��')
+    print(f'  ������: {details.get('checked_count', 0)}')
+    
+    if ok:
+        print(f'  换料方向: {details.get('from_tool')}  {details.get('to_tool')}')
+        print(f'  结果: [PASS]')
+    else:
+        print(f'  失败原因:')
+        for failure in details.get('failures', []):
+            print(f'    - {failure}')
+        print(f'  结果: [FAIL]')
+    
+    print('=' * 60)
+    
+    assert ok, f'TC-WT-007 У��ʧ��: {details}'
