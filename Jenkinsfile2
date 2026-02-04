@@ -79,6 +79,11 @@ endlocal
         }
       }
     }
+    stage('Archive performance CSV') {
+      steps {
+        archiveArtifacts artifacts: 'test_framework/performance/data/*.csv', allowEmptyArchive: true
+      }
+    }
   }
   post {
     failure {

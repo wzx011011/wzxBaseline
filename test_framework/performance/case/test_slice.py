@@ -14,8 +14,10 @@ import time
 import zipfile
 from pathlib import Path
 from typing import Dict, List, Optional, Union
+from urllib.parse import urljoin, unquote
 
 import pytest
+import requests
 
 from test_framework.engine_params.src.slicerctl.session import (
     EngineSession,
@@ -24,11 +26,6 @@ from test_framework.engine_params.src.slicerctl.session import (
 )
 from test_framework.engine_params.conftest import wait_for_file_written
 from test_framework.engine_params.src.slicerctl.constants import SLICE_BTN_ID
-from test_framework.performance.utils.feishu_downloader import (
-    BASE_URL,
-    FeishuDownloader,
-    load_feishu_config,
-)
 
 
 
@@ -77,12 +74,134 @@ def _load_manifest_cases() -> List[Dict]:
     return cases
 
 
+HTTP_3MF_ROOT_DEFAULT = "http://172.20.180.14/shared/test_3mf/"
+
+
+def _http_3mf_root() -> str:
+    base = os.getenv("HTTP_3MF_ROOT", HTTP_3MF_ROOT_DEFAULT).strip()
+    if not base:
+        base = HTTP_3MF_ROOT_DEFAULT
+    if not base.endswith("/"):
+        base += "/"
+    return base
+
+
+def _http_3mf_download_dir() -> Path:
+    custom = os.getenv("HTTP_3MF_DOWNLOAD_DIR")
+    if custom:
+        return Path(custom)
+    return Path("artifacts") / "http_3mf"
+
+
+def _safe_local_name(href: str) -> str:
+    name = href.split("/")[-1]
+    name = unquote(name)
+    for ch in '<>:"/\\|?*':
+        name = name.replace(ch, "_")
+    if len(name) > 120:
+        base, dot, ext = name.rpartition(".")
+        if not dot:
+            return name[:120]
+        base = base[:100]
+        name = base + dot + ext
+    return name
+
+
+def _http_list_links(html: str) -> List[str]:
+    links: List[str] = []
+    pos = 0
+    while True:
+        idx = html.find("href=", pos)
+        if idx == -1:
+            break
+        quote = html[idx + 5]
+        if quote not in ("'", '"'):
+            pos = idx + 5
+            continue
+        end = html.find(quote, idx + 6)
+        if end == -1:
+            break
+        href = html[idx + 6:end]
+        links.append(href)
+        pos = end + 1
+    return links
+
+
+def _download_http_3mf_files() -> List[Dict]:
+    base_url = _http_3mf_root()
+    download_dir = _http_3mf_download_dir()
+    download_dir.mkdir(parents=True, exist_ok=True)
+    print(f"[http_3mf] base_url={base_url}")
+    print(f"[http_3mf] download_dir={download_dir}")
+
+    session = requests.Session()
+    files: List[Dict] = []
+
+    def walk(url: str, rel: str = "") -> None:
+        if _truthy_env("DEBUG") and len(files) >= 10:
+            return
+        try:
+            resp = session.get(url, timeout=30)
+            resp.raise_for_status()
+        except Exception as exc:  # noqa: BLE001
+            print(f"[http_3mf] failed to list {url}: {exc}")
+            return
+        links = [
+            href
+            for href in _http_list_links(resp.text)
+            if href not in ("../", "/")
+            and not href.startswith("../")
+            and not href.lstrip("/").startswith("shared")
+            and not href.lstrip("/").startswith("erro")
+        ]
+        for href in links:
+            full = urljoin(url, href)
+            if href.endswith("/"):
+                walk(full, rel + href)
+            elif href.lower().endswith(".3mf"):
+                local_name = _safe_local_name(href)
+                local_path = download_dir / rel / local_name
+                local_path.parent.mkdir(parents=True, exist_ok=True)
+                if not local_path.exists():
+                    print(f"[http_3mf] downloading {full} -> {local_path}")
+                    try:
+                        with session.get(full, stream=True, timeout=60) as r:
+                            r.raise_for_status()
+                            with local_path.open("wb") as f:
+                                for chunk in r.iter_content(chunk_size=8192):
+                                    if not chunk:
+                                        continue
+                                    f.write(chunk)
+                    except Exception as exc:  # noqa: BLE001
+                        print(f"[http_3mf] download failed for {full}: {exc}")
+                        if local_path.exists():
+                            local_path.unlink()
+                        continue
+                files.append(
+                    {
+                        "record_id": "",
+                        "name": local_name,
+                        "path": str(local_path),
+                        "title": rel + local_name,
+                    }
+                )
+
+    walk(base_url, "")
+
+    if _truthy_env("DEBUG"):
+        if files:
+            print(f"DEBUG mode enabled: limiting to 10 HTTP cases (from {len(files)} total)")
+            files = files[:10]
+
+    return files
+
+
 def _collect_feishu_cases() -> List[Dict]:
     global _FEISHU_CASES, _FEISHU_ERROR
     if _FEISHU_CASES is not None:
         return _FEISHU_CASES
 
-    # Optional: only use local manifest for debugging, skip Feishu download.
+    # Optional: only use local manifest for debugging, skip HTTP download.
     if _truthy_env("FEISHU_USE_MANIFEST_ONLY"):
         try:
             cases = _load_manifest_cases()
@@ -100,38 +219,14 @@ def _collect_feishu_cases() -> List[Dict]:
             _FEISHU_ERROR = str(exc)
         return _FEISHU_CASES
 
-    cfg = load_feishu_config()
-    if not cfg:
-        _FEISHU_CASES = []
-        _FEISHU_ERROR = (
-            "Missing FEISHU_APP_ID/FEISHU_APP_SECRET/FEISHU_APP_TOKEN/FEISHU_TABLE_ID "
-            "environment variables, skip Feishu 3MF collection."
-        )
-        return _FEISHU_CASES
-
-    downloader = FeishuDownloader(
-        app_id=cfg["app_id"],
-        app_secret=cfg["app_secret"],
-        app_token=cfg["app_token"],
-        table_id=cfg["table_id"],
-        view_id=cfg.get("view_id"),
-        file_field=cfg.get("file_field", "文件"),
-        download_dir=cfg.get("download_dir") or Path("artifacts") / "feishu_3mf",
-    )
     try:
-        files = downloader.download_all()
-        
-        # Apply DEBUG mode limit if needed
-        if _truthy_env("DEBUG"):
-            print(f"DEBUG mode enabled: limiting to 10 Feishu cases (from {len(files)} total)")
-            files = files[:1]
-        
+        files = _download_http_3mf_files()
         _FEISHU_CASES = files
         if not files:
-            _FEISHU_ERROR = "No 3MF attachments found in Feishu table."
+            _FEISHU_ERROR = "No 3MF files found from HTTP source."
     except Exception as exc:  # noqa: BLE001
         _FEISHU_CASES = []
-        _FEISHU_ERROR = f"Feishu download failed: {exc}"
+        _FEISHU_ERROR = f"HTTP 3MF collection failed: {exc}"
     return _FEISHU_CASES
 
 
@@ -142,9 +237,16 @@ def pytest_generate_tests(metafunc):
     record_filter = os.getenv("FEISHU_RECORD_ID", "").strip()
     if record_filter:
         wanted = {s.strip() for s in record_filter.split(",") if s.strip()}
-        filtered = [c for c in cases if str(c.get("record_id") or "") in wanted]
+        filtered = [
+            c
+            for c in cases
+            if Path(c.get("path", "")).name in wanted or str(c.get("name") or "") in wanted
+        ]
         if not filtered:
-            pytest.skip(f"No Feishu cases matching FEISHU_RECORD_ID={record_filter}", allow_module_level=True)
+            pytest.skip(
+                f"No HTTP 3MF cases matching filenames in FEISHU_RECORD_ID={record_filter}",
+                allow_module_level=True,
+            )
         cases = filtered
     if not cases:
         if _FEISHU_ERROR:
@@ -196,6 +298,107 @@ def _run_command(send_cmd_handle, command: str, params: Dict, timeout: int) -> D
         "elapsed_ms": elapsed_ms,
         "error": error_msg,
         "raw": payload,
+    }
+
+
+def _progress_percentage_0_100(value) -> Optional[float]:
+    if value is None:
+        return None
+    try:
+        pct = float(value)
+    except (TypeError, ValueError):
+        return None
+    # Some engines report [0..1] while others report [0..100].
+    if 0.0 <= pct <= 1.0:
+        return pct * 100.0
+    return pct
+
+
+def _extract_slicing_progress(ret: Dict) -> Optional[Dict]:
+    raw = ret.get("raw")
+    if not isinstance(raw, dict):
+        return None
+    payload = raw.get("payload")
+    if not isinstance(payload, dict):
+        return None
+    progress = payload.get("progress")
+    if not isinstance(progress, dict):
+        return None
+    return progress
+
+
+def _is_slicing_done(progress: Dict) -> bool:
+    raw_pct = progress.get("percentage")
+    try:
+        raw_pct_f = float(raw_pct)
+    except (TypeError, ValueError):
+        raw_pct_f = None
+    # For this engine: percentage > 1 or < 0 indicates slicing is finished.
+    if raw_pct_f is not None and (raw_pct_f > 1.0 or raw_pct_f < 0.0):
+        return True
+
+    pct = _progress_percentage_0_100(progress.get("percentage"))
+    if pct is not None and pct >= 100.0 - 1e-6:
+        return True
+    if progress.get("export") is True:
+        return True
+    state = str(progress.get("state") or "").strip().lower()
+    if state in {"done", "finish", "finished", "complete", "completed", "success"}:
+        return True
+    return False
+
+
+def _wait_for_slicing_done(
+    send_cmd_handle,
+    timeout_s: float,
+    poll_interval_s: float = 0.5,
+) -> Dict:
+    start = time.perf_counter()
+    deadline = time.monotonic() + max(0.0, float(timeout_s))
+    last_progress: Optional[Dict] = None
+    last_error: Optional[str] = None
+
+    while time.monotonic() < deadline:
+        progress_ret = _run_command(
+            send_cmd_handle,
+            "get_slicing_progress",
+            {},
+            timeout=5,
+        )
+        if progress_ret["ok"]:
+            progress = _extract_slicing_progress(progress_ret)
+            if progress is not None:
+                last_progress = progress
+                if _is_slicing_done(progress):
+                    return {
+                        "ok": True,
+                        "crashed": False,
+                        "elapsed_ms": (time.perf_counter() - start) * 1000,
+                        "progress": last_progress,
+                        "error": None,
+                    }
+        else:
+            if progress_ret["crashed"]:
+                return {
+                    "ok": False,
+                    "crashed": True,
+                    "elapsed_ms": (time.perf_counter() - start) * 1000,
+                    "progress": last_progress,
+                    "error": progress_ret["error"] or "engine crashed while waiting slicing progress",
+                }
+            last_error = progress_ret["error"] or progress_ret["status"]
+
+        time.sleep(poll_interval_s)
+
+    pct = _progress_percentage_0_100((last_progress or {}).get("percentage"))
+    pct_str = f"{pct:.3f}" if pct is not None else "unknown"
+    state_str = str((last_progress or {}).get("state") or "unknown")
+    return {
+        "ok": False,
+        "crashed": False,
+        "elapsed_ms": (time.perf_counter() - start) * 1000,
+        "progress": last_progress,
+        "error": last_error or f"slicing not finished in {timeout_s}s (percentage={pct_str}, state={state_str})",
     }
 
 
@@ -449,17 +652,32 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
                 result["error"] = error["type"]
                 return result
     # Slice
+    slice_start = time.perf_counter()
     slice_ret = _run_command(
         send_cmd_handle,
         "click_button",
         {"id": SLICE_BTN_ID},
         timeout=timeouts["slice"],
     )
-    result["slice_ok"] = slice_ret["ok"]
-    result["slice_ms"] = round(slice_ret["elapsed_ms"], 2)
     result["crashed"] = result["crashed"] or slice_ret["crashed"]
     if not slice_ret["ok"]:
+        result["slice_ok"] = False
+        result["slice_ms"] = round((time.perf_counter() - slice_start) * 1000, 2)
         result["error"] = slice_ret["error"]
+        return result
+
+    # Wait until slicing progress reaches 100% (or engine reports export-ready),
+    # then continue with export_gcode.
+    wait_ret = _wait_for_slicing_done(
+        send_cmd_handle,
+        timeout_s=float(timeouts["slice"]),
+        poll_interval_s=float(os.getenv("SLICER_PROGRESS_POLL", "0.5")),
+    )
+    result["crashed"] = result["crashed"] or wait_ret["crashed"]
+    result["slice_ok"] = wait_ret["ok"]
+    result["slice_ms"] = round((time.perf_counter() - slice_start) * 1000, 2)
+    if not wait_ret["ok"]:
+        result["error"] = wait_ret["error"]
         return result
 
     # Export gcode
@@ -516,13 +734,13 @@ def test_feishu_slice(
     #model_path = Path("C:\work\C3DBaseline\test_framework\artifacts\feishu_3mf\baby-groot.3mf")
     print(f"Testing Feishu 3MF slicing: {model_path}")
     result = _run_slice_flow(send_cmd_handle, model_path, tmp_path)
-    result["record_id"] = feishu_case.get("record_id")
 
     current_filename = model_path.name
-    key = str(result["record_id"]) if result["record_id"] else current_filename
+    result["record_id"] = current_filename
+    key = current_filename
     
     baseline_row_data = {
-        "record_id": str(result["record_id"]) if result["record_id"] else "",
+        "record_id": current_filename,
         "file": str(model_path),
         "import_ms": str(result["import_ms"]),
         "slice_ms": str(result["slice_ms"]),
@@ -612,7 +830,11 @@ def write_report_to_feishu_after_tests(baseline_data):
         return
     
     # Load Feishu configuration
-    from test_framework.performance.utils.feishu_downloader import load_feishu_config, FeishuDownloader
+    from test_framework.performance.utils.feishu_downloader import (
+        load_feishu_config,
+        FeishuDownloader,
+        BASE_URL,
+    )
     cfg = load_feishu_config()
     if not cfg:
         print("Feishu configuration not found, skipping Feishu table write.")
