@@ -122,29 +122,29 @@ def test_tc_wt_007(
     }
     '''
     gcode_path = slice_and_export
-    assert gcode_path.exists(), f'GCode �ļ�������: {gcode_path}'
+    assert gcode_path.exists(), f"GCode file does not exist: {gcode_path}"
     
     ok, actual, details = parse_tc_wt_007(
         gcode_path,
         expected_value
     )
     
-    # ��ӡ��ϸ��Ϣ
-    print(f'\n=== TC-WT-007: �س�����װ�������� ===')
-    print(f'  GCode�ļ�: {gcode_path.name}')
-    print(f'  ��������: {expected_value}')
-    print(f'  ���ϵ�����: {details.get('tool_change_count', 0)} ��')
-    print(f'  ������: {details.get('checked_count', 0)}')
+    # 打印详细信息
+    print("\n=== TC-WT-007: prime tower retraction and extra ===")
+    print(f"  GCode file: {gcode_path.name}")
+    print(f"  Expected value: {expected_value}")
+    print(f"  Tool change count: {details.get('tool_change_count', 0)}")
+    print(f"  Checked points: {details.get('checked_count', 0)}")
     
     if ok:
-        print(f'  换料方向: {details.get('from_tool')}  {details.get('to_tool')}')
-        print(f'  结果: [PASS]')
+        print(f"  换料方向: {details.get('from_tool')}  {details.get('to_tool')}")
+        print("  结果: [PASS]")
     else:
-        print(f'  失败原因:')
+        print("  失败原因:")
         for failure in details.get('failures', []):
-            print(f'    - {failure}')
-        print(f'  结果: [FAIL]')
+            print(f"    - {failure}")
+        print("  结果: [FAIL]")
     
-    print('=' * 60)
+    print("=" * 60)
     
-    assert ok, f'TC-WT-007 У��ʧ��: {details}'
+    assert ok, f"TC-WT-007 validation failed: {details}"
