@@ -1,5 +1,5 @@
 pipeline {
-  agent { label 'windows' }
+  agent { label params.AGENT_LABEL }
   options {
     timestamps()
     disableConcurrentBuilds()
@@ -8,6 +8,7 @@ pipeline {
     cron('0 1 * * *') // 每天凌晨1点
   }
   parameters {
+    string(name: 'AGENT_LABEL', defaultValue: 'tester', description: 'Jenkins agent label to run the pipeline on')
     string(name: 'BRANCH', defaultValue: 'release-260330', description: 'Jenkins parameter BRANCH (optional)')
     string(name: 'WEB_BRANCH', defaultValue: 'release-260330', description: 'Jenkins parameter BRANCH (optional)')
     string(name: 'TAG_NAME', defaultValue: '7.1.0', description: 'Tag name to pass to builds (optional)')
