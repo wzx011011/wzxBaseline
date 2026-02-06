@@ -170,7 +170,8 @@ def _download_http_3mf_files() -> List[Dict]:
         for href in links:
             full = urljoin(url, href)
             if href.endswith("/"):
-                walk(full, rel + href)
+                dir_name = _safe_local_name(href.rstrip("/"))
+                walk(full, rel + dir_name + "/")
             elif href.lower().endswith(".3mf"):
                 local_name = _safe_local_name(href)
                 local_path = download_dir / rel / local_name
