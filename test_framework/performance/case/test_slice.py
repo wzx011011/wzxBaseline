@@ -10,6 +10,7 @@ Results are appended to performance/data/feishu_slice_report.csv.
 import csv
 import json
 import os
+import sys
 import time
 import zipfile
 from pathlib import Path
@@ -28,6 +29,18 @@ from test_framework.engine_params.conftest import wait_for_file_written
 from test_framework.engine_params.src.slicerctl.constants import SLICE_BTN_ID
 
 
+def _safe_print(*args, **kwargs) -> None:
+    try:
+        print(*args, **kwargs)
+        return
+    except UnicodeEncodeError:
+        pass
+    encoding = getattr(getattr(sys, "stdout", None), "encoding", None) or "utf-8"
+    sep = kwargs.get("sep", " ")
+    end = kwargs.get("end", "\n")
+    text = sep.join(str(a) for a in args)
+    text = text.encode(encoding, errors="replace").decode(encoding, errors="replace")
+    sys.stdout.write(text + end)
 
 
 # ======== Feishu dataset discovery (collection time) ========
@@ -131,8 +144,8 @@ def _download_http_3mf_files() -> List[Dict]:
     base_url = _http_3mf_root()
     download_dir = _http_3mf_download_dir()
     download_dir.mkdir(parents=True, exist_ok=True)
-    print(f"[http_3mf] base_url={base_url}")
-    print(f"[http_3mf] download_dir={download_dir}")
+    _safe_print(f"[http_3mf] base_url={base_url}")
+    _safe_print(f"[http_3mf] download_dir={download_dir}")
 
     session = requests.Session()
     files: List[Dict] = []
@@ -144,7 +157,7 @@ def _download_http_3mf_files() -> List[Dict]:
             resp = session.get(url, timeout=30)
             resp.raise_for_status()
         except Exception as exc:  # noqa: BLE001
-            print(f"[http_3mf] failed to list {url}: {exc}")
+            _safe_print(f"[http_3mf] failed to list {url}: {exc}")
             return
         links = [
             href
@@ -163,7 +176,7 @@ def _download_http_3mf_files() -> List[Dict]:
                 local_path = download_dir / rel / local_name
                 local_path.parent.mkdir(parents=True, exist_ok=True)
                 if not local_path.exists():
-                    print(f"[http_3mf] downloading {full} -> {local_path}")
+                    _safe_print(f"[http_3mf] downloading {full} -> {local_path}")
                     try:
                         with session.get(full, stream=True, timeout=60) as r:
                             r.raise_for_status()
@@ -173,7 +186,7 @@ def _download_http_3mf_files() -> List[Dict]:
                                         continue
                                     f.write(chunk)
                     except Exception as exc:  # noqa: BLE001
-                        print(f"[http_3mf] download failed for {full}: {exc}")
+                        _safe_print(f"[http_3mf] download failed for {full}: {exc}")
                         if local_path.exists():
                             local_path.unlink()
                         continue
@@ -190,7 +203,7 @@ def _download_http_3mf_files() -> List[Dict]:
 
     if _truthy_env("DEBUG"):
         if files:
-            print(f"DEBUG mode enabled: limiting to 10 HTTP cases (from {len(files)} total)")
+            _safe_print(f"DEBUG mode enabled: limiting to 10 HTTP cases (from {len(files)} total)")
             files = files[:10]
 
     return files
@@ -208,7 +221,7 @@ def _collect_feishu_cases() -> List[Dict]:
             
             # Apply DEBUG mode limit if needed
             if _truthy_env("DEBUG"):
-                print(f"DEBUG mode enabled: limiting to 10 manifest cases (from {len(cases)} total)")
+                _safe_print(f"DEBUG mode enabled: limiting to 10 manifest cases (from {len(cases)} total)")
                 cases = cases[:10]
             
             _FEISHU_CASES = cases
@@ -550,7 +563,7 @@ def baseline_data():
     baseline_data = {}
     
     if baseline_path.exists():
-        print(f"Loading baseline data from {baseline_path}...")
+        _safe_print(f"Loading baseline data from {baseline_path}...")
         encodings = ["utf-8", "gbk", "latin-1"]
         
         for encoding in encodings:
@@ -565,18 +578,18 @@ def baseline_data():
                         if not key:
                             continue
                         baseline_data[key] = row
-                print(f"OK Loaded {len(baseline_data)} baseline records with encoding: {encoding}")
+                _safe_print(f"OK Loaded {len(baseline_data)} baseline records with encoding: {encoding}")
                 break
             except UnicodeDecodeError:
-                print(f"Failed to read with encoding {encoding}, trying next...")
+                _safe_print(f"Failed to read with encoding {encoding}, trying next...")
             except Exception as e:
-                print(f"Error reading baseline file: {e}")
+                _safe_print(f"Error reading baseline file: {e}")
                 break
         
         if not baseline_data:
-            print(f"Failed to read baseline file with any encoding")
+            _safe_print(f"Failed to read baseline file with any encoding")
     else:
-        print(f"Baseline file not found: {baseline_path}")
+        _safe_print(f"Baseline file not found: {baseline_path}")
     
     return baseline_data
 
@@ -622,7 +635,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         {"printer_name": "Creality K2 Plus 0.4 nozzle"},
         timeout=5,
     )
-    print(select_ret)
+    _safe_print(select_ret)
     # Import model
     import_ret = _run_command(
         send_cmd_handle,
@@ -688,7 +701,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         {"export_all": True, "output": str(output_gcode)},
         timeout=timeouts["export"],
     )
-    print(output_gcode.exists())
+    _safe_print(output_gcode.exists())
     zip_ok = False
     if output_gcode.exists():
         try:
@@ -732,7 +745,7 @@ def test_feishu_slice(
     send_cmd_handle = engine_session_send_cmd
     model_path = Path(feishu_case["path"]).resolve()  # Ensure absolute path
     #model_path = Path("C:\work\C3DBaseline\test_framework\artifacts\feishu_3mf\baby-groot.3mf")
-    print(f"Testing Feishu 3MF slicing: {model_path}")
+    _safe_print(f"Testing Feishu 3MF slicing: {model_path}")
     result = _run_slice_flow(send_cmd_handle, model_path, tmp_path)
 
     current_filename = model_path.name
@@ -756,7 +769,7 @@ def test_feishu_slice(
     if key in baseline_data:
         # Compare with baseline
         baseline_row = baseline_data[key]
-        print(f"Comparing with baseline for {key}...")
+        _safe_print(f"Comparing with baseline for {key}...")
         
         # Assert key metrics match baseline
         assert result["crashed"] == (baseline_row["crashed"] == "True"), f"Crashed status mismatch with baseline for {key}"
@@ -764,9 +777,9 @@ def test_feishu_slice(
         assert result["slice_ok"] == (baseline_row["slice_ok"] == "True"), f"Slice status mismatch with baseline for {key}"
         assert result["export_ok"] == (baseline_row["export_ok"] == "True"), f"Export status mismatch with baseline for {key}"
         
-        print(f"OK All metrics match baseline for {key}")
+        _safe_print(f"OK All metrics match baseline for {key}")
     else:
-        print(f"Updating baseline data for {key}...")
+        _safe_print(f"Updating baseline data for {key}...")
         baseline_data[key] = baseline_row_data
     
     # Always assert basic success regardless of baseline
@@ -788,8 +801,8 @@ def write_report_to_feishu_after_tests(baseline_data):
     
     # Write all baseline data to CSV file
     if baseline_data:
-        print(f"\n=== Writing all baseline data to CSV ===")
-        print(f"Writing to: {report_path}")
+        _safe_print(f"\n=== Writing all baseline data to CSV ===")
+        _safe_print(f"Writing to: {report_path}")
         
         # Create directory if it doesn't exist
         report_path.parent.mkdir(parents=True, exist_ok=True)
@@ -822,9 +835,9 @@ def write_report_to_feishu_after_tests(baseline_data):
                 # Join and write the row
                 f.write(",".join(row) + "\n")
         
-        print(f"OK Wrote {len(baseline_data)} records to {report_path}")
+        _safe_print(f"OK Wrote {len(baseline_data)} records to {report_path}")
     
     # Check if report file exists
     if not report_path.exists():
-        print(f"Report file not found: {report_path}")
+        _safe_print(f"Report file not found: {report_path}")
         return
