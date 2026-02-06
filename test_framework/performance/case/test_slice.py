@@ -370,18 +370,37 @@ def _wait_for_slicing_done(
     deadline = time.monotonic() + max(0.0, float(timeout_s))
     last_progress: Optional[Dict] = None
     last_error: Optional[str] = None
+    last_pct = None
+    last_change_ts = time.monotonic()
+    stall_seconds = 120.0
 
     while time.monotonic() < deadline:
         progress_ret = _run_command(
             send_cmd_handle,
             "get_slicing_progress",
             {},
-            timeout=5,
+            timeout=60,
         )
         if progress_ret["ok"]:
             progress = _extract_slicing_progress(progress_ret)
             if progress is not None:
                 last_progress = progress
+                pct = _progress_percentage_0_100(progress.get("percentage"))
+                now = time.monotonic()
+                if pct is not None:
+                    if last_pct is None or pct != last_pct:
+                        last_pct = pct
+                        last_change_ts = now
+                    elif now - last_change_ts >= stall_seconds:
+                        pct_str = f"{pct:.3f}"
+                        state_str = str(progress.get("state") or "unknown")
+                        return {
+                            "ok": False,
+                            "crashed": False,
+                            "elapsed_ms": (time.perf_counter() - start) * 1000,
+                            "progress": last_progress,
+                            "error": f"slicing progress stalled for {stall_seconds}s (percentage={pct_str}, state={state_str})",
+                        }
                 if _is_slicing_done(progress):
                     return {
                         "ok": True,
@@ -597,7 +616,7 @@ def baseline_data():
 def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     timeouts = {
         "load": int(os.getenv("SLICER_LOAD_TIMEOUT", "90")),
-        "slice": int(os.getenv("SLICER_SLICE_TIMEOUT", "120")),
+        "slice": int(os.getenv("SLICER_SLICE_TIMEOUT", "600")),
         "export": int(os.getenv("SLICER_EXPORT_TIMEOUT", "360")),
         "wait": float(os.getenv("SLICER_WAIT_WRITTEN", "60")),
         "settle": float(os.getenv("SLICER_SETTLE_SECONDS", "1.0")),
@@ -668,7 +687,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     slice_start = time.perf_counter()
     slice_ret = _run_command(
         send_cmd_handle,
-        "click_button",
+        "trigger_slice",
         {"id": SLICE_BTN_ID},
         timeout=timeouts["slice"],
     )
