@@ -35,12 +35,27 @@ def _safe_print(*args, **kwargs) -> None:
         return
     except UnicodeEncodeError:
         pass
-    encoding = getattr(getattr(sys, "stdout", None), "encoding", None) or "utf-8"
+    stream = kwargs.get("file") or getattr(sys, "stdout", None)
+    if stream is None:
+        return
+    encoding = getattr(stream, "encoding", None) or "utf-8"
     sep = kwargs.get("sep", " ")
     end = kwargs.get("end", "\n")
     text = sep.join(str(a) for a in args)
-    text = text.encode(encoding, errors="replace").decode(encoding, errors="replace")
-    sys.stdout.write(text + end)
+    safe_text = text.encode(encoding, errors="backslashreplace").decode(encoding, errors="replace")
+    try:
+        stream.write(safe_text + end)
+    except UnicodeEncodeError:
+        buffer = getattr(stream, "buffer", None)
+        if buffer:
+            buffer.write((text + end).encode(encoding, errors="backslashreplace"))
+        else:
+            stream.write((text + end).encode("ascii", errors="backslashreplace").decode("ascii"))
+
+
+def _safe_pytest_id(text: str) -> str:
+    # Force a terminal-safe ASCII id on Windows cp936/gbk consoles.
+    return text.encode("ascii", errors="backslashreplace").decode("ascii")
 
 
 # ======== Feishu dataset discovery (collection time) ========
@@ -267,7 +282,7 @@ def pytest_generate_tests(metafunc):
             pytest.skip(_FEISHU_ERROR, allow_module_level=True)
         metafunc.parametrize("feishu_case", [], ids=[])
         return
-    ids = [Path(item["path"]).name for item in cases]
+    ids = [_safe_pytest_id(Path(item["path"]).name) for item in cases]
     metafunc.parametrize("feishu_case", cases, ids=ids)
 
 

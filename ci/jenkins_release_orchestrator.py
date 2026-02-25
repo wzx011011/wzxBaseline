@@ -456,6 +456,44 @@ def build_feishu_lines(builds: List[BuildOutcome], tests: Optional[TestOutcome])
     return lines
 
 
+def preferred_artifact_url(build: BuildOutcome) -> Optional[str]:
+    if build.platform.lower().startswith("windows") and build.artifact_urls:
+        for url_candidate in build.artifact_urls:
+            if url_candidate.lower().endswith(".exe"):
+                return url_candidate
+    if build.artifact_url:
+        return build.artifact_url
+    if build.artifact_local_path:
+        return str(build.artifact_local_path)
+    return None
+
+
+def write_result_json(
+    repo_root: Path,
+    output_path: str,
+    changes: Dict[str, str],
+    resolved_current_ref: Optional[str],
+    previous_ref: Optional[str],
+    builds: List[BuildOutcome],
+) -> None:
+    target = Path(output_path)
+    if not target.is_absolute():
+        target = repo_root / target
+    target.parent.mkdir(parents=True, exist_ok=True)
+
+    platform_list = [b.platform for b in builds]
+    artifact_url_list = [preferred_artifact_url(b) or "" for b in builds]
+    payload = {
+        "changes": changes,
+        "resolved_current_ref": resolved_current_ref,
+        "previous_ref": previous_ref,
+        "platform": platform_list,
+        "artifact_url": artifact_url_list,
+    }
+    target.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"[info] wrote build result json: {target}")
+
+
 def render_zentao_body(builds: List[BuildOutcome], tests: Optional[TestOutcome], changes: Dict[str, str], focus: str) -> str:
     lines = [
         f"版本范围: {changes.get('previous_ref')} -> {changes.get('current_ref')}",
@@ -491,6 +529,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--previous-ref", default=os.getenv("PREVIOUS_REF"), help="Git ref to diff from; defaults to previous tag or HEAD~1")
     parser.add_argument("--current-ref", default=os.getenv("CURRENT_REF", "HEAD"), help="Git ref treated as current version")
     parser.add_argument("--changes-repo", default=os.getenv("CHANGES_REPO"), help="Path or git URL to collect change scope; default current repo")
+    parser.add_argument("--result-json", default=os.getenv("RESULT_JSON", "artifacts/release_result.json"), help="Path to write build result json")
     parser.add_argument("--zentao-build-id", default=os.getenv("ZENTAO_BUILD_ID"), help="Zentao build/version ID to update")
     parser.add_argument("--zentao-token", default=os.getenv("ZENTAO_TOKEN"), help="Preset Zentao API token; skips login when provided")
     parser.add_argument("--zentao-execution", default=os.getenv("ZENTAO_EXECUTION_ID"), help="Zentao execution ID; when provided and build ID missing, auto-create version under it")
@@ -644,12 +683,6 @@ def main() -> int:
     feishu_webhook = os.getenv("FEISHU_WEBHOOK")
     notifier = FeishuNotifier(feishu_webhook)
 
-    llm = LlmSummarizer(
-        api_key=os.getenv("DASHSCOPE_API_KEY") or os.getenv("OPENAI_API_KEY"),
-        base_url=os.getenv("DASHSCOPE_API_BASE") or os.getenv("OPENAI_API_BASE") or "https://dashscope.aliyuncs.com/compatible-mode/v1",
-        model=os.getenv("DASHSCOPE_MODEL") or os.getenv("OPENAI_MODEL") or "qwen3-max",
-    )
-
     zentao_client = ZentaoClient(
         base_url=os.getenv("ZENTAO_BASE_URL"),
         account=os.getenv("ZENTAO_ACCOUNT"),
@@ -718,7 +751,7 @@ def main() -> int:
             else:
                 error_lines = [line for line in console.splitlines() if "error:" in line.lower()]
                 summary_input = "\n".join(error_lines) if error_lines else console
-                summary = llm.summarize(summary_input)
+                summary = summary_input[:600]
                 notifier.send_text(
                     title=f"{job.platform} 构建失败",
                     lines=[
@@ -738,6 +771,16 @@ def main() -> int:
         future_map = {executor.submit(run_job, job): job.platform for job in platform_jobs}
         for future in as_completed(future_map):
             build_results.append(future.result())
+
+    changes = collect_change_scope(changes_repo_root, args.previous_ref, resolved_current_ref)
+    write_result_json(
+        repo_root=repo_root,
+        output_path=args.result_json,
+        changes=changes,
+        resolved_current_ref=resolved_current_ref,
+        previous_ref=changes.get("previous_ref") or args.previous_ref,
+        builds=build_results,
+    )
 
     if any(b.status != "SUCCESS" for b in build_results):
         notifier.send_text("跨平台构建未通过", build_feishu_lines(build_results, None))
@@ -768,35 +811,28 @@ def main() -> int:
             except Exception as exc:
                 print(f"[warn] failed to trigger test pipeline {test_pipeline}: {exc}", file=sys.stderr)
 
-    changes = collect_change_scope(changes_repo_root, args.previous_ref, resolved_current_ref)
     #print(f"[info] change scope from {changes}")
-    focus_prompt = (
-        f"改动范围:\n{changes.get('shortlog')}\n\nDiff:\n{changes.get('diffstat')}\n\n"
-        "请用中文总结测试关注点，突出风险区域，最多150字。"
-    )
-    focus = llm.summarize(focus_prompt, max_tokens=220) if not args.dry_run else ""
-    #发送到总结到飞书
+    # send change scope directly to Feishu, no LLM summary
     feishu_lines = build_feishu_lines(build_results, test_result)
     artifact_lines = []
     for build in build_results:
-        chosen_url = None
-        if build.platform.lower().startswith("windows") and build.artifact_urls:
-            for url_candidate in build.artifact_urls:
-                if url_candidate.lower().endswith(".exe"):
-                    chosen_url = url_candidate
-                    break
-        if not chosen_url and build.artifact_url:
-            chosen_url = build.artifact_url
+        chosen_url = preferred_artifact_url(build)
         if chosen_url:
             artifact_lines.append(f"{build.platform} artifact: {chosen_url}")
-        elif build.artifact_local_path:
-            artifact_lines.append(f"{build.platform} artifact: {build.artifact_local_path}")
     if artifact_lines:
         feishu_lines.append("")
         feishu_lines.extend(artifact_lines)
-    if focus:
+    shortlog = (changes.get("shortlog") or "").strip()
+    diffstat = (changes.get("diffstat") or "").strip()
+    if shortlog or diffstat:
         feishu_lines.append("")
-        feishu_lines.append(f"关注点: {focus}")
+        feishu_lines.append("Change Scope:")
+        if shortlog:
+            feishu_lines.append(shortlog)
+        if diffstat:
+            feishu_lines.append("")
+            feishu_lines.append("DiffStat:")
+            feishu_lines.append(diffstat)
     notifier.send_text("跨平台构建+测试通过", feishu_lines)
     # if not args.dry_run and zentao_client.active() and zentao_execution_id and not zentao_build_id:
     #     artifact_tag = None

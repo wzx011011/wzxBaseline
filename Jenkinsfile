@@ -17,6 +17,7 @@ pipeline {
   }
   environment {
     PYTHONUNBUFFERED = '1'
+    PYTHONIOENCODING = 'utf-8'
     JENKINS_BASE_URL = "${JENKINS_URL}"
     ARTIFACTS_DIR = "artifacts"
     DASHSCOPE_MODEL = "qwen-turbo"
@@ -76,6 +77,11 @@ python ci\\jenkins_release_orchestrator.py --platforms windows macos_x86 macos_a
 endlocal
 '''
         }
+      }
+    }
+    stage('Archive release result JSON') {
+      steps {
+        archiveArtifacts artifacts: 'artifacts/release_result.json', allowEmptyArchive: true
       }
     }
   }
