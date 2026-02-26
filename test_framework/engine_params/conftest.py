@@ -513,56 +513,6 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     slice_res = slice_fut.result(timeout=slice_timeout)
     assert slice_res.get("code") == 0, f"slice_fut 失败：{slice_res}"
 
-    # ---- 3.1) wait for slicing done ----
-    import time
-    timeout_s = float(slice_timeout)
-    poll_interval_s = 0.5
-    deadline = time.monotonic() + max(0.0, timeout_s)
-    no_slicing_start = None
-    no_slicing_timeout = 5.0
-    while time.monotonic() < deadline:
-        progress_fut = engine_injector.submit("get_slicing_progress", {})
-        try:
-            progress_res = progress_fut.result(timeout=60)
-            if progress_res.get("code") == 0:
-                progress = progress_res.get("payload", {}).get("progress", {})
-                # Check if slicing is done
-                state = str(progress.get("state") or "").strip().lower()
-                # Skip if slicing hasn't started yet
-                if state == "no_slicing":
-                    if no_slicing_start is None:
-                        no_slicing_start = time.monotonic()
-                    elif time.monotonic() - no_slicing_start >= no_slicing_timeout:
-                        break
-                    time.sleep(poll_interval_s)
-                    continue
-                else:
-                    no_slicing_start = None
-                # Check percentage
-                raw_pct = progress.get("percentage")
-                try:
-                    raw_pct_f = float(raw_pct)
-                    if raw_pct_f > 1.0 or raw_pct_f < 0.0:
-                        break
-                except (TypeError, ValueError):
-                    pass
-                # Check if percentage is 100%
-                pct = progress.get("percentage")
-                try:
-                    if pct is not None and float(pct) >= 100.0 - 1e-6:
-                        break
-                except (TypeError, ValueError):
-                    pass
-                # Check if export is ready
-                if progress.get("export") is True:
-                    break
-                # Check if state indicates completion
-                if state in {"done", "finish", "finished", "complete", "completed", "success"}:
-                    break
-        except Exception:
-            pass
-        time.sleep(poll_interval_s)
-
     # ---- 4) export gcode ----
     export_fut = engine_injector.submit("export_gcode", {
         "export_all": False,

@@ -5,7 +5,7 @@ pipeline {
     disableConcurrentBuilds()
   }
   triggers {
-    cron('0 1 * * *') // 每天凌晨1点
+    cron('0 22 * * *') // 每天凌晨1点
   }
   parameters {
     string(name: 'AGENT_LABEL', defaultValue: 'tester', description: 'Jenkins agent label to run the pipeline on')
