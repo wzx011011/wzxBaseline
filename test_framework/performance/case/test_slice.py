@@ -266,11 +266,16 @@ def pytest_generate_tests(metafunc):
     record_filter = os.getenv("FEISHU_RECORD_ID", "").strip()
     if record_filter:
         wanted = {s.strip() for s in record_filter.split(",") if s.strip()}
-        filtered = [
-            c
-            for c in cases
-            if Path(c.get("path", "")).name in wanted or str(c.get("name") or "") in wanted
-        ]
+        _safe_print(f"[filter] wanted: {wanted}")
+        filtered = []
+        for c in cases:
+            path = c.get("path", "")
+            suffix = _extract_http_3mf_suffix(path)
+            name = str(c.get("name") or "")
+            _safe_print(f"[filter] path={path}, suffix={suffix}, name={name}")
+            if suffix in wanted or name in wanted:
+                filtered.append(c)
+        _safe_print(f"[filter] filtered count: {len(filtered)}")
         if not filtered:
             pytest.skip(
                 f"No HTTP 3MF cases matching filenames in FEISHU_RECORD_ID={record_filter}",
@@ -287,6 +292,22 @@ def pytest_generate_tests(metafunc):
 
 
 # ======== helpers ========
+def _extract_http_3mf_suffix(path: str) -> str:
+    if not path:
+        return ""
+    path_str = str(path)
+    # 查找 http_3mf 在路径中的位置
+    http_3mf_index = path_str.find("http_3mf")
+    if http_3mf_index != -1:
+        # 提取 http_3mf 后面的部分（跳过 http_3mf 和路径分隔符）
+        suffix_start = http_3mf_index + len("http_3mf")
+        # 跳过路径分隔符
+        while suffix_start < len(path_str) and path_str[suffix_start] in {"/", "\\"}:
+            suffix_start += 1
+        return path_str[suffix_start:]
+    return path_str
+
+
 def _decode_response(raw: Union[bytes, str, None]) -> Dict:
     if raw is None:
         return {}
@@ -783,7 +804,7 @@ def test_feishu_slice(
     _safe_print(f"Testing Feishu 3MF slicing: {model_path}")
     result = _run_slice_flow(send_cmd_handle, model_path, tmp_path)
 
-    current_filename = model_path.name
+    current_filename = _extract_http_3mf_suffix(model_path)
     result["record_id"] = current_filename
     key = current_filename
     
