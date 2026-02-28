@@ -10,6 +10,7 @@ Results are appended to performance/data/feishu_slice_report.csv.
 import csv
 import json
 import os
+import re
 import sys
 import time
 import zipfile
@@ -65,6 +66,27 @@ _FEISHU_ERROR: Optional[str] = None
 
 def _truthy_env(name: str) -> bool:
     return os.getenv(name, "").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _truthy_text(value: str) -> bool:
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _resolve_cli_or_env(pytestconfig, cli_name: str, env_name: str, default: str = "") -> str:
+    if pytestconfig is not None:
+        cli_val = pytestconfig.getoption(cli_name, default=None)
+        if cli_val not in (None, ""):
+            return str(cli_val).strip()
+    return os.getenv(env_name, default).strip()
+
+
+def _resolve_notify_enabled(pytestconfig) -> bool:
+    value = _resolve_cli_or_env(pytestconfig, "feishu_notify", "FEISHU_NOTIFY", default="")
+    if not value:
+        return True
+    if value in {"on", "off"}:
+        return value == "on"
+    return _truthy_text(value)
 
 
 def _manifest_path() -> Path:
@@ -263,22 +285,34 @@ def pytest_generate_tests(metafunc):
     if "feishu_case" not in metafunc.fixturenames:
         return
     cases = _collect_feishu_cases()
-    record_filter = os.getenv("FEISHU_RECORD_ID", "").strip()
-    if record_filter:
-        wanted = {s.strip() for s in record_filter.split(",") if s.strip()}
-        _safe_print(f"[filter] wanted: {wanted}")
+    regex_filter = _resolve_cli_or_env(
+        metafunc.config,
+        "feishu_case_regex",
+        "FEISHU_CASE_REGEX",
+        default="",
+    )
+    if regex_filter:
+        try:
+            pattern = re.compile(regex_filter)
+        except re.error as exc:
+            pytest.skip(f"Invalid FEISHU_CASE_REGEX={regex_filter}: {exc}", allow_module_level=True)
         filtered = []
         for c in cases:
-            path = c.get("path", "")
+            path = str(c.get("path") or "")
             suffix = _extract_http_3mf_suffix(path)
             name = str(c.get("name") or "")
-            _safe_print(f"[filter] path={path}, suffix={suffix}, name={name}")
-            if suffix in wanted or name in wanted:
+            title = str(c.get("title") or "")
+            if (
+                pattern.search(suffix)
+                or pattern.search(name)
+                or pattern.search(path)
+                or pattern.search(title)
+            ):
                 filtered.append(c)
-        _safe_print(f"[filter] filtered count: {len(filtered)}")
+        _safe_print(f"[filter-regex] pattern={regex_filter}, filtered count: {len(filtered)}")
         if not filtered:
             pytest.skip(
-                f"No HTTP 3MF cases matching filenames in FEISHU_RECORD_ID={record_filter}",
+                f"No HTTP 3MF cases matching FEISHU_CASE_REGEX={regex_filter}",
                 allow_module_level=True,
             )
         cases = filtered
@@ -846,11 +880,15 @@ def test_feishu_slice(
 
 
 @pytest.fixture(scope="session", autouse=True)
-def write_report_to_feishu_after_tests(baseline_data):
+def write_report_to_feishu_after_tests(baseline_data, pytestconfig):
     """
     Write the feishu_slice_report.csv to a new Feishu table after all tests are completed.
     """
     yield  # This is the test execution phase
+
+    if not _resolve_notify_enabled(pytestconfig):
+        _safe_print("FEISHU notify disabled by --feishu-notify/FEISHU_NOTIFY, skip post-test report step.")
+        return
     
     # This runs after all tests are completed
     report_path = Path("performance") / "data" / "feishu_slice_report.csv"

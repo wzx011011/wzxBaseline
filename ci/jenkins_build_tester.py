@@ -86,7 +86,7 @@ def main() -> int:
             env[f"CREALITY_PRINTER_PATH"] = str(maybe_exe)
             slicer_exe = maybe_exe
 
-    test_command = f"cd .\\test_framework\\&&python -m pytest -m \"{args.test_command}\" --slicer-exe=\"{slicer_exe}\" -v --alluredir=../allure-results --capture=tee-sys"
+    test_command = f"cd .\\test_framework\\&&python -m pytest \"{args.test_command}\" --slicer-exe=\"{slicer_exe}\" -v --alluredir=../allure-results --capture=tee-sys"
     if "{slicer_exe}" in test_command:
         if slicer_exe:
             test_command = test_command.replace("{slicer_exe}", str(slicer_exe))
