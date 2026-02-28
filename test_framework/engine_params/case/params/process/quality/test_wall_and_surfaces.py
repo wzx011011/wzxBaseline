@@ -153,6 +153,11 @@ def test_detect_thin_wall(slice_and_export: Path, expected_detect_thin_wall: boo
     """测试 detect_thin_wall 参数"""
     gcode_path: Path = slice_and_export
     #assert gcode_path.exists()
+    if not expected_detect_thin_wall :
+        if not gcode_path.exists():
+            return
+        else:
+            assert False, f"gcode文件存在，但expected_detect_thin_wall为False，无法测试detect_thin_wall参数"
 
     ok, actual, details = parse_detect_thin_wall(gcode_path, expected_detect_thin_wall)
     assert ok, f"detect_thin_wall expected {expected_detect_thin_wall}, actual {actual}, details: {details}"
