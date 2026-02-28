@@ -50,10 +50,6 @@ if "%BUILD_ID%"=="" (
 set "EXTRA_ARGS="
 if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ARTIFACT_PATH%\""
 if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
-if not "%TEST_COMMAND%"=="" (
-  set "TEST_COMMAND_ESC=%TEST_COMMAND:"=\"%"
-  set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"!TEST_COMMAND_ESC!\""
-)
 
 python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" !EXTRA_ARGS!
 endlocal

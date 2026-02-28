@@ -86,12 +86,23 @@ def main() -> int:
             env[f"CREALITY_PRINTER_PATH"] = str(maybe_exe)
             slicer_exe = maybe_exe
 
-    test_command = f"cd .\\test_framework\\&&python -m pytest \"{args.test_command}\" --slicer-exe=\"{slicer_exe}\" -v --alluredir=../allure-results --capture=tee-sys"
-    if "{slicer_exe}" in test_command:
+    test_args = (args.test_command or "").strip()
+    if not test_args:
+        test_args = "-q"
+    if len(test_args) >= 2 and test_args[0] == test_args[-1] and test_args[0] in {"'", '"'}:
+        test_args = test_args[1:-1].strip()
+    # Undo optional cmd-layer escaping from Jenkins bat when needed.
+    test_args = test_args.replace('\\"', '"')
+    if "{slicer_exe}" in test_args:
         if slicer_exe:
-            test_command = test_command.replace("{slicer_exe}", str(slicer_exe))
+            test_args = test_args.replace("{slicer_exe}", str(slicer_exe))
         else:
             print("[warn] slicer_exe placeholder present but no executable found", file=sys.stderr)
+    slicer_arg = f' --slicer-exe="{slicer_exe}"' if slicer_exe else ""
+    test_command = (
+        f"cd .\\test_framework\\&&python -m pytest {test_args}{slicer_arg}"
+        " -v --alluredir=../allure-results --capture=tee-sys"
+    )
 
     print(f"[info] running tests with command: {test_command}")
     result = run_tests(test_command, env, repo_root)
