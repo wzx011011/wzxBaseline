@@ -659,7 +659,7 @@ def main() -> int:
     args = parse_args()
     artifacts_dir = repo_root / args.artifacts_dir
     resolved_current_ref = args.current_ref
-    changes_repo_root = ensure_changes_repo(repo_root, args.changes_repo)
+    #changes_repo_root = ensure_changes_repo(repo_root, args.changes_repo)
 
     base_params = {
         key: value
@@ -772,11 +772,11 @@ def main() -> int:
         for future in as_completed(future_map):
             build_results.append(future.result())
 
-    changes = collect_change_scope(changes_repo_root, args.previous_ref, resolved_current_ref)
+    #changes = collect_change_scope(changes_repo_root, args.previous_ref, resolved_current_ref)
     write_result_json(
         repo_root=repo_root,
         output_path=args.result_json,
-        changes=changes,
+        changes={},
         resolved_current_ref=resolved_current_ref,
         previous_ref=changes.get("previous_ref") or args.previous_ref,
         builds=build_results,
@@ -822,17 +822,6 @@ def main() -> int:
     if artifact_lines:
         feishu_lines.append("")
         feishu_lines.extend(artifact_lines)
-    shortlog = (changes.get("shortlog") or "").strip()
-    diffstat = (changes.get("diffstat") or "").strip()
-    if shortlog or diffstat:
-        feishu_lines.append("")
-        feishu_lines.append("Change Scope:")
-        if shortlog:
-            feishu_lines.append(shortlog)
-        if diffstat:
-            feishu_lines.append("")
-            feishu_lines.append("DiffStat:")
-            feishu_lines.append(diffstat)
     notifier.send_text("跨平台构建+测试通过", feishu_lines)
     # if not args.dry_run and zentao_client.active() and zentao_execution_id and not zentao_build_id:
     #     artifact_tag = None
