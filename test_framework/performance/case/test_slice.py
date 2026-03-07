@@ -751,7 +751,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         payload = import_error["raw"]
         errors = payload["payload"]["data"]
         for error in errors:
-            if error["level"] >=9:
+            if error["level"] ==9:
                 result["error"] = error["type"]
                 return result
     # Slice
