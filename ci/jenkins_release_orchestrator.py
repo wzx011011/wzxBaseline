@@ -776,9 +776,9 @@ def main() -> int:
     write_result_json(
         repo_root=repo_root,
         output_path=args.result_json,
-        changes={},
+        changes=args.current_ref,
         resolved_current_ref=resolved_current_ref,
-        previous_ref=changes.get("previous_ref") or args.previous_ref,
+        previous_ref= args.previous_ref,
         builds=build_results,
     )
 
