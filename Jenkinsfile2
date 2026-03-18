@@ -7,7 +7,7 @@ pipeline {
   parameters {
     string(name: 'AGENT_LABEL', defaultValue: 'tester', description: 'Jenkins agent label to run the pipeline on')
     string(name: 'JOB_NAME', defaultValue: 'CrealityPrint_Release_Package', description: 'Jenkins job name to download from')
-    string(name: 'BUILD_ID', defaultValue: '1307', description: 'Jenkins build number')
+    string(name: 'BUILD_ID', defaultValue: '1497', description: 'Jenkins build number')
     string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
     string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
     string(name: 'TEST_COMMAND', defaultValue: '-m "engine_params or performance"', description: 'Override test command (optional)')
@@ -86,6 +86,29 @@ endlocal
     }
   }
   post {
+    always {
+      withCredentials([string(credentialsId: 'openclaw-webhook', variable: 'OPENCLOW_WEBHOOK')]) {
+        powershell '''
+$resultFile = "artifacts\\release_result.json"
+if (Test-Path $resultFile) {
+  $body = Get-Content $resultFile -Raw -Encoding UTF8
+} else {
+  $body = @{
+    build_status = "${currentBuild.currentResult}"
+    job_name = "${env.JOB_NAME}"
+    build_number = "${env.BUILD_NUMBER}"
+    build_url = "${env.BUILD_URL}"
+  } | ConvertTo-Json -Depth 5
+}
+
+Invoke-RestMethod `
+  -Uri $env:OPENCLOW_WEBHOOK `
+  -Method Post `
+  -ContentType "application/json; charset=utf-8" `
+  -Body $body
+'''
+      }
+    }
     failure {
       echo 'Pipeline failed; check Feishu notifications for details.'
     }
