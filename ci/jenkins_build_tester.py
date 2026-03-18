@@ -79,7 +79,8 @@ def main() -> int:
     env[f"ARTIFACT_{platform_key}"] = str(downloaded)
 
     slicer_exe = None
-    extracted_dir = extract_artifact_zip(downloaded)
+    extract_root = artifacts_root / "extracted" / args.platform
+    extracted_dir = extract_artifact_zip(downloaded, extract_root)
     if extracted_dir:
         maybe_exe = find_slicer_exe(extracted_dir)
         if maybe_exe:

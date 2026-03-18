@@ -602,13 +602,13 @@ def parse_bool_flag(value: Optional[str]) -> Optional[bool]:
     return None
 
 
-def extract_artifact_zip(artifact_path: Path) -> Optional[Path]:
-    """Extract a zip artifact, flatten single top-level folder, and return the extraction directory."""
+def extract_artifact_zip(artifact_path: Path, target_dir: Optional[Path] = None) -> Optional[Path]:
+    """Extract a zip artifact into a stable directory and return the extraction directory."""
     if artifact_path.suffix.lower() != ".zip":
         return None
-    target_dir = artifact_path.with_suffix("")
+    target_dir = target_dir or artifact_path.with_suffix("")
     if target_dir.exists():
-        return target_dir
+        shutil.rmtree(target_dir, ignore_errors=True)
     target_dir.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(artifact_path, "r") as zf:
         zf.extractall(target_dir)

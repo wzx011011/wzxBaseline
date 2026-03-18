@@ -187,6 +187,37 @@ def _download_http_3mf_files() -> List[Dict]:
     session = requests.Session()
     files: List[Dict] = []
 
+    def remote_file_size(file_url: str) -> Optional[int]:
+        try:
+            resp = session.head(file_url, allow_redirects=True, timeout=30)
+            resp.raise_for_status()
+        except Exception:
+            return None
+        content_length = resp.headers.get("Content-Length", "").strip()
+        if not content_length:
+            return None
+        try:
+            return int(content_length)
+        except ValueError:
+            return None
+
+    def download_file(file_url: str, local_path: Path) -> bool:
+        _safe_print(f"[http_3mf] downloading {file_url} -> {local_path}")
+        try:
+            with session.get(file_url, stream=True, timeout=60) as r:
+                r.raise_for_status()
+                with local_path.open("wb") as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        if not chunk:
+                            continue
+                        f.write(chunk)
+        except Exception as exc:  # noqa: BLE001
+            _safe_print(f"[http_3mf] download failed for {file_url}: {exc}")
+            if local_path.exists():
+                local_path.unlink()
+            return False
+        return True
+
     def walk(url: str, rel: str = "") -> None:
         if _truthy_env("DEBUG") and len(files) >= 10:
             return
@@ -213,21 +244,19 @@ def _download_http_3mf_files() -> List[Dict]:
                 local_name = _safe_local_name(href)
                 local_path = download_dir / rel / local_name
                 local_path.parent.mkdir(parents=True, exist_ok=True)
-                if not local_path.exists():
-                    _safe_print(f"[http_3mf] downloading {full} -> {local_path}")
-                    try:
-                        with session.get(full, stream=True, timeout=60) as r:
-                            r.raise_for_status()
-                            with local_path.open("wb") as f:
-                                for chunk in r.iter_content(chunk_size=8192):
-                                    if not chunk:
-                                        continue
-                                    f.write(chunk)
-                    except Exception as exc:  # noqa: BLE001
-                        _safe_print(f"[http_3mf] download failed for {full}: {exc}")
-                        if local_path.exists():
-                            local_path.unlink()
-                        continue
+                should_download = not local_path.exists()
+                expected_size = remote_file_size(full)
+                if local_path.exists() and expected_size is not None:
+                    local_size = local_path.stat().st_size
+                    if local_size != expected_size:
+                        _safe_print(
+                            f"[http_3mf] size mismatch for {local_path}: "
+                            f"local={local_size}, remote={expected_size}, redownloading"
+                        )
+                        local_path.unlink()
+                        should_download = True
+                if should_download and not download_file(full, local_path):
+                    continue
                 files.append(
                     {
                         "record_id": "",
@@ -689,7 +718,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         "load": int(os.getenv("SLICER_LOAD_TIMEOUT", "90")),
         "slice": int(os.getenv("SLICER_SLICE_TIMEOUT", "600")),
         "export": int(os.getenv("SLICER_EXPORT_TIMEOUT", "360")),
-        "wait": float(os.getenv("SLICER_WAIT_WRITTEN", "60")),
+        "wait": float(os.getenv("SLICER_WAIT_WRITTEN", "180")),
         "settle": float(os.getenv("SLICER_SETTLE_SECONDS", "1.0")),
     }
     project_name = os.getenv("SLICER_PROJECT_NAME", "pytest_case_project")
