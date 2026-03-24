@@ -398,10 +398,28 @@ def collect_change_scope(repo_root: Path, previous_ref: Optional[str], current_r
 
 def run_tests(command: str, env: Dict[str, str], cwd: Path) -> TestOutcome:
     print(f"[info] running tests: {command}")
-    proc = subprocess.run(command, shell=True, cwd=str(cwd), env=env, capture_output=True, text=True, encoding="utf-8", errors="ignore")
-    status = "SUCCESS" if proc.returncode == 0 else "FAILURE"
-    output = proc.stdout + "\n" + proc.stderr
-    return TestOutcome(status=status, output=output, return_code=proc.returncode)
+    output_chunks: List[str] = []
+    proc = subprocess.Popen(
+        command,
+        shell=True,
+        cwd=str(cwd),
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        encoding="utf-8",
+        errors="ignore",
+        bufsize=1,
+    )
+    assert proc.stdout is not None
+    for line in proc.stdout:
+        print(line, end="", flush=True)
+        output_chunks.append(line)
+    proc.stdout.close()
+    return_code = proc.wait()
+    status = "SUCCESS" if return_code == 0 else "FAILURE"
+    output = "".join(output_chunks)
+    return TestOutcome(status=status, output=output, return_code=return_code)
 
 
 def extract_revision_from_build(build_info: Dict) -> Optional[str]:

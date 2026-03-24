@@ -76,6 +76,7 @@ def main() -> int:
 
     env = os.environ.copy()
     env["ARTIFACTS_DIR"] = str(artifacts_root)
+    env["PYTHONUNBUFFERED"] = "1"
     platform_key = args.platform.upper()
     env[f"ARTIFACT_{platform_key}"] = str(downloaded)
 
@@ -107,7 +108,7 @@ def main() -> int:
     slicer_arg = f' --slicer-exe="{slicer_exe}"' if slicer_exe else ""
     gcode_root_arg = "" if "--gcode-root" in test_args else f' --gcode-root="{gcode_root}"'
     test_command = (
-        f"cd .\\test_framework\\&&python -m pytest {test_args}{slicer_arg}{gcode_root_arg}"
+        f"cd .\\test_framework\\&&python -u -m pytest {test_args}{slicer_arg}{gcode_root_arg}"
         " -v --alluredir=../allure-results --capture=tee-sys"
     )
 
