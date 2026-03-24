@@ -455,28 +455,14 @@ def _extract_slicing_progress(ret: Dict) -> Optional[Dict]:
     progress = payload.get("progress")
     if not isinstance(progress, dict):
         return None
+    progress["all_plate_finished"] = payload.get("all_plate_finished")
     return progress
 
 
 def _is_slicing_done(progress: Dict) -> bool:
-    raw_pct = progress.get("percentage")
-    try:
-        raw_pct_f = float(raw_pct)
-    except (TypeError, ValueError):
-        raw_pct_f = None
-    # For this engine: percentage > 1 or < 0 indicates slicing is finished.
-    if raw_pct_f is not None and (raw_pct_f > 1.0 or raw_pct_f < 0.0):
-        return True
-
-    pct = _progress_percentage_0_100(progress.get("percentage"))
-    if pct is not None and pct >= 100.0 - 1e-6:
-        return True
-    if progress.get("export") is True:
-        return True
-    state = str(progress.get("state") or "").strip().lower()
-    if state in {"done", "finish", "finished", "complete", "completed", "success"}:
-        return True
-    return False
+    all_plate_finished = progress.get("all_plate_finished")
+    
+    return all_plate_finished
 
 
 def _wait_for_slicing_done(
@@ -499,6 +485,7 @@ def _wait_for_slicing_done(
             {},
             timeout=60,
         )
+        #all_plate_finished = progress_ret["all_plate_finished"]
         if progress_ret["ok"]:
             progress = _extract_slicing_progress(progress_ret)
             if progress is not None:
@@ -821,7 +808,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     wait_ret = _wait_for_slicing_done(
         send_cmd_handle,
         timeout_s=float(timeouts["slice"]),
-        poll_interval_s=float(os.getenv("SLICER_PROGRESS_POLL", "0.5")),
+        poll_interval_s=float(os.getenv("SLICER_PROGRESS_POLL", "5")),
     )
     result["crashed"] = result["crashed"] or wait_ret["crashed"]
     result["slice_ok"] = wait_ret["ok"]
