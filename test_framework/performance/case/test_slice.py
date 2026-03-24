@@ -11,6 +11,7 @@ import csv
 import json
 import os
 import re
+import shutil
 import sys
 import time
 import zipfile
@@ -57,6 +58,23 @@ def _safe_print(*args, **kwargs) -> None:
 def _safe_pytest_id(text: str) -> str:
     # Force a terminal-safe ASCII id on Windows cp936/gbk consoles.
     return text.encode("ascii", errors="backslashreplace").decode("ascii")
+
+
+def _sanitize_path_component(text: str) -> str:
+    return re.sub(r"[^A-Za-z0-9_.-]+", "_", text)
+
+
+@pytest.fixture
+def performance_gcode_dir(request, pytestconfig, clean_gcode_param) -> Path:
+    root = Path(pytestconfig.getoption("--gcode-root")).resolve()
+    nodeid = _sanitize_path_component(request.node.nodeid)
+    output_dir = root / "performance" / f"case_{nodeid}"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    if clean_gcode_param:
+        request.addfinalizer(lambda: shutil.rmtree(output_dir, ignore_errors=True))
+
+    return output_dir
 
 
 # ======== Feishu dataset discovery (collection time) ========
@@ -855,7 +873,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
 def test_feishu_slice(
     feishu_case,
     engine_session_send_cmd,
-    tmp_path,
+    performance_gcode_dir,
     baseline_data,  # Use the fixture for baseline data
 ):
     if not _FEISHU_CASES:
@@ -865,7 +883,7 @@ def test_feishu_slice(
     model_path = Path(feishu_case["path"]).resolve()  # Ensure absolute path
     #model_path = Path("C:\work\C3DBaseline\test_framework\artifacts\feishu_3mf\baby-groot.3mf")
     _safe_print(f"Testing Feishu 3MF slicing: {model_path}")
-    result = _run_slice_flow(send_cmd_handle, model_path, tmp_path)
+    result = _run_slice_flow(send_cmd_handle, model_path, performance_gcode_dir)
 
     current_filename = _extract_http_3mf_suffix(model_path)
     result["record_id"] = current_filename

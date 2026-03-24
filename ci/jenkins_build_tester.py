@@ -23,6 +23,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--build-id", required=True, help="Jenkins build number")
     parser.add_argument("--artifact-path", help="Desired artifact relativePath or filename (optional)")
     parser.add_argument("--artifacts-dir", default=os.getenv("ARTIFACTS_DIR", "artifacts"), help="Where to store downloaded artifacts")
+    parser.add_argument("--gcode-root", default=os.getenv("GCODE_ROOT", ""), help="Root directory for pytest --gcode-root; auto-generated when omitted")
     parser.add_argument("--platform", default=os.getenv("PLATFORM", "windows"), help="Platform label used for env injection (e.g., windows/macos_x86/macos_arm64/linux)")
     parser.add_argument(
         "--test-command",
@@ -99,9 +100,14 @@ def main() -> int:
             test_args = test_args.replace("{slicer_exe}", str(slicer_exe))
         else:
             print("[warn] slicer_exe placeholder present but no executable found", file=sys.stderr)
+
+    gcode_root = Path(args.gcode_root).resolve() if args.gcode_root else (artifacts_root / "gcode" / args.platform / str(build_number)).resolve()
+    gcode_root.mkdir(parents=True, exist_ok=True)
+
     slicer_arg = f' --slicer-exe="{slicer_exe}"' if slicer_exe else ""
+    gcode_root_arg = "" if "--gcode-root" in test_args else f' --gcode-root="{gcode_root}"'
     test_command = (
-        f"cd .\\test_framework\\&&python -m pytest {test_args}{slicer_arg}"
+        f"cd .\\test_framework\\&&python -m pytest {test_args}{slicer_arg}{gcode_root_arg}"
         " -v --alluredir=../allure-results --capture=tee-sys"
     )
 
