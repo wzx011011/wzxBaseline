@@ -87,7 +87,46 @@ endlocal
   }
   post {
     always {
-      
+      withCredentials([string(credentialsId: 'openclaw-webhook', variable: 'OPENCLOW_WEBHOOK')]) {
+        script {
+          def notifyStatus = powershell(returnStatus: true, script: '''
+$resultFile = "artifacts\\release_result.json"
+if (Test-Path $resultFile) {
+  $body = Get-Content $resultFile -Raw -Encoding UTF8
+} else {
+  $body = @{
+    build_status = "${currentBuild.currentResult}"
+    job_name = "${env.JOB_NAME}"
+    build_number = "${env.BUILD_NUMBER}"
+    build_url = "${env.BUILD_URL}"
+  } | ConvertTo-Json -Depth 5
+}
+
+if ([string]::IsNullOrWhiteSpace($env:OPENCLOW_WEBHOOK)) {
+  Write-Warning "Feishu webhook is empty; skipping notification."
+  exit 0
+}
+
+try {
+  Invoke-RestMethod `
+    -Uri $env:OPENCLOW_WEBHOOK `
+    -Method Post `
+    -ContentType "application/json; charset=utf-8" `
+    -Body $body `
+    -TimeoutSec 15 `
+    -ErrorAction Stop | Out-Null
+  Write-Host "Feishu notification sent."
+} catch {
+  Write-Warning ("Feishu notification failed: " + $_.Exception.Message)
+  exit 0
+}
+''')
+
+          if (notifyStatus != 0) {
+            echo "Feishu notification step exited with code ${notifyStatus}, but the pipeline result will be preserved."
+          }
+        }
+      }
     }
     failure {
       echo 'Pipeline failed; check Feishu notifications for details.'
