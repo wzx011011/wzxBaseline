@@ -87,27 +87,7 @@ endlocal
   }
   post {
     always {
-      withCredentials([string(credentialsId: 'openclaw-webhook', variable: 'OPENCLOW_WEBHOOK')]) {
-        powershell '''
-$resultFile = "artifacts\\release_result.json"
-if (Test-Path $resultFile) {
-  $body = Get-Content $resultFile -Raw -Encoding UTF8
-} else {
-  $body = @{
-    build_status = "${currentBuild.currentResult}"
-    job_name = "${env.JOB_NAME}"
-    build_number = "${env.BUILD_NUMBER}"
-    build_url = "${env.BUILD_URL}"
-  } | ConvertTo-Json -Depth 5
-}
-
-Invoke-RestMethod `
-  -Uri $env:OPENCLOW_WEBHOOK `
-  -Method Post `
-  -ContentType "application/json; charset=utf-8" `
-  -Body $body
-'''
-      }
+      
     }
     failure {
       echo 'Pipeline failed; check Feishu notifications for details.'
