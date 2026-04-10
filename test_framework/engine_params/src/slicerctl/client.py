@@ -18,9 +18,40 @@ def is_process_running_by_name(name="CrealityPrint.exe"):
         return False
 
 
-def kill_process_by_name(name="CrealityPrint.exe", timeout=10):
+def _get_pids_by_name(name: str) -> list:
+    """通过 tasklist 获取指定名称进程的所有 PID"""
+    try:
+        out = subprocess.check_output(
+            ["tasklist", "/FI", f"IMAGENAME eq {name}", "/FO", "CSV", "/NH"],
+            text=True,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+        pids = []
+        for line in out.strip().splitlines():
+            parts = line.split('"')
+            # CSV format: "name","PID","Session Name","Session#","Mem Usage"
+            if len(parts) >= 4:
+                try:
+                    pids.append(int(parts[3]))
+                except (ValueError, IndexError):
+                    pass
+        return pids
+    except Exception:
+        return []
+
+
+def _is_port_free(host: str, port: int) -> bool:
+    """检查端口是否空闲"""
+    try:
+        with socket.create_connection((host, port), timeout=0.5):
+            return False  # 能连上说明被占用
+    except (ConnectionRefusedError, OSError):
+        return True  # 连不上说明空闲
+
+
+def kill_process_by_name(name="CrealityPrint.exe", timeout=15):
     """
-    强制停止指定名称的进程
+    强制停止指定名称的进程，多策略兜底。
     
     Args:
         name: 进程名称
@@ -34,32 +65,56 @@ def kill_process_by_name(name="CrealityPrint.exe", timeout=10):
     
     print(f"[SlicerProc] 发现已运行的 {name}，正在强制停止...")
     
-    try:
-        # 使用 taskkill 强制终止进程及其子进程
-        result = subprocess.run(
-            ["taskkill", "/IM", name, "/T", "/F"],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
+    # 策略1: taskkill /IM（按名称批量杀）
+    subprocess.run(
+        ["taskkill", "/IM", name, "/T", "/F"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        creationflags=subprocess.CREATE_NO_WINDOW,
+    )
+    time.sleep(1.0)
+    
+    if not is_process_running_by_name(name):
+        print(f"[SlicerProc] {name} 已成功停止")
+        time.sleep(1.0)
+        return True
+    
+    # 策略2: 按 PID 逐个杀
+    pids = _get_pids_by_name(name)
+    for pid in pids:
+        subprocess.run(
+            ["taskkill", "/PID", str(pid), "/T", "/F"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
             creationflags=subprocess.CREATE_NO_WINDOW,
         )
-        
-        # 等待进程完全退出
-        end_time = time.time() + timeout
-        while time.time() < end_time:
-            if not is_process_running_by_name(name):
-                print(f"[SlicerProc] {name} 已成功停止")
-                # 额外等待一小段时间确保端口释放
-                time.sleep(1.0)
-                return True
-            time.sleep(0.5)
-        
-        print(f"[SlicerProc] 警告: {name} 停止超时")
-        return False
-        
-    except Exception as e:
-        print(f"[SlicerProc] 停止进程失败: {e}")
-        return False
+    time.sleep(1.0)
+    
+    if not is_process_running_by_name(name):
+        print(f"[SlicerProc] {name} 已成功停止 (PID kill)")
+        time.sleep(1.0)
+        return True
+    
+    # 策略3: wmic 兜底
+    try:
+        subprocess.run(
+            ["wmic", "process", "where", f"name='{name}'", "delete"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+            timeout=10,
+        )
+    except Exception:
+        pass
+    
+    # 等待进程完全退出
+    end_time = time.time() + timeout
+    while time.time() < end_time:
+        if not is_process_running_by_name(name):
+            print(f"[SlicerProc] {name} 已成功停止")
+            time.sleep(1.0)
+            return True
+        time.sleep(0.5)
+    
+    print(f"[SlicerProc] 警告: {name} 停止超时")
+    return False
 
 
 class SlicerProc:
@@ -83,6 +138,17 @@ class SlicerProc:
         # 启动前强制停止已有进程，确保干净的启动环境
         if is_process_running_by_name(proc_name):
             kill_process_by_name(proc_name)
+
+        # 等端口真正释放，避免新进程 bind 10048 错误
+        port_deadline = time.time() + 30
+        while not _is_port_free(self.host, self.port):
+            if time.time() > port_deadline:
+                raise RuntimeError(
+                    f"Port {self.host}:{self.port} still occupied after killing {proc_name}. "
+                    f"Cannot start new engine."
+                )
+            print(f"[SlicerProc] 等待端口 {self.port} 释放...")
+            time.sleep(1.0)
 
         env = os.environ.copy()
         # 重要，拉起子进程的时候会注册一个环境变量来绕开弹窗

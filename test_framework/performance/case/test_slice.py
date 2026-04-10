@@ -768,7 +768,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         timeout=timeouts["load"],
     )
     result["import_ok"] = import_ret["ok"]
-    result["import_ms"] = round(import_ret["elapsed_ms"], 2)
+    result["import_ms"] = round(import_ret["elapsed_ms"], 2) if import_ret["ok"] else None
     result["crashed"] = import_ret["crashed"]
     if not import_ret["ok"]:
         result["error"] = import_ret["error"]
@@ -789,7 +789,6 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
                 result["error"] = error["type"]
                 return result
     # Slice
-    slice_start = time.perf_counter()
     slice_ret = _run_command(
         send_cmd_handle,
         "trigger_slice",
@@ -799,10 +798,11 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     result["crashed"] = result["crashed"] or slice_ret["crashed"]
     if not slice_ret["ok"]:
         result["slice_ok"] = False
-        result["slice_ms"] = round((time.perf_counter() - slice_start) * 1000, 2)
         result["error"] = slice_ret["error"]
         return result
 
+    # Timer starts after trigger_slice is ACKed — measures pure engine slicing duration.
+    slice_start = time.perf_counter()
     # Wait until slicing progress reaches 100% (or engine reports export-ready),
     # then continue with export_gcode.
     wait_ret = _wait_for_slicing_done(
@@ -812,7 +812,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     )
     result["crashed"] = result["crashed"] or wait_ret["crashed"]
     result["slice_ok"] = wait_ret["ok"]
-    result["slice_ms"] = round((time.perf_counter() - slice_start) * 1000, 2)
+    result["slice_ms"] = round((time.perf_counter() - slice_start) * 1000, 2) if wait_ret["ok"] else None
     if not wait_ret["ok"]:
         result["error"] = wait_ret["error"]
         return result
@@ -837,7 +837,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         except zipfile.BadZipFile:
             zip_ok = False
     result["export_ok"] = export_ret["ok"] and zip_ok
-    result["export_ms"] = round(export_ret["elapsed_ms"], 2)
+    result["export_ms"] = round(export_ret["elapsed_ms"], 2) if result["export_ok"] else None
     result["crashed"] = result["crashed"] or export_ret["crashed"]
     result["gcode_path"] = str(output_gcode)
     if not result["export_ok"]:
@@ -860,6 +860,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
 def test_feishu_slice(
     feishu_case,
     engine_session_send_cmd,
+    engine_manager_perf,
     performance_gcode_dir,
     baseline_data,  # Use the fixture for baseline data
 ):
@@ -871,6 +872,16 @@ def test_feishu_slice(
     #model_path = Path("C:\work\C3DBaseline\test_framework\artifacts\feishu_3mf\baby-groot.3mf")
     _safe_print(f"Testing Feishu 3MF slicing: {model_path}")
     result = _run_slice_flow(send_cmd_handle, model_path, performance_gcode_dir)
+
+    # If the case failed (deadlock / timeout / crash), force-restart the engine
+    # so the next parametrized case starts with a clean state.
+    if not result.get("export_ok"):
+        error_msg = result.get("error") or ""
+        _safe_print(f"[recovery] case failed ({error_msg}), restarting engine ...")
+        try:
+            engine_manager_perf.restart()
+        except Exception as exc:  # noqa: BLE001
+            _safe_print(f"[recovery] engine restart failed: {exc}")
 
     current_filename = _extract_http_3mf_suffix(model_path)
     result["record_id"] = current_filename

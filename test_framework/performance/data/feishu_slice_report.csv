@@ -1,2 +1,11 @@
 record_id,file,import_ms,slice_ms,export_ms,import_ok,slice_ok,export_ok,crashed,error,gcode_path
-
+111\1.3mf,E:\wzx\C3DBaseline\test_framework\artifacts\http_3mf\111\1.3mf,4689.99,None,None,False,False,False,False,load_project exception: resource deadlock would occur: resource deadlock would occur,
+111\2.3mf,E:\wzx\C3DBaseline\test_framework\artifacts\http_3mf\111\2.3mf,None,None,None,False,False,False,False,timeout,
+5.1.4\11312 (2).3mf,E:\wzx\C3DBaseline\test_framework\artifacts\http_3mf\5.1.4\11312 (2).3mf,None,None,None,False,False,False,False,timeout,
+5.1.4\121254 (2).3mf,E:\wzx\C3DBaseline\test_framework\artifacts\http_3mf\5.1.4\121254 (2).3mf,None,None,None,False,False,False,False,timeout,
+5.1.4\1231 (5).3mf,E:\wzx\C3DBaseline\test_framework\artifacts\http_3mf\5.1.4\1231 (5).3mf,None,None,None,False,False,False,False,timeout,
+5.1.4\1231.3mf,E:\wzx\C3DBaseline\test_framework\artifacts\http_3mf\5.1.4\1231.3mf,None,None,None,False,False,False,False,timeout,
+5.1.4\1241 (3).3mf,E:\wzx\C3DBaseline\test_framework\artifacts\http_3mf\5.1.4\1241 (3).3mf,None,None,None,False,False,False,False,timeout,
+5.1.4\2024-07-04_f21fa36c34ac9 (2).3mf,E:\wzx\C3DBaseline\test_framework\artifacts\http_3mf\5.1.4\2024-07-04_f21fa36c34ac9 (2).3mf,2381.8,None,None,False,False,False,False,load_project exception: resource deadlock would occur: resource deadlock would occur,
+5.1.4\628dfda5a2d2f635c938f065 (1).3mf,E:\wzx\C3DBaseline\test_framework\artifacts\http_3mf\5.1.4\628dfda5a2d2f635c938f065 (1).3mf,25296.39,None,None,False,False,False,False,timeout,
+5.1.4\63d9bad9b67e6749317158e4.3mf,E:\wzx\C3DBaseline\test_framework\artifacts\http_3mf\5.1.4\63d9bad9b67e6749317158e4.3mf,None,None,None,False,False,False,False,timeout,
