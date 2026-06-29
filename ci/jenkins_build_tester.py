@@ -3,6 +3,7 @@
 Download a Jenkins build artifact by job/build id and run tests against it.
 """
 import argparse
+import json
 import os
 import sys
 from pathlib import Path
@@ -25,6 +26,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--artifacts-dir", default=os.getenv("ARTIFACTS_DIR", "artifacts"), help="Where to store downloaded artifacts")
     parser.add_argument("--gcode-root", default=os.getenv("GCODE_ROOT", ""), help="Root directory for pytest --gcode-root; auto-generated when omitted")
     parser.add_argument("--platform", default=os.getenv("PLATFORM", "windows"), help="Platform label used for env injection (e.g., windows/macos_x86/macos_arm64/linux)")
+    parser.add_argument("--skip-tested-build", action="store_true", default=os.getenv("SKIP_TESTED_BUILD", "").lower() in {"1", "true", "yes", "on"}, help="Skip when the resolved build was already tested")
     parser.add_argument(
         "--test-command",
         default=os.getenv("TEST_COMMAND", "pytest -q"),
@@ -50,17 +52,33 @@ def main() -> int:
         notifier.send_text("单平台构建测试失败", [msg])
         return 2
 
-    try:
-        build_number = int(args.build_id)
-    except ValueError:
-        msg = f"[error] invalid build-id: {args.build_id}"
-        print(msg, file=sys.stderr)
-        notifier.send_text("单平台构建测试失败", [msg])
-        return 2
-
     client = JenkinsClient(jenkins_base, jenkins_user, jenkins_token)
+    build_id_text = str(args.build_id).strip()
+    if build_id_text == "lastSuccessfulBuild":
+        resp = client.session.get(f"{client.base_url}/job/{args.job_name}/lastSuccessfulBuild/api/json", timeout=client.timeout)
+        resp.raise_for_status()
+        build_number = int(resp.json()["number"])
+    else:
+        try:
+            build_number = int(args.build_id)
+        except ValueError:
+            msg = f"[error] invalid build-id: {args.build_id}"
+            print(msg, file=sys.stderr)
+            notifier.send_text("单平台构建测试失败", [msg])
+            return 2
     artifacts_root = repo_root / args.artifacts_dir
     dest_dir = artifacts_root / args.platform
+    state_dir = artifacts_root / "tested_builds"
+    state_dir.mkdir(parents=True, exist_ok=True)
+    state_path = state_dir / f"{args.job_name.replace('/', '_')}_{args.platform}.json"
+    if args.skip_tested_build and state_path.exists():
+        try:
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+        except Exception:
+            state = {}
+        if int(state.get("build_number") or -1) == build_number:
+            print(f"[info] {args.job_name} #{build_number} was already tested, skipping")
+            return 0
 
     print(f"[info] downloading artifact for {args.job_name} #{build_number}")
     downloaded, artifact_url, artifacts_meta = client.download_artifact(args.job_name, build_number, args.artifact_path, dest_dir)
@@ -77,6 +95,12 @@ def main() -> int:
     env = os.environ.copy()
     env["ARTIFACTS_DIR"] = str(artifacts_root)
     env["PYTHONUNBUFFERED"] = "1"
+    existing_pythonpath = env.get("PYTHONPATH", "")
+    python_paths = [str(repo_root), str(repo_root / "test_framework")]
+    if existing_pythonpath:
+        python_paths.append(existing_pythonpath)
+    env["PYTHONPATH"] = os.pathsep.join(python_paths)
+    env["SECOND_SLICE_BASELINE_CSV"] = str(state_dir / f"{args.job_name.replace('/', '_')}_{args.platform}_second_slice_baseline.csv")
     platform_key = args.platform.upper()
     env[f"ARTIFACT_{platform_key}"] = str(downloaded)
 
@@ -115,6 +139,11 @@ def main() -> int:
     print(f"[info] running tests with command: {test_command}")
     result = run_tests(test_command, env, repo_root)
     print(f"[info] tests finished with status: {result.status}, rc={result.return_code}")
+    if result.status == "SUCCESS":
+        state_path.write_text(
+            json.dumps({"job_name": args.job_name, "platform": args.platform, "build_number": build_number}, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
     # Prefer exe URL for Windows notifications when available
     preferred_url = None
     if artifacts_meta:

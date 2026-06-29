@@ -52,48 +52,14 @@ def _is_port_free(host: str, port: int) -> bool:
 def kill_process_by_name(name="CrealityPrint.exe", timeout=15):
     """
     强制停止指定名称的进程，多策略兜底。
-    
-    Args:
-        name: 进程名称
-        timeout: 等待进程退出的超时时间（秒）
-        
-    Returns:
-        bool: 是否成功停止（或进程本来就不存在）
+    对 GUI 卡死（Not Responding）的进程，优先使用 wmic 删除。
     """
     if not is_process_running_by_name(name):
         return True
-    
+
     print(f"[SlicerProc] 发现已运行的 {name}，正在强制停止...")
-    
-    # 策略1: taskkill /IM（按名称批量杀）
-    subprocess.run(
-        ["taskkill", "/IM", name, "/T", "/F"],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        creationflags=subprocess.CREATE_NO_WINDOW,
-    )
-    time.sleep(1.0)
-    
-    if not is_process_running_by_name(name):
-        print(f"[SlicerProc] {name} 已成功停止")
-        time.sleep(1.0)
-        return True
-    
-    # 策略2: 按 PID 逐个杀
-    pids = _get_pids_by_name(name)
-    for pid in pids:
-        subprocess.run(
-            ["taskkill", "/PID", str(pid), "/T", "/F"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NO_WINDOW,
-        )
-    time.sleep(1.0)
-    
-    if not is_process_running_by_name(name):
-        print(f"[SlicerProc] {name} 已成功停止 (PID kill)")
-        time.sleep(1.0)
-        return True
-    
-    # 策略3: wmic 兜底
+
+    # 策略1: wmic 优先——对 Not Responding 的进程最可靠
     try:
         subprocess.run(
             ["wmic", "process", "where", f"name='{name}'", "delete"],
@@ -103,7 +69,41 @@ def kill_process_by_name(name="CrealityPrint.exe", timeout=15):
         )
     except Exception:
         pass
-    
+    time.sleep(1.0)
+
+    if not is_process_running_by_name(name):
+        print(f"[SlicerProc] {name} 已成功停止 (wmic)")
+        time.sleep(1.0)
+        return True
+
+    # 策略2: taskkill /IM（按名称批量杀）
+    subprocess.run(
+        ["taskkill", "/IM", name, "/T", "/F"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        creationflags=subprocess.CREATE_NO_WINDOW,
+    )
+    time.sleep(1.0)
+
+    if not is_process_running_by_name(name):
+        print(f"[SlicerProc] {name} 已成功停止 (taskkill)")
+        time.sleep(1.0)
+        return True
+
+    # 策略3: 按 PID 逐个杀
+    pids = _get_pids_by_name(name)
+    for pid in pids:
+        subprocess.run(
+            ["taskkill", "/PID", str(pid), "/T", "/F"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NO_WINDOW,
+        )
+    time.sleep(1.0)
+
+    if not is_process_running_by_name(name):
+        print(f"[SlicerProc] {name} 已成功停止 (PID kill)")
+        time.sleep(1.0)
+        return True
+
     # 等待进程完全退出
     end_time = time.time() + timeout
     while time.time() < end_time:
@@ -112,7 +112,7 @@ def kill_process_by_name(name="CrealityPrint.exe", timeout=15):
             time.sleep(1.0)
             return True
         time.sleep(0.5)
-    
+
     print(f"[SlicerProc] 警告: {name} 停止超时")
     return False
 
@@ -295,70 +295,81 @@ class EngineClient:
         self.close()
         self.connect()
 
+    @staticmethod
+    def _is_response_for(frame_cmd: str, cmd: str) -> bool:
+        """判断收到的帧是否是 cmd 的应答（而不是异步推送）。"""
+        fc = frame_cmd.lower()
+        c = cmd.lower()
+        # 匹配: cmd_respone / cmd / cmd_response / 通用 cmd_respone
+        return fc in (c, f"{c}_respone", f"{c}_response", "cmd_respone", "cmd_response")
+
+    def _try_extract_message(self) -> Optional[tuple]:
+        """从 _buf 中尝试提取一条完整的 frame_cmd;json 消息。
+        返回 (frame_cmd, payload_dict)，或 None 表示数据不完整。"""
+        sep = self._buf.find(";")
+        if sep < 0:
+            return None
+        frame_cmd = self._buf[:sep]
+        js = self._buf[sep + 1:]
+        try:
+            payload = json.loads(js)
+        except json.JSONDecodeError:
+            return None  # JSON 还没收全
+        self._buf = ""
+        return (frame_cmd, payload)
+
     def send_command(self, cmd: str, obj: Optional[dict] = None, timeout: Optional[float] = None) -> dict:
         obj = obj or {}
         data = f"{cmd};{json.dumps(obj, separators=(',', ':'))}".encode("utf-8")
         with self._lock:
             if not self._sock: self.connect()
             s = self._sock
-            s.settimeout(timeout or self.timeout)
-            #接受完所有数据再发送
-            # 先读取所有剩余数据，防止缓冲区数据干扰
-            s.settimeout(0.1)  # 设置短超时，非阻塞检查
+            effective_timeout = timeout or self.timeout
+
+            # 排空缓冲区中的旧数据
+            s.settimeout(0.1)
             try:
                 while True:
                     try:
                         chunk = s.recv(8192)
-                        if not chunk:  # 连接关闭
+                        if not chunk:
                             break
-                        # 处理读取到的数据
                         self._buf += chunk.decode("utf-8", errors="strict")
-                        # 检查是否有完整的消息
-                        while True:
-                            sep = self._buf.find(";")
-                            if sep < 0:  # 没有完整消息
-                                break
-                            frame_cmd, js = self._buf[:sep], self._buf[sep + 1:]
-                            try:
-                                json.loads(js)  # 尝试解析，验证是否完整
-                                self._buf = ""  # 清空缓冲，因为是旧消息
-                            except json.JSONDecodeError:
-                                break  # JSON 不完整，保留缓冲
+                        # 丢弃所有能解析的旧消息
+                        while self._try_extract_message() is not None:
+                            pass
                     except socket.timeout:
-                        break  # 没有更多数据
+                        break
             finally:
-                s.settimeout(timeout or self.timeout)  # 恢复原超时设置
+                s.settimeout(effective_timeout)
+
             try:
                 s.sendall(data)
             except (BrokenPipeError, ConnectionResetError, OSError):
                 self._reconnect()
                 s = self._sock
-                s.settimeout(timeout or self.timeout)
+                s.settimeout(effective_timeout)
                 s.sendall(data)
 
-            end = time.time() + (timeout or self.timeout)
+            end = time.time() + effective_timeout
             while time.time() < end:
                 try:
                     chunk = s.recv(8192)
-                    print(chunk)
                 except socket.timeout:
                     continue
                 if not chunk:
                     raise ConnectionError("server closed connection")
 
                 self._buf += chunk.decode("utf-8", errors="strict")
-                sep = self._buf.find(";")
-                if sep < 0:  # 半包
+                msg = self._try_extract_message()
+                if msg is None:
                     continue
-                frame_cmd, js = self._buf[:sep], self._buf[sep + 1:]
-                try:
-                    payload = json.loads(js)
-                except json.JSONDecodeError:
-                    continue  # JSON 还没收全
-                self._buf = ""  # 一问一答协议，清空缓冲
-                # 期望 'cmd_respone'，若未来扩展可在此分支
-                return payload
-            raise TimeoutError("no cmd_respone")
+                frame_cmd, payload = msg
+                if self._is_response_for(frame_cmd, cmd):
+                    return payload
+                # 异步推送（如 app_ready）—— 跳过，继续等真正的应答
+
+            raise TimeoutError(f"no response for '{cmd}' within {effective_timeout}s")
 
     def ping(self) -> dict:
         return self.send_command("ping", {})

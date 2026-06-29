@@ -35,6 +35,7 @@ def creality_printer_path():
             "C:/Program Files/Creality/Creality Print 7.0 Beta/CrealityPrint.exe",
             "C:/Program Files/Creality/Creality Print/CrealityPrint.exe",
             str(Path.home() / "AppData/Local/Programs/Creality/CrealityPrint.exe"),
+            "E:/wzx/C3DSlicer/C3DSlicer/build_unified/src/RelWithDebInfo/CrealityPrint.exe",
             "E:/wzx/C3DSlicer/C3DSlicer/build_unified/src/Release/CrealityPrint.exe",
         ]
         

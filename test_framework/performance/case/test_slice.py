@@ -12,6 +12,7 @@ import json
 import os
 import re
 import shutil
+import subprocess
 import sys
 import time
 import zipfile
@@ -29,6 +30,7 @@ from test_framework.engine_params.src.slicerctl.session import (
 )
 from test_framework.engine_params.conftest import wait_for_file_written
 from test_framework.engine_params.src.slicerctl.constants import SLICE_BTN_ID
+from test_framework.performance.summary import build_efficiency_summary, write_summary_files
 
 
 def _safe_print(*args, **kwargs) -> None:
@@ -143,6 +145,41 @@ def _load_manifest_cases() -> List[Dict]:
 
 
 HTTP_3MF_ROOT_DEFAULT = "http://172.20.180.14/shared/test_3mf/"
+SECOND_SLICE_MODEL_DEFAULT = Path("artifacts") / "second_slice" / "切片测试_无支撑.3mf"
+
+# Cached CrealityPrint product version for the exe under test (read once per process).
+_EXE_VERSION_CACHE: Dict[str, str] = {}
+
+
+def _read_exe_version(exe_path: str) -> str:
+    """Read the CrealityPrint product version (e.g. 7.1.1.4472) from the exe's
+    Windows file version resource. Returns "unknown" when unavailable so the
+    test never blocks on a missing version label.
+    """
+    resolved = str(Path(exe_path).resolve())
+    if resolved in _EXE_VERSION_CACHE:
+        return _EXE_VERSION_CACHE[resolved]
+    version = "unknown"
+    if sys.platform.startswith("win") and Path(resolved).exists():
+        try:
+            ps = (
+                "(Get-Item -LiteralPath '%s').VersionInfo.ProductVersion"
+                % resolved.replace("'", "''")
+            )
+            out = subprocess.run(
+                ["powershell", "-NoProfile", "-Command", ps],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                check=False,
+            )
+            v = (out.stdout or "").strip()
+            if v:
+                version = v
+        except Exception:  # noqa: BLE001
+            version = "unknown"
+    _EXE_VERSION_CACHE[resolved] = version
+    return version
 
 
 def _http_3mf_root() -> str:
@@ -297,6 +334,22 @@ def _download_http_3mf_files() -> List[Dict]:
 def _collect_feishu_cases() -> List[Dict]:
     global _FEISHU_CASES, _FEISHU_ERROR
     if _FEISHU_CASES is not None:
+        return _FEISHU_CASES
+
+    fixed_model = Path(os.getenv("SECOND_SLICE_MODEL", str(SECOND_SLICE_MODEL_DEFAULT))).resolve()
+    if fixed_model.exists():
+        _FEISHU_CASES = [
+            {
+                "record_id": fixed_model.name,
+                "name": fixed_model.name,
+                "path": str(fixed_model),
+                "title": "second_slice/" + fixed_model.name,
+            }
+        ]
+        return _FEISHU_CASES
+    if os.getenv("SECOND_SLICE_MODEL"):
+        _FEISHU_CASES = []
+        _FEISHU_ERROR = f"SECOND_SLICE_MODEL points to non-existing path: {fixed_model}"
         return _FEISHU_CASES
 
     # Optional: only use local manifest for debugging, skip HTTP download.
@@ -460,15 +513,33 @@ def _extract_slicing_progress(ret: Dict) -> Optional[Dict]:
 
 
 def _is_slicing_done(progress: Dict) -> bool:
-    all_plate_finished = progress.get("all_plate_finished")
-    
-    return all_plate_finished
+    # The engine exposes a slicing state machine via get_slicing_progress:
+    #   "began" / "progress" / "cancelled" -> slice is in flight, NOT done
+    #   "completed"                         -> slice just finished (transient)
+    #   "no_slicing"                        -> idle; no slice running right now
+    # The "completed" state is transient: the SlicingProgressNotification resets
+    # to SP_NO_SLICING shortly after a slice finishes, so polling almost never
+    # observes "completed". After a slice completes the engine sits at
+    # state="no_slicing" with all_plate_finished=True (the on-disk result is
+    # ready), which is the stable post-slice signal we must rely on.
+    #
+    # "progress"/"began"/"cancelled" always mean still working, even if a stale
+    # previous result keeps all_plate_finished True (re-slice case). For any
+    # other state (completed / no_slicing / unknown / missing) the on-disk
+    # all_plate_finished flag is the completion authority.
+    state = str(progress.get("state") or "").lower()
+    if state in {"progress", "began", "cancelled"}:
+        return False
+    if state == "completed":
+        return True
+    return bool(progress.get("all_plate_finished"))
 
 
 def _wait_for_slicing_done(
     send_cmd_handle,
     timeout_s: float,
     poll_interval_s: float = 0.5,
+    wait_for_transition: bool = False,
 ) -> Dict:
     start = time.perf_counter()
     deadline = time.monotonic() + max(0.0, float(timeout_s))
@@ -477,6 +548,11 @@ def _wait_for_slicing_done(
     last_pct = None
     last_change_ts = time.monotonic()
     stall_seconds = 120.0
+    # When re-slicing, the "all_plate_finished" flag stays True from the previous
+    # slice result until the new slice overwrites it. wait_for_transition requires
+    # observing at least one False (slice in progress) before accepting True, so a
+    # stale True cannot short-circuit the wait of a subsequent slice.
+    saw_unfinished = not wait_for_transition
 
     while time.monotonic() < deadline:
         progress_ret = _run_command(
@@ -506,7 +582,9 @@ def _wait_for_slicing_done(
                             "progress": last_progress,
                             "error": f"slicing progress stalled for {stall_seconds}s (percentage={pct_str}, state={state_str})",
                         }
-                if _is_slicing_done(progress):
+                if not _is_slicing_done(progress):
+                    saw_unfinished = True
+                elif saw_unfinished:
                     return {
                         "ok": True,
                         "crashed": False,
@@ -543,32 +621,40 @@ def _write_report_line(report_path: Path, row: Dict) -> None:
     report_path.parent.mkdir(parents=True, exist_ok=True)
     header = [
         "record_id",
-        "file",
+        "version",
         "import_ms",
+        "first_slice_ms",
+        "move_ms",
+        "second_slice_trials",
+        "second_slice_ms",
         "slice_ms",
         "export_ms",
         "import_ok",
+        "move_ok",
         "slice_ok",
         "export_ok",
         "crashed",
         "error",
-        "gcode_path",
     ]
     if not report_path.exists():
         report_path.write_text(",".join(header) + "\n", encoding="utf-8")
 
     ordered = [
         row.get("record_id", ""),
-        row.get("file", ""),
+        f"{row.get('version', '')}",
         f"{row.get('import_ms', '')}",
+        f"{row.get('first_slice_ms', '')}",
+        f"{row.get('move_ms', '')}",
+        f"{row.get('second_slice_trials', '')}",
+        f"{row.get('second_slice_ms', '')}",
         f"{row.get('slice_ms', '')}",
         f"{row.get('export_ms', '')}",
         str(row.get("import_ok", "")),
+        str(row.get("move_ok", "")),
         str(row.get("slice_ok", "")),
         str(row.get("export_ok", "")),
         str(row.get("crashed", "")),
         row.get("error", "") or "",
-        row.get("gcode_path", "") or "",
     ]
     ordered = ["" if v is None else str(v) for v in ordered]
     with report_path.open("a", encoding="utf-8") as f:
@@ -679,11 +765,24 @@ def engine_session_send_cmd(engine_injector_perf):
 
 
 @pytest.fixture(scope="session")
+def exe_version_perf(pytestconfig):
+    """CrealityPrint product version label for the exe under test (read once)."""
+    slicer_exe = pytestconfig.getoption("--slicer-exe")
+    if slicer_exe:
+        exe_path = slicer_exe
+    else:
+        exe_path = os.getenv("CREALITY_PRINTER_PATH", "")
+    version = _read_exe_version(exe_path) if exe_path else "unknown"
+    _safe_print(f"[version] CrealityPrint under test: {version}")
+    return version
+
+
+@pytest.fixture(scope="session")
 def baseline_data():
     """
     Load baseline data from feishu_slice_report.csv at test startup.
     """
-    baseline_path = Path("performance") / "data" / "feishu_slice_report.csv"
+    baseline_path = Path(os.getenv("SECOND_SLICE_BASELINE_CSV") or Path("performance") / "data" / "feishu_slice_report.csv")
     baseline_data = {}
     
     if baseline_path.exists():
@@ -696,9 +795,7 @@ def baseline_data():
                     reader = csv.DictReader(f)
                     for row in reader:
                         record_id = (row.get("record_id") or "").strip()
-                        file_value = row.get("file") or ""
-                        filename = Path(file_value).name if file_value else ""
-                        key = record_id or filename
+                        key = record_id
                         if not key:
                             continue
                         baseline_data[key] = row
@@ -718,6 +815,11 @@ def baseline_data():
     return baseline_data
 
 
+@pytest.fixture(scope="session")
+def baseline_snapshot(baseline_data):
+    return {key: dict(value) for key, value in baseline_data.items()}
+
+
 def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     timeouts = {
         "load": int(os.getenv("SLICER_LOAD_TIMEOUT", "90")),
@@ -729,17 +831,47 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     project_name = os.getenv("SLICER_PROJECT_NAME", "pytest_case_project")
     result = {
         "record_id": "",
-        "file": str(model_path),
         "import_ms": None,
+        "first_slice_ms": None,
+        "move_ms": None,
+        "second_slice_ms": None,
+        "second_slice_trials": [],  # raw ms of each second-slice repeat
         "slice_ms": None,
         "export_ms": None,
         "import_ok": False,
+        "move_ok": False,
         "slice_ok": False,
         "export_ok": False,
         "crashed": False,
         "error": None,
-        "gcode_path": None,
     }
+
+    def run_slice_once(label: str, wait_for_transition: bool = False) -> Optional[float]:
+        slice_ret = _run_command(
+            send_cmd_handle,
+            "trigger_slice",
+            {"id": SLICE_BTN_ID},
+            timeout=timeouts["slice"],
+        )
+        result["crashed"] = result["crashed"] or slice_ret["crashed"]
+        if not slice_ret["ok"]:
+            result["slice_ok"] = False
+            result["error"] = slice_ret["error"] or f"{label} trigger_slice failed"
+            return None
+
+        slice_start = time.perf_counter()
+        wait_ret = _wait_for_slicing_done(
+            send_cmd_handle,
+            timeout_s=float(timeouts["slice"]),
+            poll_interval_s=float(os.getenv("SLICER_PROGRESS_POLL", "1")),
+            wait_for_transition=wait_for_transition,
+        )
+        result["crashed"] = result["crashed"] or wait_ret["crashed"]
+        if not wait_ret["ok"]:
+            result["slice_ok"] = False
+            result["error"] = wait_ret["error"] or f"{label} slicing did not finish"
+            return None
+        return round((time.perf_counter() - slice_start) * 1000, 2)
 
     # Reset project to avoid residue between runs.
     reset_ret = _run_command(
@@ -788,33 +920,48 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
             if error["level"] ==9:
                 result["error"] = error["type"]
                 return result
-    # Slice
-    slice_ret = _run_command(
-        send_cmd_handle,
-        "trigger_slice",
-        {"id": SLICE_BTN_ID},
-        timeout=timeouts["slice"],
-    )
-    result["crashed"] = result["crashed"] or slice_ret["crashed"]
-    if not slice_ret["ok"]:
-        result["slice_ok"] = False
-        result["error"] = slice_ret["error"]
+    first_slice_ms = run_slice_once("first")
+    result["first_slice_ms"] = first_slice_ms
+    if first_slice_ms is None:
         return result
 
-    # Timer starts after trigger_slice is ACKed — measures pure engine slicing duration.
-    slice_start = time.perf_counter()
-    # Wait until slicing progress reaches 100% (or engine reports export-ready),
-    # then continue with export_gcode.
-    wait_ret = _wait_for_slicing_done(
+    move_ret = _run_command(
         send_cmd_handle,
-        timeout_s=float(timeouts["slice"]),
-        poll_interval_s=float(os.getenv("SLICER_PROGRESS_POLL", "5")),
+        "move_model_instance",
+        {
+            "object_index": int(os.getenv("SECOND_SLICE_OBJECT_INDEX", "0")),
+            "instance_index": int(os.getenv("SECOND_SLICE_INSTANCE_INDEX", "0")),
+            "delta_x": float(os.getenv("SECOND_SLICE_MOVE_X", "10")),
+            "delta_y": float(os.getenv("SECOND_SLICE_MOVE_Y", "0")),
+            "delta_z": float(os.getenv("SECOND_SLICE_MOVE_Z", "0")),
+        },
+        timeout=int(os.getenv("SLICER_MOVE_TIMEOUT", "30")),
     )
-    result["crashed"] = result["crashed"] or wait_ret["crashed"]
-    result["slice_ok"] = wait_ret["ok"]
-    result["slice_ms"] = round((time.perf_counter() - slice_start) * 1000, 2) if wait_ret["ok"] else None
-    if not wait_ret["ok"]:
-        result["error"] = wait_ret["error"]
+    result["move_ok"] = move_ret["ok"]
+    result["move_ms"] = round(move_ret["elapsed_ms"], 2) if move_ret["ok"] else None
+    result["crashed"] = result["crashed"] or move_ret["crashed"]
+    if not move_ret["ok"]:
+        result["error"] = move_ret["error"] or "move_model_instance failed"
+        return result
+
+    # Second slice (slice after moving the model). One first slice + one
+    # moved-model slice is one test group. Repeat >1 only when a more stable
+    # mean is explicitly requested via SECOND_SLICE_REPEAT.
+    repeat = max(1, int(os.getenv("SECOND_SLICE_REPEAT", "1")))
+    second_trials = []
+    for i in range(repeat):
+        # Re-slicing: a previous slice result is already on disk, so use the
+        # live state signal (progress->completed) to avoid a stale "finished" flag.
+        trial = run_slice_once(f"second-{i + 1}", wait_for_transition=True)
+        if trial is None:
+            return result
+        second_trials.append(trial)
+    result["second_slice_trials"] = second_trials
+    second_slice_ms = round(sum(second_trials) / len(second_trials), 2)
+    result["second_slice_ms"] = second_slice_ms
+    result["slice_ms"] = second_slice_ms
+    result["slice_ok"] = second_slice_ms is not None
+    if second_slice_ms is None:
         return result
 
     # Export gcode
@@ -839,7 +986,6 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     result["export_ok"] = export_ret["ok"] and zip_ok
     result["export_ms"] = round(export_ret["elapsed_ms"], 2) if result["export_ok"] else None
     result["crashed"] = result["crashed"] or export_ret["crashed"]
-    result["gcode_path"] = str(output_gcode)
     if not result["export_ok"]:
         result["error"] = export_ret["error"] or "gcode not generated"
         return result
@@ -863,6 +1009,7 @@ def test_feishu_slice(
     engine_manager_perf,
     performance_gcode_dir,
     baseline_data,  # Use the fixture for baseline data
+    exe_version_perf,
 ):
     if not _FEISHU_CASES:
         pytest.skip(_FEISHU_ERROR or "Feishu dataset not configured.")
@@ -889,53 +1036,77 @@ def test_feishu_slice(
     
     baseline_row_data = {
         "record_id": current_filename,
-        "file": str(model_path),
+        "version": str(exe_version_perf),
         "import_ms": str(result["import_ms"]),
+        "first_slice_ms": str(result["first_slice_ms"]),
+        "move_ms": str(result["move_ms"]),
+        "second_slice_trials": ";".join(str(t) for t in result["second_slice_trials"]),
+        "second_slice_ms": str(result["second_slice_ms"]),
         "slice_ms": str(result["slice_ms"]),
         "export_ms": str(result["export_ms"]),
         "import_ok": str(result["import_ok"]),
+        "move_ok": str(result["move_ok"]),
         "slice_ok": str(result["slice_ok"]),
         "export_ok": str(result["export_ok"]),
         "crashed": str(result["crashed"]),
         "error": result["error"] or "",
-        "gcode_path": str(result["gcode_path"]) if result["gcode_path"] else ""
     }
     
     if key in baseline_data:
         # Compare with baseline
         baseline_row = baseline_data[key]
         _safe_print(f"Comparing with baseline for {key}...")
-        
-        # Assert key metrics match baseline
-        assert result["crashed"] == (baseline_row["crashed"] == "True"), f"Crashed status mismatch with baseline for {key}"
-        assert result["import_ok"] == (baseline_row["import_ok"] == "True"), f"Import status mismatch with baseline for {key}"
-        assert result["slice_ok"] == (baseline_row["slice_ok"] == "True"), f"Slice status mismatch with baseline for {key}"
-        assert result["export_ok"] == (baseline_row["export_ok"] == "True"), f"Export status mismatch with baseline for {key}"
-        
-        _safe_print(f"OK All metrics match baseline for {key}")
+
+        # A baseline row that itself failed (crashed/import/move/slice/export not ok)
+        # is stale and cannot be a stability reference: the whole point of this job
+        # is to detect behavior change across builds, and a freshly fixed build must
+        # be allowed to overwrite a previously broken result. summary.py already
+        # skips failed baselines when computing the regression verdict, so the
+        # consistency checks here are only meaningful against a healthy baseline.
+        def _baseline_failed(row):
+            return (
+                str(row.get("crashed", "")).strip().lower() == "true"
+                or str(row.get("import_ok", "")).strip().lower() != "true"
+                or str(row.get("move_ok", "")).strip().lower() != "true"
+                or str(row.get("slice_ok", "")).strip().lower() != "true"
+                or str(row.get("export_ok", "")).strip().lower() != "true"
+            )
+
+        if _baseline_failed(baseline_row):
+            _safe_print(f"Baseline for {key} is a failed/stale run; allowing current run to overwrite it.")
+        else:
+            # Assert key metrics match baseline (only against a healthy baseline)
+            assert result["crashed"] == (baseline_row["crashed"] == "True"), f"Crashed status mismatch with baseline for {key}"
+            assert result["import_ok"] == (baseline_row["import_ok"] == "True"), f"Import status mismatch with baseline for {key}"
+            if "move_ok" in baseline_row:
+                assert result["move_ok"] == (baseline_row.get("move_ok") == "True"), f"Move status mismatch with baseline for {key}"
+            assert result["slice_ok"] == (baseline_row["slice_ok"] == "True"), f"Slice status mismatch with baseline for {key}"
+            assert result["export_ok"] == (baseline_row["export_ok"] == "True"), f"Export status mismatch with baseline for {key}"
+
+            _safe_print(f"OK All metrics match baseline for {key}")
     else:
-        _safe_print(f"Updating baseline data for {key}...")
-        baseline_data[key] = baseline_row_data
+        _safe_print(f"New baseline entry for {key}")
+
+    # Always update baseline with latest results
+    baseline_data[key] = baseline_row_data
     
-    # Always assert basic success regardless of baseline
-    #assert not result["crashed"], f"App crashed when handling {model_path}"
-    #assert result["import_ok"], f"Import failed for {model_path}: {result['error']}"
-    #assert result["slice_ok"], f"Slice failed for {model_path}: {result['error']}"
-    #assert result["export_ok"], f"Export failed for {model_path}: {result['error']}"
+    assert not result["crashed"], f"App crashed when handling {model_path}"
+    assert result["import_ok"], f"Import failed for {model_path}: {result['error']}"
+    assert result["first_slice_ms"] is not None, f"First slice failed for {model_path}: {result['error']}"
+    assert result["move_ok"], f"Move model failed for {model_path}: {result['error']}"
+    assert result["slice_ok"], f"Second slice failed for {model_path}: {result['error']}"
+    assert result["second_slice_ms"] is not None, f"Second slice timing missing for {model_path}: {result['error']}"
+    assert result["export_ok"], f"Export failed for {model_path}: {result['error']}"
 
 
 @pytest.fixture(scope="session", autouse=True)
-def write_report_to_feishu_after_tests(baseline_data, pytestconfig):
+def write_report_to_feishu_after_tests(baseline_data, baseline_snapshot, pytestconfig):
     """
     Write the feishu_slice_report.csv to a new Feishu table after all tests are completed.
     """
     yield  # This is the test execution phase
 
-    if not _resolve_notify_enabled(pytestconfig):
-        _safe_print("FEISHU notify disabled by --feishu-notify/FEISHU_NOTIFY, skip post-test report step.")
-        return
-    
-    # This runs after all tests are completed
+    # Always write CSV report regardless of feishu-notify setting
     report_path = Path("performance") / "data" / "feishu_slice_report.csv"
     
     # Write all baseline data to CSV file
@@ -949,34 +1120,62 @@ def write_report_to_feishu_after_tests(baseline_data, pytestconfig):
         # Write CSV header
         header = [
             "record_id",
-            "file",
+            "version",
             "import_ms",
+            "first_slice_ms",
+            "move_ms",
+            "second_slice_trials",
+            "second_slice_ms",
             "slice_ms",
             "export_ms",
             "import_ok",
+            "move_ok",
             "slice_ok",
             "export_ok",
             "crashed",
             "error",
-            "gcode_path",
         ]
         
-        with open(report_path, "w", encoding="utf-8") as f:
-            f.write(",".join(header) + "\n")
-            
-            # Write all baseline records
-            for filename, record in baseline_data.items():
-                # Ensure all fields are present and in order
-                row = []
-                for field in header:
-                    # Convert all values to string to avoid TypeError during join
-                    row.append(str(record.get(field, "")))
-                # Join and write the row
-                f.write(",".join(row) + "\n")
-        
-        _safe_print(f"OK Wrote {len(baseline_data)} records to {report_path}")
+        # Retry to handle file-lock (e.g. VS Code has the file open)
+        last_exc = None
+        for _attempt in range(5):
+            try:
+                with open(report_path, "w", encoding="utf-8") as f:
+                    f.write(",".join(header) + "\n")
+                    for filename, record in baseline_data.items():
+                        row = [str(record.get(field, "")) for field in header]
+                        f.write(",".join(row) + "\n")
+                _safe_print(f"OK Wrote {len(baseline_data)} records to {report_path}")
+                last_exc = None
+                break
+            except PermissionError as exc:
+                last_exc = exc
+                _safe_print(f"[csv-write] file locked, retrying ({_attempt + 1}/5)...")
+                time.sleep(2)
+        if last_exc is not None:
+            _safe_print(f"[csv-write] failed after retries: {last_exc}")
+
+    summary = build_efficiency_summary(
+        baseline_snapshot,
+        baseline_data,
+        regression_percent=float(os.getenv("SECOND_SLICE_REGRESSION_PERCENT", "5")),
+        min_delta_ms=float(os.getenv("SECOND_SLICE_MIN_DELTA_MS", "1000")),
+    )
+    markdown_path, json_path = write_summary_files(summary, report_path.parent)
+    _safe_print(f"OK Wrote second-slice efficiency summary: {markdown_path}")
+    _safe_print(f"OK Wrote second-slice efficiency summary json: {json_path}")
     
     # Check if report file exists
     if not report_path.exists():
         _safe_print(f"Report file not found: {report_path}")
         return
+
+    baseline_csv = os.getenv("SECOND_SLICE_BASELINE_CSV")
+    if baseline_csv:
+        try:
+            baseline_csv_path = Path(baseline_csv)
+            baseline_csv_path.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(report_path, baseline_csv_path)
+            _safe_print(f"OK Updated persistent second-slice baseline: {baseline_csv_path}")
+        except Exception as exc:  # noqa: BLE001
+            _safe_print(f"[baseline-copy] failed to update persistent baseline: {exc}")

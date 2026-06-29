@@ -7,15 +7,19 @@ pipeline {
   parameters {
     string(name: 'AGENT_LABEL', defaultValue: 'tester', description: 'Jenkins agent label to run the pipeline on')
     string(name: 'JOB_NAME', defaultValue: 'CrealityPrint_Release_Package', description: 'Jenkins job name to download from')
-    string(name: 'BUILD_ID', defaultValue: '1497', description: 'Jenkins build number')
+    string(name: 'BUILD_ID', defaultValue: 'lastSuccessfulBuild', description: 'Jenkins build number or lastSuccessfulBuild')
     string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
     string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
-    string(name: 'TEST_COMMAND', defaultValue: '-m "engine_params or performance"', description: 'Override test command (optional)')
+    string(name: 'TEST_COMMAND', defaultValue: '-m performance', description: 'Override test command (optional)')
     string(name: 'ALLURE_CMD', defaultValue: 'Allure', description: 'Allure commandline tool name (Global Tool); leave empty to use default')
   }
   environment {
     POWERSHELL_HOME = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
     PYTHONIOENCODING = 'utf-8'
+    SKIP_TESTED_BUILD = 'true'
+  }
+  triggers {
+    cron('H/30 * * * *')
   }
   stages {
     stage('Checkout') {
@@ -50,8 +54,9 @@ if "%BUILD_ID%"=="" (
 set "EXTRA_ARGS="
 if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ARTIFACT_PATH%\""
 if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
+if not "%TEST_COMMAND%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%TEST_COMMAND%\""
 
-python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" !EXTRA_ARGS!
+python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --skip-tested-build !EXTRA_ARGS!
 endlocal
 '''
           }
@@ -79,9 +84,9 @@ endlocal
         }
       }
     }
-    stage('Archive performance CSV') {
+    stage('Archive performance reports') {
       steps {
-        archiveArtifacts artifacts: 'test_framework/performance/data/*.csv', allowEmptyArchive: true
+        archiveArtifacts artifacts: 'test_framework/performance/data/*.csv,test_framework/performance/data/*.md,test_framework/performance/data/*.json', allowEmptyArchive: true
       }
     }
   }
