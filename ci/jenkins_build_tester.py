@@ -40,14 +40,14 @@ def main() -> int:
     load_env_file(repo_root)
     args = parse_args()
 
-    jenkins_base = os.getenv("JENKINS_BASE_URL")
+    jenkins_base = os.getenv("JENKINS_BASE_URL") or os.getenv("JENKINS_URL")
     jenkins_user = os.getenv("JENKINS_USER")
     jenkins_token = os.getenv("JENKINS_TOKEN")
     feishu_webhook = os.getenv("FEISHU_WEBHOOK")
 
     notifier = FeishuNotifier(feishu_webhook)
-    if not all([jenkins_base, jenkins_user, jenkins_token]):
-        msg = "[error] JENKINS_BASE_URL / JENKINS_USER / JENKINS_TOKEN are required"
+    if not jenkins_base:
+        msg = "[error] JENKINS_BASE_URL or JENKINS_URL is required"
         print(msg, file=sys.stderr)
         notifier.send_text("单平台构建测试失败", [msg])
         return 2

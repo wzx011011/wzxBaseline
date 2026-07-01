@@ -45,10 +45,11 @@ class TestOutcome:
 
 
 class JenkinsClient:
-    def __init__(self, base_url: str, username: str, token: str, timeout: int = 15):
+    def __init__(self, base_url: str, username: Optional[str] = None, token: Optional[str] = None, timeout: int = 15):
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
-        self.session.auth = (username, token)
+        if username and token:
+            self.session.auth = (username, token)
         self.timeout = timeout
         self.crumb: Optional[Dict[str, str]] = None
 
