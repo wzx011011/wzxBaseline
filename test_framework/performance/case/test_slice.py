@@ -109,6 +109,16 @@ def _resolve_notify_enabled(pytestconfig) -> bool:
     return _truthy_text(value)
 
 
+def _result_row_failed(row: Dict) -> bool:
+    return (
+        str(row.get("crashed", "")).strip().lower() == "true"
+        or str(row.get("import_ok", "")).strip().lower() != "true"
+        or str(row.get("move_ok", "")).strip().lower() != "true"
+        or str(row.get("slice_ok", "")).strip().lower() != "true"
+        or str(row.get("export_ok", "")).strip().lower() != "true"
+    )
+
+
 def _manifest_path() -> Path:
     download_dir = os.getenv("FEISHU_DOWNLOAD_DIR")
     base = Path(download_dir) if download_dir else Path("artifacts") / "feishu_3mf"
@@ -687,6 +697,14 @@ def engine_manager_perf(pytestconfig):
     
     # Resolve to absolute path
     exe_path = str(Path(exe_path).resolve())
+    slicer_datadir = pytestconfig.getoption("--slicer-datadir") or os.getenv("SLICER_DATADIR", "")
+    cli_args = [exe_path, "test#157369"]
+    if slicer_datadir:
+        datadir_path = Path(slicer_datadir).resolve()
+        datadir_path.mkdir(parents=True, exist_ok=True)
+        cli_args.append(f"--datadir={datadir_path}")
+        _safe_print(f"[datadir] CrealityPrint isolated data dir: {datadir_path}")
+
     host = os.getenv("SLICER_TEST_HOST", "127.0.0.1")
     port = int(os.getenv("SLICER_TEST_PORT", "12345"))
     stdout_log = Path(os.getenv("SLICER_STDOUT_LOG", "artifacts/slicer_stdout.log")).resolve()
@@ -703,7 +721,7 @@ def engine_manager_perf(pytestconfig):
         return EngineSession(
             exe_path=exe_path,
             log_path=str(stdout_log),
-            cli_args=[exe_path, "test#157369"],
+            cli_args=cli_args,
             host=host,
             port=port,
             timeout=session_timeout,
@@ -1063,16 +1081,7 @@ def test_feishu_slice(
         # be allowed to overwrite a previously broken result. summary.py already
         # skips failed baselines when computing the regression verdict, so the
         # consistency checks here are only meaningful against a healthy baseline.
-        def _baseline_failed(row):
-            return (
-                str(row.get("crashed", "")).strip().lower() == "true"
-                or str(row.get("import_ok", "")).strip().lower() != "true"
-                or str(row.get("move_ok", "")).strip().lower() != "true"
-                or str(row.get("slice_ok", "")).strip().lower() != "true"
-                or str(row.get("export_ok", "")).strip().lower() != "true"
-            )
-
-        if _baseline_failed(baseline_row):
+        if _result_row_failed(baseline_row):
             _safe_print(f"Baseline for {key} is a failed/stale run; allowing current run to overwrite it.")
         else:
             # Assert key metrics match baseline (only against a healthy baseline)
@@ -1172,6 +1181,14 @@ def write_report_to_feishu_after_tests(baseline_data, baseline_snapshot, pytestc
 
     baseline_csv = os.getenv("SECOND_SLICE_BASELINE_CSV")
     if baseline_csv:
+        update_baseline = _truthy_text(os.getenv("SECOND_SLICE_UPDATE_BASELINE", ""))
+        failed_rows = [record for record in baseline_data.values() if _result_row_failed(record)]
+        if not update_baseline:
+            _safe_print(f"Persistent second-slice baseline is read-only for this run: {baseline_csv}")
+            return
+        if failed_rows:
+            _safe_print(f"Skip updating persistent second-slice baseline because {len(failed_rows)} current row(s) failed.")
+            return
         try:
             baseline_csv_path = Path(baseline_csv)
             baseline_csv_path.parent.mkdir(parents=True, exist_ok=True)

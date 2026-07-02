@@ -26,6 +26,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--artifacts-dir", default=os.getenv("ARTIFACTS_DIR", "artifacts"), help="Where to store downloaded artifacts")
     parser.add_argument("--gcode-root", default=os.getenv("GCODE_ROOT", ""), help="Root directory for pytest --gcode-root; auto-generated when omitted")
     parser.add_argument("--platform", default=os.getenv("PLATFORM", "windows"), help="Platform label used for env injection (e.g., windows/macos_x86/macos_arm64/linux)")
+    parser.add_argument("--baseline-build-id", default=os.getenv("BASELINE_BUILD_ID", "1793"), help="Fixed Jenkins build number used as the second-slice baseline")
+    parser.add_argument("--update-baseline", action="store_true", default=os.getenv("UPDATE_BASELINE", "").lower() in {"1", "true", "yes", "on"}, help="Allow updating the persistent second-slice baseline CSV")
     parser.add_argument("--skip-tested-build", action="store_true", default=os.getenv("SKIP_TESTED_BUILD", "").lower() in {"1", "true", "yes", "on"}, help="Skip when the resolved build was already tested")
     parser.add_argument(
         "--test-command",
@@ -71,6 +73,12 @@ def main() -> int:
     state_dir = artifacts_root / "tested_builds"
     state_dir.mkdir(parents=True, exist_ok=True)
     state_path = state_dir / f"{args.job_name.replace('/', '_')}_{args.platform}.json"
+    baseline_csv = state_dir / f"{args.job_name.replace('/', '_')}_{args.platform}_second_slice_baseline.csv"
+    baseline_build_text = str(args.baseline_build_id).strip()
+    try:
+        baseline_build_number = int(baseline_build_text)
+    except ValueError:
+        baseline_build_number = -1
     test_args = (args.test_command or "").strip()
     if not test_args:
         test_args = "-q"
@@ -111,7 +119,14 @@ def main() -> int:
     if existing_pythonpath:
         python_paths.append(existing_pythonpath)
     env["PYTHONPATH"] = os.pathsep.join(python_paths)
-    env["SECOND_SLICE_BASELINE_CSV"] = str(state_dir / f"{args.job_name.replace('/', '_')}_{args.platform}_second_slice_baseline.csv")
+    env["SECOND_SLICE_BASELINE_CSV"] = str(baseline_csv)
+    env["SECOND_SLICE_BASELINE_BUILD_ID"] = str(args.baseline_build_id)
+    allow_update_baseline = args.update_baseline or (build_number == baseline_build_number and not baseline_csv.exists())
+    env["SECOND_SLICE_UPDATE_BASELINE"] = "1" if allow_update_baseline else "0"
+    print(
+        f"[info] second-slice baseline: build #{args.baseline_build_id}, "
+        f"csv={baseline_csv}, update={'on' if allow_update_baseline else 'off'}"
+    )
     platform_key = args.platform.upper()
     env[f"ARTIFACT_{platform_key}"] = str(downloaded)
 
@@ -132,11 +147,18 @@ def main() -> int:
 
     gcode_root = Path(args.gcode_root).resolve() if args.gcode_root else (artifacts_root / "gcode" / args.platform / str(build_number)).resolve()
     gcode_root.mkdir(parents=True, exist_ok=True)
+    slicer_datadir = (artifacts_root / "slicer_data" / args.platform / str(build_number)).resolve()
+    if slicer_datadir.exists():
+        import shutil
+        shutil.rmtree(slicer_datadir, ignore_errors=True)
+    slicer_datadir.mkdir(parents=True, exist_ok=True)
+    print(f"[info] using isolated slicer datadir: {slicer_datadir}")
 
     slicer_arg = f' --slicer-exe="{slicer_exe}"' if slicer_exe else ""
     gcode_root_arg = "" if "--gcode-root" in test_args else f' --gcode-root="{gcode_root}"'
+    slicer_datadir_arg = "" if "--slicer-datadir" in test_args else f' --slicer-datadir="{slicer_datadir}"'
     test_command = (
-        f"cd .\\test_framework\\&&python -u -m pytest {test_args}{slicer_arg}{gcode_root_arg}"
+        f"cd .\\test_framework\\&&python -u -m pytest {test_args}{slicer_arg}{gcode_root_arg}{slicer_datadir_arg}"
         " -v --alluredir=../allure-results --capture=tee-sys"
     )
 

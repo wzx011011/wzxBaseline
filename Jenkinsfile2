@@ -8,6 +8,8 @@ pipeline {
     string(name: 'AGENT_LABEL', defaultValue: 'winTestServer_2', description: 'Jenkins agent label to run the pipeline on')
     string(name: 'JOB_NAME', defaultValue: 'CrealityPrint_Release_Package', description: 'Jenkins job name to download from')
     string(name: 'BUILD_ID', defaultValue: 'lastSuccessfulBuild', description: 'Jenkins build number or lastSuccessfulBuild')
+    string(name: 'BASELINE_BUILD_ID', defaultValue: '1793', description: 'Fixed baseline build number for second-slice comparison')
+    booleanParam(name: 'UPDATE_BASELINE', defaultValue: false, description: 'Allow updating the persistent second-slice baseline CSV')
     string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
     string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
     string(name: 'TEST_COMMAND', defaultValue: 'performance/case/test_slice.py::test_feishu_slice -m performance', description: 'Override test command (optional)')
@@ -55,6 +57,8 @@ set "EXTRA_ARGS="
 if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ARTIFACT_PATH%\""
 if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
 if not "%TEST_COMMAND%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%TEST_COMMAND%\""
+if not "%BASELINE_BUILD_ID%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --baseline-build-id \"%BASELINE_BUILD_ID%\""
+if /I "%UPDATE_BASELINE%"=="true" set "EXTRA_ARGS=!EXTRA_ARGS! --update-baseline"
 
 python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --skip-tested-build !EXTRA_ARGS!
 endlocal
