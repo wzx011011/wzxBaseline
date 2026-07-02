@@ -225,6 +225,26 @@ def test_version_comparison_skips_failed_rows():
     assert summary["overall_rate_change"] is None
     # still recorded as a failure
     assert summary["counts"]["failures"] == 1
+    assert summary["status"] == "INCONCLUSIVE"
+
+
+def test_build_efficiency_summary_status_inconclusive_for_new_failed_case():
+    current = {
+        "model.3mf": {
+            "record_id": "model.3mf",
+            "version": "2.0",
+            "first_slice_ms": "10000.0",
+            "second_slice_ms": "",
+            "import_ok": "True", "move_ok": "False", "slice_ok": "False", "export_ok": "False",
+            "crashed": "False", "error": "COMMAND NOT FAOUND",
+        },
+    }
+
+    summary = build_efficiency_summary({}, current)
+
+    assert summary["status"] == "INCONCLUSIVE"
+    assert summary["counts"]["failures"] == 1
+    assert summary["counts"]["comparable"] == 0
 
 
 def test_write_summary_files_outputs_version_comparison_table(tmp_path: Path):

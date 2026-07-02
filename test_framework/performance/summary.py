@@ -146,7 +146,13 @@ def build_efficiency_summary(
     # percentage points (cross-version cache-benefit loss), OR a second-slice absolute
     # regression was detected.
     rate_regression = overall_rate_change is not None and overall_rate_change < -regression_percent
-    status = "REGRESSION" if (rate_regression or regressions) else "PASS"
+    inconclusive = bool(current_rows) and not version_comparison and (bool(failures) or not baseline_rows)
+    if rate_regression or regressions:
+        status = "REGRESSION"
+    elif inconclusive:
+        status = "INCONCLUSIVE"
+    else:
+        status = "PASS"
     return {
         "status": status,
         "threshold": {
@@ -243,7 +249,9 @@ def render_markdown(summary: Mapping[str, object]) -> str:
     baseline_version = version_rows[0]["baseline_version"] if version_rows else ""
     current_version = version_rows[0]["current_version"] if version_rows else ""
 
-    if summary["status"] == "REGRESSION":
+    if summary["status"] == "INCONCLUSIVE":
+        headline = "本次版本无法判定二次切片效率是否下降：缺少可对比的成功二次切片结果"
+    elif summary["status"] == "REGRESSION":
         if overall_rate_change is not None:
             headline = (
                 f"{current_version or '本次版本'} vs {baseline_version or '基线版本'}："

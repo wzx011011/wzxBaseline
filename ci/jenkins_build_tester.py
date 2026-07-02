@@ -71,12 +71,23 @@ def main() -> int:
     state_dir = artifacts_root / "tested_builds"
     state_dir.mkdir(parents=True, exist_ok=True)
     state_path = state_dir / f"{args.job_name.replace('/', '_')}_{args.platform}.json"
+    test_args = (args.test_command or "").strip()
+    if not test_args:
+        test_args = "-q"
+    if len(test_args) >= 2 and test_args[0] == test_args[-1] and test_args[0] in {"'", '"'}:
+        test_args = test_args[1:-1].strip()
+    # Undo optional cmd-layer escaping from Jenkins bat when needed.
+    test_args = test_args.replace('\\"', '"')
+
     if args.skip_tested_build and state_path.exists():
         try:
             state = json.loads(state_path.read_text(encoding="utf-8"))
         except Exception:
             state = {}
-        if int(state.get("build_number") or -1) == build_number:
+        if (
+            int(state.get("build_number") or -1) == build_number
+            and str(state.get("test_command") or "").strip() == test_args
+        ):
             print(f"[info] {args.job_name} #{build_number} was already tested, skipping")
             return 0
 
@@ -113,13 +124,6 @@ def main() -> int:
             env[f"CREALITY_PRINTER_PATH"] = str(maybe_exe)
             slicer_exe = maybe_exe
 
-    test_args = (args.test_command or "").strip()
-    if not test_args:
-        test_args = "-q"
-    if len(test_args) >= 2 and test_args[0] == test_args[-1] and test_args[0] in {"'", '"'}:
-        test_args = test_args[1:-1].strip()
-    # Undo optional cmd-layer escaping from Jenkins bat when needed.
-    test_args = test_args.replace('\\"', '"')
     if "{slicer_exe}" in test_args:
         if slicer_exe:
             test_args = test_args.replace("{slicer_exe}", str(slicer_exe))
@@ -141,7 +145,16 @@ def main() -> int:
     print(f"[info] tests finished with status: {result.status}, rc={result.return_code}")
     if result.status == "SUCCESS":
         state_path.write_text(
-            json.dumps({"job_name": args.job_name, "platform": args.platform, "build_number": build_number}, ensure_ascii=False, indent=2),
+            json.dumps(
+                {
+                    "job_name": args.job_name,
+                    "platform": args.platform,
+                    "build_number": build_number,
+                    "test_command": test_args,
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
             encoding="utf-8",
         )
     # Prefer exe URL for Windows notifications when available
