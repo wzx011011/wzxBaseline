@@ -1,7 +1,8 @@
-import os
 from pathlib import Path
 
-from ci.jenkins_build_tester import prepare_slicer_datadir
+import pytest
+
+from ci.jenkins_build_tester import prepare_slicer_datadir, resolve_run_slicer_datadir
 
 
 def test_prepare_slicer_datadir_seeds_from_explicit_template(tmp_path: Path):
@@ -63,3 +64,42 @@ def test_prepare_slicer_datadir_auto_seeds_appdata_when_enabled(tmp_path: Path):
 
     assert seeded_from == [profile]
     assert (target / "Creality Print" / "7.0 Alpha" / "Creality.conf").exists()
+
+
+def test_prepare_slicer_datadir_fails_when_old_datadir_is_locked(tmp_path: Path, monkeypatch):
+    target = tmp_path / "run-data"
+    target.mkdir()
+
+    def fail_rmtree(_path):
+        raise PermissionError("locked")
+
+    monkeypatch.setattr("ci.jenkins_build_tester.shutil.rmtree", fail_rmtree)
+
+    with pytest.raises(PermissionError, match="locked"):
+        prepare_slicer_datadir(target, env={})
+
+
+def test_resolve_run_slicer_datadir_uses_jenkins_build_number(tmp_path: Path):
+    root = tmp_path / "artifacts"
+
+    datadir = resolve_run_slicer_datadir(
+        root,
+        platform="windows",
+        package_build_number=1793,
+        env={"BUILD_NUMBER": "67"},
+    )
+
+    assert datadir == root / "slicer_data" / "windows" / "1793" / "jenkins_67"
+
+
+def test_resolve_run_slicer_datadir_falls_back_to_package_build_number(tmp_path: Path):
+    root = tmp_path / "artifacts"
+
+    datadir = resolve_run_slicer_datadir(
+        root,
+        platform="windows",
+        package_build_number=1793,
+        env={},
+    )
+
+    assert datadir == root / "slicer_data" / "windows" / "1793"

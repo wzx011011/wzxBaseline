@@ -83,7 +83,7 @@ def prepare_slicer_datadir(target: Path, env: Optional[Dict[str, str]] = None) -
     """Create an isolated CrealityPrint datadir, seeded from a known-good profile if present."""
     env = env or os.environ
     if target.exists():
-        shutil.rmtree(target, ignore_errors=True)
+        shutil.rmtree(target)
     target.mkdir(parents=True, exist_ok=True)
 
     if _truthy(str(env.get("SLICER_DATADIR_EMPTY", ""))):
@@ -98,6 +98,20 @@ def prepare_slicer_datadir(target: Path, env: Optional[Dict[str, str]] = None) -
             _copy_slicer_datadir_template(candidate, dest)
             seeded.append(candidate)
     return seeded
+
+
+def resolve_run_slicer_datadir(
+    artifacts_root: Path,
+    platform: str,
+    package_build_number: int,
+    env: Optional[Dict[str, str]] = None,
+) -> Path:
+    env = env or os.environ
+    datadir = artifacts_root / "slicer_data" / platform / str(package_build_number)
+    jenkins_build_number = str(env.get("BUILD_NUMBER", "")).strip()
+    if jenkins_build_number:
+        datadir = datadir / f"jenkins_{jenkins_build_number}"
+    return datadir.resolve()
 
 
 def parse_args() -> argparse.Namespace:
@@ -229,7 +243,7 @@ def main() -> int:
 
     gcode_root = Path(args.gcode_root).resolve() if args.gcode_root else (artifacts_root / "gcode" / args.platform / str(build_number)).resolve()
     gcode_root.mkdir(parents=True, exist_ok=True)
-    slicer_datadir = (artifacts_root / "slicer_data" / args.platform / str(build_number)).resolve()
+    slicer_datadir = resolve_run_slicer_datadir(artifacts_root, args.platform, build_number, env)
     seeded_from = prepare_slicer_datadir(slicer_datadir, env)
     print(f"[info] using isolated slicer datadir: {slicer_datadir}")
     if seeded_from:
