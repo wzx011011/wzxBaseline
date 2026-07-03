@@ -902,14 +902,21 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         result["error"] = reset_ret["error"] or "reset_project failed"
         result["crashed"] = reset_ret["crashed"]
         return result
-    # select_printer
-    select_ret = _run_command(
-        send_cmd_handle,
-        "select_printer",
-        {"printer_name": "Creality K2 Plus 0.4 nozzle"},
-        timeout=5,
-    )
-    _safe_print(select_ret)
+    printer_name = os.getenv("SECOND_SLICE_PRINTER_NAME", "").strip()
+    if printer_name:
+        select_ret = _run_command(
+            send_cmd_handle,
+            "select_printer",
+            {"printer_name": printer_name},
+            timeout=5,
+        )
+        _safe_print(select_ret)
+        if not select_ret["ok"]:
+            result["error"] = f"select_printer failed: {select_ret['error'] or select_ret['raw']}"
+            result["crashed"] = select_ret["crashed"]
+            return result
+    else:
+        _safe_print("[printer] SECOND_SLICE_PRINTER_NAME is empty; using project/current printer")
     # Import model
     import_ret = _run_command(
         send_cmd_handle,

@@ -92,6 +92,44 @@ def test_run_slice_flow_respects_second_slice_repeat_env(tmp_path: Path, monkeyp
     assert slicer.commands.count("trigger_slice") == 6  # 1 first + 5 second
 
 
+def test_run_slice_flow_stops_when_select_printer_fails(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("SLICER_PROGRESS_POLL", "0.001")
+    monkeypatch.setenv("SECOND_SLICE_PRINTER_NAME", "Creality K2 Plus 0.4 nozzle")
+    model_path = tmp_path / "case.3mf"
+    model_path.write_bytes(b"fake 3mf")
+    slicer = FakeSlicer()
+
+    def fail_select_printer(command, params_json, recvcmd_timeout=None, band_output=False):
+        if command == "select_printer":
+            slicer.commands.append(command)
+            payload = {"code": 1, "error": "no found printer", "payload": ""}
+            return True, "ok", f"{command}_respone;{json.dumps(payload)}".encode("utf-8")
+        return slicer(command, params_json, recvcmd_timeout, band_output)
+
+    result = _run_slice_flow(fail_select_printer, model_path, tmp_path)
+
+    assert result["import_ok"] is False
+    assert result["move_ok"] is False
+    assert result["slice_ok"] is False
+    assert result["crashed"] is False
+    assert result["error"] == "select_printer failed: no found printer"
+    assert slicer.commands == ["reset_project", "select_printer"]
+
+
+def test_run_slice_flow_uses_project_printer_when_printer_env_is_empty(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("SLICER_PROGRESS_POLL", "0.001")
+    monkeypatch.delenv("SECOND_SLICE_PRINTER_NAME", raising=False)
+    model_path = tmp_path / "case.3mf"
+    model_path.write_bytes(b"fake 3mf")
+    slicer = FakeSlicer()
+
+    result = _run_slice_flow(slicer, model_path, tmp_path)
+
+    assert result["slice_ok"] is True
+    assert "select_printer" not in slicer.commands
+    assert "trigger_load_project2" in slicer.commands
+
+
 def test_is_slicing_done_uses_state_completed():
     # The reliable completion signal is the live state machine ("completed"),
     # which the engine sets exactly when a slice finishes.
@@ -125,4 +163,3 @@ def test_is_slicing_done_falls_back_to_all_plate_finished_without_state():
     # Engines that do not report state fall back to all_plate_finished.
     assert _is_slicing_done({"all_plate_finished": True}) is True
     assert _is_slicing_done({"all_plate_finished": False}) is False
-

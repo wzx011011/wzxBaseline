@@ -5,8 +5,10 @@ Download a Jenkins build artifact by job/build id and run tests against it.
 import argparse
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
+from typing import Dict, List, Optional, Set, Tuple
 
 from jenkins_release_orchestrator import (
     JenkinsClient,
@@ -16,6 +18,86 @@ from jenkins_release_orchestrator import (
     extract_artifact_zip,
     find_slicer_exe,
 )
+
+
+def _truthy(value: str) -> bool:
+    return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _template_relative_target(source: Path) -> Path:
+    if source.parent.name in {"Creality Print", "CrealityPrint"}:
+        return Path(source.parent.name) / source.name
+    if source.name in {"Creality Print", "CrealityPrint"}:
+        return Path(source.name)
+    return Path()
+
+
+def _candidate_slicer_datadir_templates(env: Optional[Dict[str, str]] = None) -> List[Tuple[Path, Path]]:
+    env = env or os.environ
+    candidates: List[Tuple[Path, Path]] = []
+    explicit = str(env.get("SLICER_DATADIR_TEMPLATE", "")).strip()
+    if explicit:
+        explicit_path = Path(explicit)
+        candidates.append((explicit_path, _template_relative_target(explicit_path)))
+
+    if not _truthy(str(env.get("SLICER_DATADIR_AUTO_SEED", ""))):
+        return candidates
+
+    appdata = str(env.get("APPDATA", "")).strip()
+    if appdata:
+        appdata_path = Path(appdata)
+        candidates.extend(
+            [
+                (appdata_path / "Creality" / "Creality Print" / "7.0 Alpha", Path("Creality Print") / "7.0 Alpha"),
+                (appdata_path / "Creality" / "Creality Print" / "7.0", Path("Creality Print") / "7.0"),
+                (appdata_path / "CrealityPrint" / "7.0 Alpha", Path("CrealityPrint") / "7.0 Alpha"),
+                (appdata_path / "CrealityPrint" / "7.0", Path("CrealityPrint") / "7.0"),
+            ]
+        )
+    return candidates
+
+
+def _copy_slicer_datadir_template(source: Path, target: Path) -> None:
+    ignore_names = {
+        "log",
+        "logs",
+        "applock.data",
+        "cache",
+        "caches",
+        "thumbnail_cache",
+        "cloud_download_data",
+        "Network",
+        "GPUCache",
+        "Code Cache",
+    }
+
+    ignore_keys = {name.lower() for name in ignore_names}
+
+    def ignore(_dir: str, names: List[str]) -> Set[str]:
+        return {name for name in names if name.lower() in ignore_keys}
+
+    shutil.copytree(source, target, dirs_exist_ok=True, ignore=ignore)
+
+
+def prepare_slicer_datadir(target: Path, env: Optional[Dict[str, str]] = None) -> List[Path]:
+    """Create an isolated CrealityPrint datadir, seeded from a known-good profile if present."""
+    env = env or os.environ
+    if target.exists():
+        shutil.rmtree(target, ignore_errors=True)
+    target.mkdir(parents=True, exist_ok=True)
+
+    if _truthy(str(env.get("SLICER_DATADIR_EMPTY", ""))):
+        return []
+
+    seeded: List[Path] = []
+    for candidate, relative_target in _candidate_slicer_datadir_templates(env):
+        candidate = candidate.expanduser()
+        if candidate.exists() and candidate.is_dir():
+            dest = target / relative_target if str(relative_target) else target
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            _copy_slicer_datadir_template(candidate, dest)
+            seeded.append(candidate)
+    return seeded
 
 
 def parse_args() -> argparse.Namespace:
@@ -148,11 +230,13 @@ def main() -> int:
     gcode_root = Path(args.gcode_root).resolve() if args.gcode_root else (artifacts_root / "gcode" / args.platform / str(build_number)).resolve()
     gcode_root.mkdir(parents=True, exist_ok=True)
     slicer_datadir = (artifacts_root / "slicer_data" / args.platform / str(build_number)).resolve()
-    if slicer_datadir.exists():
-        import shutil
-        shutil.rmtree(slicer_datadir, ignore_errors=True)
-    slicer_datadir.mkdir(parents=True, exist_ok=True)
+    seeded_from = prepare_slicer_datadir(slicer_datadir, env)
     print(f"[info] using isolated slicer datadir: {slicer_datadir}")
+    if seeded_from:
+        for source in seeded_from:
+            print(f"[info] seeded slicer datadir from: {source}")
+    else:
+        print("[warn] no slicer datadir template found; starting with an empty datadir")
 
     slicer_arg = f' --slicer-exe="{slicer_exe}"' if slicer_exe else ""
     gcode_root_arg = "" if "--gcode-root" in test_args else f' --gcode-root="{gcode_root}"'

@@ -414,7 +414,14 @@ def run_tests(command: str, env: Dict[str, str], cwd: Path) -> TestOutcome:
     )
     assert proc.stdout is not None
     for line in proc.stdout:
-        print(line, end="", flush=True)
+        try:
+            print(line, end="", flush=True)
+        except UnicodeEncodeError:
+            safe_line = line.encode(sys.stdout.encoding or "utf-8", errors="backslashreplace").decode(
+                sys.stdout.encoding or "utf-8",
+                errors="replace",
+            )
+            print(safe_line, end="", flush=True)
         output_chunks.append(line)
     proc.stdout.close()
     return_code = proc.wait()
