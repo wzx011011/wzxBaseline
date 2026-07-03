@@ -5,6 +5,8 @@ import pytest
 from ci.jenkins_build_tester import (
     prepare_slicer_datadir,
     resolve_run_slicer_datadir,
+    resolve_slicer_log_dir,
+    resolve_slicer_stdout_log,
     should_use_isolated_slicer_datadir,
 )
 
@@ -119,3 +121,22 @@ def test_should_use_isolated_slicer_datadir_can_be_enabled_explicitly():
 
 def test_should_use_isolated_slicer_datadir_is_enabled_for_template():
     assert should_use_isolated_slicer_datadir({"SLICER_DATADIR_TEMPLATE": r"D:\profiles\Creality Print\7.0 Alpha"}) is True
+
+
+def test_resolve_slicer_log_dir_uses_isolated_datadir(tmp_path: Path):
+    datadir = tmp_path / "run-data"
+
+    log_dir = resolve_slicer_log_dir(datadir)
+
+    assert log_dir == datadir / "Creality Print" / "7.0 Alpha" / "log"
+
+
+def test_resolve_slicer_stdout_log_uses_jenkins_build_number(tmp_path: Path):
+    log_path = resolve_slicer_stdout_log(
+        tmp_path,
+        platform="windows",
+        package_build_number=1793,
+        env={"BUILD_NUMBER": "74"},
+    )
+
+    assert log_path == tmp_path / "test_framework" / "artifacts" / "slicer_stdout_windows_1793_jenkins_74.log"

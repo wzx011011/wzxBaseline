@@ -5,7 +5,7 @@ pipeline {
     disableConcurrentBuilds()
   }
   parameters {
-    string(name: 'AGENT_LABEL', defaultValue: 'winTestServer_2', description: 'Jenkins agent label to run the pipeline on')
+    string(name: 'AGENT_LABEL', defaultValue: 'PackageServer_Win', description: 'Jenkins agent label to run the pipeline on')
     string(name: 'JOB_NAME', defaultValue: 'CrealityPrint_Release_Package', description: 'Jenkins job name to download from')
     string(name: 'BUILD_ID', defaultValue: 'lastSuccessfulBuild', description: 'Jenkins build number or lastSuccessfulBuild')
     string(name: 'BASELINE_BUILD_ID', defaultValue: '1793', description: 'Fixed baseline build number for second-slice comparison')
@@ -18,6 +18,7 @@ pipeline {
   environment {
     POWERSHELL_HOME = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
     PYTHONIOENCODING = 'utf-8'
+    SLICER_DATADIR_ISOLATED = '1'
     SKIP_TESTED_BUILD = 'true'
   }
   triggers {
@@ -90,7 +91,7 @@ endlocal
     }
     stage('Archive performance reports') {
       steps {
-        archiveArtifacts artifacts: 'test_framework/performance/data/*.csv,test_framework/performance/data/*.md,test_framework/performance/data/*.json', allowEmptyArchive: true
+        archiveArtifacts artifacts: 'test_framework/performance/data/*.csv,test_framework/performance/data/*.md,test_framework/performance/data/*.json,test_framework/artifacts/slicer_stdout*.log', allowEmptyArchive: true
       }
     }
   }

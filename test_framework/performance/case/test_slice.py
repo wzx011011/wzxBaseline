@@ -482,7 +482,11 @@ def _run_command(send_cmd_handle, command: str, params: Dict, timeout: int) -> D
     if not ok:
         error_msg = payload.get("error") or payload.get("msg")
         if not error_msg:
-            error_msg = status if status != "ok" else str(payload)
+            raw_error = payload.get("raw")
+            if raw_error:
+                error_msg = f"{status}: {raw_error}" if status != "ok" else str(raw_error)
+            else:
+                error_msg = status if status != "ok" else str(payload)
 
     return {
         "ok": ok,
@@ -493,6 +497,36 @@ def _run_command(send_cmd_handle, command: str, params: Dict, timeout: int) -> D
         "error": error_msg,
         "raw": payload,
     }
+
+
+def _command_brief(ret: Dict) -> Dict:
+    raw = ret.get("raw")
+    if isinstance(raw, dict):
+        raw = raw.copy()
+    return {
+        "ok": ret.get("ok"),
+        "code": ret.get("code"),
+        "status": ret.get("status"),
+        "crashed": ret.get("crashed"),
+        "elapsed_ms": round(float(ret.get("elapsed_ms") or 0), 2),
+        "error": ret.get("error"),
+        "raw": raw,
+    }
+
+
+def _log_command_result(label: str, ret: Dict) -> None:
+    try:
+        payload = json.dumps(_command_brief(ret), ensure_ascii=False, sort_keys=True)
+    except Exception:  # noqa: BLE001
+        payload = str(_command_brief(ret))
+    _safe_print(f"[cmd] {label}: {payload}")
+
+
+def _error_summary(error: Dict) -> str:
+    try:
+        return json.dumps(error, ensure_ascii=False, sort_keys=True)
+    except Exception:  # noqa: BLE001
+        return str(error)
 
 
 def _progress_percentage_0_100(value) -> Optional[float]:
@@ -871,10 +905,11 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
             {"id": SLICE_BTN_ID},
             timeout=timeouts["slice"],
         )
+        _log_command_result(f"{label}.trigger_slice", slice_ret)
         result["crashed"] = result["crashed"] or slice_ret["crashed"]
         if not slice_ret["ok"]:
             result["slice_ok"] = False
-            result["error"] = slice_ret["error"] or f"{label} trigger_slice failed"
+            result["error"] = slice_ret["error"] or f"{label} trigger_slice failed: {_command_brief(slice_ret)}"
             return None
 
         slice_start = time.perf_counter()
@@ -884,6 +919,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
             poll_interval_s=float(os.getenv("SLICER_PROGRESS_POLL", "1")),
             wait_for_transition=wait_for_transition,
         )
+        _log_command_result(f"{label}.wait_slicing_done", wait_ret)
         result["crashed"] = result["crashed"] or wait_ret["crashed"]
         if not wait_ret["ok"]:
             result["slice_ok"] = False
@@ -898,6 +934,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         {"skip_confirm": True, "silent": True, "project_name": project_name},
         timeout=30,
     )
+    _log_command_result("reset_project", reset_ret)
     if not reset_ret["ok"]:
         result["error"] = reset_ret["error"] or "reset_project failed"
         result["crashed"] = reset_ret["crashed"]
@@ -924,6 +961,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         {"file": str(model_path), "discard_preset_changes": True},
         timeout=timeouts["load"],
     )
+    _log_command_result("trigger_load_project2", import_ret)
     result["import_ok"] = import_ret["ok"]
     result["import_ms"] = round(import_ret["elapsed_ms"], 2) if import_ret["ok"] else None
     result["crashed"] = import_ret["crashed"]
@@ -937,13 +975,14 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         {"type":"all"},
         timeout=5,
     )
+    _log_command_result("get_error.after_import", import_error)
     
     if(import_error["ok"]):
         payload = import_error["raw"]
         errors = payload["payload"]["data"]
         for error in errors:
             if error["level"] ==9:
-                result["error"] = error["type"]
+                result["error"] = f"get_error level 9 after import: {_error_summary(error)}"
                 return result
     first_slice_ms = run_slice_once("first")
     result["first_slice_ms"] = first_slice_ms
@@ -962,6 +1001,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         },
         timeout=int(os.getenv("SLICER_MOVE_TIMEOUT", "30")),
     )
+    _log_command_result("move_model_instance", move_ret)
     result["move_ok"] = move_ret["ok"]
     result["move_ms"] = round(move_ret["elapsed_ms"], 2) if move_ret["ok"] else None
     result["crashed"] = result["crashed"] or move_ret["crashed"]
@@ -997,6 +1037,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         {"export_all": True, "output": str(output_gcode)},
         timeout=timeouts["export"],
     )
+    _log_command_result("export_gcode", export_ret)
     _safe_print(output_gcode.exists())
     zip_ok = False
     if output_gcode.exists():

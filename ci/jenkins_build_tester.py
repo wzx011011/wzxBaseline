@@ -123,6 +123,29 @@ def should_use_isolated_slicer_datadir(env: Optional[Dict[str, str]] = None) -> 
     )
 
 
+def _safe_filename_part(value: str) -> str:
+    safe = "".join(ch if ch.isalnum() or ch in {"-", "_"} else "_" for ch in str(value).strip())
+    return safe.strip("_") or "unknown"
+
+
+def resolve_slicer_stdout_log(
+    repo_root: Path,
+    platform: str,
+    package_build_number: int,
+    env: Optional[Dict[str, str]] = None,
+) -> Path:
+    env = env or os.environ
+    parts = ["slicer_stdout", _safe_filename_part(platform), str(package_build_number)]
+    jenkins_build_number = str(env.get("BUILD_NUMBER", "")).strip()
+    if jenkins_build_number:
+        parts.append(f"jenkins_{_safe_filename_part(jenkins_build_number)}")
+    return (repo_root / "test_framework" / "artifacts" / ("_".join(parts) + ".log")).resolve()
+
+
+def resolve_slicer_log_dir(slicer_datadir: Path) -> Path:
+    return (slicer_datadir / "Creality Print" / "7.0 Alpha" / "log").resolve()
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Download a Jenkins build artifact and run tests.")
     parser.add_argument("--job-name", required=True, help="Jenkins job name")
@@ -256,7 +279,19 @@ def main() -> int:
     if should_use_isolated_slicer_datadir(env):
         slicer_datadir = resolve_run_slicer_datadir(artifacts_root, args.platform, build_number, env)
         seeded_from = prepare_slicer_datadir(slicer_datadir, env)
+        slicer_log_dir = resolve_slicer_log_dir(slicer_datadir)
+        slicer_log_dir.mkdir(parents=True, exist_ok=True)
+        env["CREALITY_PRINTER_LOG_PATH"] = str(slicer_log_dir)
+        slicer_stdout_log = resolve_slicer_stdout_log(repo_root, args.platform, build_number, env)
+        slicer_stdout_log.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            slicer_stdout_log.unlink()
+        except FileNotFoundError:
+            pass
+        env["SLICER_STDOUT_LOG"] = str(slicer_stdout_log)
         print(f"[info] using isolated slicer datadir: {slicer_datadir}")
+        print(f"[info] using isolated slicer log dir: {slicer_log_dir}")
+        print(f"[info] slicer stdout log: {slicer_stdout_log}")
         if seeded_from:
             for source in seeded_from:
                 print(f"[info] seeded slicer datadir from: {source}")
