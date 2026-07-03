@@ -169,7 +169,7 @@ for ($attempt = 1; $attempt -le 3; $attempt++) {
     if ($null -ne $response.code -and [int]$response.code -ne 0) {
       throw "Feishu returned code=$($response.code), msg=$($response.msg)"
     }
-    Write-Host "Feishu notification sent on attempt $attempt: $responseJson"
+    Write-Host "Feishu notification sent on attempt ${attempt}: $responseJson"
     exit 0
   } catch {
     Write-Warning ("Feishu notification attempt $attempt failed: " + $_.Exception.Message)
