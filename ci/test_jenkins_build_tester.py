@@ -2,7 +2,11 @@ from pathlib import Path
 
 import pytest
 
-from ci.jenkins_build_tester import prepare_slicer_datadir, resolve_run_slicer_datadir
+from ci.jenkins_build_tester import (
+    prepare_slicer_datadir,
+    resolve_run_slicer_datadir,
+    should_use_isolated_slicer_datadir,
+)
 
 
 def test_prepare_slicer_datadir_seeds_from_explicit_template(tmp_path: Path):
@@ -103,3 +107,15 @@ def test_resolve_run_slicer_datadir_falls_back_to_package_build_number(tmp_path:
     )
 
     assert datadir == root / "slicer_data" / "windows" / "1793"
+
+
+def test_should_use_isolated_slicer_datadir_defaults_to_global_datadir():
+    assert should_use_isolated_slicer_datadir({}) is False
+
+
+def test_should_use_isolated_slicer_datadir_can_be_enabled_explicitly():
+    assert should_use_isolated_slicer_datadir({"SLICER_DATADIR_ISOLATED": "1"}) is True
+
+
+def test_should_use_isolated_slicer_datadir_is_enabled_for_template():
+    assert should_use_isolated_slicer_datadir({"SLICER_DATADIR_TEMPLATE": r"D:\profiles\Creality Print\7.0 Alpha"}) is True

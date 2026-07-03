@@ -114,6 +114,15 @@ def resolve_run_slicer_datadir(
     return datadir.resolve()
 
 
+def should_use_isolated_slicer_datadir(env: Optional[Dict[str, str]] = None) -> bool:
+    env = env or os.environ
+    return (
+        _truthy(str(env.get("SLICER_DATADIR_ISOLATED", "")))
+        or bool(str(env.get("SLICER_DATADIR_TEMPLATE", "")).strip())
+        or _truthy(str(env.get("SLICER_DATADIR_EMPTY", "")))
+    )
+
+
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Download a Jenkins build artifact and run tests.")
     parser.add_argument("--job-name", required=True, help="Jenkins job name")
@@ -243,18 +252,24 @@ def main() -> int:
 
     gcode_root = Path(args.gcode_root).resolve() if args.gcode_root else (artifacts_root / "gcode" / args.platform / str(build_number)).resolve()
     gcode_root.mkdir(parents=True, exist_ok=True)
-    slicer_datadir = resolve_run_slicer_datadir(artifacts_root, args.platform, build_number, env)
-    seeded_from = prepare_slicer_datadir(slicer_datadir, env)
-    print(f"[info] using isolated slicer datadir: {slicer_datadir}")
-    if seeded_from:
-        for source in seeded_from:
-            print(f"[info] seeded slicer datadir from: {source}")
+    slicer_datadir = None
+    if should_use_isolated_slicer_datadir(env):
+        slicer_datadir = resolve_run_slicer_datadir(artifacts_root, args.platform, build_number, env)
+        seeded_from = prepare_slicer_datadir(slicer_datadir, env)
+        print(f"[info] using isolated slicer datadir: {slicer_datadir}")
+        if seeded_from:
+            for source in seeded_from:
+                print(f"[info] seeded slicer datadir from: {source}")
+        else:
+            print("[warn] no slicer datadir template found; starting with an empty datadir")
     else:
-        print("[warn] no slicer datadir template found; starting with an empty datadir")
+        print("[info] using Jenkins user CrealityPrint datadir")
 
     slicer_arg = f' --slicer-exe="{slicer_exe}"' if slicer_exe else ""
     gcode_root_arg = "" if "--gcode-root" in test_args else f' --gcode-root="{gcode_root}"'
-    slicer_datadir_arg = "" if "--slicer-datadir" in test_args else f' --slicer-datadir="{slicer_datadir}"'
+    slicer_datadir_arg = ""
+    if slicer_datadir and "--slicer-datadir" not in test_args:
+        slicer_datadir_arg = f' --slicer-datadir="{slicer_datadir}"'
     test_command = (
         f"cd .\\test_framework\\&&python -u -m pytest {test_args}{slicer_arg}{gcode_root_arg}{slicer_datadir_arg}"
         " -v --alluredir=../allure-results --capture=tee-sys"
