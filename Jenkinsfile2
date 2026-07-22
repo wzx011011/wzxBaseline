@@ -5,8 +5,8 @@ pipeline {
     disableConcurrentBuilds()
   }
   parameters {
-    string(name: 'AGENT_LABEL', defaultValue: 'PackageServer_Win', description: 'Jenkins agent label to run the pipeline on')
-    string(name: 'JOB_NAME', defaultValue: 'CrealityPrint_Release_Package', description: 'Jenkins job name to download from')
+    string(name: 'AGENT_LABEL', defaultValue: 'windows-tester1', description: 'Jenkins agent label to run the pipeline on')
+    string(name: 'JOB_NAME', defaultValue: 'CrealityPrint_Release_Package_pipeline', description: 'Jenkins job name to download from')
     string(name: 'BUILD_ID', defaultValue: 'lastSuccessfulBuild', description: 'Jenkins build number or lastSuccessfulBuild')
     string(name: 'BASELINE_BUILD_ID', defaultValue: '1793', description: 'Fixed baseline build number for second-slice comparison')
     booleanParam(name: 'UPDATE_BASELINE', defaultValue: false, description: 'Allow updating the persistent second-slice baseline CSV')
@@ -20,9 +20,6 @@ pipeline {
     PYTHONIOENCODING = 'utf-8'
     SLICER_DATADIR_ISOLATED = '1'
     SKIP_TESTED_BUILD = 'true'
-  }
-  triggers {
-    cron('H/30 * * * *')
   }
   stages {
     stage('Checkout') {
