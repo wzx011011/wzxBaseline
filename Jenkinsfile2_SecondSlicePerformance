@@ -6,9 +6,12 @@ pipeline {
   }
   parameters {
     string(name: 'AGENT_LABEL', defaultValue: 'windows-tester1', description: 'Jenkins agent label to run the pipeline on')
-    string(name: 'PACKAGE_FILE', defaultValue: '', description: 'Local release ZIP path accessible from the selected agent')
-    string(name: 'PACKAGE_ID', defaultValue: '', description: 'Optional package version/label; defaults to filename plus content hash')
-    booleanParam(name: 'UPDATE_BASELINE', defaultValue: false, description: 'Initialize or update the manual performance baseline from an approved package')
+    string(name: 'UPSTREAM_JOB', defaultValue: 'CrealityPrint_Release_Package_pipeline', description: 'Jenkins job used when PACKAGE_FILE is empty')
+    string(name: 'UPSTREAM_BUILD_ID', defaultValue: 'lastSuccessfulBuild', description: 'Upstream build number or lastSuccessfulBuild when PACKAGE_FILE is empty')
+    string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Optional upstream ZIP artifact path or filename')
+    string(name: 'PACKAGE_FILE', defaultValue: '', description: 'Optional local release ZIP path; overrides the upstream package')
+    string(name: 'PACKAGE_ID', defaultValue: '', description: 'Optional local package version/label; defaults to filename plus content hash')
+    booleanParam(name: 'UPDATE_BASELINE', defaultValue: false, description: 'Initialize or update the persistent performance baseline from an approved package')
     booleanParam(name: 'SKIP_TESTED_PACKAGE', defaultValue: false, description: 'Skip only when this exact selected package has already passed the same test command')
     string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for environment injection')
     string(name: 'TEST_COMMAND', defaultValue: 'performance/case/test_slice.py::test_feishu_slice -m performance', description: 'Pytest selection for the second-slice performance test')
@@ -19,6 +22,7 @@ pipeline {
     PYTHONIOENCODING = 'utf-8'
     SLICER_DATADIR_ISOLATED = '1'
     SKIP_TESTED_BUILD = 'false'
+    JENKINS_BASE_URL = "${JENKINS_URL}"
   }
   stages {
     stage('Checkout') {
@@ -40,19 +44,34 @@ if exist allure-results rd /s /q allure-results
 @echo off
 setlocal enabledelayedexpansion
 
-if "%PACKAGE_FILE%"=="" (
-  echo PACKAGE_FILE is required
-  exit /b 1
-)
-
 set "RUN_ARTIFACTS_DIR=%ARTIFACTS_DIR%"
 if "%RUN_ARTIFACTS_DIR%"=="" set "RUN_ARTIFACTS_DIR=artifacts"
 set "FLAG_ARGS="
 if /I "%UPDATE_BASELINE%"=="true" set "FLAG_ARGS=!FLAG_ARGS! --update-baseline"
 if /I "%SKIP_TESTED_PACKAGE%"=="true" set "FLAG_ARGS=!FLAG_ARGS! --skip-tested-build"
 
-python ci\\jenkins_build_tester.py --artifacts-dir "%RUN_ARTIFACTS_DIR%" --artifact-file "%PACKAGE_FILE%" --artifact-id "%PACKAGE_ID%" --platform "%PLATFORM%" --test-command "%TEST_COMMAND%" !FLAG_ARGS!
-endlocal
+if "%PACKAGE_FILE%"=="" (
+  if "%UPSTREAM_JOB%"=="" (
+    echo UPSTREAM_JOB is required when PACKAGE_FILE is empty
+    exit /b 1
+  )
+  if "%UPSTREAM_BUILD_ID%"=="" (
+    echo UPSTREAM_BUILD_ID is required when PACKAGE_FILE is empty
+    exit /b 1
+  )
+
+  if "%ARTIFACT_PATH%"=="" (
+    python ci\\jenkins_build_tester.py --artifacts-dir "%RUN_ARTIFACTS_DIR%" --job-name "%UPSTREAM_JOB%" --build-id "%UPSTREAM_BUILD_ID%" --platform "%PLATFORM%" --test-command "%TEST_COMMAND%" !FLAG_ARGS!
+    set "RUN_STATUS=!ERRORLEVEL!"
+  ) else (
+    python ci\\jenkins_build_tester.py --artifacts-dir "%RUN_ARTIFACTS_DIR%" --job-name "%UPSTREAM_JOB%" --build-id "%UPSTREAM_BUILD_ID%" --artifact-path "%ARTIFACT_PATH%" --platform "%PLATFORM%" --test-command "%TEST_COMMAND%" !FLAG_ARGS!
+    set "RUN_STATUS=!ERRORLEVEL!"
+  )
+) else (
+  python ci\\jenkins_build_tester.py --artifacts-dir "%RUN_ARTIFACTS_DIR%" --artifact-file "%PACKAGE_FILE%" --artifact-id "%PACKAGE_ID%" --platform "%PLATFORM%" --test-command "%TEST_COMMAND%" !FLAG_ARGS!
+  set "RUN_STATUS=!ERRORLEVEL!"
+)
+endlocal & exit /b %RUN_STATUS%
 '''
         }
       }
@@ -91,6 +110,8 @@ endlocal
           withEnv([
             "PACKAGE_FILE=${params.PACKAGE_FILE ?: ''}",
             "PACKAGE_ID=${params.PACKAGE_ID ?: ''}",
+            "UPSTREAM_JOB=${params.UPSTREAM_JOB ?: ''}",
+            "UPSTREAM_BUILD_ID=${params.UPSTREAM_BUILD_ID ?: ''}",
             "PERFORMANCE_JOB_NAME=${env.JOB_BASE_NAME ?: env.JOB_NAME}",
             "PIPELINE_RESULT=${currentBuild.currentResult ?: 'UNKNOWN'}"
           ]) {
@@ -102,9 +123,15 @@ if ([string]::IsNullOrWhiteSpace($env:FEISHU_WEBHOOK)) {
 
 $packageFile = $env:PACKAGE_FILE
 $packageId = $env:PACKAGE_ID
+$upstreamJob = $env:UPSTREAM_JOB
+$upstreamBuildId = $env:UPSTREAM_BUILD_ID
 $performanceJob = $env:PERFORMANCE_JOB_NAME
 $summaryPath = "test_framework\\performance\\data\\second_slice_efficiency_summary.md"
-$packageLabel = if ([string]::IsNullOrWhiteSpace($packageId)) { $packageFile } else { "$packageId ($packageFile)" }
+$packageLabel = if (-not [string]::IsNullOrWhiteSpace($packageFile)) {
+  if ([string]::IsNullOrWhiteSpace($packageId)) { $packageFile } else { "$packageId ($packageFile)" }
+} else {
+  "$upstreamJob #$upstreamBuildId"
+}
 
 $lines = New-Object "System.Collections.Generic.List[string]"
 $lines.Add("C3DBaseline second-slice performance")
