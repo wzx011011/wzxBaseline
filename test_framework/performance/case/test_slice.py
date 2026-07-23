@@ -872,6 +872,12 @@ def baseline_snapshot(baseline_data):
     return {key: dict(value) for key, value in baseline_data.items()}
 
 
+@pytest.fixture(scope="session")
+def current_results():
+    """Rows produced by this test session, kept separate from the loaded baseline."""
+    return {}
+
+
 def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     timeouts = {
         "load": int(os.getenv("SLICER_LOAD_TIMEOUT", "90")),
@@ -1075,6 +1081,7 @@ def test_feishu_slice(
     engine_manager_perf,
     performance_gcode_dir,
     baseline_data,  # Use the fixture for baseline data
+    current_results,
     exe_version_perf,
 ):
     if not _FEISHU_CASES:
@@ -1118,9 +1125,15 @@ def test_feishu_slice(
         "error": result["error"] or "",
     }
     
-    if key in baseline_data:
+    baseline_row = baseline_data.get(key)
+
+    # Preserve the observed row before any comparison assertion can abort the
+    # test. The session teardown then writes an accurate failure report.
+    baseline_data[key] = baseline_row_data
+    current_results[key] = baseline_row_data
+
+    if baseline_row:
         # Compare with baseline
-        baseline_row = baseline_data[key]
         _safe_print(f"Comparing with baseline for {key}...")
 
         # A baseline row that itself failed (crashed/import/move/slice/export not ok)
@@ -1144,9 +1157,6 @@ def test_feishu_slice(
     else:
         _safe_print(f"New baseline entry for {key}")
 
-    # Always update baseline with latest results
-    baseline_data[key] = baseline_row_data
-    
     assert not result["crashed"], f"App crashed when handling {model_path}"
     assert result["import_ok"], f"Import failed for {model_path}: {result['error']}"
     assert result["first_slice_ms"] is not None, f"First slice failed for {model_path}: {result['error']}"
@@ -1157,7 +1167,7 @@ def test_feishu_slice(
 
 
 @pytest.fixture(scope="session", autouse=True)
-def write_report_to_feishu_after_tests(baseline_data, baseline_snapshot, pytestconfig):
+def write_report_to_feishu_after_tests(baseline_data, baseline_snapshot, current_results, pytestconfig):
     """
     Write the feishu_slice_report.csv to a new Feishu table after all tests are completed.
     """
@@ -1166,51 +1176,46 @@ def write_report_to_feishu_after_tests(baseline_data, baseline_snapshot, pytestc
     # Always write CSV report regardless of feishu-notify setting
     report_path = Path("performance") / "data" / "feishu_slice_report.csv"
     
-    # Write all baseline data to CSV file
-    if baseline_data:
-        _safe_print(f"\n=== Writing all baseline data to CSV ===")
-        _safe_print(f"Writing to: {report_path}")
-        
-        # Create directory if it doesn't exist
-        report_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Write CSV header
-        header = [
-            "record_id",
-            "version",
-            "import_ms",
-            "first_slice_ms",
-            "move_ms",
-            "second_slice_trials",
-            "second_slice_ms",
-            "slice_ms",
-            "export_ms",
-            "import_ok",
-            "move_ok",
-            "slice_ok",
-            "export_ok",
-            "crashed",
-            "error",
-        ]
-        
-        # Retry to handle file-lock (e.g. VS Code has the file open)
-        last_exc = None
-        for _attempt in range(5):
-            try:
-                with open(report_path, "w", encoding="utf-8") as f:
-                    f.write(",".join(header) + "\n")
-                    for filename, record in baseline_data.items():
-                        row = [str(record.get(field, "")) for field in header]
-                        f.write(",".join(row) + "\n")
-                _safe_print(f"OK Wrote {len(baseline_data)} records to {report_path}")
-                last_exc = None
-                break
-            except PermissionError as exc:
-                last_exc = exc
-                _safe_print(f"[csv-write] file locked, retrying ({_attempt + 1}/5)...")
-                time.sleep(2)
-        if last_exc is not None:
-            _safe_print(f"[csv-write] failed after retries: {last_exc}")
+    _safe_print(f"\n=== Writing all baseline data to CSV ===")
+    _safe_print(f"Writing to: {report_path}")
+
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    header = [
+        "record_id",
+        "version",
+        "import_ms",
+        "first_slice_ms",
+        "move_ms",
+        "second_slice_trials",
+        "second_slice_ms",
+        "slice_ms",
+        "export_ms",
+        "import_ok",
+        "move_ok",
+        "slice_ok",
+        "export_ok",
+        "crashed",
+        "error",
+    ]
+
+    report_written_this_run = False
+    last_exc = None
+    for _attempt in range(5):
+        try:
+            with open(report_path, "w", encoding="utf-8") as f:
+                f.write(",".join(header) + "\n")
+                for record in baseline_data.values():
+                    row = [str(record.get(field, "")) for field in header]
+                    f.write(",".join(row) + "\n")
+            _safe_print(f"OK Wrote {len(baseline_data)} records to {report_path}")
+            report_written_this_run = True
+            break
+        except PermissionError as exc:
+            last_exc = exc
+            _safe_print(f"[csv-write] file locked, retrying ({_attempt + 1}/5)...")
+            time.sleep(2)
+    if last_exc is not None and not report_written_this_run:
+        _safe_print(f"[csv-write] failed after retries: {last_exc}")
 
     summary = build_efficiency_summary(
         baseline_snapshot,
@@ -1222,15 +1227,17 @@ def write_report_to_feishu_after_tests(baseline_data, baseline_snapshot, pytestc
     _safe_print(f"OK Wrote second-slice efficiency summary: {markdown_path}")
     _safe_print(f"OK Wrote second-slice efficiency summary json: {json_path}")
     
-    # Check if report file exists
-    if not report_path.exists():
-        _safe_print(f"Report file not found: {report_path}")
+    if not report_written_this_run:
+        _safe_print(f"Skip updating persistent second-slice baseline: report was not written in this run.")
         return
 
     baseline_csv = os.getenv("SECOND_SLICE_BASELINE_CSV")
     if baseline_csv:
         update_baseline = _truthy_text(os.getenv("SECOND_SLICE_UPDATE_BASELINE", ""))
-        failed_rows = [record for record in baseline_data.values() if _result_row_failed(record)]
+        if not current_results:
+            _safe_print("Skip updating persistent second-slice baseline: no current result rows were produced.")
+            return
+        failed_rows = [record for record in current_results.values() if _result_row_failed(record)]
         if not update_baseline:
             _safe_print(f"Persistent second-slice baseline is read-only for this run: {baseline_csv}")
             return
