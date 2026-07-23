@@ -43,6 +43,7 @@ if exist allure-results rd /s /q allure-results
           bat '''
 @echo off
 setlocal enabledelayedexpansion
+set "PATH=%POWERSHELL_HOME%;%PATH%"
 
 set "RUN_ARTIFACTS_DIR=%ARTIFACTS_DIR%"
 if "%RUN_ARTIFACTS_DIR%"=="" set "RUN_ARTIFACTS_DIR=artifacts"
@@ -112,6 +113,7 @@ endlocal & exit /b %RUN_STATUS%
       withCredentials([string(credentialsId: 'openclaw-webhook', variable: 'FEISHU_WEBHOOK')]) {
         script {
           withEnv([
+            "PATH+POWERSHELL=${env.POWERSHELL_HOME}",
             "PACKAGE_FILE=${params.PACKAGE_FILE ?: ''}",
             "PACKAGE_ID=${params.PACKAGE_ID ?: ''}",
             "UPSTREAM_JOB=${params.UPSTREAM_JOB ?: 'CrealityPrint_Release_Package_pipeline'}",
