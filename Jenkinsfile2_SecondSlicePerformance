@@ -51,6 +51,10 @@ if /I "%UPDATE_BASELINE%"=="true" set "FLAG_ARGS=!FLAG_ARGS! --update-baseline"
 if /I "%SKIP_TESTED_PACKAGE%"=="true" set "FLAG_ARGS=!FLAG_ARGS! --skip-tested-build"
 
 if "%PACKAGE_FILE%"=="" (
+  rem Jenkins keeps the previous parameter set until this Jenkinsfile has run once.
+  rem Make the first run use the same safe upstream defaults as later runs.
+  if "%UPSTREAM_JOB%"=="" set "UPSTREAM_JOB=CrealityPrint_Release_Package_pipeline"
+  if "%UPSTREAM_BUILD_ID%"=="" set "UPSTREAM_BUILD_ID=lastSuccessfulBuild"
   if "%UPSTREAM_JOB%"=="" (
     echo UPSTREAM_JOB is required when PACKAGE_FILE is empty
     exit /b 1
@@ -110,8 +114,8 @@ endlocal & exit /b %RUN_STATUS%
           withEnv([
             "PACKAGE_FILE=${params.PACKAGE_FILE ?: ''}",
             "PACKAGE_ID=${params.PACKAGE_ID ?: ''}",
-            "UPSTREAM_JOB=${params.UPSTREAM_JOB ?: ''}",
-            "UPSTREAM_BUILD_ID=${params.UPSTREAM_BUILD_ID ?: ''}",
+            "UPSTREAM_JOB=${params.UPSTREAM_JOB ?: 'CrealityPrint_Release_Package_pipeline'}",
+            "UPSTREAM_BUILD_ID=${params.UPSTREAM_BUILD_ID ?: 'lastSuccessfulBuild'}",
             "PERFORMANCE_JOB_NAME=${env.JOB_BASE_NAME ?: env.JOB_NAME}",
             "PIPELINE_RESULT=${currentBuild.currentResult ?: 'UNKNOWN'}"
           ]) {
