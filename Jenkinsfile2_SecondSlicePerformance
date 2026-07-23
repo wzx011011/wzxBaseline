@@ -1,0 +1,175 @@
+pipeline {
+  agent { label params.AGENT_LABEL }
+  options {
+    timestamps()
+    disableConcurrentBuilds()
+  }
+  parameters {
+    string(name: 'AGENT_LABEL', defaultValue: 'windows-tester1', description: 'Jenkins agent label to run the pipeline on')
+    string(name: 'PACKAGE_FILE', defaultValue: '', description: 'Local release ZIP path accessible from the selected agent')
+    string(name: 'PACKAGE_ID', defaultValue: '', description: 'Optional package version/label; defaults to filename plus content hash')
+    booleanParam(name: 'UPDATE_BASELINE', defaultValue: false, description: 'Initialize or update the manual performance baseline from an approved package')
+    booleanParam(name: 'SKIP_TESTED_PACKAGE', defaultValue: false, description: 'Skip only when this exact selected package has already passed the same test command')
+    string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for environment injection')
+    string(name: 'TEST_COMMAND', defaultValue: 'performance/case/test_slice.py::test_feishu_slice -m performance', description: 'Pytest selection for the second-slice performance test')
+    string(name: 'ALLURE_CMD', defaultValue: 'Allure', description: 'Allure commandline tool name; leave empty to use the default')
+  }
+  environment {
+    POWERSHELL_HOME = 'C:\\Windows\\System32\\WindowsPowerShell\\v1.0'
+    PYTHONIOENCODING = 'utf-8'
+    SLICER_DATADIR_ISOLATED = '1'
+    SKIP_TESTED_BUILD = 'false'
+  }
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+    stage('Install deps') {
+      steps {
+        bat '''
+python -m pip install -U pip
+python -m pip install -r requirements.txt
+if exist allure-results rd /s /q allure-results
+'''
+      }
+    }
+    stage('Run selected package') {
+      steps {
+        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+          bat '''
+@echo off
+setlocal enabledelayedexpansion
+
+if "%PACKAGE_FILE%"=="" (
+  echo PACKAGE_FILE is required
+  exit /b 1
+)
+
+set "RUN_ARTIFACTS_DIR=%ARTIFACTS_DIR%"
+if "%RUN_ARTIFACTS_DIR%"=="" set "RUN_ARTIFACTS_DIR=artifacts"
+set "FLAG_ARGS="
+if /I "%UPDATE_BASELINE%"=="true" set "FLAG_ARGS=!FLAG_ARGS! --update-baseline"
+if /I "%SKIP_TESTED_PACKAGE%"=="true" set "FLAG_ARGS=!FLAG_ARGS! --skip-tested-build"
+
+python ci\\jenkins_build_tester.py --artifacts-dir "%RUN_ARTIFACTS_DIR%" --artifact-file "%PACKAGE_FILE%" --artifact-id "%PACKAGE_ID%" --platform "%PLATFORM%" --test-command "%TEST_COMMAND%" !FLAG_ARGS!
+endlocal
+'''
+        }
+      }
+    }
+    stage('Allure results') {
+      steps {
+        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+          script {
+            def allurePaths = ['allure-results', 'test_framework/allure-results', 'output/report/allure-results', 'test_engine_framework/output/report/allure-results']
+            def found = allurePaths.find { fileExists(it) }
+            if (found) {
+              echo "Publishing Allure results from ${found}"
+              def cmdName = params.ALLURE_CMD?.trim()
+              if (cmdName) {
+                allure includeProperties: false, jdk: '', commandline: cmdName, results: [[path: found]]
+              } else {
+                allure includeProperties: false, jdk: '', results: [[path: found]]
+              }
+            } else {
+              echo 'No Allure results found, skipping publish'
+            }
+          }
+        }
+      }
+    }
+    stage('Archive performance reports') {
+      steps {
+        archiveArtifacts artifacts: 'test_framework/performance/data/*.csv,test_framework/performance/data/*.md,test_framework/performance/data/*.json,test_framework/artifacts/slicer_stdout*.log', allowEmptyArchive: true
+      }
+    }
+  }
+  post {
+    always {
+      withCredentials([string(credentialsId: 'openclaw-webhook', variable: 'FEISHU_WEBHOOK')]) {
+        script {
+          withEnv([
+            "PACKAGE_FILE=${params.PACKAGE_FILE ?: ''}",
+            "PACKAGE_ID=${params.PACKAGE_ID ?: ''}",
+            "PERFORMANCE_JOB_NAME=${env.JOB_BASE_NAME ?: env.JOB_NAME}",
+            "PIPELINE_RESULT=${currentBuild.currentResult ?: 'UNKNOWN'}"
+          ]) {
+            def notifyStatus = powershell(returnStatus: true, script: '''
+if ([string]::IsNullOrWhiteSpace($env:FEISHU_WEBHOOK)) {
+  Write-Warning "Feishu webhook is empty; skipping notification."
+  exit 0
+}
+
+$packageFile = $env:PACKAGE_FILE
+$packageId = $env:PACKAGE_ID
+$performanceJob = $env:PERFORMANCE_JOB_NAME
+$summaryPath = "test_framework\\performance\\data\\second_slice_efficiency_summary.md"
+$packageLabel = if ([string]::IsNullOrWhiteSpace($packageId)) { $packageFile } else { "$packageId ($packageFile)" }
+
+$lines = New-Object "System.Collections.Generic.List[string]"
+$lines.Add("C3DBaseline second-slice performance")
+$lines.Add("")
+$lines.Add("Package: $packageLabel")
+$lines.Add("Performance build: $performanceJob #$env:BUILD_NUMBER")
+$lines.Add("Result: $env:PIPELINE_RESULT")
+$lines.Add("Link: $env:BUILD_URL")
+
+if (Test-Path $summaryPath) {
+  $summary = (Get-Content $summaryPath -Raw -Encoding UTF8).Trim()
+  if (-not [string]::IsNullOrWhiteSpace($summary)) {
+    $lines.Add("")
+    $lines.Add($summary)
+  }
+} else {
+  $lines.Add("")
+  $lines.Add("Second-slice summary not found: $summaryPath")
+}
+
+$text = ($lines -join [Environment]::NewLine)
+if ($text.Length -gt 18000) {
+  $text = $text.Substring(0, 18000) + [Environment]::NewLine + "...(truncated)"
+}
+
+$payload = @{
+  msg_type = "text"
+  content = @{ text = $text }
+} | ConvertTo-Json -Depth 6 -Compress
+$body = [System.Text.Encoding]::UTF8.GetBytes($payload)
+
+for ($attempt = 1; $attempt -le 3; $attempt++) {
+  try {
+    $response = Invoke-RestMethod `
+      -Uri $env:FEISHU_WEBHOOK `
+      -Method Post `
+      -ContentType "application/json; charset=utf-8" `
+      -Body $body `
+      -TimeoutSec 30 `
+      -ErrorAction Stop
+    if ($null -ne $response.code -and [int]$response.code -ne 0) {
+      throw "Feishu returned code=$($response.code), msg=$($response.msg)"
+    }
+    exit 0
+  } catch {
+    Write-Warning ("Feishu notification attempt $attempt failed: " + $_.Exception.Message)
+    if ($attempt -lt 3) {
+      Start-Sleep -Seconds (5 * $attempt)
+    }
+  }
+}
+
+Write-Warning "Feishu notification failed after 3 attempts."
+exit 0
+''')
+
+            if (notifyStatus != 0) {
+              echo "Feishu notification step exited with code ${notifyStatus}, but the pipeline result will be preserved."
+            }
+          }
+        }
+      }
+    }
+    failure {
+      echo 'Pipeline failed; check Feishu notifications for details.'
+    }
+  }
+}

@@ -3,10 +3,12 @@
 Download a Jenkins build artifact by job/build id and run tests against it.
 """
 import argparse
+import hashlib
 import json
 import os
 import shutil
 import sys
+import uuid
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -128,6 +130,48 @@ def _safe_filename_part(value: str) -> str:
     return safe.strip("_") or "unknown"
 
 
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def stage_local_package(source_value: str, dest_dir: Path) -> Tuple[Path, str]:
+    """Copy a manually selected release ZIP into the run workspace.
+
+    The pipeline cleans managed artifacts after a run. Copying first keeps the
+    original package (including one on a shared drive) untouched.
+    """
+    source = Path(str(source_value).strip()).expanduser()
+    if not source.is_file():
+        raise ValueError(f"local package file does not exist: {source}")
+    if source.suffix.lower() != ".zip":
+        raise ValueError(f"local package must be a .zip file: {source}")
+
+    staging_dir = dest_dir / "manual"
+    staging_dir.mkdir(parents=True, exist_ok=True)
+    temporary = staging_dir / f".{_safe_filename_part(source.stem)}.{uuid.uuid4().hex}.tmp"
+    try:
+        shutil.copy2(source, temporary)
+        # Hash the staged copy so skip state always describes the bytes tested.
+        digest = _sha256_file(temporary)
+        target = staging_dir / f"{_safe_filename_part(source.stem)}_{digest[:12]}.zip"
+        if source.resolve() == target.resolve():
+            target = staging_dir / f"{_safe_filename_part(source.stem)}_{digest[:12]}_{uuid.uuid4().hex[:8]}.zip"
+        temporary.replace(target)
+    finally:
+        if temporary.exists():
+            temporary.unlink()
+    return target, digest
+
+
+def resolve_manual_package_id(requested_id: str, package_path: Path, digest: str) -> str:
+    value = str(requested_id or "").strip()
+    return value or f"{package_path.stem}-{digest[:12]}"
+
+
 def resolve_slicer_stdout_log(
     repo_root: Path,
     platform: str,
@@ -147,9 +191,11 @@ def resolve_slicer_log_dir(slicer_datadir: Path) -> Path:
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Download a Jenkins build artifact and run tests.")
-    parser.add_argument("--job-name", required=True, help="Jenkins job name")
-    parser.add_argument("--build-id", required=True, help="Jenkins build number")
+    parser = argparse.ArgumentParser(description="Run tests against a selected local package or Jenkins artifact.")
+    parser.add_argument("--artifact-file", default=os.getenv("PACKAGE_FILE", ""), help="Local release ZIP path; bypasses Jenkins artifact download")
+    parser.add_argument("--artifact-id", default=os.getenv("PACKAGE_ID", ""), help="Optional display identifier for a local package")
+    parser.add_argument("--job-name", help="Jenkins job name (required when --artifact-file is omitted)")
+    parser.add_argument("--build-id", help="Jenkins build number (required when --artifact-file is omitted)")
     parser.add_argument("--artifact-path", help="Desired artifact relativePath or filename (optional)")
     parser.add_argument("--artifacts-dir", default=os.getenv("ARTIFACTS_DIR", "artifacts"), help="Where to store downloaded artifacts")
     parser.add_argument("--gcode-root", default=os.getenv("GCODE_ROOT", ""), help="Root directory for pytest --gcode-root; auto-generated when omitted")
@@ -170,38 +216,98 @@ def main() -> int:
     load_env_file(repo_root)
     args = parse_args()
 
-    jenkins_base = os.getenv("JENKINS_BASE_URL") or os.getenv("JENKINS_URL")
-    jenkins_user = os.getenv("JENKINS_USER")
-    jenkins_token = os.getenv("JENKINS_TOKEN")
     feishu_webhook = os.getenv("FEISHU_WEBHOOK")
-
     notifier = FeishuNotifier(feishu_webhook)
-    if not jenkins_base:
-        msg = "[error] JENKINS_BASE_URL or JENKINS_URL is required"
+
+    artifact_file = str(args.artifact_file or "").strip()
+    has_jenkins_fields = bool(str(args.job_name or "").strip() or str(args.build_id or "").strip())
+    if artifact_file and has_jenkins_fields:
+        msg = "[error] --artifact-file cannot be combined with --job-name or --build-id"
         print(msg, file=sys.stderr)
         notifier.send_text("单平台构建测试失败", [msg])
         return 2
 
-    client = JenkinsClient(jenkins_base, jenkins_user, jenkins_token)
-    build_id_text = str(args.build_id).strip()
-    if build_id_text == "lastSuccessfulBuild":
-        resp = client.session.get(f"{client.base_url}/job/{args.job_name}/lastSuccessfulBuild/api/json", timeout=client.timeout)
-        resp.raise_for_status()
-        build_number = int(resp.json()["number"])
-    else:
-        try:
-            build_number = int(args.build_id)
-        except ValueError:
-            msg = f"[error] invalid build-id: {args.build_id}"
-            print(msg, file=sys.stderr)
-            notifier.send_text("单平台构建测试失败", [msg])
-            return 2
+    if not artifact_file and (not str(args.job_name or "").strip() or not str(args.build_id or "").strip()):
+        msg = "[error] provide --artifact-file, or both --job-name and --build-id"
+        print(msg, file=sys.stderr)
+        notifier.send_text("单平台构建测试失败", [msg])
+        return 2
+
     artifacts_root = repo_root / args.artifacts_dir
     dest_dir = artifacts_root / args.platform
     state_dir = artifacts_root / "tested_builds"
     state_dir.mkdir(parents=True, exist_ok=True)
-    state_path = state_dir / f"{args.job_name.replace('/', '_')}_{args.platform}.json"
-    baseline_csv = state_dir / f"{args.job_name.replace('/', '_')}_{args.platform}_second_slice_baseline.csv"
+
+    source_kind = "local" if artifact_file else "jenkins"
+    artifact_sha256 = ""
+    artifact_url = None
+    artifacts_meta: List[Dict] = []
+    jenkins_base = None
+    package_id = ""
+    package_run_key = ""
+    state_key = ""
+    source_label = ""
+    build_number = ""
+
+    if source_kind == "local":
+        try:
+            downloaded, artifact_sha256 = stage_local_package(artifact_file, dest_dir)
+        except (OSError, ValueError) as exc:
+            msg = f"[error] {exc}"
+            print(msg, file=sys.stderr)
+            notifier.send_text("单平台构建测试失败", [msg])
+            return 2
+        package_id = resolve_manual_package_id(args.artifact_id, Path(artifact_file), artifact_sha256)
+        package_run_key = _safe_filename_part(package_id)
+        state_key = "manual"
+        source_label = f"local package {package_id}"
+        build_number = package_run_key
+        print(f"[info] staged {source_label}: {downloaded}")
+    else:
+        jenkins_base = os.getenv("JENKINS_BASE_URL") or os.getenv("JENKINS_URL")
+        jenkins_user = os.getenv("JENKINS_USER")
+        jenkins_token = os.getenv("JENKINS_TOKEN")
+        if not jenkins_base:
+            msg = "[error] JENKINS_BASE_URL or JENKINS_URL is required for Jenkins artifact mode"
+            print(msg, file=sys.stderr)
+            notifier.send_text("单平台构建测试失败", [msg])
+            return 2
+
+        client = JenkinsClient(jenkins_base, jenkins_user, jenkins_token)
+        build_id_text = str(args.build_id).strip()
+        if build_id_text == "lastSuccessfulBuild":
+            resp = client.session.get(f"{client.base_url}/job/{args.job_name}/lastSuccessfulBuild/api/json", timeout=client.timeout)
+            resp.raise_for_status()
+            build_number = int(resp.json()["number"])
+        else:
+            try:
+                build_number = int(args.build_id)
+            except ValueError:
+                msg = f"[error] invalid build-id: {args.build_id}"
+                print(msg, file=sys.stderr)
+                notifier.send_text("单平台构建测试失败", [msg])
+                return 2
+
+        print(f"[info] downloading artifact for {args.job_name} #{build_number}")
+        downloaded, artifact_url, artifacts_meta = client.download_artifact(args.job_name, build_number, args.artifact_path, dest_dir)
+        if not downloaded:
+            msg = f"[error] no artifact found for {args.job_name} #{build_number}"
+            print(msg, file=sys.stderr)
+            notifier.send_text("单平台构建测试失败", [msg])
+            return 1
+
+        package_id = str(build_number)
+        package_run_key = _safe_filename_part(package_id)
+        state_key = str(args.job_name)
+        source_label = f"Jenkins {args.job_name} #{build_number}"
+        print(f"[info] artifact saved to: {downloaded}")
+        if artifact_url:
+            print(f"[info] artifact URL: {artifact_url}")
+
+    state_file_key = _safe_filename_part(state_key)
+    platform_file_key = _safe_filename_part(args.platform)
+    state_path = state_dir / f"{state_file_key}_{platform_file_key}.json"
+    baseline_csv = state_dir / f"{state_file_key}_{platform_file_key}_second_slice_baseline.csv"
     baseline_build_text = str(args.baseline_build_id).strip()
     try:
         baseline_build_number = int(baseline_build_text)
@@ -220,24 +326,24 @@ def main() -> int:
             state = json.loads(state_path.read_text(encoding="utf-8"))
         except Exception:
             state = {}
-        if (
-            int(state.get("build_number") or -1) == build_number
-            and str(state.get("test_command") or "").strip() == test_args
-        ):
-            print(f"[info] {args.job_name} #{build_number} was already tested, skipping")
+        if source_kind == "local":
+            same_source = (
+                state.get("source_kind") == "local"
+                and state.get("artifact_sha256") == artifact_sha256
+            )
+        else:
+            same_source = (
+                state.get("source_kind") in {None, "jenkins"}
+                and str(state.get("build_number") or "") == str(build_number)
+            )
+        if same_source and str(state.get("test_command") or "").strip() == test_args:
+            print(f"[info] {source_label} was already tested, skipping")
+            if source_kind == "local" and downloaded.exists():
+                try:
+                    downloaded.unlink()
+                except OSError as exc:
+                    print(f"[warn] cleanup failed: {exc}", file=sys.stderr)
             return 0
-
-    print(f"[info] downloading artifact for {args.job_name} #{build_number}")
-    downloaded, artifact_url, artifacts_meta = client.download_artifact(args.job_name, build_number, args.artifact_path, dest_dir)
-    if not downloaded:
-        msg = f"[error] no artifact found for {args.job_name} #{build_number}"
-        print(msg, file=sys.stderr)
-        notifier.send_text("单平台构建测试失败", [msg])
-        return 1
-
-    print(f"[info] artifact saved to: {downloaded}")
-    if artifact_url:
-        print(f"[info] artifact URL: {artifact_url}")
 
     env = os.environ.copy()
     env["ARTIFACTS_DIR"] = str(artifacts_root)
@@ -248,13 +354,20 @@ def main() -> int:
         python_paths.append(existing_pythonpath)
     env["PYTHONPATH"] = os.pathsep.join(python_paths)
     env["SECOND_SLICE_BASELINE_CSV"] = str(baseline_csv)
-    env["SECOND_SLICE_BASELINE_BUILD_ID"] = str(args.baseline_build_id)
-    allow_update_baseline = args.update_baseline or (build_number == baseline_build_number and not baseline_csv.exists())
+    env["SECOND_SLICE_BASELINE_BUILD_ID"] = str(args.baseline_build_id if source_kind == "jenkins" else package_id)
+    allow_update_baseline = args.update_baseline or (
+        source_kind == "jenkins" and build_number == baseline_build_number and not baseline_csv.exists()
+    )
     env["SECOND_SLICE_UPDATE_BASELINE"] = "1" if allow_update_baseline else "0"
     print(
-        f"[info] second-slice baseline: build #{args.baseline_build_id}, "
+        f"[info] second-slice baseline: scope={state_key}, "
         f"csv={baseline_csv}, update={'on' if allow_update_baseline else 'off'}"
     )
+    if source_kind == "local" and not baseline_csv.exists() and not allow_update_baseline:
+        print(
+            "[warn] no manual baseline exists; rerun an approved reference package with "
+            "--update-baseline to initialize performance comparison"
+        )
     platform_key = args.platform.upper()
     env[f"ARTIFACT_{platform_key}"] = str(downloaded)
 
@@ -266,6 +379,18 @@ def main() -> int:
         if maybe_exe:
             env[f"CREALITY_PRINTER_PATH"] = str(maybe_exe)
             slicer_exe = maybe_exe
+    if source_kind == "local" and not slicer_exe:
+        msg = f"[error] local package does not contain CrealityPrint.exe: {downloaded}"
+        print(msg, file=sys.stderr)
+        notifier.send_text("单平台构建测试失败", [msg])
+        try:
+            if extracted_dir and extracted_dir.exists():
+                shutil.rmtree(extracted_dir, ignore_errors=True)
+            if downloaded.exists():
+                downloaded.unlink()
+        except OSError as exc:
+            print(f"[warn] cleanup failed: {exc}", file=sys.stderr)
+        return 1
 
     if "{slicer_exe}" in test_args:
         if slicer_exe:
@@ -273,7 +398,7 @@ def main() -> int:
         else:
             print("[warn] slicer_exe placeholder present but no executable found", file=sys.stderr)
 
-    gcode_root = Path(args.gcode_root).resolve() if args.gcode_root else (artifacts_root / "gcode" / args.platform / str(build_number)).resolve()
+    gcode_root = Path(args.gcode_root).resolve() if args.gcode_root else (artifacts_root / "gcode" / args.platform / package_run_key).resolve()
     gcode_root.mkdir(parents=True, exist_ok=True)
     slicer_datadir = None
     if should_use_isolated_slicer_datadir(env):
@@ -317,9 +442,13 @@ def main() -> int:
         state_path.write_text(
             json.dumps(
                 {
-                    "job_name": args.job_name,
+                    "source_kind": source_kind,
+                    "source_label": source_label,
+                    "job_name": args.job_name if source_kind == "jenkins" else None,
                     "platform": args.platform,
                     "build_number": build_number,
+                    "package_id": package_id,
+                    "artifact_sha256": artifact_sha256 or None,
                     "test_command": test_args,
                 },
                 ensure_ascii=False,
@@ -329,7 +458,7 @@ def main() -> int:
         )
     # Prefer exe URL for Windows notifications when available
     preferred_url = None
-    if artifacts_meta:
+    if source_kind == "jenkins" and artifacts_meta:
         if args.platform.lower().startswith("windows"):
             for a in artifacts_meta:
                 rel = a.get("relativePath") or ""
@@ -339,10 +468,9 @@ def main() -> int:
         if not preferred_url and artifact_url:
             preferred_url = artifact_url
     if not preferred_url:
-        preferred_url = artifact_url or downloaded
+        preferred_url = artifact_url or artifact_file or downloaded
     lines = [
-        f"Job: {args.job_name}",
-        f"Build: #{build_number}",
+        f"Source: {source_label}",
         f"Artifact: {preferred_url}",
         f"Test: {result.status} (rc={result.return_code})",
     ]

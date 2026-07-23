@@ -1,12 +1,18 @@
+import hashlib
 from pathlib import Path
+from types import SimpleNamespace
+from zipfile import ZipFile
 
 import pytest
 
 from ci.jenkins_build_tester import (
+    main,
     prepare_slicer_datadir,
+    resolve_manual_package_id,
     resolve_run_slicer_datadir,
     resolve_slicer_log_dir,
     resolve_slicer_stdout_log,
+    stage_local_package,
     should_use_isolated_slicer_datadir,
 )
 
@@ -140,3 +146,172 @@ def test_resolve_slicer_stdout_log_uses_jenkins_build_number(tmp_path: Path):
     )
 
     assert log_path == tmp_path / "test_framework" / "artifacts" / "slicer_stdout_windows_1793_jenkins_74.log"
+
+
+def _write_release_zip(path: Path, marker: bytes = b"test") -> None:
+    with ZipFile(path, "w") as archive:
+        archive.writestr("Creality Print/CrealityPrint.exe", marker)
+
+
+def test_stage_local_package_copies_zip_without_touching_source(tmp_path: Path):
+    source = tmp_path / "CrealityPrint 7.0.zip"
+    _write_release_zip(source)
+
+    staged, digest = stage_local_package(str(source), tmp_path / "artifacts" / "windows")
+
+    assert staged != source
+    assert staged.is_file()
+    assert staged.read_bytes() == source.read_bytes()
+    assert digest == hashlib.sha256(staged.read_bytes()).hexdigest()
+    staged.unlink()
+    assert source.is_file()
+
+
+def test_stage_local_package_rejects_non_zip_file(tmp_path: Path):
+    source = tmp_path / "CrealityPrint.exe"
+    source.write_bytes(b"not-a-release-zip")
+
+    with pytest.raises(ValueError, match="must be a .zip"):
+        stage_local_package(str(source), tmp_path / "artifacts")
+
+
+def test_stage_local_package_does_not_replace_a_symlink_target(tmp_path: Path):
+    destination = tmp_path / "artifacts" / "windows"
+    package_bytes = b"release-package"
+    digest = hashlib.sha256(package_bytes).hexdigest()
+    original = destination / "manual" / f"source_{digest[:12]}.zip"
+    original.parent.mkdir(parents=True)
+    original.write_bytes(package_bytes)
+    source = tmp_path / "source.zip"
+    try:
+        source.symlink_to(original)
+    except OSError:
+        pytest.skip("file symlinks are unavailable on this Windows host")
+
+    staged, _ = stage_local_package(str(source), destination)
+
+    assert source.is_symlink()
+    assert staged != original
+    assert original.read_bytes() == package_bytes
+
+
+def test_resolve_manual_package_id_defaults_to_filename_and_hash(tmp_path: Path):
+    package = tmp_path / "CrealityPrint.zip"
+
+    assert resolve_manual_package_id("", package, "abcdef0123456789") == "CrealityPrint-abcdef012345"
+    assert resolve_manual_package_id("7.0.0.5243", package, "abcdef0123456789") == "7.0.0.5243"
+
+
+def test_main_runs_local_package_without_jenkins_and_preserves_source(tmp_path: Path, monkeypatch):
+    package = tmp_path / "manual-release.zip"
+    _write_release_zip(package)
+    artifacts_dir = tmp_path / "artifacts"
+    calls = []
+
+    def fake_run_tests(command, env, repo_root):
+        calls.append((command, env, repo_root))
+        return SimpleNamespace(status="SUCCESS", return_code=0, output="ok")
+
+    monkeypatch.setattr("ci.jenkins_build_tester.load_env_file", lambda _root: None)
+    monkeypatch.setattr("ci.jenkins_build_tester.run_tests", fake_run_tests)
+    monkeypatch.delenv("JENKINS_BASE_URL", raising=False)
+    monkeypatch.delenv("JENKINS_URL", raising=False)
+    monkeypatch.delenv("SLICER_DATADIR_ISOLATED", raising=False)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "jenkins_build_tester.py",
+            "--artifact-file",
+            str(package),
+            "--artifact-id",
+            "manual-5243",
+            "--artifacts-dir",
+            str(artifacts_dir),
+            "--platform",
+            "windows",
+            "--test-command=-q",
+        ],
+    )
+
+    assert main() == 0
+    assert package.is_file()
+    assert len(calls) == 1
+    assert "CrealityPrint.exe" in calls[0][0]
+    assert calls[0][1]["CREALITY_PRINTER_PATH"].endswith("CrealityPrint.exe")
+    assert not list((artifacts_dir / "windows" / "manual").glob("*.zip"))
+    state = (artifacts_dir / "tested_builds" / "manual_windows.json").read_text(encoding="utf-8")
+    assert '"source_kind": "local"' in state
+
+
+def test_main_does_not_skip_a_changed_manual_package(tmp_path: Path, monkeypatch):
+    package = tmp_path / "manual-release.zip"
+    artifacts_dir = tmp_path / "artifacts"
+    calls = []
+
+    def fake_run_tests(command, env, repo_root):
+        calls.append(command)
+        return SimpleNamespace(status="SUCCESS", return_code=0, output="ok")
+
+    monkeypatch.setattr("ci.jenkins_build_tester.load_env_file", lambda _root: None)
+    monkeypatch.setattr("ci.jenkins_build_tester.run_tests", fake_run_tests)
+    monkeypatch.delenv("JENKINS_BASE_URL", raising=False)
+    monkeypatch.delenv("JENKINS_URL", raising=False)
+    monkeypatch.delenv("SLICER_DATADIR_ISOLATED", raising=False)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "jenkins_build_tester.py",
+            "--artifact-file",
+            str(package),
+            "--artifact-id",
+            "manual-current",
+            "--artifacts-dir",
+            str(artifacts_dir),
+            "--skip-tested-build",
+            "--test-command",
+            "performance/case/test_slice.py::test_feishu_slice",
+        ],
+    )
+
+    _write_release_zip(package, b"first")
+    assert main() == 0
+    _write_release_zip(package, b"second")
+    assert main() == 0
+
+    assert len(calls) == 2
+
+
+def test_main_removes_staged_zip_when_skipping_an_unchanged_package(tmp_path: Path, monkeypatch):
+    package = tmp_path / "manual-release.zip"
+    artifacts_dir = tmp_path / "artifacts"
+    calls = []
+
+    def fake_run_tests(command, env, repo_root):
+        calls.append(command)
+        return SimpleNamespace(status="SUCCESS", return_code=0, output="ok")
+
+    monkeypatch.setattr("ci.jenkins_build_tester.load_env_file", lambda _root: None)
+    monkeypatch.setattr("ci.jenkins_build_tester.run_tests", fake_run_tests)
+    monkeypatch.delenv("JENKINS_BASE_URL", raising=False)
+    monkeypatch.delenv("JENKINS_URL", raising=False)
+    monkeypatch.delenv("SLICER_DATADIR_ISOLATED", raising=False)
+    monkeypatch.setattr(
+        "sys.argv",
+        [
+            "jenkins_build_tester.py",
+            "--artifact-file",
+            str(package),
+            "--artifacts-dir",
+            str(artifacts_dir),
+            "--skip-tested-build",
+            "--test-command",
+            "performance/case/test_slice.py::test_feishu_slice",
+        ],
+    )
+
+    _write_release_zip(package)
+    assert main() == 0
+    assert main() == 0
+
+    assert len(calls) == 1
+    assert not list((artifacts_dir / "windows" / "manual").glob("*.zip"))
