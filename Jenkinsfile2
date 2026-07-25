@@ -93,9 +93,6 @@ endlocal
     }
   }
   post {
-    always {
-      
-    }
     failure {
       echo 'Pipeline failed; check Feishu notifications for details.'
     }
