@@ -203,7 +203,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--baseline-build-id", default=os.getenv("BASELINE_BUILD_ID", "1793"), help="Fixed Jenkins build number used as the second-slice baseline")
     parser.add_argument("--update-baseline", action="store_true", default=os.getenv("UPDATE_BASELINE", "").lower() in {"1", "true", "yes", "on"}, help="Allow updating the persistent second-slice baseline CSV")
     parser.add_argument("--skip-tested-build", action="store_true", default=os.getenv("SKIP_TESTED_BUILD", "").lower() in {"1", "true", "yes", "on"}, help="Skip when the resolved build was already tested")
-    parser.add_argument("--preserve-extracted-files", action="store_true", default=os.getenv("PRESERVE_EXTRACTED_FILES", "").lower() in {"1", "true", "yes", "on"}, help="Overlay ZIP contents onto the extraction directory without removing existing files")
+    parser.add_argument("--preserve-extracted-files", action="store_true", default=_truthy(os.getenv("PRESERVE_EXTRACTED_FILES", "1")), help="Overlay ZIP contents onto the extraction directory without removing existing files")
     parser.add_argument(
         "--test-command",
         default=os.getenv("TEST_COMMAND", "pytest -q"),
@@ -386,7 +386,7 @@ def main() -> int:
         notifier.send_text("单平台构建测试失败", [msg])
         try:
             if extracted_dir and extracted_dir.exists():
-                shutil.rmtree(extracted_dir, ignore_errors=True)
+                print(f"[info] preserving extracted package directory: {extracted_dir}")
             if downloaded.exists():
                 downloaded.unlink()
         except OSError as exc:
@@ -490,8 +490,7 @@ def main() -> int:
             if downloaded.is_file():
                 downloaded.unlink()
         if extracted_dir and extracted_dir.exists():
-            import shutil
-            shutil.rmtree(extracted_dir, ignore_errors=True)
+            print(f"[info] preserving extracted package directory: {extracted_dir}")
     except Exception as exc:
         print(f"[warn] cleanup failed: {exc}", file=sys.stderr)
 
