@@ -8,7 +8,7 @@ import sys
 import time
 import zipfile
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Dict, List, Optional, Tuple
 
 import requests
@@ -628,15 +628,54 @@ def parse_bool_flag(value: Optional[str]) -> Optional[bool]:
     return None
 
 
-def extract_artifact_zip(artifact_path: Path, target_dir: Optional[Path] = None) -> Optional[Path]:
-    """Extract a zip artifact into a stable directory and return the extraction directory."""
+def extract_artifact_zip(
+    artifact_path: Path,
+    target_dir: Optional[Path] = None,
+    preserve_existing: bool = False,
+) -> Optional[Path]:
+    """Extract a ZIP artifact and return its stable extraction directory.
+
+    When ``preserve_existing`` is true, ZIP entries overwrite files with the
+    same names but leave files that are absent from the ZIP untouched.
+    """
     if artifact_path.suffix.lower() != ".zip":
         return None
     target_dir = target_dir or artifact_path.with_suffix("")
-    if target_dir.exists():
+    if target_dir.exists() and not preserve_existing:
         shutil.rmtree(target_dir, ignore_errors=True)
     target_dir.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(artifact_path, "r") as zf:
+        if preserve_existing:
+            file_entries = [entry for entry in zf.infolist() if not entry.is_dir()]
+            top_levels = {
+                PurePosixPath(entry.filename).parts[0]
+                for entry in file_entries
+                if PurePosixPath(entry.filename).parts
+            }
+            # Release packages normally contain one top-level CrealityPrint/
+            # directory. Strip it so the payload overlays the existing root.
+            prefix = (
+                next(iter(top_levels))
+                if len(top_levels) == 1
+                and all(len(PurePosixPath(entry.filename).parts) > 1 for entry in file_entries)
+                else None
+            )
+            target_root = target_dir.resolve()
+            for entry in file_entries:
+                parts = PurePosixPath(entry.filename).parts
+                if prefix and parts and parts[0] == prefix:
+                    parts = parts[1:]
+                if not parts or any(part in {"", ".", ".."} for part in parts):
+                    raise ValueError(f"Unsafe ZIP entry: {entry.filename}")
+                destination = target_dir.joinpath(*parts)
+                try:
+                    destination.resolve().relative_to(target_root)
+                except ValueError as exc:
+                    raise ValueError(f"Unsafe ZIP entry: {entry.filename}") from exc
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                with zf.open(entry) as source, destination.open("wb") as output:
+                    shutil.copyfileobj(source, output)
+            return target_dir
         zf.extractall(target_dir)
     # Flatten if the zip contains a single top-level directory
     children = [p for p in target_dir.iterdir()]

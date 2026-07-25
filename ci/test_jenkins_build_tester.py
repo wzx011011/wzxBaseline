@@ -15,6 +15,25 @@ from ci.jenkins_build_tester import (
     stage_local_package,
     should_use_isolated_slicer_datadir,
 )
+from ci.jenkins_release_orchestrator import extract_artifact_zip
+
+
+def test_extract_artifact_zip_overlay_preserves_unrelated_files(tmp_path: Path):
+    archive = tmp_path / "package.zip"
+    with ZipFile(archive, "w") as zf:
+        zf.writestr("CrealityPrint/CrealityPrint.exe", "new executable")
+        zf.writestr("CrealityPrint/new.dll", "new library")
+
+    target = tmp_path / "extracted"
+    target.mkdir()
+    (target / "CrealityPrint.exe").write_text("old executable", encoding="utf-8")
+    (target / "keep.dll").write_text("keep me", encoding="utf-8")
+
+    extract_artifact_zip(archive, target, preserve_existing=True)
+
+    assert (target / "CrealityPrint.exe").read_text(encoding="utf-8") == "new executable"
+    assert (target / "new.dll").read_text(encoding="utf-8") == "new library"
+    assert (target / "keep.dll").read_text(encoding="utf-8") == "keep me"
 
 
 def test_prepare_slicer_datadir_seeds_from_explicit_template(tmp_path: Path):

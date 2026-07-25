@@ -203,6 +203,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--baseline-build-id", default=os.getenv("BASELINE_BUILD_ID", "1793"), help="Fixed Jenkins build number used as the second-slice baseline")
     parser.add_argument("--update-baseline", action="store_true", default=os.getenv("UPDATE_BASELINE", "").lower() in {"1", "true", "yes", "on"}, help="Allow updating the persistent second-slice baseline CSV")
     parser.add_argument("--skip-tested-build", action="store_true", default=os.getenv("SKIP_TESTED_BUILD", "").lower() in {"1", "true", "yes", "on"}, help="Skip when the resolved build was already tested")
+    parser.add_argument("--preserve-extracted-files", action="store_true", default=os.getenv("PRESERVE_EXTRACTED_FILES", "").lower() in {"1", "true", "yes", "on"}, help="Overlay ZIP contents onto the extraction directory without removing existing files")
     parser.add_argument(
         "--test-command",
         default=os.getenv("TEST_COMMAND", "pytest -q"),
@@ -373,7 +374,7 @@ def main() -> int:
 
     slicer_exe = None
     extract_root = artifacts_root / "extracted" / args.platform
-    extracted_dir = extract_artifact_zip(downloaded, extract_root)
+    extracted_dir = extract_artifact_zip(downloaded, extract_root, preserve_existing=args.preserve_extracted_files)
     if extracted_dir:
         maybe_exe = find_slicer_exe(extracted_dir)
         if maybe_exe:
