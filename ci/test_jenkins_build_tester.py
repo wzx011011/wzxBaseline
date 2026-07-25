@@ -16,6 +16,7 @@ from ci.jenkins_build_tester import (
     should_use_isolated_slicer_datadir,
 )
 from ci.jenkins_release_orchestrator import extract_artifact_zip
+from test_framework.performance.case import test_slice
 
 
 def test_extract_artifact_zip_overlay_preserves_unrelated_files(tmp_path: Path):
@@ -34,6 +35,26 @@ def test_extract_artifact_zip_overlay_preserves_unrelated_files(tmp_path: Path):
     assert (target / "CrealityPrint.exe").read_text(encoding="utf-8") == "new executable"
     assert (target / "new.dll").read_text(encoding="utf-8") == "new library"
     assert (target / "keep.dll").read_text(encoding="utf-8") == "keep me"
+
+
+def test_second_slice_model_is_opt_in(tmp_path: Path, monkeypatch):
+    cases = [
+        {"record_id": "a", "name": "a.3mf", "path": "a.3mf", "title": "a.3mf"},
+        {"record_id": "b", "name": "b.3mf", "path": "b.3mf", "title": "b.3mf"},
+    ]
+    monkeypatch.setattr(test_slice, "_FEISHU_CASES", None)
+    monkeypatch.setattr(test_slice, "_download_http_3mf_files", lambda: cases)
+    no_fixed_model = SimpleNamespace(getoption=lambda _name: "")
+
+    assert test_slice._collect_feishu_cases(no_fixed_model) == cases
+
+    model = tmp_path / "single.3mf"
+    model.write_bytes(b"3mf")
+    monkeypatch.setattr(test_slice, "_FEISHU_CASES", None)
+    fixed_model = SimpleNamespace(getoption=lambda _name: str(model))
+
+    selected = test_slice._collect_feishu_cases(fixed_model)
+    assert [case["path"] for case in selected] == [str(model.resolve())]
 
 
 def test_prepare_slicer_datadir_seeds_from_explicit_template(tmp_path: Path):

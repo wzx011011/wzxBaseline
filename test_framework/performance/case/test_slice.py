@@ -155,8 +155,6 @@ def _load_manifest_cases() -> List[Dict]:
 
 
 HTTP_3MF_ROOT_DEFAULT = "http://172.20.180.14/shared/test_3mf/"
-SECOND_SLICE_MODEL_DEFAULT = Path("artifacts") / "second_slice" / "切片测试_无支撑.3mf"
-
 # Cached CrealityPrint product version for the exe under test (read once per process).
 _EXE_VERSION_CACHE: Dict[str, str] = {}
 
@@ -341,13 +339,18 @@ def _download_http_3mf_files() -> List[Dict]:
     return files
 
 
-def _collect_feishu_cases() -> List[Dict]:
+def _collect_feishu_cases(pytestconfig=None) -> List[Dict]:
     global _FEISHU_CASES, _FEISHU_ERROR
     if _FEISHU_CASES is not None:
         return _FEISHU_CASES
 
-    fixed_model = Path(os.getenv("SECOND_SLICE_MODEL", str(SECOND_SLICE_MODEL_DEFAULT))).resolve()
-    if fixed_model.exists():
+    fixed_model_value = pytestconfig.getoption("--second-slice-model") if pytestconfig else ""
+    if fixed_model_value:
+        fixed_model = Path(fixed_model_value).expanduser().resolve()
+        if not fixed_model.exists():
+            _FEISHU_CASES = []
+            _FEISHU_ERROR = f"--second-slice-model points to non-existing path: {fixed_model}"
+            return _FEISHU_CASES
         _FEISHU_CASES = [
             {
                 "record_id": fixed_model.name,
@@ -356,10 +359,6 @@ def _collect_feishu_cases() -> List[Dict]:
                 "title": "second_slice/" + fixed_model.name,
             }
         ]
-        return _FEISHU_CASES
-    if os.getenv("SECOND_SLICE_MODEL"):
-        _FEISHU_CASES = []
-        _FEISHU_ERROR = f"SECOND_SLICE_MODEL points to non-existing path: {fixed_model}"
         return _FEISHU_CASES
 
     # Optional: only use local manifest for debugging, skip HTTP download.
@@ -394,7 +393,7 @@ def _collect_feishu_cases() -> List[Dict]:
 def pytest_generate_tests(metafunc):
     if "feishu_case" not in metafunc.fixturenames:
         return
-    cases = _collect_feishu_cases()
+    cases = _collect_feishu_cases(metafunc.config)
     regex_filter = _resolve_cli_or_env(
         metafunc.config,
         "feishu_case_regex",

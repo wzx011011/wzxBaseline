@@ -109,8 +109,8 @@ SECOND_SLICE_BASELINE_CSV
 
 已调整为二次切片测试流程：
 
-- 优先使用固定模型 `SECOND_SLICE_MODEL`。
-- 没有显式设置时默认使用项目内缓存模型。
+- 默认从 HTTP 用例源收集全部模型。
+- 仅在显式传入 pytest 参数 `--second-slice-model <path>` 时，使用该模型作为唯一二次切片用例。
 - 测试字段新增：
   - `first_slice_ms`
   - `move_ms`

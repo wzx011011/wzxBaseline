@@ -201,6 +201,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--gcode-root", default=os.getenv("GCODE_ROOT", ""), help="Root directory for pytest --gcode-root; auto-generated when omitted")
     parser.add_argument("--platform", default=os.getenv("PLATFORM", "windows"), help="Platform label used for env injection (e.g., windows/macos_x86/macos_arm64/linux)")
     parser.add_argument("--baseline-build-id", default=os.getenv("BASELINE_BUILD_ID", "1793"), help="Fixed Jenkins build number used as the second-slice baseline")
+    parser.add_argument("--second-slice-model", default=os.getenv("SECOND_SLICE_MODEL", ""), help="Optional 3MF path used as the only second-slice case")
     parser.add_argument("--update-baseline", action="store_true", default=os.getenv("UPDATE_BASELINE", "").lower() in {"1", "true", "yes", "on"}, help="Allow updating the persistent second-slice baseline CSV")
     parser.add_argument("--skip-tested-build", action="store_true", default=os.getenv("SKIP_TESTED_BUILD", "").lower() in {"1", "true", "yes", "on"}, help="Skip when the resolved build was already tested")
     parser.add_argument("--preserve-extracted-files", action="store_true", default=_truthy(os.getenv("PRESERVE_EXTRACTED_FILES", "1")), help="Overlay ZIP contents onto the extraction directory without removing existing files")
@@ -431,8 +432,14 @@ def main() -> int:
     slicer_datadir_arg = ""
     if slicer_datadir and "--slicer-datadir" not in test_args:
         slicer_datadir_arg = f' --slicer-datadir="{slicer_datadir}"'
+    second_slice_model_arg = ""
+    if args.second_slice_model and "--second-slice-model" not in test_args:
+        requested_model = Path(args.second_slice_model).expanduser()
+        if not requested_model.is_absolute():
+            requested_model = repo_root / requested_model
+        second_slice_model_arg = f' --second-slice-model="{requested_model.resolve()}"'
     test_command = (
-        f"cd .\\test_framework\\&&python -u -m pytest {test_args}{slicer_arg}{gcode_root_arg}{slicer_datadir_arg}"
+        f"cd .\\test_framework\\&&python -u -m pytest {test_args}{slicer_arg}{gcode_root_arg}{slicer_datadir_arg}{second_slice_model_arg}"
         " -v --alluredir=../allure-results --capture=tee-sys"
     )
 

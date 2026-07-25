@@ -52,6 +52,12 @@
         help="3MF case regex filter; higher priority than FEISHU_CASE_REGEX",
     )
     grp.addoption(
+        "--second-slice-model",
+        dest="second_slice_model",
+        default="",
+        help="Optional 3MF path used as the only second-slice performance case",
+    )
+    grp.addoption(
         "--feishu-notify",
         dest="feishu_notify",
         choices=("on", "off"),
