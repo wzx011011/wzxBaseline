@@ -42,7 +42,7 @@ pipeline {
             selectedGroups << [name: '强度', path: 'engine_params/case/params/process/strength']
           }
           if (params.TEST_SUPPORT) {
-            selectedGroups << [name: '支撑', path: 'engine_params/case/params/process/test_support.py']
+            selectedGroups << [name: '支撑', path: 'engine_params/case/params/process/support']
           }
           if (params.TEST_SPEED) {
             selectedGroups << [name: '速度', path: 'engine_params/case/params/process/speed']

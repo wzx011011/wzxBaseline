@@ -1,6 +1,4 @@
-"""
-Test cases for Support parameters.
-"""
+"""Test cases for the independent Process/Support category."""
 
 import pytest
 from pathlib import Path
