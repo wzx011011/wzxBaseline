@@ -106,6 +106,8 @@ def test_slice_and_export_exports_only_after_slicing_completed(tmp_path: Path):
 
     assert result == output
     assert output.stat().st_size > 0
+    assert "click_button" in injector.commands
+    assert "trigger_slice" not in injector.commands
     assert injector.commands.index("export_gcode") > max(
         index for index, command in enumerate(injector.commands) if command == "get_slicing_progress"
     )

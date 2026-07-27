@@ -514,15 +514,19 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     load_res = load_fut.result(timeout=load_timeout)
     assert load_res.get("code") == 0, f"加载模型失败：{load_res}"
 
-    # ---- 3) trigger slicing and wait for the engine's completed state ----
+    # ---- 3) click the UI slice button, then wait for completion ----
+    # click_button waits until the button is visible and enabled before posting
+    # the event. trigger_slice waits for slice_started before responding, which
+    # can occupy the command queue forever when the Prepare page is not ready or
+    # slicing is rejected before that event is emitted.
     trigger_timeout = min(slice_timeout, 60.0)
     slice_fut = engine_injector.submit(
-        "trigger_slice",
+        "click_button",
         {"id": slice_btn_id},
         timeout=trigger_timeout,
     )
     slice_res = slice_fut.result(timeout=trigger_timeout)
-    assert slice_res.get("code") == 0, f"触发切片失败：{slice_res}"
+    assert slice_res.get("code") == 0, f"点击切片按钮失败：{slice_res}"
 
     try:
         slicing_progress = wait_for_slicing_done(
