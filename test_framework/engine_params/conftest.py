@@ -36,6 +36,7 @@ _load_env_from_file()
 import pytest
 from .src.slicerctl.session import EngineSession, RestartingEngine, EngineUnavailable
 from .src.slicerctl.constants import SLICE_BTN_ID
+from .src.slicerctl.slicing import SlicingWaitTimeout, wait_for_slicing_done
 
 from .src.testing_utils.caseio import (
     repo_root,
@@ -483,11 +484,13 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     slice_btn_id = int(params.get("slice_btn_id", SLICE_BTN_ID))
     timeouts = params.get("timeouts", {})
     load_timeout = int(timeouts.get("load", 90))
-    slice_timeout = int(timeouts.get("slice", 120))
+    slice_timeout = float(timeouts.get("slice", os.getenv("SLICER_SLICE_TIMEOUT", "600")))
+    slice_poll = float(timeouts.get("poll", os.getenv("SLICER_PROGRESS_POLL", "1")))
+    slice_stall = float(timeouts.get("stall", os.getenv("SLICER_STALL_TIMEOUT", "120")))
     export_timeout = int(timeouts.get("export", 360))
     # 事件落盘稳定期与整体等待上限（新的两个可选超时）
     settle_seconds = float(timeouts.get("settle", 1.0))   # 文件大小/mtime 保持不变的时间
-    wait_written   = float(timeouts.get("wait", 60.0))    # 监听等待总时长
+    wait_written = float(timeouts.get("wait", os.getenv("SLICER_WAIT_WRITTEN", "180")))
 
     # 确保父目录存在
     output_gcode.parent.mkdir(parents=True, exist_ok=True)
@@ -511,12 +514,28 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     load_res = load_fut.result(timeout=load_timeout)
     assert load_res.get("code") == 0, f"加载模型失败：{load_res}"
 
-    # ---- 3) click slice button ----
-    slice_fut = engine_injector.submit("click_button", {"id": slice_btn_id})
-    slice_res = slice_fut.result(timeout=slice_timeout)
-    assert slice_res.get("code") == 0, f"slice_fut 失败：{slice_res}"
+    # ---- 3) trigger slicing and wait for the engine's completed state ----
+    trigger_timeout = min(slice_timeout, 60.0)
+    slice_fut = engine_injector.submit(
+        "trigger_slice",
+        {"id": slice_btn_id},
+        timeout=trigger_timeout,
+    )
+    slice_res = slice_fut.result(timeout=trigger_timeout)
+    assert slice_res.get("code") == 0, f"触发切片失败：{slice_res}"
 
-    # ---- 4) export gcode ----
+    try:
+        slicing_progress = wait_for_slicing_done(
+            engine_injector,
+            timeout=slice_timeout,
+            poll_interval=slice_poll,
+            stall_timeout=slice_stall,
+        )
+    except SlicingWaitTimeout as exc:
+        pytest.fail(f"等待切片完成失败：{exc}")
+    print(f"[slice_and_export] slicing completed: {slicing_progress}")
+
+    # ---- 4) export G-code only after slicing has completed ----
     export_fut = engine_injector.submit("export_gcode", {
         "export_all": False,
         "output": str(output_gcode)
@@ -524,16 +543,16 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     export_res = export_fut.result(timeout=export_timeout)
     assert export_res.get("code") == 0, f"导出 G-code 失败：{export_res}"
 
-    # ---- 5) watchdog 等待文件真正落盘且写入完成 ----
+    # ---- 5) wait until the exported file is stable and readable ----
     #   - 事件驱动，无需忙等
     #   - 跨平台：Windows 上也通过“可读打开”探测写锁释放
     try:
-        wait_for_file_written(output_gcode, timeout=5, settle_time=settle_seconds)
-    except TimeoutError:
-        # 超时了，但是文件可能已经生成了
-        pass
+        wait_for_file_written(output_gcode, timeout=wait_written, settle_time=settle_seconds)
+    except TimeoutError as exc:
+        pytest.fail(f"等待 G-code 文件写入完成失败：{output_gcode}: {exc}")
 
-    #assert output_gcode.exists(), f"G-code 未生成：{output_gcode}"
+    assert output_gcode.is_file(), f"G-code 未生成：{output_gcode}"
+    assert output_gcode.stat().st_size > 0, f"G-code 文件为空：{output_gcode}"
     return output_gcode
 
 
