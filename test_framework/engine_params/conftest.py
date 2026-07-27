@@ -539,8 +539,15 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
 
 # ========== pytest 钩子：自动跳过 ignored_tests.json 中的用例 ==========
 def pytest_collection_modifyitems(config, items):
-    """读取 ignored_tests.json 并标记匹配的测试用例为 skip"""
+    """Mark parameter cases and skip cases listed in ignored_tests.json."""
     import json
+
+    # ``paramters`` is the project-defined pytest marker used by the dedicated
+    # Jenkins parameter-test job. Keep the legacy spelling for compatibility.
+    for item in items:
+        item_path = str(item.fspath).replace("\\", "/")
+        if "/engine_params/case/params/" in item_path:
+            item.add_marker(pytest.mark.paramters)
     
     root = repo_root(Path.cwd())
     ignored_file = root / "test_framework" / "engine_params" / "data" / "ignored_tests.json"

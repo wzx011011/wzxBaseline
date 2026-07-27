@@ -5,12 +5,12 @@ pipeline {
     disableConcurrentBuilds()
   }
   parameters {
-    string(name: 'AGENT_LABEL', defaultValue: 'winTestServer_2', description: 'Jenkins agent label to run the pipeline on')
+    string(name: 'AGENT_LABEL', defaultValue: 'windows-tester1', description: 'Jenkins agent label to run the pipeline on')
     string(name: 'JOB_NAME', defaultValue: 'CrealityPrint_Release_Package_pipeline', description: 'Jenkins job name to download from')
     string(name: 'BUILD_ID', defaultValue: 'lastSuccessfulBuild', description: 'Jenkins build number or lastSuccessfulBuild')
     string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
     string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
-    string(name: 'TEST_COMMAND', defaultValue: '-m pytest -m engine_params', description: 'pytest selection for parameter tests')
+    string(name: 'PARAM_TEST_COMMAND', defaultValue: 'engine_params/case/params -m paramters', description: 'pytest selection for parameter tests')
     string(name: 'ALLURE_CMD', defaultValue: 'Allure', description: 'Allure commandline tool name (Global Tool); leave empty to use default')
   }
   environment {
@@ -52,7 +52,7 @@ if "%BUILD_ID%"=="" (
 set "EXTRA_ARGS="
 if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ARTIFACT_PATH%\""
 if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
-if not "%TEST_COMMAND%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%TEST_COMMAND%\""
+if not "%PARAM_TEST_COMMAND%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%PARAM_TEST_COMMAND%\""
 
 python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --allure-results-dir "%ALLURE_RESULTS_DIR%" --skip-tested-build --preserve-extracted-files !EXTRA_ARGS!
 endlocal
