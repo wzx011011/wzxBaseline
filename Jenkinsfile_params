@@ -10,7 +10,15 @@ pipeline {
     string(name: 'BUILD_ID', defaultValue: 'lastSuccessfulBuild', description: 'Jenkins build number or lastSuccessfulBuild')
     string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
     string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
-    string(name: 'PARAM_TEST_COMMAND', defaultValue: 'engine_params/case/params -m paramters', description: 'pytest selection for parameter tests')
+    booleanParam(name: 'TEST_QUALITY', defaultValue: false, description: '质量参数')
+    booleanParam(name: 'TEST_STRENGTH', defaultValue: false, description: '强度参数')
+    booleanParam(name: 'TEST_SUPPORT', defaultValue: false, description: '支撑参数')
+    booleanParam(name: 'TEST_SPEED', defaultValue: false, description: '速度参数')
+    booleanParam(name: 'TEST_PROCESS_FILAMENT', defaultValue: false, description: '工艺耗材参数')
+    booleanParam(name: 'TEST_PROCESS_OTHERS', defaultValue: false, description: '其他工艺参数')
+    booleanParam(name: 'TEST_PRINTER', defaultValue: false, description: '打印机参数')
+    booleanParam(name: 'TEST_FILAMENT', defaultValue: false, description: '耗材参数')
+    string(name: 'PYTEST_EXTRA_ARGS', defaultValue: '', description: 'Optional advanced pytest arguments, for example: -k wall_loops --maxfail=1')
     string(name: 'ALLURE_CMD', defaultValue: 'Allure', description: 'Allure commandline tool name (Global Tool); leave empty to use default')
   }
   environment {
@@ -22,6 +30,54 @@ pipeline {
   stages {
     stage('Checkout') {
       steps { checkout scm }
+    }
+    stage('Select parameter tests') {
+      steps {
+        script {
+          def selectedGroups = []
+          if (params.TEST_QUALITY) {
+            selectedGroups << [name: '质量', path: 'engine_params/case/params/process/quality']
+          }
+          if (params.TEST_STRENGTH) {
+            selectedGroups << [name: '强度', path: 'engine_params/case/params/process/strength']
+          }
+          if (params.TEST_SUPPORT) {
+            selectedGroups << [name: '支撑', path: 'engine_params/case/params/process/test_support.py']
+          }
+          if (params.TEST_SPEED) {
+            selectedGroups << [name: '速度', path: 'engine_params/case/params/process/speed']
+          }
+          if (params.TEST_PROCESS_FILAMENT) {
+            selectedGroups << [name: '工艺耗材', path: 'engine_params/case/params/process/filament']
+          }
+          if (params.TEST_PROCESS_OTHERS) {
+            selectedGroups << [name: '其他工艺', path: 'engine_params/case/params/process/others']
+          }
+          if (params.TEST_PRINTER) {
+            selectedGroups << [name: '打印机', path: 'engine_params/case/params/printer']
+          }
+          if (params.TEST_FILAMENT) {
+            selectedGroups << [name: '耗材', path: 'engine_params/case/params/filament']
+          }
+
+          if (selectedGroups.isEmpty()) {
+            error('At least one parameter test group must be selected.')
+          }
+
+          def commandParts = selectedGroups.collect { it.path }
+          commandParts << '-m paramters'
+          def extraArgs = params.PYTEST_EXTRA_ARGS?.trim()
+          if (extraArgs) {
+            commandParts << extraArgs
+          }
+
+          env.PARAM_TEST_COMMAND = commandParts.join(' ')
+          def selectedNames = selectedGroups.collect { it.name }.join(', ')
+          echo "Selected parameter test groups: ${selectedNames}"
+          echo "Generated pytest selection: ${env.PARAM_TEST_COMMAND}"
+          currentBuild.description = "参数测试：${selectedNames}"
+        }
+      }
     }
     stage('Install deps') {
       steps {
@@ -50,10 +106,9 @@ if "%BUILD_ID%"=="" (
 )
 
 set "EXTRA_ARGS="
-if "%PARAM_TEST_COMMAND%"=="" set "PARAM_TEST_COMMAND=engine_params/case/params -m paramters"
 if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ARTIFACT_PATH%\""
 if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
-if not "%PARAM_TEST_COMMAND%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%PARAM_TEST_COMMAND%\""
+set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%PARAM_TEST_COMMAND%\""
 
 python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --allure-results-dir "%ALLURE_RESULTS_DIR%" --skip-tested-build --preserve-extracted-files !EXTRA_ARGS!
 endlocal
