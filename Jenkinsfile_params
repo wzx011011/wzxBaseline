@@ -1,0 +1,95 @@
+pipeline {
+  agent { label params.AGENT_LABEL }
+  options {
+    timestamps()
+    disableConcurrentBuilds()
+  }
+  parameters {
+    string(name: 'AGENT_LABEL', defaultValue: 'winTestServer_2', description: 'Jenkins agent label to run the pipeline on')
+    string(name: 'JOB_NAME', defaultValue: 'CrealityPrint_Release_Package_pipeline', description: 'Jenkins job name to download from')
+    string(name: 'BUILD_ID', defaultValue: 'lastSuccessfulBuild', description: 'Jenkins build number or lastSuccessfulBuild')
+    string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
+    string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
+    string(name: 'TEST_COMMAND', defaultValue: '-m pytest -m engine_params', description: 'pytest selection for parameter tests')
+    string(name: 'ALLURE_CMD', defaultValue: 'Allure', description: 'Allure commandline tool name (Global Tool); leave empty to use default')
+  }
+  environment {
+    PYTHONIOENCODING = 'utf-8'
+    SLICER_DATADIR_ISOLATED = '1'
+    SKIP_TESTED_BUILD = 'true'
+    ALLURE_RESULTS_DIR = 'allure-results-params'
+  }
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+    stage('Install deps') {
+      steps {
+        bat '''
+python -m pip install -U pip
+python -m pip install -r requirements.txt
+if exist allure-results-params rd /s /q allure-results-params
+'''
+      }
+    }
+    stage('Download artifact and run parameter tests') {
+      steps {
+        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+          withCredentials([sshUserPrivateKey(credentialsId: 'cxsw-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+            bat '''
+@echo off
+setlocal enabledelayedexpansion
+
+if "%JOB_NAME%"=="" (
+  echo JOB_NAME is required
+  exit /b 1
+)
+if "%BUILD_ID%"=="" (
+  echo BUILD_ID is required
+  exit /b 1
+)
+
+set "EXTRA_ARGS="
+if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ARTIFACT_PATH%\""
+if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
+if not "%TEST_COMMAND%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%TEST_COMMAND%\""
+
+python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --allure-results-dir "%ALLURE_RESULTS_DIR%" --skip-tested-build --preserve-extracted-files !EXTRA_ARGS!
+endlocal
+'''
+          }
+        }
+      }
+    }
+    stage('Allure parameter-test results') {
+      steps {
+        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+          script {
+            def allurePath = 'allure-results-params'
+            if (fileExists(allurePath)) {
+              echo "Publishing independent Allure results from ${allurePath}"
+              def cmdName = params.ALLURE_CMD?.trim()
+              if (cmdName) {
+                allure includeProperties: false, jdk: '', commandline: cmdName, results: [[path: allurePath]]
+              } else {
+                allure includeProperties: false, jdk: '', results: [[path: allurePath]]
+              }
+            } else {
+              echo 'No parameter-test Allure results found, skipping publish'
+            }
+          }
+        }
+      }
+    }
+    stage('Archive parameter-test artifacts') {
+      steps {
+        archiveArtifacts artifacts: 'allure-results-params/**,test_framework/engine_params/output/**,test_framework/artifacts/slicer_stdout*.log', allowEmptyArchive: true
+      }
+    }
+  }
+  post {
+    failure {
+      echo 'Parameter-test pipeline failed.'
+    }
+  }
+}

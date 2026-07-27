@@ -198,6 +198,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--build-id", help="Jenkins build number (required when --artifact-file is omitted)")
     parser.add_argument("--artifact-path", help="Desired artifact relativePath or filename (optional)")
     parser.add_argument("--artifacts-dir", default=os.getenv("ARTIFACTS_DIR", "artifacts"), help="Where to store downloaded artifacts")
+    parser.add_argument("--allure-results-dir", default=os.getenv("ALLURE_RESULTS_DIR", "allure-results"), help="Directory for pytest Allure result files, relative to the repository unless absolute")
     parser.add_argument("--gcode-root", default=os.getenv("GCODE_ROOT", ""), help="Root directory for pytest --gcode-root; auto-generated when omitted")
     parser.add_argument("--platform", default=os.getenv("PLATFORM", "windows"), help="Platform label used for env injection (e.g., windows/macos_x86/macos_arm64/linux)")
     parser.add_argument("--baseline-build-id", default=os.getenv("BASELINE_BUILD_ID", "1793"), help="Fixed Jenkins build number used as the second-slice baseline")
@@ -432,6 +433,11 @@ def main() -> int:
     slicer_datadir_arg = ""
     if slicer_datadir and "--slicer-datadir" not in test_args:
         slicer_datadir_arg = f' --slicer-datadir="{slicer_datadir}"'
+    allure_results_dir = Path(args.allure_results_dir).expanduser()
+    if not allure_results_dir.is_absolute():
+        allure_results_dir = repo_root / allure_results_dir
+    allure_results_dir = allure_results_dir.resolve()
+    allure_results_arg = f' --alluredir="{allure_results_dir}"'
     second_slice_model_arg = ""
     if args.second_slice_model and "--second-slice-model" not in test_args:
         requested_model = Path(args.second_slice_model).expanduser()
@@ -440,7 +446,7 @@ def main() -> int:
         second_slice_model_arg = f' --second-slice-model="{requested_model.resolve()}"'
     test_command = (
         f"cd .\\test_framework\\&&python -u -m pytest {test_args}{slicer_arg}{gcode_root_arg}{slicer_datadir_arg}{second_slice_model_arg}"
-        " -v --alluredir=../allure-results --capture=tee-sys"
+        f" -v{allure_results_arg} --capture=tee-sys"
     )
 
     print(f"[info] running tests with command: {test_command}")
