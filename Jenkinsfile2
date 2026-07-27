@@ -8,19 +8,14 @@ pipeline {
     string(name: 'AGENT_LABEL', defaultValue: 'tester2', description: 'Jenkins agent label to run the pipeline on')
     string(name: 'JOB_NAME', defaultValue: 'CrealityPrint_Release_Package_pipeline', description: 'Jenkins job name to download from')
     string(name: 'BUILD_ID', defaultValue: 'lastSuccessfulBuild', description: 'Jenkins build number or lastSuccessfulBuild')
-    string(name: 'BASELINE_BUILD_ID', defaultValue: '81', description: 'Fixed baseline build number for second-slice comparison')
-    string(name: 'SECOND_SLICE_MODEL', defaultValue: '', description: 'Optional 3MF path for a single second-slice case; leave empty to run all collected cases')
-    booleanParam(name: 'UPDATE_BASELINE', defaultValue: false, description: 'Allow updating the persistent second-slice baseline CSV')
     string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
     string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
-    string(name: 'TEST_COMMAND', defaultValue: 'performance/case/test_slice.py::test_feishu_slice -m performance', description: 'Override test command (optional)')
+    string(name: 'TEST_COMMAND', defaultValue: '-m "engine_params or performance"', description: 'Override test command (optional)')
     string(name: 'ALLURE_CMD', defaultValue: 'Allure', description: 'Allure commandline tool name (Global Tool); leave empty to use default')
   }
   environment {
     POWERSHELL_HOME = "C:\\Windows\\System32\\WindowsPowerShell\\v1.0"
     PYTHONIOENCODING = 'utf-8'
-    SLICER_DATADIR_ISOLATED = '1'
-    SKIP_TESTED_BUILD = 'true'
   }
   stages {
     stage('Checkout') {
@@ -56,11 +51,8 @@ set "EXTRA_ARGS="
 if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ARTIFACT_PATH%\""
 if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
 if not "%TEST_COMMAND%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%TEST_COMMAND%\""
-if not "%BASELINE_BUILD_ID%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --baseline-build-id \"%BASELINE_BUILD_ID%\""
-if not "%SECOND_SLICE_MODEL%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --second-slice-model \"%SECOND_SLICE_MODEL%\""
-if /I "%UPDATE_BASELINE%"=="true" set "EXTRA_ARGS=!EXTRA_ARGS! --update-baseline"
 
-python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --skip-tested-build --preserve-extracted-files !EXTRA_ARGS!
+python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --preserve-extracted-files !EXTRA_ARGS!
 endlocal
 '''
           }
@@ -90,13 +82,13 @@ endlocal
     }
     stage('Archive performance reports') {
       steps {
-        archiveArtifacts artifacts: 'test_framework/performance/data/*.csv,test_framework/performance/data/*.md,test_framework/performance/data/*.json,test_framework/artifacts/slicer_stdout*.log', allowEmptyArchive: true
+        archiveArtifacts artifacts: 'test_framework/performance/data/*.csv,test_framework/performance/data/*.md,test_framework/performance/data/*.json', allowEmptyArchive: true
       }
     }
   }
   post {
     failure {
-      echo 'Pipeline failed; check Feishu notifications for details.'
+      echo 'Pipeline failed; check the console output for details.'
     }
   }
 }
