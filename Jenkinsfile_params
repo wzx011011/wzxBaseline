@@ -50,6 +50,7 @@ if "%BUILD_ID%"=="" (
 )
 
 set "EXTRA_ARGS="
+if "%PARAM_TEST_COMMAND%"=="" set "PARAM_TEST_COMMAND=engine_params/case/params -m paramters"
 if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ARTIFACT_PATH%\""
 if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
 if not "%PARAM_TEST_COMMAND%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%PARAM_TEST_COMMAND%\""
