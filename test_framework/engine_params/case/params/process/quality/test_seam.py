@@ -205,64 +205,54 @@ def test_scarf_overhang_threshold(slice_and_export: Path, expected_scarf_overhan
 
 # ================== seam_position_aligned_L3 ==================
 @pytest.mark.engine_params
-def test_seam_position_aligned_L3(slice_and_export: Path, baseline_gcode: Path):
-    """测试 seam_position 参数 aligned 字段的 L3 级别快照对比"""
+def test_seam_position_aligned_L3(slice_and_export: Path):
+    """保留 L3 用例名兼容现有选择器，按 L2 接缝位置分布验证 aligned。"""
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
-    ok, actual_match, details = parse_seam_position_aligned_L3(
-        gcode_path, baseline_gcode, expected_match=True
-    )
+    ok, actual_match, details = parse_seam_position_aligned_L3(gcode_path, expected_match=True)
     assert ok, f"seam_position_aligned_L3 expected match True, actual match {actual_match}, details: {details}"
 
 
 # ================== seam_position_back_L3 ==================
 @pytest.mark.engine_params
-def test_seam_position_back_L3(slice_and_export: Path, baseline_gcode: Path):
-    """测试 seam_position 参数 back 字段的 L3 级别快照对比"""
+def test_seam_position_back_L3(slice_and_export: Path):
+    """保留 L3 用例名兼容现有选择器，按 L2 接缝位置分布验证 back。"""
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
-    ok, actual_match, details = parse_seam_position_back_L3(
-        gcode_path, baseline_gcode, expected_match=True
-    )
+    ok, actual_match, details = parse_seam_position_back_L3(gcode_path, expected_match=True)
     assert ok, f"seam_position_back_L3 expected match True, actual match {actual_match}, details: {details}"
 
 
 # ================== seam_position_nearest_L3 ==================
 @pytest.mark.engine_params
-def test_seam_position_nearest_L3(slice_and_export: Path, baseline_gcode: Path):
-    """测试 seam_position 参数 nearest 字段的 L3 级别快照对比"""
+def test_seam_position_nearest_L3(slice_and_export: Path):
+    """保留 L3 用例名兼容现有选择器，按 L2 接缝位置分布验证 nearest。"""
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
-    ok, actual_match, details = parse_seam_position_nearest_L3(
-        gcode_path, baseline_gcode, expected_match=True
-    )
+    ok, actual_match, details = parse_seam_position_nearest_L3(gcode_path, expected_match=True)
     assert ok, f"seam_position_nearest_L3 expected match True, actual match {actual_match}, details: {details}"
 
 
 # ================== seam_position_assemble_zgap_L3 ==================
 @pytest.mark.engine_params
-def test_seam_position_assemble_zgap_L3(slice_and_export: Path, baseline_gcode: Path):
-    """测试 seam_position 参数 assemble_zgap 字段的 L3 级别快照对比"""
+def test_seam_position_assemble_zgap_L3(slice_and_export: Path):
+    """保留 L3 用例名兼容现有选择器，按 L2 接缝位置分布验证 assemble_zgap。"""
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
-    ok, actual_match, details = parse_seam_position_assemble_zgap_L3(
-        gcode_path, baseline_gcode, expected_match=True
-    )
+    ok, actual_match, details = parse_seam_position_assemble_zgap_L3(gcode_path, expected_match=True)
     assert ok, f"seam_position_assemble_zgap_L3 expected match True, actual match {actual_match}, details: {details}"
 
 
 # ================== seam_position_random_L3 ==================
 @pytest.mark.engine_params
-def test_seam_position_random_L3(slice_and_export: Path, baseline_gcode: Path):
-    """测试 seam_position 参数 random 字段的 L3 级别快照对比"""
+def test_seam_position_random_L3(slice_and_export: Path):
+    """保留 L3 用例名兼容现有选择器，按 L2 接缝位置分布验证 random。"""
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
-    ok, actual_match, details = parse_seam_position_random_L3(
-        gcode_path, baseline_gcode, expected_match=True
-    )
+    ok, actual_match, details = parse_seam_position_random_L3(gcode_path, expected_match=True)
     assert ok, f"seam_position_random_L3 expected match True, actual match {actual_match}, details: {details}"

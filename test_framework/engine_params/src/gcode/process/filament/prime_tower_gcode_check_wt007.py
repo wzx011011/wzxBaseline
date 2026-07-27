@@ -87,15 +87,20 @@ def parse_tc_wt_007(
                 
                 # 打印第一个换料点的调试信息
                 if idx == 0:
-                    # 计算期望的三个值
+                    # 优先使用用例中明确给出的三阶段期望值。
                     retract_before_wipe_ratio = tool_params[from_tool].get("retract_before_wipe", 0.7)
+                    expected_phases = tool_params[from_tool].get("before_change", {})
                     print(f"\n=== 参数信息 ===")
                     print(f"{from_tool} retract_before_wipe: {retract_before_wipe_ratio}")
                     print(f"{from_tool} retraction_length: {expected_retract}")
                     
-                    expected_before = expected_retract * retract_before_wipe_ratio
-                    expected_after = 0.05  # 固定值
-                    expected_during = expected_retract - expected_before - expected_after
+                    expected_before = expected_phases.get(
+                        "before_wipe", expected_retract * retract_before_wipe_ratio
+                    )
+                    expected_after = expected_phases.get("after_wipe", 0.05)
+                    expected_during = expected_phases.get(
+                        "during_wipe", expected_retract - expected_before - expected_after
+                    )
                     
                     print(f"\n=== Bug 11460 换料前三阶段回抽 (换料点0 行{tc['line']}) ===")
                     print(f"期望值 (基于{from_tool}参数 {expected_retract}mm):")
@@ -455,9 +460,19 @@ def parse_retraction_phases(
         'after_wipe': 0.0
     }
     
-    # 向前搜索50行范围
-    search_start = max(0, tool_change_line - 50)
-    search_lines = lines[search_start:tool_change_line]
+    # 以最近一次独立装填（G1 E<positive>）作为当前回抽序列的起点。
+    # 固定 50 行窗口可能同时覆盖擦拭塔上一段完整回抽，导致重复累计。
+    tool_change_idx = min(len(lines), max(0, tool_change_line - 1))
+    standalone_unretract_re = re.compile(
+        r'^G1\s+E\+?([\d.]+)(?:\s+F[\d.]+)?\s*(?:;.*)?$',
+        re.IGNORECASE,
+    )
+    search_start = max(0, tool_change_idx - 500)
+    for line_idx in range(tool_change_idx - 1, search_start - 1, -1):
+        if standalone_unretract_re.match(lines[line_idx].strip()):
+            search_start = line_idx
+            break
+    search_lines = lines[search_start:tool_change_idx]
     
     # 查找标记位置
     wipe_start_idx = None
@@ -471,11 +486,11 @@ def parse_retraction_phases(
     
     # 如果没有找到擦拭标记，使用简单模式
     if wipe_start_idx is None or wipe_end_idx is None:
-        # 收集所有回抽
+        # 收集当前装填之后到换料前的所有回抽
         for move in reversed(moves):
             if move.line_num >= tool_change_line:
                 continue
-            if move.line_num < tool_change_line - 50:
+            if move.line_num < search_start + 1:
                 break
             if move.move_type == GCodeMoveType.RETRACTION:
                 result['before_wipe'] += abs(move.e)

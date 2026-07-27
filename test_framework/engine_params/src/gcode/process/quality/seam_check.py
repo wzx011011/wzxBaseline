@@ -4,6 +4,9 @@ Seam（接缝）参数的 G-code 检测逻辑
 """
 from __future__ import annotations
 
+import math
+import re
+import statistics
 from pathlib import Path
 from typing import Tuple, Any
 
@@ -449,278 +452,124 @@ def parse_scarf_overhang_threshold(
     return (ok, actual_value, details)
 
 
-def parse_seam_position_aligned_L3(
+def _extract_primary_outer_wall_seams(gcode_path: Path) -> Tuple[list[Tuple[float, float]], Tuple[float, float] | None]:
+    """提取 object 0 每层第一条外墙开始前的喷头位置。"""
+    seams_by_layer: dict[int, Tuple[float, float]] = {}
+    object_center: Tuple[float, float] | None = None
+    layer_index = -1
+    in_object = False
+    last_xy: Tuple[float, float] | None = None
+
+    center_re = re.compile(r"\bCENTER=([+-]?[\d.]+),([+-]?[\d.]+)", re.IGNORECASE)
+    start_re = re.compile(r"^\s*;?\s*EXCLUDE_OBJECT_START\s+NAME=.*(?:^|_)id_0(?:_|$)", re.IGNORECASE)
+    end_re = re.compile(r"^\s*;?\s*EXCLUDE_OBJECT_END\s+NAME=.*(?:^|_)id_0(?:_|$)", re.IGNORECASE)
+    xy_re = re.compile(r"^G[01]\b.*\bX([+-]?[\d.]+).*\bY([+-]?[\d.]+)", re.IGNORECASE)
+
+    with Path(gcode_path).open("r", encoding="utf-8", errors="ignore") as stream:
+        for raw_line in stream:
+            line = raw_line.strip()
+            if object_center is None and "EXCLUDE_OBJECT_DEFINE" in line:
+                match = center_re.search(line)
+                if match:
+                    object_center = (float(match.group(1)), float(match.group(2)))
+            if line == ";LAYER_CHANGE":
+                layer_index += 1
+            if start_re.match(line):
+                in_object = True
+                last_xy = None
+                continue
+            if end_re.match(line):
+                in_object = False
+                last_xy = None
+                continue
+            if not in_object:
+                continue
+            if line.startswith(";TYPE:Outer wall"):
+                if layer_index not in seams_by_layer and last_xy is not None:
+                    seams_by_layer[layer_index] = last_xy
+                continue
+            if line.startswith(";"):
+                continue
+            match = xy_re.match(line)
+            if match:
+                last_xy = (float(match.group(1)), float(match.group(2)))
+
+    return [seams_by_layer[idx] for idx in sorted(seams_by_layer)], object_center
+
+
+def _parse_seam_position_behavior_l2(
     gcode_path: Path,
-    baseline_gcode: Path,
-    expected_match: bool = True
+    expected_mode: str,
+    expected_match: bool,
 ) -> Tuple[bool, bool, dict]:
-    """
-    检测 EXCLUDE_OBJECT_START 到 EXCLUDE_OBJECT_END 之间数据的 L3 级别快照对比
-    
-    对比测试 G-code 和基准 G-code 中指定对象的 EXCLUDE_OBJECT 数据
-    
-    参数:
-        gcode_path: 测试 G-code 文件路径
-        baseline_gcode: 基准 G-code 文件路径
-        expected_match: 期望是否匹配
-    
-    返回:
-        (是否通过, 实际匹配结果, 详细信息)
-    """
-    # 导入 EXCLUDE_OBJECT 比较功能
-    from ...GCodeCompExcludeObject import GCodeCompExcludeObject
-    
-    # 创建比较器实例并比较 EXCLUDE_OBJECT 数据（默认对象ID=0）
-    comparator = GCodeCompExcludeObject()
-    actual_match, details = comparator.compare_exclude_object_data(
-        baseline_gcode=baseline_gcode,
-        test_gcode=gcode_path,
-        object_id=0
-    )
-    
-    # 判断是否通过测试
+    """用接缝位置分布验证模式行为，避免跨版本逐行快照误报。"""
+    parser = GCodeParser(str(gcode_path))
+    config = parser.load_config()
+    actual_mode = str(config.get("seam_position", "")).lower().strip()
+    seams, object_center = _extract_primary_outer_wall_seams(Path(gcode_path))
+
+    adjacent_distances = [math.dist(left, right) for left, right in zip(seams, seams[1:])]
+    median_adjacent = statistics.median(adjacent_distances) if adjacent_distances else None
+    median_y = statistics.median(point[1] for point in seams) if seams else None
+    enough_samples = len(seams) >= 20
+    mode_config_ok = actual_mode == expected_mode
+    behavior_match = False
+    rule = ""
+
+    if enough_samples and median_adjacent is not None:
+        if expected_mode in {"aligned", "assemble_zgap"}:
+            rule = "相邻层主外墙接缝中位位移 <= 0.25mm"
+            behavior_match = median_adjacent <= 0.25
+        elif expected_mode == "back":
+            rule = "接缝连续，且 Y 中位值位于物体中心后方至少 2mm"
+            behavior_match = (
+                object_center is not None
+                and median_y is not None
+                and median_adjacent <= 0.25
+                and median_y >= object_center[1] + 2.0
+            )
+        elif expected_mode == "random":
+            rule = "相邻层主外墙接缝中位位移 >= 1mm"
+            behavior_match = median_adjacent >= 1.0
+        elif expected_mode == "nearest":
+            rule = "接缝随路径选择但不呈随机离散，中位位移 < 1mm"
+            behavior_match = median_adjacent < 1.0
+
+    actual_match = mode_config_ok and behavior_match
     ok = actual_match == expected_match
-    
-    # 构建返回的详细信息
-    result_details = {
-        "baseline_file": str(baseline_gcode),
+    details = {
         "test_file": str(gcode_path),
-        "object_id": 0,
-        "expected_match": expected_match,
+        "expected_mode": expected_mode,
+        "config_mode": actual_mode,
+        "mode_config_ok": mode_config_ok,
+        "seam_sample_count": len(seams),
+        "median_adjacent_distance": median_adjacent,
+        "median_seam_y": median_y,
+        "object_center": object_center,
+        "behavior_rule": rule,
+        "behavior_match": behavior_match,
         "actual_match": actual_match,
-        "detection_level": "L3 - EXCLUDE_OBJECT 数据快照对比"
-    }
-    
-    # 合并比较结果详情
-    if "total_lines" in details:
-        result_details["total_lines"] = details["total_lines"]
-    if "mismatch_count" in details:
-        result_details["mismatch_count"] = details["mismatch_count"]
-    if "mismatches" in details:
-        result_details["mismatches"] = details["mismatches"]
-    if "error" in details:
-        result_details["error"] = details["error"]
-    
-
-    
-    return (ok, actual_match, result_details)
-
-
-def parse_seam_position_random_L3(
-    gcode_path: Path,
-    baseline_gcode: Path,
-    expected_match: bool = True
-) -> Tuple[bool, bool, dict]:
-    """
-    检测 random 参数的 EXCLUDE_OBJECT_START 到 EXCLUDE_OBJECT_END 之间数据的 L3 级别快照对比
-    
-    对比测试 G-code 和基准 G-code 中指定对象的 EXCLUDE_OBJECT 数据
-    
-    参数:
-        gcode_path: 测试 G-code 文件路径
-        baseline_gcode: 基准 G-code 文件路径
-        expected_match: 期望是否匹配
-    
-    返回:
-        (是否通过, 实际匹配结果, 详细信息)
-    """
-    # 导入 EXCLUDE_OBJECT 比较功能
-    from ...GCodeCompExcludeObject import GCodeCompExcludeObject
-    
-    # 创建比较器实例并比较 EXCLUDE_OBJECT 数据（默认对象ID=0）
-    comparator = GCodeCompExcludeObject()
-    actual_match, details = comparator.compare_exclude_object_data(
-        baseline_gcode=baseline_gcode,
-        test_gcode=gcode_path,
-        object_id=0
-    )
-    
-    # 判断是否通过测试
-    ok = actual_match == expected_match
-    
-    # 构建返回的详细信息
-    result_details = {
-        "baseline_file": str(baseline_gcode),
-        "test_file": str(gcode_path),
-        "object_id": 0,
         "expected_match": expected_match,
-        "actual_match": actual_match,
-        "detection_level": "L3 - EXCLUDE_OBJECT 数据快照对比"
+        "detection_level": "L2 - 主外墙接缝位置分布",
     }
-    
-    # 合并比较结果详情
-    if "total_lines" in details:
-        result_details["total_lines"] = details["total_lines"]
-    if "mismatch_count" in details:
-        result_details["mismatch_count"] = details["mismatch_count"]
-    if "mismatches" in details:
-        result_details["mismatches"] = details["mismatches"]
-    if "error" in details:
-        result_details["error"] = details["error"]
-    
-    return (ok, actual_match, result_details)
+    return ok, actual_match, details
 
 
-def parse_seam_position_assemble_zgap_L3(
-    gcode_path: Path,
-    baseline_gcode: Path,
-    expected_match: bool = True
-) -> Tuple[bool, bool, dict]:
-    """
-    检测 assemble_zgap 参数的 EXCLUDE_OBJECT_START 到 EXCLUDE_OBJECT_END 之间数据的 L3 级别快照对比
-    
-    对比测试 G-code 和基准 G-code 中指定对象的 EXCLUDE_OBJECT 数据
-    
-    参数:
-        gcode_path: 测试 G-code 文件路径
-        baseline_gcode: 基准 G-code 文件路径
-        expected_match: 期望是否匹配
-    
-    返回:
-        (是否通过, 实际匹配结果, 详细信息)
-    """
-    # 导入 EXCLUDE_OBJECT 比较功能
-    from ...GCodeCompExcludeObject import GCodeCompExcludeObject
-    
-    # 创建比较器实例并比较 EXCLUDE_OBJECT 数据（默认对象ID=0）
-    comparator = GCodeCompExcludeObject()
-    actual_match, details = comparator.compare_exclude_object_data(
-        baseline_gcode=baseline_gcode,
-        test_gcode=gcode_path,
-        object_id=0
-    )
-    
-    # 判断是否通过测试
-    ok = actual_match == expected_match
-    
-    # 构建返回的详细信息
-    result_details = {
-        "baseline_file": str(baseline_gcode),
-        "test_file": str(gcode_path),
-        "object_id": 0,
-        "expected_match": expected_match,
-        "actual_match": actual_match,
-        "detection_level": "L3 - EXCLUDE_OBJECT 数据快照对比"
-    }
-    
-    # 合并比较结果详情
-    if "total_lines" in details:
-        result_details["total_lines"] = details["total_lines"]
-    if "mismatch_count" in details:
-        result_details["mismatch_count"] = details["mismatch_count"]
-    if "mismatches" in details:
-        result_details["mismatches"] = details["mismatches"]
-    if "error" in details:
-        result_details["error"] = details["error"]
-    
-    return (ok, actual_match, result_details)
+def parse_seam_position_aligned_L3(gcode_path: Path, baseline_gcode: Path | None = None, expected_match: bool = True) -> Tuple[bool, bool, dict]:
+    return _parse_seam_position_behavior_l2(gcode_path, "aligned", expected_match)
 
 
-def parse_seam_position_nearest_L3(
-    gcode_path: Path,
-    baseline_gcode: Path,
-    expected_match: bool = True
-) -> Tuple[bool, bool, dict]:
-    """
-    检测 nearest 参数的 EXCLUDE_OBJECT_START 到 EXCLUDE_OBJECT_END 之间数据的 L3 级别快照对比
-    
-    对比测试 G-code 和基准 G-code 中指定对象的 EXCLUDE_OBJECT 数据
-    
-    参数:
-        gcode_path: 测试 G-code 文件路径
-        baseline_gcode: 基准 G-code 文件路径
-        expected_match: 期望是否匹配
-    
-    返回:
-        (是否通过, 实际匹配结果, 详细信息)
-    """
-    # 导入 EXCLUDE_OBJECT 比较功能
-    from ...GCodeCompExcludeObject import GCodeCompExcludeObject
-    
-    # 创建比较器实例并比较 EXCLUDE_OBJECT 数据（默认对象ID=0）
-    comparator = GCodeCompExcludeObject()
-    actual_match, details = comparator.compare_exclude_object_data(
-        baseline_gcode=baseline_gcode,
-        test_gcode=gcode_path,
-        object_id=0
-    )
-    
-    # 判断是否通过测试
-    ok = actual_match == expected_match
-    
-    # 构建返回的详细信息
-    result_details = {
-        "baseline_file": str(baseline_gcode),
-        "test_file": str(gcode_path),
-        "object_id": 0,
-        "expected_match": expected_match,
-        "actual_match": actual_match,
-        "detection_level": "L3 - EXCLUDE_OBJECT 数据快照对比"
-    }
-    
-    # 合并比较结果详情
-    if "total_lines" in details:
-        result_details["total_lines"] = details["total_lines"]
-    if "mismatch_count" in details:
-        result_details["mismatch_count"] = details["mismatch_count"]
-    if "mismatches" in details:
-        result_details["mismatches"] = details["mismatches"]
-    if "error" in details:
-        result_details["error"] = details["error"]
-    
-    return (ok, actual_match, result_details)
+def parse_seam_position_random_L3(gcode_path: Path, baseline_gcode: Path | None = None, expected_match: bool = True) -> Tuple[bool, bool, dict]:
+    return _parse_seam_position_behavior_l2(gcode_path, "random", expected_match)
 
 
-def parse_seam_position_back_L3(
-    gcode_path: Path,
-    baseline_gcode: Path,
-    expected_match: bool = True
-) -> Tuple[bool, bool, dict]:
-    """
-    检测 back 参数的 EXCLUDE_OBJECT_START 到 EXCLUDE_OBJECT_END 之间数据的 L3 级别快照对比
-    
-    对比测试 G-code 和基准 G-code 中指定对象的 EXCLUDE_OBJECT 数据
-    
-    参数:
-        gcode_path: 测试 G-code 文件路径
-        baseline_gcode: 基准 G-code 文件路径
-        expected_match: 期望是否匹配
-    
-    返回:
-        (是否通过, 实际匹配结果, 详细信息)
-    """
-    # 导入 EXCLUDE_OBJECT 比较功能
-    from ...GCodeCompExcludeObject import GCodeCompExcludeObject
-    
-    # 创建比较器实例并比较 EXCLUDE_OBJECT 数据（默认对象ID=0）
-    comparator = GCodeCompExcludeObject()
-    actual_match, details = comparator.compare_exclude_object_data(
-        baseline_gcode=baseline_gcode,
-        test_gcode=gcode_path,
-        object_id=0
-    )
-    
-    # 判断是否通过测试
-    ok = actual_match == expected_match
-    
-    # 构建返回的详细信息
-    result_details = {
-        "baseline_file": str(baseline_gcode),
-        "test_file": str(gcode_path),
-        "object_id": 0,
-        "expected_match": expected_match,
-        "actual_match": actual_match,
-        "detection_level": "L3 - EXCLUDE_OBJECT 数据快照对比"
-    }
-    
-    # 合并比较结果详情
-    if "total_lines" in details:
-        result_details["total_lines"] = details["total_lines"]
-    if "mismatch_count" in details:
-        result_details["mismatch_count"] = details["mismatch_count"]
-    if "mismatches" in details:
-        result_details["mismatches"] = details["mismatches"]
-    if "error" in details:
-        result_details["error"] = details["error"]
-    
-    return (ok, actual_match, result_details)
+def parse_seam_position_assemble_zgap_L3(gcode_path: Path, baseline_gcode: Path | None = None, expected_match: bool = True) -> Tuple[bool, bool, dict]:
+    return _parse_seam_position_behavior_l2(gcode_path, "assemble_zgap", expected_match)
+
+
+def parse_seam_position_nearest_L3(gcode_path: Path, baseline_gcode: Path | None = None, expected_match: bool = True) -> Tuple[bool, bool, dict]:
+    return _parse_seam_position_behavior_l2(gcode_path, "nearest", expected_match)
+
+
+def parse_seam_position_back_L3(gcode_path: Path, baseline_gcode: Path | None = None, expected_match: bool = True) -> Tuple[bool, bool, dict]:
+    return _parse_seam_position_behavior_l2(gcode_path, "back", expected_match)

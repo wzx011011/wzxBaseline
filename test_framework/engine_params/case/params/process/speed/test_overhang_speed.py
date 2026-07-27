@@ -82,7 +82,7 @@ def test_slowdown_for_curled_perimeters(slice_and_export: Path, expected_slowdow
 @pytest.mark.engine_params
 def test_overhang_speed_classic(slice_and_export: Path, expected_overhang_speed_classic: bool, tolerance: float):
     """
-    经典悬垂速度：带 Overhang wall 的层，外墙整条路径是否全部为 overhang_4_4_speed。
+    经典悬垂速度 L2：配置开启，且含悬垂区域的外墙实际出现分级降速。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()

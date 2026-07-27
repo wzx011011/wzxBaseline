@@ -683,20 +683,9 @@ def parse_flush_into_infill(
     """
     解析 G-code 文件，检测 flush_into_infill 是否生效。
     
-    校验逻辑（Level 2 特征检测）：
-    检测换料后首个挤出块是否在填充区域。
-    
-    flush_into_infill 启用时的特征：
-    1. 换料命令（T0/T1/T2...）之后
-    2. 在 Prime tower 挤出完成后
-    3. 首个模型挤出出现在填充区域（;TYPE:Sparse infill 或 ;TYPE:Internal solid infill）
-    
-    具体检测步骤：
-    1. 定位所有换料命令（T0, T1, T2...）
-    2. 在换料后，跳过 Prime tower 区域
-    3. 记录进入模型打印后的首个 TYPE 标记
-    4. 统计换料后首个 TYPE 为填充类型的比例
-    5. 如果比例 > 80%，判定为 flush_into_infill 启用
+    校验逻辑（Level 2 行为检测）：
+    统计 Sparse infill 中各工具的正向挤出量。开启后，冲刷耗材会覆写
+    一部分原本由主工具打印的填充；关闭时，次要工具占比应接近零。
     
     参数说明：
     - flush_into_infill: 冲刷到对象的填充
@@ -726,15 +715,19 @@ def parse_flush_into_infill(
     # 统计数据
     tool_changes = []  # [(line_no, tool_id), ...]
     first_type_after_change = []  # 换料后首个模型挤出类型
+    sparse_volume_by_tool: Dict[int, float] = {}
     
     # 正则匹配换料命令 T0, T1, T2...
     tool_change_pattern = re.compile(r'^T(\d+)\s*$')
     # 正则匹配 TYPE 标记
     type_pattern = re.compile(r'^;TYPE:(.+)$')
+    extrusion_pattern = re.compile(r'\bE([+]?(?:\d+(?:\.\d*)?|\.\d+))\b')
     
     # 状态机
     waiting_for_type = False  # 是否在等待换料后的首个 TYPE
     in_prime_tower = False    # 是否在 Prime tower 区域内
+    current_tool = 0
+    current_type = ""
     
     with open(gcode_path, 'r', encoding='utf-8', errors='ignore') as f:
         for line_no, line in enumerate(f, 1):
@@ -744,6 +737,7 @@ def parse_flush_into_infill(
             tool_match = tool_change_pattern.match(line)
             if tool_match:
                 tool_id = int(tool_match.group(1))
+                current_tool = tool_id
                 tool_changes.append((line_no, tool_id))
                 waiting_for_type = True
                 in_prime_tower = False
@@ -772,6 +766,22 @@ def parse_flush_into_infill(
                 in_prime_tower = True
             elif '; WIPE_TOWER_END' in line:
                 in_prime_tower = False
+
+            # flush_into_infill 的源码语义是覆写 Internal infill 的工具，
+            # 并不保证换料后第一个模型 TYPE 就是填充。统计 Sparse infill
+            # 中各工具实际承担的挤出量，作为行为级证据。
+            if (
+                current_type == "Sparse infill"
+                and line.startswith("G1")
+                and (" X" in f" {line}" or " Y" in f" {line}")
+            ):
+                extrusion_match = extrusion_pattern.search(line)
+                if extrusion_match:
+                    extrusion = float(extrusion_match.group(1))
+                    if extrusion > 0:
+                        sparse_volume_by_tool[current_tool] = (
+                            sparse_volume_by_tool.get(current_tool, 0.0) + extrusion
+                        )
     
     # 计算填充类型比例
     total_changes = len(first_type_after_change)
@@ -784,6 +794,10 @@ def parse_flush_into_infill(
         "first_types_after_change": first_type_after_change,
         "infill_count": infill_count,
         "total_analyzed": total_changes,
+        "sparse_volume_by_tool": {
+            f"T{tool}": round(volume, 6)
+            for tool, volume in sorted(sparse_volume_by_tool.items())
+        },
     }
     
     # 如果没有换料操作，无法通过 Level 2 检测
@@ -814,19 +828,19 @@ def parse_flush_into_infill(
         
         return ok, detected_value, details
     
-    # Level 2 特征检测：计算填充比例
-    infill_ratio = infill_count / total_changes
-    details["infill_ratio"] = infill_ratio
-    details["detection_method"] = "Level 2 (特征检测)"
-    
-    # 判定：如果换料后首个挤出大部分是填充类型，则启用
-    # 阈值说明：
-    # - 启用 flush_into_infill 时，换料后会优先在填充区域冲刷
-    # - 但并非所有换料都会进入填充区域（取决于模型结构和层的填充量）
-    # - 根据实测数据，启用时填充比例约 50%+，禁用时填充比例较低
-    # - 阈值设为 40%，能有效区分启用/禁用状态
-    threshold = 0.4
-    detected_value = infill_ratio > threshold
+    # Level 2：启用后，原本由主工具打印的 Sparse infill 会有显著比例
+    # 被另一工具覆写以吸收冲刷量。禁用时仅允许极少量模型自身带来的杂散占比。
+    sparse_total = sum(sparse_volume_by_tool.values())
+    secondary_ratio = 0.0
+    if sparse_total > 0 and sparse_volume_by_tool:
+        dominant_volume = max(sparse_volume_by_tool.values())
+        secondary_ratio = (sparse_total - dominant_volume) / sparse_total
+
+    threshold = 0.10
+    detected_value = secondary_ratio >= threshold
+    details["sparse_total_extrusion"] = sparse_total
+    details["secondary_tool_ratio"] = secondary_ratio
+    details["detection_method"] = "Level 2 (Sparse infill 工具覆写量)"
     details["detected_value"] = detected_value
     details["threshold"] = threshold
     
@@ -835,13 +849,14 @@ def parse_flush_into_infill(
     if ok:
         details["message"] = (
             f"Level 2 通过: flush_into_infill detected={detected_value}, "
-            f"infill_ratio={infill_ratio:.1%} ({infill_count}/{total_changes})"
+            f"secondary_tool_ratio={secondary_ratio:.1%}, "
+            f"volumes={details['sparse_volume_by_tool']}"
         )
     else:
         details["message"] = (
             f"Level 2 失败: expected={expected_value}, detected={detected_value}, "
-            f"infill_ratio={infill_ratio:.1%} ({infill_count}/{total_changes}), "
-            f"first_types={first_type_after_change}"
+            f"secondary_tool_ratio={secondary_ratio:.1%}, "
+            f"volumes={details['sparse_volume_by_tool']}"
         )
     
     return ok, detected_value, details

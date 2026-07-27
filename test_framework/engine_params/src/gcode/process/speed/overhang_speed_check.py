@@ -773,10 +773,9 @@ def parse_overhang_speed_classic(
         tolerance: float = 1e-6,
 ) -> Tuple[bool, bool, Dict[str, Any]]:
     """
-    经典悬垂速度：开启后，带 Overhang wall 的层，其外墙整条路径都应为 outer_wall_speed（无渐变）。
-    - 跳过首层；仅在存在 Overhang wall 的层检查 OUTER_WALL 的点速度 point.f。
-    - 开启：所有点均应等于 outer_wall_speed（容差内）。
-    - 关闭：应存在至少一个点不等于 outer_wall_speed（出现平滑过渡）。
+    经典悬垂速度 L2：配置开启时，含 Overhang wall 的层必须实际出现低于
+    outer_wall_speed 的外墙点。经典模式会按 overhang_degree 使用分级速度，
+    不能把“整条外墙保持 outer_wall_speed”当成开启特征。
     """
     path_obj = Path(gcode_path)
     parser = GCodeParserEx(path_obj)
@@ -790,6 +789,7 @@ def parse_overhang_speed_classic(
             return None
 
     outer_speed = _to_float(cfg.get("outer_wall_speed"))
+    classic_config = bool(getattr(cfg.get("overhang_speed_classic"), "value", False))
     if outer_speed is None:
         details = {
             "expected_enabled": expected_enabled,
@@ -855,25 +855,29 @@ def parse_overhang_speed_classic(
                             "diff": diff,
                         })
 
-    # 开启经典：不允许 mismatch；关闭：需要至少一个 mismatch（出现过渡值）
-    actual_enabled = not mismatches
+    # 旧逻辑中的 mismatches 实际是“不等于外墙速度”的点；对经典模式而言，
+    # 这些点正是分级悬垂降速已经作用到路径上的 L2 证据。
+    has_classic_slowdown = bool(mismatches)
+    actual_enabled = classic_config and has_classic_slowdown
     note = None
     if not layers_with_overhang:
         note = "No overhang wall regions parsed."
-    elif expected_enabled and mismatches:
-        note = "Found outer wall point not equal to outer_wall_speed while classic expected."
-    elif (not expected_enabled) and not mismatches:
-        note = "No smooth transition detected; classic mode observed while expected disabled."
+    elif expected_enabled and not classic_config:
+        note = "overhang_speed_classic is disabled in CONFIG_BLOCK."
+    elif expected_enabled and not has_classic_slowdown:
+        note = "Classic mode is configured, but no slowed outer wall point was detected."
 
     ok = (actual_enabled == expected_enabled) and not missing_feedrate
     details = {
         "expected_enabled": expected_enabled,
         "actual_enabled": actual_enabled,
+        "config_enabled": classic_config,
+        "has_classic_slowdown": has_classic_slowdown,
         "outer_wall_speed": outer_speed,
         "tolerance": tolerance,
         "checked_layers": sorted({idx for idx in checked_layers if idx != 0}),
         "layers_with_overhang": sorted(set(layers_with_overhang)),
-        "mismatches": mismatches,
+        "slowed_points": mismatches,
         "missing_feedrate": missing_feedrate,
         "note": note,
         "match": ok,
