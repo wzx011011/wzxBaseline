@@ -88,7 +88,12 @@ def test_accel_to_decel_enable(
         slice_and_export: Path,
         expected_accel_to_decel_enable: bool,
 ):
-    """校验 ACCEL_TO_DECEL 是否按预期启用/禁用。"""
+    """
+    验证方法：
+    1. 解析全部层、全部挤出类型的 LayerRegion.velocity_limits。
+    2. 根据 ACCEL_TO_DECEL 键是否存在，判断加减速功能在实际 G-code 中是否启用。
+    通过标准：所有 Region 的启用状态都与期望一致，且至少解析到一个 Region。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -106,7 +111,12 @@ def test_default_acceleration(
         expected_default_acceleration: float,
         tolerance: float,
 ):
-    """除去特定挤出类型外，其余 LayerRegion 应遵循 default_acceleration。排除第一层"""
+    """
+    验证方法：
+    1. 跳过首层以及已有专用加速度的墙、填充、桥接、顶面、悬垂和料塔类型。
+    2. 读取剩余 Region 的 velocity_limits.ACCEL，与 default_acceleration 逐一比较。
+    通过标准：至少检查到一个 Region，ACCEL 不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -137,7 +147,12 @@ def test_accel_to_decel_factor(
         expected_accel_to_decel_factor: float,
         tolerance: float,
 ):
-    """校验 ACCEL_TO_DECEL / ACCEL 的比值。"""
+    """
+    验证方法：
+    1. 遍历全部层和全部 Region，同时读取 ACCEL 与 ACCEL_TO_DECEL。
+    2. 计算每个 Region 的 ACCEL_TO_DECEL / ACCEL，并与期望因子比较。
+    通过标准：两个字段均存在、ACCEL 非 0，且所有比值都在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -156,7 +171,12 @@ def test_initial_layer_acceleration(
         expected_initial_layer_acceleration: float,
         tolerance: float,
 ):
-    """Validate that all layer-0 regions respect initial_layer_acceleration (ACCEL in velocity_limits)."""
+    """
+    验证方法：
+    1. 仅解析首层（layer 0）的全部 LayerRegion。
+    2. 读取每个 Region 的 velocity_limits.ACCEL，与首层加速度期望值比较。
+    通过标准：至少检查到一个 Region，ACCEL 不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -175,7 +195,12 @@ def test_outer_wall_acceleration(
         expected_outer_wall_acceleration: float,
         tolerance: float,
 ):
-    """Non-first-layer OUTER_WALL regions should use outer_wall_acceleration for ACCEL limits."""
+    """
+    验证方法：
+    1. 跳过首层，仅筛选 OUTER_WALL（外墙）Region。
+    2. 读取 velocity_limits.ACCEL，与外墙加速度期望值逐一比较。
+    通过标准：至少存在一个外墙 Region，ACCEL 不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -194,7 +219,12 @@ def test_inner_wall_acceleration(
         expected_inner_wall_acceleration: float,
         tolerance: float,
 ):
-    """Non-first-layer INNER_WALL regions should match inner_wall_acceleration."""
+    """
+    验证方法：
+    1. 跳过首层，仅筛选 INNER_WALL（内墙）Region。
+    2. 读取 velocity_limits.ACCEL，与内墙加速度期望值逐一比较。
+    通过标准：至少存在一个内墙 Region，ACCEL 不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -213,7 +243,12 @@ def test_bridge_acceleration(
         expected_bridge_acceleration: float,
         tolerance: float,
 ):
-    """Bridge/Internal Bridge regions (except layer 0) should follow bridge_acceleration."""
+    """
+    验证方法：
+    1. 跳过首层，筛选 BRIDGE 和 INTERNAL_BRIDGE Region。
+    2. 读取 velocity_limits.ACCEL，与桥接加速度期望值逐一比较。
+    通过标准：至少存在一个桥接 Region，ACCEL 不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -232,7 +267,12 @@ def test_sparse_infill_acceleration(
         expected_sparse_infill_acceleration: float,
         tolerance: float,
 ):
-    """Sparse infill regions (excluding layer 0) should respect sparse_infill_acceleration."""
+    """
+    验证方法：
+    1. 跳过首层，仅筛选 SPARSE_INFILL（稀疏填充）Region。
+    2. 读取 velocity_limits.ACCEL，与稀疏填充加速度期望值逐一比较。
+    通过标准：至少存在一个目标 Region，ACCEL 不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -251,7 +291,12 @@ def test_internal_solid_infill_acceleration(
         expected_internal_solid_infill_acceleration: float,
         tolerance: float,
 ):
-    """Internal solid infill regions (excluding layer 0) should match the configured acceleration."""
+    """
+    验证方法：
+    1. 跳过首层，仅筛选 INTERNAL_SOLID_INFILL（内部实心填充）Region。
+    2. 读取 velocity_limits.ACCEL，与内部实心填充加速度期望值逐一比较。
+    通过标准：至少存在一个目标 Region，ACCEL 不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -270,7 +315,12 @@ def test_top_surface_acceleration(
         expected_top_surface_acceleration: float,
         tolerance: float,
 ):
-    """Top surface regions on layers > 0 should follow top_surface_acceleration."""
+    """
+    验证方法：
+    1. 跳过首层，仅筛选 TOP_SURFACE（顶面）Region。
+    2. 读取 velocity_limits.ACCEL，与顶面加速度期望值逐一比较。
+    通过标准：至少存在一个顶面 Region，ACCEL 不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -289,7 +339,12 @@ def test_travel_acceleration(
         expected_travel_acceleration: float,
         tolerance: float,
 ):
-    """Travel 点进给速度校验（跳过首层）。"""
+    """
+    验证方法：
+    1. 跳过首层，通过 get_motion_paths 获取 kind=travel 的移动点。
+    2. 读取每个移动点继承的 velocity_limits.ACCEL；这里校验的是加速度，不是 F 速度。
+    通过标准：至少存在一个 travel 点，ACCEL 不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

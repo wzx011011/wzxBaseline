@@ -16,9 +16,10 @@ def test_max_volumetric_extrusion_rate_slope(
         expected_max_volumetric_extrusion_rate_slope: float,
 ):
     """
-    验证最大体积挤出率斜率开关：检查最后一层外墙路径点数是否被细分。
-    - expected=0 -> 关闭：最后一层外墙路径点数不超过 5。
-    - expected>0 -> 开启：最后一层至少有一条外墙路径点数大于 5。
+    验证方法：
+    1. 跳过首层，找到包含 OUTER_WALL 的最高层，统计该层每条外墙路径的点数。
+    2. expected=0 代表关闭，路径不应被细分；expected>0 代表开启，路径应出现额外细分点。
+    通过标准：关闭时所有路径点数不超过 5；开启时至少一条路径点数大于 5。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -37,7 +38,11 @@ def test_max_volumetric_extrusion_rate_slope_segment_length(
         tolerance: float,
 ):
     """
-    分段长度限制：统计外墙段长，超阈段若偏离均值不超过20%则判违规，否则舍弃。
+    验证方法：
+    1. 跳过首层，取最高外墙层，计算所有相邻外墙点之间的线段长度。
+    2. 用“期望段长 + 容差”分出正常段和超阈段，并计算正常段平均长度。
+    3. 超阈段若只比均值长 20% 以内则视为违规；明显更长的结构段不作为细分失败。
+    通过标准：存在正常段，且没有应被细分却仍落在违规范围内的超阈段。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -57,10 +62,11 @@ def test_speed_limit_to_height_enable(
         speed_limit_to_height: str,
 ):
     """
-    高度限速开启后，检查外墙/内墙的实际速度和加速度是否随高度变化。
-
-    同时核对导出 G-code 的 CONFIG_BLOCK 中的开关和限速曲线，避免仅验证
-    JSON 输入值而没有验证实际切片结果。
+    验证方法：
+    1. 核对导出 G-code 的 CONFIG_BLOCK 中高度限速开关和限速曲线是否与期望一致。
+    2. 在曲线覆盖的高度范围内，按层采集外墙/内墙 Region.feedrate 和 velocity_limits.ACCEL。
+    3. 对同一种墙类型比较不同高度的采样值，确认速度和加速度都发生变化。
+    通过标准：开关及曲线匹配，采样字段不缺失，且至少一种墙类型同时观察到速度、加速度变化。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -84,9 +90,11 @@ def test_acceleration_limit_mess_enable(
         acc_tolerance: float,
 ):
     """
-    acceleration_limit_mess_enable：按耗材重量做线性裁剪，校验打印块的速度/加速度是否匹配裁剪后的期望值。
-    - 首层仅用于累计耗材重量，实际校验从第 1 层开始。
-    - 目标挤出类型：外墙/内墙/稀疏填充/内部实心填充。
+    验证方法：
+    1. 解析 acceleration_limit_mess 曲线；首层只累计挤出量，并结合丝径、密度换算耗材重量。
+    2. 从第 1 层开始，按外墙、内墙、稀疏填充、内部实心填充切分连续打印块。
+    3. 根据累计重量对配置速度/加速度线性裁剪，分别与 point.f 和 velocity_limits.ACCEL 比较。
+    通过标准：所有目标打印块的速度和加速度都在各自容差内，且 ACCEL 不缺失。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()

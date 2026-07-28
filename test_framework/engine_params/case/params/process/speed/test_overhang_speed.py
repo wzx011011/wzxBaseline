@@ -16,8 +16,11 @@ from engine_params.src.gcode.process.speed.overhang_speed_check import (
 @pytest.mark.engine_params
 def test_bridge_speed(slice_and_export: Path, expected_bridge_speed: float, tolerance: float):
     """
-    Overhang wall（桥接）速度：校验 LayerRegion.feedrate 是否等于期望值。
-    TODO，要加上没有开启翘边降速，额外检测 Bridge 挤出类型（其实就是相当于悬空的 Bridge infill ）的情况
+    验证方法：
+    1. 跳过首层，仅解析 OVERHANG_WALL（悬垂外墙）Region。
+    2. 读取 Region.feedrate（mm/s），与 bridge_speed 期望值逐一比较。
+    通过标准：至少检查到一个悬垂外墙 Region，feedrate 不缺失，且全部在容差范围内。
+    说明：当前实现验证的是 OVERHANG_WALL，不包含普通 BRIDGE 填充类型。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -34,7 +37,10 @@ def test_bridge_speed(slice_and_export: Path, expected_bridge_speed: float, tole
 @pytest.mark.engine_params
 def test_internal_bridge_speed(slice_and_export: Path, expected_internal_bridge_speed: float, tolerance: float):
     """
-    Internal bridge 速度：校验 INTERNAL_BRIDGE LayerRegion.feedrate 是否等于期望值。
+    验证方法：
+    1. 跳过首层，仅解析 INTERNAL_BRIDGE（内部桥接）Region。
+    2. 读取 Region.feedrate（mm/s），与 internal_bridge_speed 期望值逐一比较。
+    通过标准：至少检查到一个内部桥接 Region，feedrate 不缺失，且全部在容差范围内。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -50,7 +56,10 @@ def test_internal_bridge_speed(slice_and_export: Path, expected_internal_bridge_
 @pytest.mark.engine_params
 def test_enable_overhang_speed(slice_and_export: Path, expected_enable_overhang_speed: bool, tolerance: float):
     """
-    Overhang 速度开关：检查除首层外外墙路径点的 feedrate 是否与 outer_wall_speed 一致。
+    验证方法：
+    1. 从 CONFIG_BLOCK 读取 outer_wall_speed，并跳过首层解析所有外墙路径点。
+    2. 只要存在实际速度不同于 outer_wall_speed 的点，就判定悬垂速度功能已生效。
+    通过标准：推断出的启用状态与期望一致，所有路径点都有速度值。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -66,7 +75,10 @@ def test_enable_overhang_speed(slice_and_export: Path, expected_enable_overhang_
 @pytest.mark.engine_params
 def test_slowdown_for_curled_perimeters(slice_and_export: Path, expected_slowdown_for_curled_perimeters: bool, tolerance: float):
     """
-    翘边降速：Overhang 层的外墙应出现 overhang_4_4_speed（开启时），否则保持 outer_wall_speed。
+    验证方法：
+    1. 从 CONFIG_BLOCK 读取 overhang_4_4_speed 和 bridge_speed，定位含 OVERHANG_WALL 的非首层。
+    2. 检查这些层的普通外墙路径点：开启时应出现 overhang_4_4_speed，关闭时应出现 bridge_speed。
+    通过标准：实际速度特征推断出的开关状态与期望一致，且路径点速度不缺失。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -82,7 +94,10 @@ def test_slowdown_for_curled_perimeters(slice_and_export: Path, expected_slowdow
 @pytest.mark.engine_params
 def test_overhang_speed_classic(slice_and_export: Path, expected_overhang_speed_classic: bool, tolerance: float):
     """
-    经典悬垂速度 L2：配置开启，且含悬垂区域的外墙实际出现分级降速。
+    验证方法：
+    1. 核对 CONFIG_BLOCK 的 overhang_speed_classic 开关，并定位含 OVERHANG_WALL 的非首层。
+    2. 检查同层普通外墙路径点，确认至少有点低于 outer_wall_speed，作为分级降速已生效的证据。
+    通过标准：配置开关和实际降速共同推断出的状态与期望一致，且速度不缺失。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -98,7 +113,10 @@ def test_overhang_speed_classic(slice_and_export: Path, expected_overhang_speed_
 @pytest.mark.engine_params
 def test_overhang_totally_speed(slice_and_export: Path, expected_overhang_totally_speed: float, tolerance: float):
     """
-    完全悬垂速度：Overhang wall 的路径点 point.f 全部应等于期望值。
+    验证方法：
+    1. 跳过首层，仅提取 OVERHANG_WALL 的所有路径点。
+    2. 逐点读取实际 F 速度（mm/s），与 overhang_totally_speed 期望值比较。
+    通过标准：至少检查到一个点，速度不缺失，且所有点都在容差范围内。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -114,7 +132,10 @@ def test_overhang_totally_speed(slice_and_export: Path, expected_overhang_totall
 @pytest.mark.engine_params
 def test_smooth_speed_discontinuity_area(slice_and_export: Path, expected_smooth_speed_discontinuity_area: bool, tolerance: float):
     """
-    平滑速度过渡：检查含 Overhang wall 的层，外墙路径速度是否单调（增/减）。
+    验证方法：
+    1. 跳过首层，定位含 OVERHANG_WALL 的层，并提取同层普通外墙每条路径的逐点速度序列。
+    2. 开启时要求速度序列单调递增或递减；关闭时要求至少观察到一条非单调路径。
+    通过标准：根据路径单调性推断出的开关状态与期望一致，且速度不缺失。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()

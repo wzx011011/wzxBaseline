@@ -74,7 +74,12 @@ def test_outer_wall_jerk(
         expected_outer_wall_jerk: float,
         tolerance: float,
 ):
-    """非首层 OUTER_WALL 的 SQUARE_CORNER_VELOCITY 应与期望值一致。"""
+    """
+    验证方法：
+    1. 跳过首层，仅筛选 OUTER_WALL（外墙）Region。
+    2. 从 velocity_limits 读取 SQUARE_CORNER_VELOCITY，作为外墙 Jerk 实际值。
+    通过标准：至少存在一个外墙 Region，该字段不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -93,7 +98,12 @@ def test_inner_wall_jerk(
         expected_inner_wall_jerk: float,
         tolerance: float,
 ):
-    """非首层 INNER_WALL 的 SQUARE_CORNER_VELOCITY 应与期望值一致。"""
+    """
+    验证方法：
+    1. 跳过首层，仅筛选 INNER_WALL（内墙）Region。
+    2. 从 velocity_limits 读取 SQUARE_CORNER_VELOCITY，作为内墙 Jerk 实际值。
+    通过标准：至少存在一个内墙 Region，该字段不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -112,7 +122,13 @@ def test_top_surface_acceleration(
         expected_top_surface_acceleration: float,
         tolerance: float,
 ):
-    """非首层 TOP_SURFACE 的 SQUARE_CORNER_VELOCITY 应与期望值一致。"""
+    """
+    验证方法：
+    1. 跳过首层，仅筛选 TOP_SURFACE（顶面）Region。
+    2. 从 velocity_limits 读取 SQUARE_CORNER_VELOCITY 并与期望值比较。
+    通过标准：至少存在一个顶面 Region，该字段不缺失，且全部在容差范围内。
+    注意：函数名沿用历史命名 acceleration，实际验证的是顶面 Jerk。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -131,7 +147,12 @@ def test_initial_layer_jerk(
         expected_initial_layer_jerk: float,
         tolerance: float,
 ):
-    """首层所有 LayerRegion 的 SQUARE_CORNER_VELOCITY 应与期望值一致。"""
+    """
+    验证方法：
+    1. 仅解析首层（layer 0）的全部 LayerRegion。
+    2. 从 velocity_limits 读取 SQUARE_CORNER_VELOCITY，作为首层 Jerk 实际值。
+    通过标准：至少检查到一个 Region，该字段不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -164,7 +185,12 @@ def test_default_jerk(
         expected_default_jerk: float,
         tolerance: float,
 ):
-    """非首层 GAP/SUPPORT 类型 Region 的 SQUARE_CORNER_VELOCITY 应符合期望。"""
+    """
+    验证方法：
+    1. 跳过首层，筛选 GAP_INFILL、SUPPORT、SUPPORT_INTERFACE Region。
+    2. 从 velocity_limits 读取 SQUARE_CORNER_VELOCITY，作为默认 Jerk 实际值。
+    通过标准：至少检查到一个目标 Region，该字段不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -183,7 +209,12 @@ def test_infill_jerk(
         expected_infill_jerk: float,
         tolerance: float,
 ):
-    """首层 INFILL/IRONING/BRIDGE 类 LayerRegion 的 SQUARE_CORNER_VELOCITY 应符合期望。"""
+    """
+    验证方法：
+    1. 跳过首层，筛选稀疏填充、内部实心填充、熨烫和内部桥接 Region。
+    2. 从 velocity_limits 读取 SQUARE_CORNER_VELOCITY，作为填充 Jerk 实际值。
+    通过标准：至少检查到一个目标 Region，该字段不缺失，且全部在容差范围内。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

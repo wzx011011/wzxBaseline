@@ -41,13 +41,12 @@ def _format_failure_travel_speed(details) -> str:
 
 def test_travel_speed(gcode_parser: Any, input_3mf: str, expected_travel_speed: float, tolerance: float = 0.0) -> None:
     """
-    测试travel_speed参数
-    
-    Args:
-        gcode_parser: GCode解析器实例
-        input_3mf: 输入的3MF文件路径
-        expected_travel_speed: 期望的travel速度值
-        tolerance: 容差范围，默认为0
+    验证方法：
+    1. 确认输入 3MF 存在，并使用 gcode_parser 获取除首层外的全部运动路径。
+    2. 只筛选 kind=travel 的移动点，读取每个点的实际 F 速度（mm/s）。
+    3. 将实际速度与 travel_speed 期望值逐点比较。
+    通过标准：所有 travel 点都包含 F，且速度全部在容差范围内。
+    说明：当前实现未额外要求必须解析到至少一个 travel 点。
     """
     # 验证输入文件存在
     assert os.path.exists(input_3mf), f"Input file not found: {input_3mf}"

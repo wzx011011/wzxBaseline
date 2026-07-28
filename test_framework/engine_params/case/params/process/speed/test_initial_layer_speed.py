@@ -55,10 +55,10 @@ def _format_failure_speed(details) -> str:
 @pytest.mark.engine_params
 def test_initial_layer_speed(slice_and_export: Path, expected_initial_layer_speed: float, tolerance: float):
     """
-    首层速度检查：
-    - 仅比对 LayerRegion.feedrate
-    - 跳过 PRIME_TOWER、SKIRT、BOTTOM_SURFACE
-    - 失败时打印出具体是哪些 Region 失配或缺失全局速度
+    验证方法：
+    1. 仅解析首层（layer 0）的内墙、外墙、间隙填充、Brim 和支撑 Region。
+    2. 读取各 Region.feedrate（mm/s），与 initial_layer_speed 期望值比较。
+    通过标准：至少检查到一个目标 Region，feedrate 不缺失，且全部在容差范围内。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -75,8 +75,10 @@ def test_initial_layer_speed(slice_and_export: Path, expected_initial_layer_spee
 @pytest.mark.engine_params
 def test_initial_layer_infill_speed(slice_and_export: Path, expected_initial_layer_infill_speed: float, tolerance: float):
     """
-    首层填充速度检查：
-    - 仅比对首层 BOTTOM_SURFACE 类型的 LayerRegion.feedrate
+    验证方法：
+    1. 仅解析首层（layer 0）的 BOTTOM_SURFACE（底面填充）Region。
+    2. 读取 Region.feedrate（mm/s），与 initial_layer_infill_speed 期望值比较。
+    通过标准：至少检查到一个底面 Region，feedrate 不缺失，且全部在容差范围内。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -125,8 +127,10 @@ def _format_failure_travel_speed(details) -> str:
 @pytest.mark.engine_params
 def test_initial_layer_travel_speed(slice_and_export: Path, expected_initial_layer_travel_speed: float, tolerance: float):
     """
-    首层移动速度检查：
-    - 比对首层中返回的paths中点的kind为travel的点的f值
+    验证方法：
+    1. 通过 get_motion_paths_for_layer(0) 获取首层运动点，筛选 kind=travel 且非料塔的点。
+    2. 读取每个移动点的实际 F 速度（已换算为 mm/s），与期望值比较。
+    通过标准：至少检查到一个 travel 点，且所有点的速度都在容差范围内。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -141,7 +145,13 @@ def test_initial_layer_travel_speed(slice_and_export: Path, expected_initial_lay
 # ================== slow_down_layers ==================
 @pytest.mark.engine_params
 def test_slow_down_layers(slice_and_export: Path, expected_slow_down_layers: int, tolerance: float):
-    """慢速打印层数校验：验证差值算法应用到各挤出类型后与期望一致。"""
+    """
+    验证方法：
+    1. 读取前 N 层墙和填充 Region；N 为 expected_slow_down_layers。
+    2. 按“首层速度 → 正常层速度”线性插值，计算每一层、每种类型的期望速度。
+    3. 将计算结果与对应 Region.feedrate 逐一比较。
+    通过标准：至少检查到一个 Region，feedrate 不缺失，且全部符合插值结果。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
