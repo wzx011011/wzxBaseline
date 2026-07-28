@@ -2,17 +2,10 @@ from __future__ import annotations
 
 from pathlib import Path
 from typing import Any, Dict, List, Tuple, Optional
-import math
 
 from engine_params.src.gcode.GCodeParser import GCodeParser
 from engine_params.src.gcode.GCodeParserEx import GCodeParserEx
 from engine_params.src.gcode.constants import ExtrusionType
-from engine_params.src.gcode.process.quality.line_width_check import (
-    compute_line_width,
-    _resolve_flow_ratio,
-    _resolve_filament_diameter,
-    _resolve_layer_height,
-)
 
 
 def parse_wall_loops(
@@ -293,9 +286,8 @@ def parse_detect_thin_wall(
         tolerance: float = 0.001,
 ) -> Tuple[bool, bool, Dict[str, Any]]:
     """
-    检测薄壁选项：非首层 OUTER_WALL 每层应分成两个孤岛，其中一条线宽多变、一条线宽恒定。
-    - 使用 GCodeParserEx，跳过首层。
-    - 周长与线宽计算均补充首尾闭合段；线宽按逐段 E/长度 + 层高公式计算。
+    检测薄壁选项：目标模型开启时每个非首层有两条外墙路径，关闭时只有一条。
+    同时校验 G-code CONFIG_BLOCK 中的 detect_thin_wall 配置值。
     """
     
     path_obj = Path(gcode_path)
@@ -304,21 +296,41 @@ def parse_detect_thin_wall(
     parser = GCodeParserEx(path_obj)
 
     cfg_meta = parser.load_config() or {}
-    cfg = {k: (v.value if hasattr(v, "value") else v) for k, v in cfg_meta.items()}
-    flow_ratio = _resolve_flow_ratio(cfg)
-    filament_diameter = _resolve_filament_diameter(cfg)
-    layer_meta = parser.extract_layers()  # [(z, h), ...]
+    raw_config = cfg_meta.get("detect_thin_wall")
+    raw_config = raw_config.value if hasattr(raw_config, "value") else raw_config
+    config_on = None if raw_config is None else str(raw_config).strip().lower() in {
+        "1", "true", "yes", "enabled",
+    }
 
     layers = parser.get_type_contours_per_layer(
         types=[ExtrusionType.OUTER_WALL],
         skip_layers=[0],
     )    
 
-    actual_on = len(layers)>0
-    ok = (actual_on == expected_on)
+    path_counts: List[Dict[str, Any]] = []
+    for layer in layers:
+        for object_id, type_map in (layer.regions or {}).items():
+            region = type_map.get(ExtrusionType.OUTER_WALL.value)
+            if region is None or not region.paths:
+                continue
+            path_counts.append({
+                "layer": layer.index,
+                "object_id": object_id,
+                "path_count": len(region.paths),
+            })
+
+    actual_on = bool(path_counts) and all(item["path_count"] == 2 for item in path_counts)
+    config_match = config_on == expected_on
+    effect_match = actual_on == expected_on
+    ok = config_match and effect_match
     details = {
         "expected_on": expected_on,
+        "config_on": config_on,
         "actual_on": actual_on,
+        "config_match": config_match,
+        "effect_match": effect_match,
+        "path_counts": path_counts,
+        "tolerance": tolerance,
         "match": ok,
     }
     return ok, expected_on, details

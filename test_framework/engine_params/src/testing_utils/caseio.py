@@ -32,15 +32,35 @@ def model_or_baseline_path(repo: Path, module_: str, group: str, param_name: str
     3MF 与 GCODE 都在：
     test_framework/engine_params/data/models/<module>/<group>/<param_name>/<filename>
     """
-    expected = (repo / "test_framework" / "engine_params" / "data" / "models"
-            / module_ / group / param_name / filename).resolve()
+    models_root = repo / "test_framework" / "engine_params" / "data" / "models"
+    filename_path = Path(filename)
+
+    # 支持 JSON 直接给出相对 models/ 的路径；旧用例通常只写文件名。
+    rooted = (models_root / filename_path).resolve()
+    if rooted.exists():
+        return rooted
+
+    expected = (models_root / module_ / group / param_name / filename_path).resolve()
     if expected.exists():
         return expected
-    # 容错：如果文件不在预期位置，尝试在 models/ 下全局查找相同文件名的候选项
-    models_root = (repo / "test_framework" / "engine_params" / "data" / "models")
-    matches = list(models_root.rglob(filename)) if models_root.exists() else []
-    if matches:
-        return matches[0].resolve()
+
+    # 参数模型允许按功能再分一层目录，例如 quality/wall_and_surfaces/...
+    # 必须先限定在 module/group 内，避免 strength 与 quality 的同名模型串用。
+    scoped_root = models_root / module_ / group
+    scoped_matches = sorted(scoped_root.rglob(filename_path.name)) if scoped_root.exists() else []
+    parameter_matches = [
+        path for path in scoped_matches
+        if param_name in path.relative_to(scoped_root).parts
+    ]
+    if parameter_matches:
+        return parameter_matches[0].resolve()
+    if scoped_matches:
+        return scoped_matches[0].resolve()
+
+    # 最后才做全局兼容搜索，保留旧用例取首个候选项的行为。
+    global_matches = sorted(models_root.rglob(filename_path.name)) if models_root.exists() else []
+    if global_matches:
+        return global_matches[0].resolve()
     return expected
 
 # ---------------- 元信息推断 ----------------

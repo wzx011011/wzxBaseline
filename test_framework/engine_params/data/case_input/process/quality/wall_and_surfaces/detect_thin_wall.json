@@ -8,7 +8,8 @@
     {
       "project_name": "disabled",
       "input_3mf": "detect_thin_wall_disabled.3mf",
-      "expected_detect_thin_wall": false
+      "expected_detect_thin_wall": false,
+      "expect_gcode": false
     }
   ]
 }

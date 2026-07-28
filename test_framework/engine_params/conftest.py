@@ -491,6 +491,8 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     slice_timeout = float(timeouts.get("slice", os.getenv("SLICER_SLICE_TIMEOUT", "600")))
     slice_poll = float(timeouts.get("poll", os.getenv("SLICER_PROGRESS_POLL", "1")))
     slice_stall = float(timeouts.get("stall", os.getenv("SLICER_STALL_TIMEOUT", "120")))
+    expect_gcode = bool(params.get("expect_gcode", True))
+    empty_slice_timeout = float(timeouts.get("empty_slice", 5.0))
     export_timeout = int(timeouts.get("export", 360))
     # 事件落盘稳定期与整体等待上限（新的两个可选超时）
     settle_seconds = float(timeouts.get("settle", 1.0))   # 文件大小/mtime 保持不变的时间
@@ -551,10 +553,15 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
             timeout=slice_timeout,
             poll_interval=slice_poll,
             stall_timeout=slice_stall,
+            accept_idle_after=empty_slice_timeout if not expect_gcode else None,
         )
     except SlicingWaitTimeout as exc:
         pytest.fail(f"等待切片完成失败：{exc}")
     print(f"[slice_and_export] slicing completed: {slicing_progress}")
+
+    if slicing_progress.get("empty_slice"):
+        print(f"[slice_and_export] expected empty slice; G-code will not be exported: {output_gcode}")
+        return output_gcode
 
     # ---- 4) export G-code only after slicing has completed ----
     export_fut = engine_injector.submit("export_gcode", {

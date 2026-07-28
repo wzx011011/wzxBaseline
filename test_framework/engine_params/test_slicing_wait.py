@@ -82,6 +82,22 @@ def test_wait_for_slicing_done_times_out_when_never_complete():
         )
 
 
+def test_wait_for_slicing_done_accepts_expected_empty_slice():
+    injector = FakeInjector(
+        [{"state": "no_slicing", "percentage": -1, "all_plate_finished": False}]
+    )
+
+    progress = wait_for_slicing_done(
+        injector,
+        timeout=1,
+        poll_interval=0,
+        accept_idle_after=0,
+    )
+
+    assert progress["empty_slice"] is True
+    assert progress["all_plate_finished"] is False
+
+
 def test_slice_and_export_exports_only_after_slicing_completed(tmp_path: Path):
     model = tmp_path / "case.3mf"
     model.write_bytes(b"3mf")
@@ -111,3 +127,32 @@ def test_slice_and_export_exports_only_after_slicing_completed(tmp_path: Path):
     assert injector.commands.index("export_gcode") > max(
         index for index, command in enumerate(injector.commands) if command == "get_slicing_progress"
     )
+
+
+def test_slice_and_export_returns_missing_path_for_expected_empty_slice(tmp_path: Path):
+    model = tmp_path / "empty.3mf"
+    model.write_bytes(b"3mf")
+    output = tmp_path / "empty.gcode"
+    injector = FakeInjector(
+        [{"state": "no_slicing", "percentage": -1, "all_plate_finished": False}],
+        output=output,
+    )
+    request = SimpleNamespace(
+        param={
+            "input_3mf": str(model),
+            "output_gcode": str(output),
+            "expect_gcode": False,
+            "timeouts": {
+                "slice": 1,
+                "poll": 0,
+                "stall": 0,
+                "empty_slice": 0,
+            },
+        }
+    )
+
+    result = slice_and_export.__wrapped__(request, injector, lambda: output)
+
+    assert result == output
+    assert not output.exists()
+    assert "export_gcode" not in injector.commands

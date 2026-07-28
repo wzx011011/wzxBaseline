@@ -37,6 +37,7 @@ def wait_for_slicing_done(
     command_timeout: float = 60.0,
     stall_timeout: float = 120.0,
     require_transition: bool = False,
+    accept_idle_after: Optional[float] = None,
 ) -> Dict[str, Any]:
     """Poll ``get_slicing_progress`` until the current slice is complete.
 
@@ -52,6 +53,7 @@ def wait_for_slicing_done(
     last_error: Optional[str] = None
     last_percentage: Optional[float] = None
     last_change = started
+    idle_since: Optional[float] = None
 
     while time.monotonic() < deadline:
         remaining = max(0.01, deadline - time.monotonic())
@@ -78,6 +80,21 @@ def wait_for_slicing_done(
 
                     now = time.monotonic()
                     percentage = _percentage_0_100(progress.get("percentage"))
+                    state = str(progress.get("state") or "").lower()
+                    is_empty_idle = (
+                        state == "no_slicing"
+                        and (percentage is None or percentage < 0)
+                        and not progress.get("all_plate_finished")
+                    )
+                    if is_empty_idle:
+                        if idle_since is None:
+                            idle_since = now
+                        if accept_idle_after is not None and now - idle_since >= max(0.0, accept_idle_after):
+                            progress["empty_slice"] = True
+                            return progress
+                    else:
+                        idle_since = None
+
                     if percentage is not None:
                         if last_percentage is None or percentage != last_percentage:
                             last_percentage = percentage
