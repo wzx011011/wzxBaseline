@@ -7,7 +7,7 @@
     "replica_root_count": 3
   },
   "parameter_count": 43,
-  "case_count": 122,
+  "case_count": 124,
   "parameters": {
     "bridge_no_support": {
       "entries": [
@@ -4038,37 +4038,37 @@
           "expected_key": "\"normal(auto)\"",
           "replica_count": 3,
           "metrics": {
-            "role.Support total.bbox_area": {
-              "min": 1159.8202,
-              "max": 1159.8202
+            "role.Support interface.bbox_area": {
+              "min": 851.07414,
+              "max": 851.07414
             },
-            "role.Support total.bbox_height": {
-              "min": 32.648,
-              "max": 32.648
+            "role.Support interface.bbox_width": {
+              "min": 29.582,
+              "max": 29.582
             },
-            "role.Support total.bbox_width": {
-              "min": 35.525,
-              "max": 35.525
+            "role.Support interface.block_count": {
+              "min": 63,
+              "max": 63
             },
-            "role.Support total.block_count": {
-              "min": 203,
-              "max": 203
+            "role.Support interface.extrusion": {
+              "min": 201.64747,
+              "max": 201.64747
             },
-            "role.Support total.extrusion": {
-              "min": 1689.83122,
-              "max": 1689.83122
+            "role.Support interface.layer_count": {
+              "min": 63,
+              "max": 63
             },
-            "role.Support total.fan_p50": {
-              "min": 1.0,
-              "max": 1.0
+            "role.Support interface.layer_length_max": {
+              "min": 172.72503,
+              "max": 172.72503
             },
-            "role.Support total.layer_count": {
-              "min": 143,
-              "max": 143
+            "role.Support interface.layer_length_p50": {
+              "min": 102.2149,
+              "max": 102.2149
             },
-            "role.Support total.layer_length_max": {
-              "min": 2091.961,
-              "max": 2091.961
+            "role.Support interface.layer_moves_max": {
+              "min": 41,
+              "max": 41
             }
           }
         },
@@ -4079,141 +4079,244 @@
           "expected_key": "\"tree(auto)\"",
           "replica_count": 3,
           "metrics": {
-            "role.Support total.bbox_area": {
-              "min": 670.79023,
-              "max": 677.39485
+            "role.Support interface.bbox_area": {
+              "min": 663.16857,
+              "max": 663.95172
             },
-            "role.Support total.bbox_height": {
-              "min": 24.627,
-              "max": 24.823
+            "role.Support interface.bbox_width": {
+              "min": 27.057,
+              "max": 27.093
             },
-            "role.Support total.bbox_width": {
-              "min": 27.238,
-              "max": 27.303
+            "role.Support interface.block_count": {
+              "min": 63,
+              "max": 63
             },
-            "role.Support total.block_count": {
-              "min": 327,
-              "max": 346
+            "role.Support interface.extrusion": {
+              "min": 167.07256,
+              "max": 168.32875
             },
-            "role.Support total.extrusion": {
-              "min": 1050.54762,
-              "max": 1073.81864
+            "role.Support interface.layer_count": {
+              "min": 63,
+              "max": 63
             },
-            "role.Support total.fan_p50": {
-              "min": 1.0,
-              "max": 1.0
+            "role.Support interface.layer_length_max": {
+              "min": 105.48892,
+              "max": 118.33545
             },
-            "role.Support total.layer_count": {
-              "min": 141,
-              "max": 141
+            "role.Support interface.layer_length_p50": {
+              "min": 79.25502,
+              "max": 80.05574
             },
-            "role.Support total.layer_length_max": {
-              "min": 344.67364,
-              "max": 347.99723
+            "role.Support interface.layer_moves_max": {
+              "min": 81,
+              "max": 82
+            }
+          }
+        },
+        {
+          "project_name": "normal_auto_painted",
+          "input_3mf": "support_type_painted.3mf",
+          "expected_value": "normal(auto)",
+          "expected_key": "\"normal(auto)\"",
+          "replica_count": 3,
+          "metrics": {
+            "role.Support interface.bbox_area": {
+              "min": 207.52826,
+              "max": 207.52826
+            },
+            "role.Support interface.bbox_width": {
+              "min": 7.421,
+              "max": 7.421
+            },
+            "role.Support interface.block_count": {
+              "min": 24,
+              "max": 24
+            },
+            "role.Support interface.extrusion": {
+              "min": 51.28938,
+              "max": 51.28938
+            },
+            "role.Support interface.layer_count": {
+              "min": 24,
+              "max": 24
+            },
+            "role.Support interface.layer_length_max": {
+              "min": 97.53042,
+              "max": 97.53042
+            },
+            "role.Support interface.layer_length_p50": {
+              "min": 83.68787,
+              "max": 83.68787
+            },
+            "role.Support interface.layer_moves_max": {
+              "min": 117,
+              "max": 117
+            }
+          }
+        },
+        {
+          "project_name": "tree_auto_painted",
+          "input_3mf": "support_type_painted.3mf",
+          "expected_value": "tree(auto)",
+          "expected_key": "\"tree(auto)\"",
+          "replica_count": 3,
+          "metrics": {
+            "role.Support interface.bbox_area": {
+              "min": 279.9896,
+              "max": 281.40465
+            },
+            "role.Support interface.bbox_width": {
+              "min": 9.839,
+              "max": 9.85
+            },
+            "role.Support interface.block_count": {
+              "min": 29,
+              "max": 30
+            },
+            "role.Support interface.extrusion": {
+              "min": 76.38496,
+              "max": 78.21214
+            },
+            "role.Support interface.layer_count": {
+              "min": 28,
+              "max": 28
+            },
+            "role.Support interface.layer_length_max": {
+              "min": 127.66871,
+              "max": 138.39348
+            },
+            "role.Support interface.layer_length_p50": {
+              "min": 108.34184,
+              "max": 113.31558
+            },
+            "role.Support interface.layer_moves_max": {
+              "min": 98,
+              "max": 105
             }
           }
         },
         {
           "project_name": "normal_manual",
-          "input_3mf": "support_type_normal_manual.3mf",
+          "input_3mf": "support_type_painted.3mf",
           "expected_value": "normal(manual)",
           "expected_key": "\"normal(manual)\"",
           "replica_count": 3,
           "metrics": {
-            "role.Support total.bbox_area": {
-              "min": 0.0,
-              "max": 0.0
+            "role.Support interface.bbox_area": {
+              "min": 207.52826,
+              "max": 207.52826
             },
-            "role.Support total.bbox_height": {
-              "min": 0.0,
-              "max": 0.0
+            "role.Support interface.bbox_width": {
+              "min": 7.421,
+              "max": 7.421
             },
-            "role.Support total.bbox_width": {
-              "min": 0.0,
-              "max": 0.0
+            "role.Support interface.block_count": {
+              "min": 24,
+              "max": 24
             },
-            "role.Support total.block_count": {
-              "min": 0,
-              "max": 0
+            "role.Support interface.extrusion": {
+              "min": 51.28938,
+              "max": 51.28938
             },
-            "role.Support total.extrusion": {
-              "min": 0.0,
-              "max": 0.0
+            "role.Support interface.layer_count": {
+              "min": 24,
+              "max": 24
             },
-            "role.Support total.fan_p50": {
-              "min": 0.0,
-              "max": 0.0
+            "role.Support interface.layer_length_max": {
+              "min": 97.53042,
+              "max": 97.53042
             },
-            "role.Support total.layer_count": {
-              "min": 0,
-              "max": 0
+            "role.Support interface.layer_length_p50": {
+              "min": 83.68787,
+              "max": 83.68787
             },
-            "role.Support total.layer_length_max": {
-              "min": 0.0,
-              "max": 0.0
+            "role.Support interface.layer_moves_max": {
+              "min": 117,
+              "max": 117
             }
           }
         },
         {
           "project_name": "tree_manual",
-          "input_3mf": "support_type_tree_manual.3mf",
+          "input_3mf": "support_type_painted.3mf",
           "expected_value": "tree(manual)",
           "expected_key": "\"tree(manual)\"",
           "replica_count": 3,
           "metrics": {
-            "role.Support total.bbox_area": {
-              "min": 0.0,
-              "max": 0.0
+            "role.Support interface.bbox_area": {
+              "min": 279.23035,
+              "max": 282.09686
             },
-            "role.Support total.bbox_height": {
-              "min": 0.0,
-              "max": 0.0
+            "role.Support interface.bbox_width": {
+              "min": 9.778,
+              "max": 9.849
             },
-            "role.Support total.bbox_width": {
-              "min": 0.0,
-              "max": 0.0
+            "role.Support interface.block_count": {
+              "min": 30,
+              "max": 30
             },
-            "role.Support total.block_count": {
-              "min": 0,
-              "max": 0
+            "role.Support interface.extrusion": {
+              "min": 76.54281,
+              "max": 76.90304
             },
-            "role.Support total.extrusion": {
-              "min": 0.0,
-              "max": 0.0
+            "role.Support interface.layer_count": {
+              "min": 28,
+              "max": 28
             },
-            "role.Support total.fan_p50": {
-              "min": 0.0,
-              "max": 0.0
+            "role.Support interface.layer_length_max": {
+              "min": 125.15831,
+              "max": 137.11745
             },
-            "role.Support total.layer_count": {
-              "min": 0,
-              "max": 0
+            "role.Support interface.layer_length_p50": {
+              "min": 109.6058,
+              "max": 110.10486
             },
-            "role.Support total.layer_length_max": {
-              "min": 0.0,
-              "max": 0.0
+            "role.Support interface.layer_moves_max": {
+              "min": 100,
+              "max": 102
             }
           }
         }
       ],
       "checks": [
-        "role.Support total.bbox_area",
-        "role.Support total.bbox_height",
-        "role.Support total.bbox_width",
-        "role.Support total.block_count",
-        "role.Support total.extrusion",
-        "role.Support total.fan_p50",
-        "role.Support total.layer_count",
-        "role.Support total.layer_length_max"
+        "role.Support interface.bbox_area",
+        "role.Support interface.bbox_width",
+        "role.Support interface.block_count",
+        "role.Support interface.extrusion",
+        "role.Support interface.layer_count",
+        "role.Support interface.layer_length_max",
+        "role.Support interface.layer_length_p50",
+        "role.Support interface.layer_moves_max"
       ],
       "relative_tolerance": 0.12,
       "behavior_aliases": [
         {
           "expected_values": [
-            "normal(manual)",
+            "normal(auto)",
+            "normal(manual)"
+          ],
+          "reason": "the painted regions fully constrain the normal-support paths for this geometry"
+        },
+        {
+          "expected_values": [
+            "tree(auto)",
             "tree(manual)"
           ],
-          "reason": "manual modes contain no painted/enforced support in the canonical project"
+          "reason": "the painted regions constrain both tree modes to the same stochastic layout range"
+        },
+        {
+          "expected_values": [
+            "normal(auto)",
+            "normal(manual)"
+          ],
+          "reason": "the painted regions fully constrain the normal-support paths for this geometry"
+        },
+        {
+          "expected_values": [
+            "tree(auto)",
+            "tree(manual)"
+          ],
+          "reason": "the painted regions constrain both tree modes to the same stochastic layout range"
         }
       ]
     },

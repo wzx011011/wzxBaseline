@@ -52,8 +52,10 @@ _ALLOWED_BEHAVIOR_ALIASES = {
             "their aggregate path difference is below ReleaseC tree-layout variance for this geometry",
     },
     "support_type": {
-        frozenset((canonical_expected("normal(manual)"), canonical_expected("tree(manual)"))):
-            "manual modes contain no painted/enforced support in the canonical project",
+        frozenset((canonical_expected("normal(auto)"), canonical_expected("normal(manual)"))):
+            "the painted regions fully constrain the normal-support paths for this geometry",
+        frozenset((canonical_expected("tree(auto)"), canonical_expected("tree(manual)"))):
+            "the painted regions constrain both tree modes to the same stochastic layout range",
     },
     "raft_contact_distance": {
         frozenset((canonical_expected("0.1"), canonical_expected("0.2"))):

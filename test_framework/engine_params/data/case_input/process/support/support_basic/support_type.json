@@ -11,14 +11,28 @@
       "expected_value": "tree(auto)"
     },
     {
+      "project_name": "normal_auto_painted",
+      "input_3mf": "support_type_painted.3mf",
+      "expected_value": "normal(auto)",
+      "preserve_painted_support": true
+    },
+    {
+      "project_name": "tree_auto_painted",
+      "input_3mf": "support_type_painted.3mf",
+      "expected_value": "tree(auto)",
+      "preserve_painted_support": true
+    },
+    {
       "project_name": "normal_manual",
-      "input_3mf": "support_type_normal_manual.3mf",
-      "expected_value": "normal(manual)"
+      "input_3mf": "support_type_painted.3mf",
+      "expected_value": "normal(manual)",
+      "preserve_painted_support": true
     },
     {
       "project_name": "tree_manual",
-      "input_3mf": "support_type_tree_manual.3mf",
-      "expected_value": "tree(manual)"
+      "input_3mf": "support_type_painted.3mf",
+      "expected_value": "tree(manual)",
+      "preserve_painted_support": true
     }
   ]
 }

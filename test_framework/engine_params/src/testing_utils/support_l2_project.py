@@ -270,9 +270,10 @@ def build_support_l2_project(
     output_path: Path,
     parameter: str,
     expected_value: Any,
+    source_project: Path | None = None,
 ) -> Path:
     """Create a temporary 3MF whose geometry exercises the support parameter."""
-    template = _template_path(repo, parameter)
+    template = source_project or _template_path(repo, parameter)
     if not template.is_file():
         raise FileNotFoundError(f"support L2 template not found: {template}")
     output_path.parent.mkdir(parents=True, exist_ok=True)

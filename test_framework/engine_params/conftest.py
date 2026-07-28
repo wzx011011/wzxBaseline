@@ -512,6 +512,7 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
             output_path=output_gcode.with_suffix(".l2.3mf"),
             parameter=str(support_l2_parameter),
             expected_value=params.get("support_l2_expected"),
+            source_project=input_3mf if params.get("preserve_painted_support") else None,
         )
     # ---- 1) reset_project ----
     reset_fut = engine_injector.submit("reset_project", {
