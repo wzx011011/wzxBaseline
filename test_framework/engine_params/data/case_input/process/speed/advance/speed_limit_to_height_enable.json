@@ -1,10 +1,10 @@
 {
   "cases": [
     {
-      "project_name": "case1",
+      "project_name": "height_limit_cube_100_250mm",
       "input_3mf": "speed_limit_to_height_enable_case1.3mf",
       "expected_speed_limit_to_height_enable": true,
-      "speed_limit_to_height": "[[0,10,66,666]]"
+      "speed_limit_to_height": "[[100,150,100,3000],[150,200,80,2000],[200,250,60,500]]"
     }
   ]
 }

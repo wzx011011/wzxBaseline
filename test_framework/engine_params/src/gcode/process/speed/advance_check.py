@@ -480,55 +480,148 @@ def parse_speed_limit_to_height_enable(
         gcode_path: Path | str,
         expected_speed_limit_to_height_enable: bool,
         speed_limit_to_height: str,
+        speed_tolerance: float = 0.1,
+        acc_tolerance: float = 2.0,
 ) -> Tuple[bool, bool, Dict[str, Any]]:
     """
-    speed_limit_to_height_enable 校验：
-    - 仅校验 speed_limit_to_height_enable 功能是否启用
-    - 校验 speed_limit_to_height 配置是否正确解析
-    - 不检查具体的速度和加速度值
+    校验高度限速实际作用到了 G-code：
+    - CONFIG_BLOCK 中的开关和限速曲线必须与期望一致；
+    - 在限速曲线覆盖的高度范围内，采集外墙/内墙的实际速度和加速度；
+    - 同一种挤出类型的速度和加速度都必须随高度发生变化。
     """
     path_obj = Path(gcode_path)
     parser = GCodeParserEx(path_obj)
-
     cfg = parser.load_config() or {}
 
-    # 初始化 SmoothSpeedAcc，传入开关与限速曲线
-    try:
-        ssa = SmoothSpeedAcc(
-            parser,
-            speed_limit_to_height_enable=expected_speed_limit_to_height_enable,
-        )
-        ssa.init_limit(speed_limit_to_height=speed_limit_to_height)
-        
-        # 检查功能是否正确启用
-        actual_enabled = ssa.get_acceleration_limit_height_enable()
-        config_parsed = True
-        
-        # 验证配置字符串是否能正确解析
-        try:
-            # 创建临时列表来测试解析
-            test_data = []
-            ssa.paraseLimitStr(speed_limit_to_height, test_data, 0.0, 0.0, 0.0)
-            config_valid = len(test_data) > 0
-        except Exception:
-            config_valid = False
-            
-    except Exception as e:
-        actual_enabled = False
-        config_parsed = False
-        config_valid = False
+    actual_enabled = SmoothSpeedAcc._get_cfg_bool(
+        cfg, "speed_limit_to_height_enable", False
+    )
+    actual_curve = SmoothSpeedAcc._get_cfg_str(cfg, "speed_limit_to_height", "")
 
-    # 简单校验：功能启用状态是否匹配期望
-    ok = (actual_enabled == expected_speed_limit_to_height_enable) and config_parsed and config_valid
-    
+    def _normalized_curve(raw: str) -> List[Tuple[float, ...]]:
+        try:
+            data = ast.literal_eval(raw)
+        except (SyntaxError, ValueError, TypeError):
+            return []
+        if not isinstance(data, list):
+            return []
+        normalized: List[Tuple[float, ...]] = []
+        for row in data:
+            if not isinstance(row, (list, tuple)) or not 4 <= len(row) <= 5:
+                return []
+            try:
+                normalized.append(tuple(float(value) for value in row))
+            except (TypeError, ValueError):
+                return []
+        return normalized
+
+    expected_curve = _normalized_curve(speed_limit_to_height)
+    parsed_actual_curve = _normalized_curve(actual_curve)
+    curve_match = bool(expected_curve) and parsed_actual_curve == expected_curve
+
+    if parsed_actual_curve:
+        min_height = min(row[0] for row in parsed_actual_curve)
+        max_height = max(row[1] for row in parsed_actual_curve)
+    else:
+        min_height = max_height = None
+
+    target_types = [ExtrusionType.OUTER_WALL, ExtrusionType.INNER_WALL]
+    layers = parser.get_type_contours_per_layer(types=target_types, skip_layers=[0])
+    samples_by_type: Dict[str, List[Dict[str, float]]] = {}
+    missing_speed: List[Dict[str, Any]] = []
+    missing_acceleration: List[Dict[str, Any]] = []
+
+    for layer in layers:
+        if layer.z is None or min_height is None or max_height is None:
+            continue
+        z = float(layer.z)
+        if z < min_height or z > max_height:
+            continue
+        for object_id, type_map in (layer.regions or {}).items():
+            for type_name, region in (type_map or {}).items():
+                if region.feedrate is None:
+                    missing_speed.append({
+                        "layer": layer.index,
+                        "z": z,
+                        "object_id": object_id,
+                        "type": type_name,
+                    })
+                    continue
+                acceleration = (region.velocity_limits or {}).get(ACCEL_KEY)
+                if acceleration is None:
+                    missing_acceleration.append({
+                        "layer": layer.index,
+                        "z": z,
+                        "object_id": object_id,
+                        "type": type_name,
+                    })
+                    continue
+                samples_by_type.setdefault(type_name, []).append({
+                    "z": z,
+                    "speed": float(region.feedrate),
+                    "acceleration": float(acceleration),
+                })
+
+    def _distinct(values: List[float], tolerance: float) -> List[float]:
+        distinct: List[float] = []
+        for value in sorted(values):
+            if not distinct or abs(value - distinct[-1]) > tolerance:
+                distinct.append(value)
+        return distinct
+
+    variation_by_type: Dict[str, Dict[str, Any]] = {}
+    types_with_speed_and_acceleration_change: List[str] = []
+    for type_name, samples in samples_by_type.items():
+        ordered = sorted(samples, key=lambda sample: sample["z"])
+        distinct_speeds = _distinct(
+            [sample["speed"] for sample in ordered], speed_tolerance
+        )
+        distinct_accelerations = _distinct(
+            [sample["acceleration"] for sample in ordered], acc_tolerance
+        )
+        speed_changed = len(distinct_speeds) >= 2
+        acceleration_changed = len(distinct_accelerations) >= 2
+        if speed_changed and acceleration_changed:
+            types_with_speed_and_acceleration_change.append(type_name)
+        variation_by_type[type_name] = {
+            "sample_count": len(ordered),
+            "first_sample": ordered[0],
+            "last_sample": ordered[-1],
+            "distinct_speeds": distinct_speeds,
+            "distinct_accelerations": distinct_accelerations,
+            "speed_changed": speed_changed,
+            "acceleration_changed": acceleration_changed,
+        }
+
+    switch_match = actual_enabled == expected_speed_limit_to_height_enable
+    behavior_changed = bool(types_with_speed_and_acceleration_change)
+    ok = (
+        switch_match
+        and curve_match
+        and behavior_changed
+        and not missing_speed
+        and not missing_acceleration
+    )
+
     details = {
         "expected_enabled": expected_speed_limit_to_height_enable,
         "actual_enabled": actual_enabled,
-        "speed_limit_to_height": speed_limit_to_height,
-        "config_parsed": config_parsed,
-        "config_valid": config_valid,
+        "switch_match": switch_match,
+        "expected_speed_limit_to_height": expected_curve,
+        "actual_speed_limit_to_height": parsed_actual_curve,
+        "curve_match": curve_match,
+        "checked_height_range": [min_height, max_height],
+        "variation_by_type": variation_by_type,
+        "types_with_speed_and_acceleration_change": types_with_speed_and_acceleration_change,
+        "missing_speed": missing_speed,
+        "missing_acceleration": missing_acceleration,
+        "speed_tolerance": speed_tolerance,
+        "acc_tolerance": acc_tolerance,
         "match": ok,
-        "note": "Only checking enable status and config parsing, not specific speed values.",
+        "note": None if ok else (
+            "The configured height limit did not produce observable speed and "
+            "acceleration changes in the checked G-code range."
+        ),
     }
     return ok, expected_speed_limit_to_height_enable, details
 

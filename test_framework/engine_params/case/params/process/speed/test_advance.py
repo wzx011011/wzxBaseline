@@ -57,10 +57,10 @@ def test_speed_limit_to_height_enable(
         speed_limit_to_height: str,
 ):
     """
-    speed_limit_to_height_enable：利用 SmoothSpeedAcc 校验裁剪后的速度/加速度是否匹配。
-    - 目标类型：外墙/内墙/稀疏填充/内部实心填充；跳过首层。
-    - 速度取 point.f，与 detect_speed(raw_speed, z) 结果对比；
-    - 加速度取 velocity_limits.ACCEL，与 detect_acc(raw_acc, z) 结果对比。
+    高度限速开启后，检查外墙/内墙的实际速度和加速度是否随高度变化。
+
+    同时核对导出 G-code 的 CONFIG_BLOCK 中的开关和限速曲线，避免仅验证
+    JSON 输入值而没有验证实际切片结果。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
