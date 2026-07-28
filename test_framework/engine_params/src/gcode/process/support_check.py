@@ -6,10 +6,12 @@ This module contains parsing and validation functions for support-related parame
 
 from pathlib import Path
 from typing import Tuple, Dict, Any, List
+from functools import wraps
 import re
 from engine_params.src.gcode.GCodeParser import GCodeParser
 from engine_params.src.gcode.GCodeParserEx import GCodeParserEx
 from engine_params.src.gcode.constants import ExtrusionType
+from engine_params.src.gcode.process.support_l2_metrics import validate_support_l2_behavior
 
 
 def _to_int_maybe(v: Any) -> int | None:
@@ -1155,4 +1157,84 @@ def parse_tree_support_tip_diameter(gcode_path: Path, expected_value: str) -> Tu
             "detection_method": "Level 1 - Config",
             "message": f"Tree support tip diameter: {actual}mm",
         }
+    )
+
+
+# Every parameter exercised by case/params/process/support/test_support.py must
+# pass both its value-specific check and the trusted executable's semantic
+# G-code baseline. There is deliberately no L1 fallback when the baseline is
+# absent or a behavior metric differs.
+_SUPPORT_L2_PARAMETERS = (
+    "enable_support",
+    "support_type",
+    "support_style",
+    "support_threshold_angle",
+    "support_on_build_plate_only",
+    "support_critical_regions_only",
+    "support_remove_small_overhang",
+    "raft_layers",
+    "raft_contact_distance",
+    "raft_first_layer_density",
+    "raft_first_layer_expansion",
+    "support_filament",
+    "support_interface_filament",
+    "support_interface_not_for_body",
+    "support_top_z_distance",
+    "support_bottom_z_distance",
+    "support_base_pattern",
+    "support_base_pattern_tree",
+    "support_base_pattern_spacing",
+    "support_angle",
+    "support_interface_top_layers",
+    "support_interface_bottom_layers",
+    "support_interface_pattern",
+    "support_interface_spacing",
+    "support_bottom_interface_spacing",
+    "support_interface_loop_pattern",
+    "support_interface_speed",
+    "support_interface_min_area",
+    "support_expansion",
+    "support_object_xy_distance",
+    "support_object_first_layer_gap",
+    "support_xy_overrides_z",
+    "bridge_no_support",
+    "max_bridge_length",
+    "independent_support_layer_height",
+    "ironing_support_layer",
+    "tree_hybrid_cross_height",
+    "tree_support_branch_diameter",
+    "tree_support_branch_angle",
+    "tree_support_wall_count",
+    "tree_support_wall_count_tree",
+    "tree_support_branch_distance",
+    "tree_support_tip_diameter",
+)
+
+
+def _with_support_l2(parameter: str, parser):
+    @wraps(parser)
+    def validated(gcode_path: Path, expected_value: Any):
+        value_ok, actual, value_details = parser(gcode_path, expected_value)
+        behavior_ok, behavior_details = validate_support_l2_behavior(
+            gcode_path,
+            parameter,
+            expected_value,
+        )
+        return (
+            value_ok and behavior_ok,
+            actual,
+            {
+                "detection_method": "Level 2 - semantic G-code baseline",
+                "value_check": value_details,
+                "behavior_check": behavior_details,
+            },
+        )
+    return validated
+
+
+for _parameter in _SUPPORT_L2_PARAMETERS:
+    _function_name = f"parse_{_parameter}"
+    globals()[_function_name] = _with_support_l2(
+        _parameter,
+        globals()[_function_name],
     )

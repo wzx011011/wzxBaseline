@@ -49,6 +49,7 @@ from .src.testing_utils.caseio import (
     resolve_extra_params,
     model_or_baseline_path,
 )
+from .src.testing_utils.support_l2_project import build_support_l2_project
 
 # ========== watchdog 依赖 ==========
 try:
@@ -431,6 +432,9 @@ def pytest_generate_tests(metafunc: pytest.Metafunc):
         case_for_fixture = normalize_case_for_fixture(
             c, repo=repo, module_=module_, group=group, param_name=param_name
         )
+        if module_ == "process" and group == "support":
+            case_for_fixture["support_l2_parameter"] = param_name
+            case_for_fixture["support_l2_expected"] = c.get("expected_value")
 
         # 期望值：按 expected_* 名依次取
         expected_values = pick_expected_values(c, expected_params)
@@ -497,6 +501,18 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     # 如果输出文件已存在，删除它
     if output_gcode.exists():
         output_gcode.unlink()
+
+    # Legacy support fixtures were built for CONFIG-only checks and often do
+    # not generate support at all. Compose a temporary project from a known
+    # support-sensitive model while retaining the case's target value.
+    support_l2_parameter = params.get("support_l2_parameter")
+    if support_l2_parameter:
+        input_3mf = build_support_l2_project(
+            repo=repo_root(Path(__file__)),
+            output_path=output_gcode.with_suffix(".l2.3mf"),
+            parameter=str(support_l2_parameter),
+            expected_value=params.get("support_l2_expected"),
+        )
     # ---- 1) reset_project ----
     reset_fut = engine_injector.submit("reset_project", {
         "skip_confirm": True,
