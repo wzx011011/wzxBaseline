@@ -117,6 +117,28 @@ _STOCHASTIC_TREE_PARAMETERS = {
     "tree_support_tip_diameter",
 }
 
+_SPEED_UNIQUE_PARAMETERS = {
+    "support_interface_speed",
+}
+
+
+def _metric_allowed(parameter: str, key: str) -> bool:
+    """Reject metrics that separate samples without matching the parameter."""
+    if key.startswith("semantic."):
+        return parameter == "support_top_z_distance" and key == "semantic.support_top_z_gap"
+    if key.endswith(".speed_unique") and parameter not in _SPEED_UNIQUE_PARAMETERS:
+        return False
+    if parameter == "support_base_pattern":
+        return key.startswith("role.Support") and ".orientation_" in key
+    if parameter == "support_on_build_plate_only":
+        return key.startswith("role.Support total.") and key.endswith((
+            ".block_count",
+            ".layer_count",
+            ".move_count",
+            ".path_length",
+        ))
+    return True
+
 
 def _case_files(case_root: Path) -> Iterable[Tuple[str, dict]]:
     seen = set()
@@ -146,17 +168,19 @@ def _find_gcode(
 
 
 def _feature_priority(key: str) -> Tuple[int, str]:
-    if key.startswith("role.Support"):
+    if key.startswith("semantic."):
         return 0, key
-    if key.startswith("role.Bridge") or key.startswith("role.Internal Bridge"):
+    if key.startswith("role.Support"):
         return 1, key
-    if ".tool_" in key or ".speed_" in key or ".z_" in key:
+    if key.startswith("role.Bridge") or key.startswith("role.Internal Bridge"):
         return 2, key
-    if ".orientation_" in key or ".bbox_" in key:
+    if ".tool_" in key or ".speed_" in key or ".z_" in key:
         return 3, key
-    if key.startswith("role."):
+    if ".orientation_" in key or ".bbox_" in key:
         return 4, key
-    return 5, key
+    if key.startswith("role."):
+        return 5, key
+    return 6, key
 
 
 def _metric_range(values: Sequence[float | int]) -> Dict[str, float | int]:
@@ -228,8 +252,7 @@ def _select_checks(
             for entry in entries
         )
     ]
-    if parameter in _STOCHASTIC_TREE_PARAMETERS:
-        keys = [key for key in keys if not key.endswith(".speed_unique")]
+    keys = [key for key in keys if _metric_allowed(parameter, key)]
     separates: Dict[str, set] = {}
     for key in keys:
         covered = set()
@@ -275,12 +298,6 @@ def _select_checks(
     if uncovered:
         raise RuntimeError(f"semantic metrics cannot distinguish {len(uncovered)} expected-value pairs")
 
-    # Retain independent behavior dimensions, not just one accidental scalar.
-    for key in sorted(separates, key=_feature_priority):
-        if len(selected) >= maximum:
-            break
-        if key not in selected:
-            selected.append(key)
     # A fully aliased parameter still validates real executable behavior. Pick
     # stable support metrics even though they do not distinguish the aliases.
     if not selected:

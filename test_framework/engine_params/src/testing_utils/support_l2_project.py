@@ -90,6 +90,8 @@ _SYNTHETIC_GEOMETRY_PARAMETERS = {
     "support_interface_min_area",
     "support_object_first_layer_gap",
     "support_critical_regions_only",
+    "support_on_build_plate_only",
+    "support_top_z_distance",
     "tree_hybrid_cross_height",
 }
 

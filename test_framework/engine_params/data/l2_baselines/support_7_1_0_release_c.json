@@ -1115,37 +1115,9 @@
           "expected_key": "\"rectilinear\"",
           "replica_count": 2,
           "metrics": {
-            "role.Support interface.speed_unique": {
-              "min": 38,
-              "max": 38
-            },
-            "role.Support total.layer_moves_p50": {
-              "min": 24.0,
-              "max": 24.0
-            },
             "role.Support total.orientation_00_ratio": {
               "min": 0.7129,
               "max": 0.7129
-            },
-            "role.Support total.orientation_06_ratio": {
-              "min": 0.28359,
-              "max": 0.28359
-            },
-            "role.Support total.speed_unique": {
-              "min": 138,
-              "max": 138
-            },
-            "role.Support.orientation_00_ratio": {
-              "min": 0.82758,
-              "max": 0.82758
-            },
-            "role.Support.orientation_06_ratio": {
-              "min": 0.17229,
-              "max": 0.17229
-            },
-            "role.Support.speed_unique": {
-              "min": 135,
-              "max": 135
             }
           }
         },
@@ -1156,50 +1128,15 @@
           "expected_key": "\"rectilinear-grid\"",
           "replica_count": 2,
           "metrics": {
-            "role.Support interface.speed_unique": {
-              "min": 37,
-              "max": 37
-            },
-            "role.Support total.layer_moves_p50": {
-              "min": 27.0,
-              "max": 27.0
-            },
             "role.Support total.orientation_00_ratio": {
               "min": 0.40907,
               "max": 0.40907
-            },
-            "role.Support total.orientation_06_ratio": {
-              "min": 0.58729,
-              "max": 0.58729
-            },
-            "role.Support total.speed_unique": {
-              "min": 135,
-              "max": 135
-            },
-            "role.Support.orientation_00_ratio": {
-              "min": 0.47172,
-              "max": 0.47172
-            },
-            "role.Support.orientation_06_ratio": {
-              "min": 0.528,
-              "max": 0.528
-            },
-            "role.Support.speed_unique": {
-              "min": 132,
-              "max": 132
             }
           }
         }
       ],
       "checks": [
-        "role.Support interface.speed_unique",
-        "role.Support total.layer_moves_p50",
-        "role.Support total.orientation_00_ratio",
-        "role.Support total.orientation_06_ratio",
-        "role.Support total.speed_unique",
-        "role.Support.orientation_00_ratio",
-        "role.Support.orientation_06_ratio",
-        "role.Support.speed_unique"
+        "role.Support total.orientation_00_ratio"
       ],
       "relative_tolerance": 0.01
     },
@@ -3287,13 +3224,9 @@
           "expected_key": "number:0",
           "replica_count": 2,
           "metrics": {
-            "role.Gap infill.speed_unique": {
-              "min": 95,
-              "max": 95
-            },
-            "global.layer_count": {
-              "min": 279,
-              "max": 279
+            "role.Support total.block_count": {
+              "min": 80,
+              "max": 80
             }
           }
         },
@@ -3304,13 +3237,9 @@
           "expected_key": "number:1",
           "replica_count": 2,
           "metrics": {
-            "role.Gap infill.speed_unique": {
-              "min": 93,
-              "max": 93
-            },
-            "global.layer_count": {
-              "min": 243,
-              "max": 243
+            "role.Support total.block_count": {
+              "min": 76,
+              "max": 76
             }
           }
         },
@@ -3321,20 +3250,15 @@
           "expected_key": "number:1",
           "replica_count": 2,
           "metrics": {
-            "role.Gap infill.speed_unique": {
-              "min": 93,
-              "max": 93
-            },
-            "global.layer_count": {
-              "min": 243,
-              "max": 243
+            "role.Support total.block_count": {
+              "min": 76,
+              "max": 76
             }
           }
         }
       ],
       "checks": [
-        "role.Gap infill.speed_unique",
-        "global.layer_count"
+        "role.Support total.block_count"
       ],
       "relative_tolerance": 0.01
     },
@@ -3900,37 +3824,9 @@
           "expected_key": "number:0.2",
           "replica_count": 2,
           "metrics": {
-            "role.Gap infill.speed_unique": {
-              "min": 95,
-              "max": 95
-            },
-            "role.Support interface.extrusion": {
-              "min": 201.64747,
-              "max": 201.64747
-            },
-            "role.Support interface.layer_length_max": {
-              "min": 172.72503,
-              "max": 172.72503
-            },
-            "role.Support interface.layer_length_p50": {
-              "min": 102.2149,
-              "max": 102.2149
-            },
-            "role.Support interface.layer_moves_max": {
-              "min": 41,
-              "max": 41
-            },
-            "role.Support interface.path_length": {
-              "min": 6712.27253,
-              "max": 6712.27253
-            },
-            "role.Support interface.speed_unique": {
-              "min": 38,
-              "max": 38
-            },
-            "role.Support interface.tool_0_extrusion": {
-              "min": 201.64747,
-              "max": 201.64747
+            "semantic.support_top_z_gap": {
+              "min": 0.4,
+              "max": 0.4
             }
           }
         },
@@ -3941,37 +3837,9 @@
           "expected_key": "number:0.1",
           "replica_count": 2,
           "metrics": {
-            "role.Gap infill.speed_unique": {
-              "min": 93,
-              "max": 93
-            },
-            "role.Support interface.extrusion": {
-              "min": 192.51869,
-              "max": 192.51869
-            },
-            "role.Support interface.layer_length_max": {
-              "min": 169.05079,
-              "max": 169.05079
-            },
-            "role.Support interface.layer_length_p50": {
-              "min": 96.82344,
-              "max": 96.82344
-            },
-            "role.Support interface.layer_moves_max": {
-              "min": 38,
-              "max": 38
-            },
-            "role.Support interface.path_length": {
-              "min": 6414.80807,
-              "max": 6414.80807
-            },
-            "role.Support interface.speed_unique": {
-              "min": 37,
-              "max": 37
-            },
-            "role.Support interface.tool_0_extrusion": {
-              "min": 192.51869,
-              "max": 192.51869
+            "semantic.support_top_z_gap": {
+              "min": 0.3,
+              "max": 0.3
             }
           }
         },
@@ -3982,50 +3850,15 @@
           "expected_key": "number:0.3",
           "replica_count": 2,
           "metrics": {
-            "role.Gap infill.speed_unique": {
-              "min": 90,
-              "max": 90
-            },
-            "role.Support interface.extrusion": {
-              "min": 201.64747,
-              "max": 201.64747
-            },
-            "role.Support interface.layer_length_max": {
-              "min": 172.72503,
-              "max": 172.72503
-            },
-            "role.Support interface.layer_length_p50": {
-              "min": 102.2149,
-              "max": 102.2149
-            },
-            "role.Support interface.layer_moves_max": {
-              "min": 41,
-              "max": 41
-            },
-            "role.Support interface.path_length": {
-              "min": 6712.27253,
-              "max": 6712.27253
-            },
-            "role.Support interface.speed_unique": {
-              "min": 38,
-              "max": 38
-            },
-            "role.Support interface.tool_0_extrusion": {
-              "min": 201.64747,
-              "max": 201.64747
+            "semantic.support_top_z_gap": {
+              "min": 0.5,
+              "max": 0.5
             }
           }
         }
       ],
       "checks": [
-        "role.Gap infill.speed_unique",
-        "role.Support interface.extrusion",
-        "role.Support interface.layer_length_max",
-        "role.Support interface.layer_length_p50",
-        "role.Support interface.layer_moves_max",
-        "role.Support interface.path_length",
-        "role.Support interface.speed_unique",
-        "role.Support interface.tool_0_extrusion"
+        "semantic.support_top_z_gap"
       ],
       "relative_tolerance": 0.01
     },

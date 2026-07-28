@@ -7,7 +7,7 @@ import math
 import re
 from decimal import Decimal, InvalidOperation
 import statistics
-from collections import defaultdict
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, Sequence, Tuple
 
@@ -27,6 +27,14 @@ _TOOL_RE = re.compile(r"^T(\d+)\s*$", re.IGNORECASE)
 _FAN_RE = re.compile(r"^M106\b.*(?:\bS(\d+(?:\.\d*)?)\b)?", re.IGNORECASE)
 
 _COMBINED_SUPPORT = "Support total"
+_SUPPORT_ROLES = {"Support", "Support interface", "Support transition"}
+_NON_MODEL_ROLES = {
+    "Unclassified",
+    "Skirt",
+    "Brim",
+    "Prime tower",
+    "Wipe tower",
+}
 _INTEGER_SUFFIXES = (
     ".block_count",
     ".layer_count",
@@ -35,6 +43,70 @@ _INTEGER_SUFFIXES = (
     ".tool_count",
     ".tool_change_count",
 )
+
+
+def _segment_cells(
+    start: Tuple[float, float],
+    end: Tuple[float, float],
+    resolution: float = 1.0,
+) -> set[Tuple[int, int]]:
+    """Rasterize an extrusion segment for coarse spatial comparisons."""
+    length = math.dist(start, end)
+    steps = max(1, math.ceil(length / resolution))
+    return {
+        (
+            round((start[0] + (end[0] - start[0]) * step / steps) / resolution),
+            round((start[1] + (end[1] - start[1]) * step / steps) / resolution),
+        )
+        for step in range(steps + 1)
+    }
+
+
+def _cells_touch(
+    left: set[Tuple[int, int]],
+    right: set[Tuple[int, int]],
+    radius: int = 1,
+) -> bool:
+    if left & right:
+        return True
+    return any(
+        (x + dx, y + dy) in right
+        for x, y in left
+        for dx in range(-radius, radius + 1)
+        for dy in range(-radius, radius + 1)
+    )
+
+
+def _support_top_z_gap(
+    role_cells_by_z: Mapping[str, Mapping[float, set[Tuple[int, int]]]],
+) -> float:
+    """Measure the modal spatial Z gap from support interface to model."""
+    interface = role_cells_by_z.get("Support interface", {})
+    model_by_z: Dict[float, set[Tuple[int, int]]] = defaultdict(set)
+    for role, cells_by_z in role_cells_by_z.items():
+        if role in _SUPPORT_ROLES or role == _COMBINED_SUPPORT or role in _NON_MODEL_ROLES:
+            continue
+        for z_value, cells in cells_by_z.items():
+            model_by_z[z_value].update(cells)
+
+    gaps = []
+    model_z_values = sorted(model_by_z)
+    for interface_z, interface_cells in interface.items():
+        for model_z in model_z_values:
+            if model_z <= interface_z + 1e-6:
+                continue
+            if _cells_touch(interface_cells, model_by_z[model_z]):
+                gaps.append(model_z - interface_z)
+                break
+    if not gaps:
+        return 0.0
+    rounded_counts = Counter(round(gap, 2) for gap in gaps)
+    highest_frequency = max(rounded_counts.values())
+    modal_gaps = [
+        gap for gap, frequency in rounded_counts.items()
+        if frequency == highest_frequency
+    ]
+    return _round(min(modal_gaps))
 
 
 def canonical_expected(value: Any) -> str:
@@ -192,6 +264,9 @@ def analyze_support_gcode(gcode_path: Path | str) -> Dict[str, float | int]:
     UUIDs, object IDs, timestamps, thumbnails and the CONFIG block are ignored.
     """
     role_stats: Dict[str, Dict[str, Any]] = defaultdict(_new_role_stats)
+    role_cells_by_z: Dict[str, Dict[float, set[Tuple[int, int]]]] = defaultdict(
+        lambda: defaultdict(set)
+    )
     combined_stats = role_stats[_COMBINED_SUPPORT]
     current_role = "Unclassified"
     current_tool = 0
@@ -275,6 +350,9 @@ def analyze_support_gcode(gcode_path: Path | str) -> Dict[str, float | int]:
             length = math.hypot(new_x - x, new_y - y)
             if extrusion > 1e-9 and length > 1e-9:
                 stats = role_stats[current_role]
+                segment_cells = _segment_cells((x, y), (new_x, new_y))
+                actual_z = current_layer_z if current_layer_z is not None else new_z
+                role_cells_by_z[current_role][round(actual_z, 5)].update(segment_cells)
                 kwargs = {
                     "layer_index": current_layer,
                     "z_value": current_layer_z,
@@ -287,7 +365,7 @@ def analyze_support_gcode(gcode_path: Path | str) -> Dict[str, float | int]:
                     "fan": current_fan,
                 }
                 _record_extrusion(stats, **kwargs)
-                if current_role in {"Support", "Support interface", "Support transition"}:
+                if current_role in _SUPPORT_ROLES:
                     _record_extrusion(combined_stats, **kwargs)
             x, y, z = new_x, new_y, new_z
 
@@ -297,6 +375,7 @@ def analyze_support_gcode(gcode_path: Path | str) -> Dict[str, float | int]:
     }
     for role, stats in sorted(role_stats.items()):
         _flatten_role(role, stats, output)
+    output["semantic.support_top_z_gap"] = _support_top_z_gap(role_cells_by_z)
     return output
 
 

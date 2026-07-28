@@ -40,6 +40,39 @@ support_speed = 999
     assert metrics["role.Support total.move_count"] == 2
 
 
+def test_analyze_support_gcode_extracts_direct_support_semantics(tmp_path: Path):
+    gcode = tmp_path / "support_semantics.gcode"
+    gcode.write_text(
+        """; EXECUTABLE_BLOCK_START
+M83
+;LAYER_CHANGE
+;Z:0.2
+;TYPE:Support
+G1 X10 Y0 E1 F3600
+;LAYER_CHANGE
+;Z:0.4
+;TYPE:Support
+G1 X10 Y1 E1
+G1 X30 Y20
+G1 X40 Y20 E1
+;LAYER_CHANGE
+;Z:0.6
+;TYPE:Support interface
+G1 X40 Y21 E1
+;LAYER_CHANGE
+;Z:1.0
+;TYPE:External perimeter
+G1 X40 Y22 E1
+; EXECUTABLE_BLOCK_END
+""",
+        encoding="utf-8",
+    )
+
+    metrics = analyze_support_gcode(gcode)
+
+    assert metrics["semantic.support_top_z_gap"] == 0.4
+
+
 def test_metric_matches_uses_exact_counts_and_tolerant_geometry():
     assert metric_matches("role.Support.move_count", 10, 10)
     assert not metric_matches("role.Support.move_count", 11, 10)

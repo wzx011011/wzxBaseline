@@ -77,3 +77,26 @@ def test_build_support_l2_project_preserves_painted_support(tmp_path: Path):
 
     assert settings["enable_support"] == "1"
     assert settings["support_type"] == "normal(manual)"
+
+
+def test_build_support_l2_project_uses_semantic_geometry_for_gap_and_build_plate(tmp_path: Path):
+    object_models = []
+    for parameter, value in (
+        ("support_top_z_distance", "0.2"),
+        ("support_on_build_plate_only", 1),
+    ):
+        output = build_support_l2_project(
+            repo=_repo(),
+            output_path=tmp_path / f"{parameter}.3mf",
+            parameter=parameter,
+            expected_value=value,
+        )
+        with ZipFile(output) as archive:
+            object_name = next(
+                name for name in archive.namelist()
+                if name.startswith("3D/Objects/") and name.endswith(".model")
+            )
+            object_models.append(archive.read(object_name))
+
+    assert all(b'<vertex x="-32" y="-30" z="0"/>' in model for model in object_models)
+    assert object_models[0] == object_models[1]
