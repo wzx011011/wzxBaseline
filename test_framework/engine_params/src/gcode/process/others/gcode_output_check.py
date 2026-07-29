@@ -435,21 +435,11 @@ def parse_filename_format(
         gcode_path: Path | str,
         expected_value: str,
 ) -> Tuple[bool, str, Dict[str, object]]:
-    """
-    解析 G-code，特殊处理 filename_format。
-    
-    注意：filename_format 参数影响输出文件名，无法通过 G-code 内容校验。
-    此函数仅作占位，实际校验需要在文件系统层面检查文件名格式。
-    
-    参数:
-        gcode_path: G-code 文件路径
-        expected_value: 期望的文件名格式模板
+    """Validate the filename template stored in the generated G-code config.
 
-    返回:
-        Tuple[bool, str, Dict[str, object]]:
-            - ok: 始终返回 False（无法通过 G-code 校验）
-            - detected_value: "N/A"
-            - details: 详细信息字典
+    CLI export uses a fixed plate filename, while the GUI expands this template.
+    Use deterministic sample values for every placeholder in the 7.2 system
+    default and reject unknown or malformed placeholders.
     """
     gcode_path = Path(gcode_path)
     config = GCodeParser(gcode_path).load_config() or {}
@@ -458,16 +448,23 @@ def parse_filename_format(
 
     # CLI 固定把板件导出为 plate_1.gcode，GUI 最终另行展开模板；这里
     # 验证切片产物携带的模板以及模板对标准占位符的确定性展开契约。
-    sample_base = "behavior_model"
-    expanded = actual_value.replace("{input_filename_base}", sample_base)
+    sample_values = {
+        "{input_filename_base}": "behavior_model",
+        "{filament_type[initial_tool]}": "PLA",
+        "{print_time}": "1h2m",
+    }
+    expanded = actual_value
+    for placeholder, sample in sample_values.items():
+        expanded = expanded.replace(placeholder, sample)
     unresolved = re.findall(r"\{[^{}]+\}", expanded)
-    ok = actual_value == expected_value and not unresolved and expanded == f"{sample_base}.gcode"
+    ok = actual_value == expected_value and not unresolved and expanded.endswith(".gcode")
     return ok, actual_value, {
         "detection_method": "G-code config + template expansion",
         "actual_filename": gcode_path.name,
         "expected_format": expected_value,
         "actual_format": actual_value,
         "sample_expanded_filename": expanded,
+        "sample_placeholder_values": sample_values,
         "unresolved_placeholders": unresolved,
         "message": f"filename_format={actual_value!r}, sample expansion={expanded!r}",
         "note": "CLI plate filename is fixed; GUI applies this validated template during user export.",

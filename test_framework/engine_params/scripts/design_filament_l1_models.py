@@ -24,6 +24,7 @@ MODEL_SETTINGS = "Metadata/model_settings.config"
 PROJECT_SETTINGS = "Metadata/project_settings.config"
 PROCESS_SETTINGS = "Metadata/process_settings_1.config"
 CORE_NS = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
+CURRENT_PROJECT_VERSION = "7.2.1"
 
 
 @dataclass
@@ -201,11 +202,10 @@ def rewrite_project(path: Path, parameter: str) -> None:
     settings["top_shell_layers"] = "3"
     settings["bottom_shell_layers"] = "3"
     if parameter == "wall_filament":
-        # The executable's CLI path rejects projects labelled as 7.x even
-        # though the same build opens them in the GUI.  The payload uses only
-        # the long-supported core-3MF schema, so mark this focused CLI fixture
-        # with the same 6.0 compatibility version as normalized L1 projects.
-        settings["version"] = "6.0.0"
+        # Parameter tests load projects through the GUI.  Mark role-filament
+        # fixtures as current projects so 7.2 does not reinterpret the legacy
+        # 1/1/1 role assignment as the new 0/0/0 default/inherited value.
+        settings["version"] = CURRENT_PROJECT_VERSION
     replacements = {
         PROJECT_SETTINGS: (json.dumps(settings, ensure_ascii=False, indent=2) + "\n").encode("utf-8"),
     }
@@ -235,7 +235,7 @@ def rewrite_project(path: Path, parameter: str) -> None:
         process_settings = json.loads(source_template.read(PROCESS_SETTINGS).decode("utf-8-sig"))
         process_settings.update({key: value for key, value in settings.items() if key in process_settings})
         if parameter == "wall_filament":
-            process_settings["version"] = "6.0.0"
+            process_settings["version"] = CURRENT_PROJECT_VERSION
         replacements[PROCESS_SETTINGS] = (
             json.dumps(process_settings, ensure_ascii=False, indent=4) + "\n"
         ).encode("utf-8")
@@ -249,7 +249,7 @@ def rewrite_project(path: Path, parameter: str) -> None:
             )
             replacements["Metadata/creality.config"] = re.sub(
                 rb'(<metadata key="AppVersion" value=")[^"]+("/>)',
-                rb'\g<1>6.0.0\2',
+                rf'\g<1>{CURRENT_PROJECT_VERSION}\2'.encode("ascii"),
                 source_template.read("Metadata/creality.config"),
             )
         entries = [
@@ -289,9 +289,15 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--apply", action="store_true")
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[3])
+    parser.add_argument("--parameter", action="append", default=[])
+    parser.add_argument("--project", action="append", default=[])
     args = parser.parse_args()
     count = 0
     for parameter, path in iter_projects(args.repo):
+        if args.parameter and parameter not in args.parameter:
+            continue
+        if args.project and path.stem not in args.project:
+            continue
         print(f"{parameter:35s} {path.name}")
         if args.apply:
             rewrite_project(path, parameter)

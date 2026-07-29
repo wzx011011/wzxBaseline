@@ -190,8 +190,8 @@ def test_filename_format(
         expected_value: str,
 ):
     """验证方法：CLI 板件名固定为 plate_1.gcode，因此从实际 G-code
-    CONFIG_BLOCK 读取 GUI 导出模板，并用标准 input_filename_base 样例
-    展开，断言无未解析占位符且生成 .gcode 文件名。"""
+    CONFIG_BLOCK 读取 GUI 导出模板，并用标准文件名、耗材类型和打印时间
+    样例展开 7.2 系统默认模板，断言无未解析占位符且生成 .gcode 文件名。"""
     # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析导出文件名规则以及 G-code 头尾中的脚本/备注结果；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_filename_format(

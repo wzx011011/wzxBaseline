@@ -3,8 +3,8 @@
     {
       "project_name": "default",
       "input_3mf": "filename_format_default.3mf",
-      "expected_value": "{input_filename_base}.gcode",
-      "note": "此参数无法通过 G-code 内容校验，需要文件系统层面验证"
+      "expected_value": "{input_filename_base}_{filament_type[initial_tool]}_{print_time}.gcode",
+      "note": "验证 7.2 系统默认模板及标准占位符展开"
     }
   ]
 }

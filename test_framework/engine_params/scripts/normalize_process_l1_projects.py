@@ -311,7 +311,9 @@ def normalize_project(path: Path, *, allow_multi: bool = False) -> bool:
                 replacements[MODEL_SETTINGS] = settings.encode("utf-8")
             if path.stem == "filename_format_default" and PROJECT_SETTINGS in names:
                 settings = json.loads(source.read(PROJECT_SETTINGS).decode("utf-8-sig"))
-                settings["filename_format"] = "{input_filename_base}.gcode"
+                settings["filename_format"] = (
+                    "{input_filename_base}_{filament_type[initial_tool]}_{print_time}.gcode"
+                )
                 replacements[PROJECT_SETTINGS] = (json.dumps(settings, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
             entries = [
                 (info, replacements.get(info.filename, source.read(info.filename)))
