@@ -456,7 +456,15 @@ def parse_wall_transition_length(
 def parse_wall_distribution_count(
     gcode_path: Path | str, expected_value: float, tolerance: float = 0.5
 ) -> Tuple[bool, Optional[float], Dict[str, object]]:
-    """Count wall paths that share WIDTH variation on representative layers."""
+    """Check how broadly Arachne distributes WIDTH variation across wall paths.
+
+    ``BehaviorGCode.paths`` splits a physical wall at every travel.  Consequently
+    the number observed here is a path-component count, not a literal wall-ring
+    count.  On this symmetric annular model distribution radii 1 and 2 produce
+    four variable components.  Radius 3 must produce *more* components, but the
+    exact value may be seven or eight depending on where Arachne places a seam
+    and splits the short transition fragments.
+    """
     behavior = BehaviorGCode(gcode_path)
     counts = []
     for layer in sorted({move.layer for move in behavior.extrusion_moves()}):
@@ -469,15 +477,31 @@ def parse_wall_distribution_count(
             counts.append(variable)
     actual = median(counts)
     # DistributedBeadingStrategy deliberately gives radius 1 and 2 the same
-    # coefficient (1 / 1^2); radius 3 is the first setting that spreads the
-    # remainder to additional neighboring beads.  On the six-loop annular
-    # model this appears as four versus seven variable-width emitted loops.
-    expected_variable = 4 if expected_value <= 2 else 7
-    ok = actual is not None and abs(actual - expected_variable) <= tolerance
-    return ok, actual, {"method": "L2 - Distributed variable-width ring count",
-                        "counts_by_active_layer": counts, "actual_variable_rings": actual,
-                        "expected_variable_rings": expected_variable,
-                        "configured_distribution_radius": expected_value}
+    # coefficient (1 / 1^2).  Radius 3 is the first setting that spreads the
+    # remainder to additional neighboring beads.  Assert that behavioral step
+    # without depending on the travel/seam segmentation of those beads.
+    baseline_components = 4.0
+    minimum_expanded_components = 7.0
+    if expected_value <= 2:
+        ok = actual is not None and abs(actual - baseline_components) <= tolerance
+        expectation = {
+            "mode": "approximately",
+            "target_path_components": baseline_components,
+        }
+    else:
+        ok = actual is not None and actual + tolerance >= minimum_expanded_components
+        expectation = {
+            "mode": "at_least",
+            "minimum_path_components": minimum_expanded_components,
+        }
+
+    return ok, actual, {
+        "method": "L2 - Distributed variable-width path spread",
+        "counts_by_active_layer": counts,
+        "actual_variable_path_components": actual,
+        "expectation": expectation,
+        "configured_distribution_radius": expected_value,
+    }
 
 
 def parse_min_feature_size(

@@ -105,7 +105,11 @@ def test_wall_distribution_count(slice_and_export: Path, expected_wall_distribut
     assert gcode_path.exists()
 
     ok, actual, details = parse_wall_distribution_count(gcode_path, expected_wall_distribution_count)
-    assert ok, f"wall_distribution_count expected {expected_wall_distribution_count}, actual {actual}, details: {details}"
+    assert ok, (
+        "wall_distribution_count behavior mismatch: "
+        f"configured={expected_wall_distribution_count}, "
+        f"variable_path_components={actual}, details={details}"
+    )
 
 
 # ================== min_feature_size ==================
