@@ -11,6 +11,7 @@ pipeline {
     string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
     string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
     string(name: 'TEST_COMMAND', defaultValue: '-m "engine_params or performance"', description: 'Override test command (optional)')
+    string(name: 'FEISHU_CASE_REGEX', defaultValue: '', description: 'Optional regex limiting test_feishu_slice 3MF cases for a quick regression')
     string(name: 'ALLURE_CMD', defaultValue: 'Allure', description: 'Allure commandline tool name (Global Tool); leave empty to use default')
   }
   environment {
@@ -34,7 +35,8 @@ if exist allure-results rd /s /q allure-results
       steps {
         catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
           withCredentials([sshUserPrivateKey(credentialsId: 'cxsw-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
-            bat '''
+            withEnv(["FEISHU_CASE_REGEX=${params.FEISHU_CASE_REGEX ?: ''}"]) {
+              bat '''
 @echo off
 setlocal enabledelayedexpansion
 
@@ -55,6 +57,7 @@ if not "%TEST_COMMAND%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%TEST_
 python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --preserve-extracted-files !EXTRA_ARGS!
 endlocal
 '''
+            }
           }
         }
       }
