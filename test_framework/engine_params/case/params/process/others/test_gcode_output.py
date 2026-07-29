@@ -33,6 +33,7 @@ def test_reduce_infill_retraction(
         expected_value: bool,
 ):
     """测试 reduce_infill_retraction 参数 (Level 2 - 填充区域回抽统计)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_reduce_infill_retraction(
         gcode_path,
@@ -64,6 +65,7 @@ def test_gcode_add_line_number(
         expected_value: bool,
 ):
     """测试 gcode_add_line_number 参数 (Level 2 - 行号格式检测)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析输出指令、行号、注释、对象标签和回抽事件；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_gcode_add_line_number(
         gcode_path,
@@ -95,6 +97,7 @@ def test_gcode_comments(
         expected_value: bool,
 ):
     """测试 gcode_comments 参数 (Level 2 - 注释行占比检测)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析输出指令、行号、注释、对象标签和回抽事件；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_gcode_comments(
         gcode_path,
@@ -126,6 +129,7 @@ def test_gcode_label_objects(
         expected_value: bool,
 ):
     """测试 gcode_label_objects 参数 (Level 2 - EXCLUDE_OBJECT标记检测)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析输出指令、行号、注释、对象标签和回抽事件；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_gcode_label_objects(
         gcode_path,
@@ -155,6 +159,7 @@ def test_exclude_object(
         expected_value: bool,
 ):
     """测试 exclude_object 参数 (Level 2 - EXCLUDE_OBJECT标记检测)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析输出指令、行号、注释、对象标签和回抽事件；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_exclude_object(
         gcode_path,
@@ -180,16 +185,14 @@ def test_exclude_object(
 # ================== filename_format ==================
 
 @pytest.mark.engine_params
-@pytest.mark.skip(reason="filename_format cannot be validated through G-code content")
 def test_filename_format(
         slice_and_export: Path,
         expected_value: str,
 ):
-    """测试 filename_format 参数 (特殊 - 无法通过G-code校验)
-    
-    注意：此参数影响输出文件名格式，无法通过 G-code 内容校验。
-    需要在文件系统层面检查输出文件名是否符合模板格式。
-    """
+    """验证方法：CLI 板件名固定为 plate_1.gcode，因此从实际 G-code
+    CONFIG_BLOCK 读取 GUI 导出模板，并用标准 input_filename_base 样例
+    展开，断言无未解析占位符且生成 .gcode 文件名。"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析导出文件名规则以及 G-code 头尾中的脚本/备注结果；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_filename_format(
         gcode_path,
@@ -205,5 +208,4 @@ def test_filename_format(
     print(f"  结果消息: {details.get('message', 'N/A')}")
     print("=" * 50)
 
-    # 此测试始终跳过，因为无法通过 G-code 校验
-    pytest.skip(details.get('message', 'Cannot validate through G-code'))
+    assert ok, f"filename_format expected {expected_value!r}, actual {actual_value!r}, details={details}"

@@ -79,6 +79,48 @@ def _normalize_to_bool(val: object) -> bool:
     return False
 
 
+def _path_metrics(gcode_path: Path | str) -> Dict[str, object]:
+    number = r"-?(?:\d+(?:\.\d*)?|\.\d+)"
+    axis_pattern = re.compile(rf"\b([XYZE])({number})")
+    current_type = ""
+    z = 0.0
+    layers: set[float] = set()
+    type_moves: Dict[str, int] = {}
+    continuous_outer_z_moves = 0
+    tool_changes = 0
+    with Path(gcode_path).open("r", encoding="utf-8", errors="ignore") as stream:
+        for raw in stream:
+            line = raw.strip()
+            if line.startswith(";TYPE:"):
+                current_type = line[6:]
+                continue
+            if re.fullmatch(r"T\d+", line):
+                tool_changes += 1
+                continue
+            if not line.startswith("G1"):
+                continue
+            values = {axis: float(value) for axis, value in axis_pattern.findall(line)}
+            z = values.get("Z", z)
+            if values.get("E", 0.0) > 0 and ("X" in values or "Y" in values):
+                layers.add(round(z, 4))
+                type_moves[current_type] = type_moves.get(current_type, 0) + 1
+                if current_type == "Outer wall" and "Z" in values:
+                    continuous_outer_z_moves += 1
+    return {
+        "layer_count": len(layers),
+        "type_moves": type_moves,
+        "outer_wall_moves": type_moves.get("Outer wall", 0),
+        "inner_wall_moves": type_moves.get("Inner wall", 0),
+        "prime_tower_moves": type_moves.get("Prime tower", 0),
+        "continuous_outer_z_moves": continuous_outer_z_moves,
+        "tool_changes": tool_changes,
+    }
+
+
+def _model_paths_ok(metrics: Dict[str, object]) -> bool:
+    return int(metrics["layer_count"]) > 1 and int(metrics["outer_wall_moves"]) > 10
+
+
 # ================== slicing_mode ==================
 
 def parse_slicing_mode(
@@ -113,7 +155,10 @@ def parse_slicing_mode(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    ok = detected_value == expected_value
+    behavior = _path_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 实际分层外墙/填充路径"
+    ok = detected_value == expected_value and _model_paths_ok(behavior)
     
     if ok:
         details["message"] = f"Level 1 通过: slicing_mode={detected_value}"
@@ -232,7 +277,31 @@ def parse_print_order(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    ok = detected_value == expected_value
+    layer_orders: list[list[int]] = []
+    current_order: list[int] = []
+    object_pattern = re.compile(r"; printing object .* id:(\d+) copy")
+    with gcode_path.open("r", encoding="utf-8", errors="ignore") as stream:
+        for raw in stream:
+            line = raw.strip()
+            if line == ";LAYER_CHANGE":
+                if current_order:
+                    layer_orders.append(current_order)
+                current_order = []
+                continue
+            match = object_pattern.match(line)
+            if match:
+                object_id = int(match.group(1))
+                if object_id not in current_order:
+                    current_order.append(object_id)
+    if current_order:
+        layer_orders.append(current_order)
+    nonempty = [order for order in layer_orders if order]
+    stable_order = bool(nonempty) and all(order == nonempty[0] for order in nonempty)
+    details["layer_object_orders"] = nonempty[:10]
+    details["object_count"] = len(nonempty[0]) if nonempty else 0
+    details["stable_layer_order"] = stable_order
+    details["detection_method"] = "配置值 + 各层对象标签顺序"
+    ok = detected_value == expected_value and stable_order and len(nonempty[0]) >= 2
     
     if ok:
         details["message"] = f"Level 1 通过: print_order={detected_value}"
@@ -361,7 +430,14 @@ def parse_spiral_mode_smooth(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    ok = detected_value == expected_value
+    behavior = _path_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 螺旋外墙连续 Z 路径"
+    ok = (
+        detected_value == expected_value
+        and _model_paths_ok(behavior)
+        and int(behavior["continuous_outer_z_moves"]) > 50
+    )
     
     if ok:
         details["message"] = f"Level 1 通过: spiral_mode_smooth={detected_value}"
@@ -405,8 +481,14 @@ def parse_spiral_mode_max_xy_smoothing(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    # 浮点数比较，容差 1.0%
-    ok = abs(detected_value - expected_value) < 1.0
+    behavior = _path_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 螺旋外墙连续 XY/Z 路径"
+    ok = (
+        abs(detected_value - expected_value) < 1.0
+        and _model_paths_ok(behavior)
+        and int(behavior["continuous_outer_z_moves"]) > 50
+    )
     
     if ok:
         details["message"] = f"Level 1 通过: spiral_mode_max_xy_smoothing={detected_value}%"
@@ -450,7 +532,14 @@ def parse_ignore_inner_color(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    ok = detected_value == expected_value
+    behavior = _path_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 外墙/内墙实际挤出路径"
+    ok = (
+        detected_value == expected_value
+        and _model_paths_ok(behavior)
+        and int(behavior["inner_wall_moves"]) > 0
+    )
     
     if ok:
         details["message"] = f"Level 1 通过: ignore_inner_color={detected_value}"
@@ -494,7 +583,11 @@ def parse_timelapse_type(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    ok = detected_value == expected_value
+    behavior = _path_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 分层打印/平滑延时擦料塔路径"
+    smooth_tower_ok = expected_value != 1 or int(behavior["prime_tower_moves"]) > 0
+    ok = detected_value == expected_value and _model_paths_ok(behavior) and smooth_tower_ok
     
     if ok:
         details["message"] = f"Level 1 通过: timelapse_type={detected_value}"
@@ -594,7 +687,15 @@ def parse_fuzzy_skin(
     except Exception as e:
         details["level3_error"] = str(e)
     
-    ok = detected_value == expected_value
+    behavior = _path_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    if details.get("outer_wall_points", 0):
+        details["detection_method"] = "配置值 + Outer wall 坐标偏差分析"
+    ok = (
+        detected_value == expected_value
+        and _model_paths_ok(behavior)
+        and int(details.get("outer_wall_points", 0)) > 10
+    )
     
     if ok:
         details["message"] = f"Level 1 通过: fuzzy_skin={detected_value}"
@@ -638,8 +739,10 @@ def parse_fuzzy_skin_point_distance(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    # 浮点数比较，容差 0.1 mm
-    ok = abs(detected_value - expected_value) < 0.1
+    behavior = _path_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 模糊外墙实际采样路径"
+    ok = abs(detected_value - expected_value) < 0.1 and _model_paths_ok(behavior)
     
     if ok:
         details["message"] = f"Level 1 通过: fuzzy_skin_point_distance={detected_value}mm"
@@ -683,8 +786,10 @@ def parse_fuzzy_skin_thickness(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    # 浮点数比较，容差 0.01 mm
-    ok = abs(detected_value - expected_value) < 0.01
+    behavior = _path_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 模糊外墙实际偏移路径"
+    ok = abs(detected_value - expected_value) < 0.01 and _model_paths_ok(behavior)
     
     if ok:
         details["message"] = f"Level 1 通过: fuzzy_skin_thickness={detected_value}mm"
@@ -728,7 +833,10 @@ def parse_fuzzy_skin_first_layer(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    ok = detected_value == expected_value
+    behavior = _path_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 首层及后续层外墙实际路径"
+    ok = detected_value == expected_value and _model_paths_ok(behavior)
     
     if ok:
         details["message"] = f"Level 1 通过: fuzzy_skin_first_layer={detected_value}"
@@ -754,65 +862,47 @@ def parse_first_layer_print_sequence(
     """
     path_obj = Path(gcode_path)
     parser = GCodeParser(path_obj)
-    
-    try:
-        # 从配置中读取 first_layer_print_sequence
-        cfg = parser.load_config() or {}
-        config_sequence = cfg.get("first_layer_print_sequence")
-        
-        # 如果配置中有值，直接比较配置值
-        if config_sequence is not None:
-            try:
-                if hasattr(config_sequence, 'values'):
-                    detected_sequence = list(config_sequence.values)
-                elif hasattr(config_sequence, 'value'):
-                    detected_sequence = list(config_sequence.value) if config_sequence.value else []
-                else:
-                    # 处理数值类型（如 0 表示默认/自动）
-                    if isinstance(config_sequence, (int, float)):
-                        if config_sequence == 0:
-                            detected_sequence = []  # 0 表示自动/默认
-                        else:
-                            detected_sequence = [int(config_sequence)]
-                    elif isinstance(config_sequence, (list, tuple)):
-                        detected_sequence = list(config_sequence)
-                    elif isinstance(config_sequence, str):
-                        # 尝试解析逗号分隔的字符串
-                        if ',' in config_sequence:
-                            detected_sequence = [int(x.strip()) for x in config_sequence.split(',') if x.strip().isdigit()]
-                        else:
-                            detected_sequence = [int(config_sequence)] if config_sequence.isdigit() else []
-                    else:
-                        detected_sequence = []
-            except Exception as e:
-                detected_sequence = []
-        else:
-            detected_sequence = []
-        
-        # 比较期望值和检测值
-        ok = detected_sequence == expected_sequence
-        
-        details: Dict[str, object] = {
-            "gcode_path": str(gcode_path),
-            "expected_sequence": expected_sequence,
-            "config_sequence": config_sequence,
-            "detected_sequence": detected_sequence,
-            "detection_method": "配置对比",
-        }
-        
-        if ok:
-            details["message"] = f"首层耗材打印顺序匹配: {detected_sequence}"
-        else:
-            details["message"] = f"首层耗材打印顺序不匹配: expected={expected_sequence}, actual={detected_sequence}"
-        
-        return ok, detected_sequence, details
-        
-    except Exception as e:
-        details = {
-            "gcode_path": str(gcode_path),
-            "expected_sequence": expected_sequence,
-            "error": str(e),
-            "detection_method": "配置读取失败",
-            "message": f"解析失败: {e}"
-        }
-        return False, [], details
+    cfg = parser.load_config() or {}
+    config_sequence = cfg.get("first_layer_print_sequence")
+
+    current_tool: int | None = None
+    in_first_layer = False
+    layer_changes = 0
+    detected_sequence: list[int] = []
+    with path_obj.open("r", encoding="utf-8", errors="ignore") as stream:
+        for raw in stream:
+            line = raw.strip()
+            tool_match = re.fullmatch(r"T(\d+)", line)
+            if tool_match:
+                current_tool = int(tool_match.group(1)) + 1
+                if in_first_layer and current_tool not in detected_sequence:
+                    detected_sequence.append(current_tool)
+                continue
+            if line == ";LAYER_CHANGE":
+                layer_changes += 1
+                if layer_changes == 1:
+                    in_first_layer = True
+                    if current_tool is not None:
+                        detected_sequence.append(current_tool)
+                elif layer_changes == 2:
+                    break
+
+    config_detected: list[int] = []
+    if isinstance(config_sequence, (list, tuple)):
+        config_detected = [int(value) for value in config_sequence]
+    elif isinstance(config_sequence, str):
+        config_detected = [int(value) for value in re.findall(r"\d+", config_sequence)]
+    config_ok = not config_detected or config_detected == expected_sequence
+    ok = detected_sequence == expected_sequence and config_ok
+    details: Dict[str, object] = {
+        "gcode_path": str(gcode_path),
+        "expected_sequence": expected_sequence,
+        "config_sequence": config_sequence,
+        "detected_sequence": detected_sequence,
+        "detection_method": "首层 T0/T1/T2 实际换料顺序",
+        "message": (
+            f"首层耗材打印顺序匹配: {detected_sequence}" if ok else
+            f"首层耗材打印顺序不匹配: expected={expected_sequence}, actual={detected_sequence}"
+        ),
+    }
+    return ok, detected_sequence, details

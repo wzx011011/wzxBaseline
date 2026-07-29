@@ -44,12 +44,14 @@ def parse_post_process(
     try:
         # 尝试从 G-code 中搜索后处理脚本的痕迹
         content = gcode_path.read_text(encoding='utf-8')
+        config = GCodeParser(gcode_path).load_config() or {}
+        raw_config = config.get("post_process", "")
+        config_value = str(getattr(raw_config, "value", raw_config) or "").strip()
         
         # 搜索可能的标记（不同切片器可能有不同标记）
         # 例如："; post-processed by <script>"
         post_process_markers = [
             "post-processed by",
-            "post_process",
             "POST_PROCESS",
         ]
         
@@ -58,6 +60,14 @@ def parse_post_process(
             if marker in content:
                 found_markers.append(marker)
         
+        if not str(expected_value).strip():
+            ok = not config_value and not found_markers
+            return ok, config_value, {
+                "detection_method": "Config + output marker absence",
+                "config_value": config_value,
+                "found_markers": found_markers,
+                "message": "No post-process command configured and no modified-output marker found.",
+            }
         if found_markers:
             return (
                 False,

@@ -22,6 +22,7 @@ def test_interlocking_beam(
         slice_and_export: Path,
         expected_value: bool,
 ):
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_interlocking_beam(
         gcode_path,
@@ -54,6 +55,7 @@ def test_mmu_segmented_region_max_width(
         slice_and_export: Path,
         expected_value: float,
 ):
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_mmu_segmented_region_max_width(
         gcode_path,
@@ -84,6 +86,7 @@ def test_interlocking_beam_width(
         slice_and_export: Path,
         expected_value: float,
 ):
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_interlocking_beam_width(
         gcode_path,
@@ -110,6 +113,7 @@ def test_interlocking_orientation(
         slice_and_export: Path,
         expected_value: float,
 ):
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_interlocking_orientation(
         gcode_path,
@@ -136,6 +140,7 @@ def test_interlocking_beam_layer_count(
         slice_and_export: Path,
         expected_value: int,
 ):
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_interlocking_beam_layer_count(
         gcode_path,
@@ -162,6 +167,7 @@ def test_interlocking_depth(
         slice_and_export: Path,
         expected_value: float,
 ):
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_interlocking_depth(
         gcode_path,
@@ -188,6 +194,7 @@ def test_interlocking_boundary_avoidance(
         slice_and_export: Path,
         expected_value: float,
 ):
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_interlocking_boundary_avoidance(
         gcode_path,

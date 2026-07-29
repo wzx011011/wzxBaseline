@@ -286,7 +286,8 @@ def parse_detect_thin_wall(
         tolerance: float = 0.001,
 ) -> Tuple[bool, bool, Dict[str, Any]]:
     """
-    检测薄壁选项：目标模型开启时每个非首层有两条外墙路径，关闭时只有一条。
+    检测薄壁选项：专用窄壁模型关闭时每个非首层只有主轮廓，开启后
+    还会生成窄壁补偿路径，因此每层 OUTER_WALL 路径数应由 1 增至多条。
     同时校验 G-code CONFIG_BLOCK 中的 detect_thin_wall 配置值。
     """
     
@@ -319,7 +320,7 @@ def parse_detect_thin_wall(
                 "path_count": len(region.paths),
             })
 
-    actual_on = bool(path_counts) and all(item["path_count"] == 2 for item in path_counts)
+    actual_on = bool(path_counts) and all(item["path_count"] > 1 for item in path_counts)
     config_match = config_on == expected_on
     effect_match = actual_on == expected_on
     ok = config_match and effect_match

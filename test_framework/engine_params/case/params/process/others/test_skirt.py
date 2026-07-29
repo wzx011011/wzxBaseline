@@ -34,6 +34,7 @@ def test_skirt_type(
         expected_value: str,
 ):
     """测试 skirt_type 参数 (Level 2 - 覆盖率分析)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析Skirt 路径的层数、圈数、边界距离、挤出长度和速度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_skirt_type(
         gcode_path,
@@ -64,6 +65,7 @@ def test_skirt_loops(
         expected_value: int,
 ):
     """测试 skirt_loops 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析Skirt 路径的层数、圈数、边界距离、挤出长度和速度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_skirt_loops(
         gcode_path,
@@ -91,6 +93,7 @@ def test_skirt_distance(
         expected_value: float,
 ):
     """测试 skirt_distance 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析Skirt 路径的层数、圈数、边界距离、挤出长度和速度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_skirt_distance(
         gcode_path,
@@ -119,6 +122,7 @@ def test_skirt_height(
         expected_value: int,
 ):
     """测试 skirt_height 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析Skirt 路径的层数、圈数、边界距离、挤出长度和速度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_skirt_height(
         gcode_path,
@@ -146,6 +150,7 @@ def test_skirt_speed(
         expected_value: float,
 ):
     """测试 skirt_speed 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析Skirt 路径的层数、圈数、边界距离、挤出长度和速度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_skirt_speed(
         gcode_path,
@@ -174,6 +179,7 @@ def test_min_skirt_length(
         expected_value: float,
 ):
     """测试 min_skirt_length 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析Skirt 路径的层数、圈数、边界距离、挤出长度和速度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_min_skirt_length(
         gcode_path,
@@ -202,6 +208,7 @@ def test_draft_shield(
         expected_value: str,
 ):
     """测试 draft_shield 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析Skirt 路径的层数、圈数、边界距离、挤出长度和速度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_draft_shield(
         gcode_path,

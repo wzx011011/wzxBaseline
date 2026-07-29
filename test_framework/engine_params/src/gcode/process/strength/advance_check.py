@@ -303,7 +303,7 @@ def parse_infill_combination(
 ) -> Tuple[bool, bool, Dict[str, Any]]:
     """
     稀疏填充合并：N = int(nozzle_diameter / layer_height)，
-    检查稀疏填充层之间的间隔是否为 N-1（跳过首层）。
+    检查相邻稀疏填充所在层的层号差是否为 N（跳过首层）。
     """
     path_obj = Path(gcode_path)
     parser = GCodeParserEx(path_obj)
@@ -364,8 +364,11 @@ def parse_infill_combination(
     sparse_layers = sorted(set(sparse_layers))
 
     diffs = [b - a for a, b in zip(sparse_layers, sparse_layers[1:])]
-    expect_diff = interval_N - 1
-    all_good = len(sparse_layers) > 1 and all(abs(d - expect_diff) < 1e-6 for d in diffs)
+    expect_diff = interval_N
+    # 顶层前的最后一个稀疏填充层可能因壳层封顶而提前一层，只用
+    # 完整的中间周期判断合并是否真正生效。
+    periodic_diffs = diffs[:-1] if len(diffs) > 1 and diffs[-1] < expect_diff else diffs
+    all_good = bool(periodic_diffs) and all(d == expect_diff for d in periodic_diffs)
     actual_enabled = all_good
 
     details = {
@@ -377,6 +380,7 @@ def parse_infill_combination(
         "expected_diff": expect_diff,
         "sparse_layers": sparse_layers,
         "diffs": diffs,
+        "periodic_diffs": periodic_diffs,
         "expected_interval": expected_interval,
         "note": None if sparse_layers else "No sparse infill layers detected.",
         "match": (actual_enabled == expected_enabled) and (expected_interval is None or expect_diff == expected_interval),

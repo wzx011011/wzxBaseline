@@ -17,6 +17,7 @@ def test_detect_narrow_internal_solid_infill(
         slice_and_export: Path,
         expected_enabled: bool,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -46,6 +47,7 @@ def test_bridge_angle(
         expected_bridge_angle: float,
         baseline_gcode: str | Path | None,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Bridge 类型路径的数量、主方向和挤出行为；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -75,6 +77,7 @@ def test_minimum_sparse_infill_area(
         slice_and_export: Path,
         expected_has_sp_infill: bool,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -95,8 +98,11 @@ def test_infill_combination(
         expected_interval: int,
 ) -> None:
     """
-    稀疏填充合并：检测稀疏填充层间隔是否满足 N=int(nozzle_diameter/layer_height) ⇒ diff=N-1。
+    验证方法：解析实际 Sparse infill 层号；按 C3DSlicer 的合并周期
+    N=int(nozzle_diameter/layer_height)，断言中间层的相邻层号差为 N，
+    并允许封顶壳层使最后一次间隔缩短。
     """
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -122,6 +128,7 @@ def test_ensure_vertical_shell_thickness(
     """
     ensure_vertical_shell_thickness：与基线 G-code 逐层比对外/内墙轮廓，忽略轮廓顺序差异。
     """
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Top/Bottom surface 连续层数、厚度和路径形态；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

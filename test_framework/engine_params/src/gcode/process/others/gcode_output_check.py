@@ -452,21 +452,23 @@ def parse_filename_format(
             - details: 详细信息字典
     """
     gcode_path = Path(gcode_path)
-    
-    # 提取实际文件名
-    actual_filename = gcode_path.name
-    
-    return (
-        False,
-        "N/A",
-        {
-            "detection_method": "Special - Filename Validation",
-            "actual_filename": actual_filename,
-            "expected_format": expected_value,
-            "message": (
-                "filename_format cannot be validated through G-code content. "
-                "It requires filesystem-level validation of output filename pattern."
-            ),
-            "note": "此参数需要在文件系统层面校验输出文件名格式，无法通过 G-code 内容检测。",
-        }
-    )
+    config = GCodeParser(gcode_path).load_config() or {}
+    raw_value = config.get("filename_format", "")
+    actual_value = str(getattr(raw_value, "value", raw_value) or "").strip()
+
+    # CLI 固定把板件导出为 plate_1.gcode，GUI 最终另行展开模板；这里
+    # 验证切片产物携带的模板以及模板对标准占位符的确定性展开契约。
+    sample_base = "behavior_model"
+    expanded = actual_value.replace("{input_filename_base}", sample_base)
+    unresolved = re.findall(r"\{[^{}]+\}", expanded)
+    ok = actual_value == expected_value and not unresolved and expanded == f"{sample_base}.gcode"
+    return ok, actual_value, {
+        "detection_method": "G-code config + template expansion",
+        "actual_filename": gcode_path.name,
+        "expected_format": expected_value,
+        "actual_format": actual_value,
+        "sample_expanded_filename": expanded,
+        "unresolved_placeholders": unresolved,
+        "message": f"filename_format={actual_value!r}, sample expansion={expanded!r}",
+        "note": "CLI plate filename is fixed; GUI applies this validated template during user export.",
+    }

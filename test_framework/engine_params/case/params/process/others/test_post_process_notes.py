@@ -20,16 +20,13 @@ from engine_params.src.gcode.process.others.post_process_notes_check import (
 # ================== post_process ==================
 
 @pytest.mark.engine_params
-@pytest.mark.skip(reason="post_process cannot be validated through G-code content")
 def test_post_process(
         slice_and_export: Path,
         expected_value: str,
 ):
-    """测试 post_process 参数 (特殊 - 无法直接校验)
-    
-    注意：post_process 参数指定外部脚本路径，该脚本在 G-code 生成后执行。
-    无法通过 G-code 内容反向推断脚本路径，需要基线对比或外部验证。
-    """
+    """验证方法：空脚本用例核对 CONFIG_BLOCK 未配置命令，并确认导出的
+    G-code 没有后处理标记；非空脚本必须通过脚本约定的输出标记验证。"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析导出文件名规则以及 G-code 头尾中的脚本/备注结果；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_post_process(
         gcode_path,
@@ -45,8 +42,7 @@ def test_post_process(
     print(f"  结果消息: {details.get('message', 'N/A')}")
     print("=" * 50)
 
-    # 此测试始终跳过，因为无法通过 G-code 校验
-    pytest.skip(details.get('message', 'Cannot validate through G-code'))
+    assert ok, f"post_process expected {expected_value!r}, actual {actual_value!r}, details={details}"
 
 
 # ================== notes ==================
@@ -56,11 +52,9 @@ def test_notes(
         slice_and_export: Path,
         expected_value: str,
 ):
-    """测试 notes 参数 (Level 1 - 配置对比)"""
-    # 跳过 notes_custom 测试用例（需要手动配置 3MF）
-    if expected_value == "Test notes for G-code validation":
-        pytest.skip("notes_custom requires manual 3MF configuration")
-    
+    """验证方法：notes 是工程元数据、不会改变刀路；从实际 G-code 的
+    CONFIG_BLOCK 读取完整备注并断言空值或自定义文本未丢失。"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析导出文件名规则以及 G-code 头尾中的脚本/备注结果；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_notes(
         gcode_path,

@@ -46,6 +46,7 @@ def test_slicing_mode(
         expected_value: str,
 ):
     """测试 slicing_mode 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析目标特征的 G-code 类型块、运动指令和尾部配置；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_slicing_mode(
         gcode_path,
@@ -73,6 +74,7 @@ def test_print_sequence(
         expected_value: str,
 ):
     """测试 print_sequence 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析对象标签、层高 Z 和对象开始/结束标记的实际顺序；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     print(f"\n[DEBUG] G-code 路径: {gcode_path}")
     print(f"[DEBUG] 文件是否存在: {gcode_path.exists()}")
@@ -104,6 +106,7 @@ def test_print_order(
         expected_value: str,
 ):
     """测试 print_order 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析对象标签、层高 Z 和对象开始/结束标记的实际顺序；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_print_order(
         gcode_path,
@@ -131,6 +134,7 @@ def test_spiral_mode(
         expected_value: bool,
 ):
     """测试 spiral_mode 参数 (Level 2 - Z轴连续性检测)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析外墙路径中的连续 Z 抬升、回抽次数和 XY 平滑变化；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_spiral_mode(
         gcode_path,
@@ -161,6 +165,7 @@ def test_spiral_mode_smooth(
         expected_value: bool,
 ):
     """测试 spiral_mode_smooth 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析外墙路径中的连续 Z 抬升、回抽次数和 XY 平滑变化；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_spiral_mode_smooth(
         gcode_path,
@@ -188,6 +193,7 @@ def test_spiral_mode_max_xy_smoothing(
         expected_value: float,
 ):
     """测试 spiral_mode_max_xy_smoothing 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析Inner/Outer wall 的每层路径数、顺序和几何覆盖；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_spiral_mode_max_xy_smoothing(
         gcode_path,
@@ -216,6 +222,7 @@ def test_ignore_inner_color(
         expected_value: bool,
 ):
     """测试 ignore_inner_color 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析目标特征的 G-code 类型块、运动指令和尾部配置；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_ignore_inner_color(
         gcode_path,
@@ -243,6 +250,7 @@ def test_timelapse_type(
         expected_value: int,
 ):
     """测试 timelapse_type 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析目标特征的 G-code 类型块、运动指令和尾部配置；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_timelapse_type(
         gcode_path,
@@ -270,6 +278,7 @@ def test_fuzzy_skin(
         expected_value: str,
 ):
     """测试 fuzzy_skin 参数 (Level 2/3 - 路径偏差分析)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析Outer wall 坐标相对规则轮廓的偏移幅度、点距及生效层；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_fuzzy_skin(
         gcode_path,
@@ -299,6 +308,7 @@ def test_fuzzy_skin_point_distance(
         expected_value: float,
 ):
     """测试 fuzzy_skin_point_distance 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析Outer wall 坐标相对规则轮廓的偏移幅度、点距及生效层；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_fuzzy_skin_point_distance(
         gcode_path,
@@ -327,6 +337,7 @@ def test_fuzzy_skin_thickness(
         expected_value: float,
 ):
     """测试 fuzzy_skin_thickness 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析Outer wall 坐标相对规则轮廓的偏移幅度、点距及生效层；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_fuzzy_skin_thickness(
         gcode_path,
@@ -355,6 +366,7 @@ def test_fuzzy_skin_first_layer(
         expected_value: bool,
 ):
     """测试 fuzzy_skin_first_layer 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析Outer wall 坐标相对规则轮廓的偏移幅度、点距及生效层；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_fuzzy_skin_first_layer(
         gcode_path,
@@ -385,6 +397,7 @@ def test_first_layer_print_sequence(
     first_layer_print_sequence：检测首层耗材打印顺序
     - 验证G-code中首层的耗材使用顺序是否符合配置
     """
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析对象标签、层高 Z 和对象开始/结束标记的实际顺序；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

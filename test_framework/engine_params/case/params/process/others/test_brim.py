@@ -31,6 +31,7 @@ def test_brim_type(
         expected_value: str,
 ):
     """测试 brim_type 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析首层 Brim 路径的存在性、圈数、边界和对象间隙；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_brim_type(
         gcode_path,
@@ -58,6 +59,7 @@ def test_brim_width(
         expected_value: float,
 ):
     """测试 brim_width 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析首层 Brim 路径的存在性、圈数、边界和对象间隙；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_brim_width(
         gcode_path,
@@ -86,6 +88,7 @@ def test_brim_object_gap(
         expected_value: float,
 ):
     """测试 brim_object_gap 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析首层 Brim 路径的存在性、圈数、边界和对象间隙；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_brim_object_gap(
         gcode_path,
@@ -114,6 +117,7 @@ def test_brim_ears_max_angle(
         expected_value: float,
 ):
     """测试 brim_ears_max_angle 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析首层 Brim 路径的存在性、圈数、边界和对象间隙；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_brim_ears_max_angle(
         gcode_path,
@@ -142,6 +146,7 @@ def test_brim_ears_detection_length(
         expected_value: float,
 ):
     """测试 brim_ears_detection_length 参数 (Level 1 - 配置对比)"""
+    # 验证方法：使用首层附着、外壳或多对象专用 3MF切片，解析首层 Brim 路径的存在性、圈数、边界和对象间隙；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_brim_ears_detection_length(
         gcode_path,

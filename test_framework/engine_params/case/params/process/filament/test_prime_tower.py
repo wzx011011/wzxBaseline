@@ -30,6 +30,7 @@ def test_enable_prime_tower(
     1. 配置值是否与期望一致
     2. G-code 中是否存在/不存在 Prime tower 挤出块
     """
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析Prime tower 分层路径、边界尺寸、工具切换及挤出/回抽量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -60,6 +61,7 @@ def test_prime_tower_width(
     - 最小值: 2.0mm
     - 默认值: 60.0mm
     """
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析Prime tower 分层路径、边界尺寸、工具切换及挤出/回抽量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -90,6 +92,7 @@ def test_prime_tower_brim_width(
     - 最小值: 0.0mm
     - 默认值: 3.0mm
     """
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析首层 Brim 路径的存在性、圈数、边界和对象间隙；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -120,6 +123,7 @@ def test_prime_volume(
     - 最小值: 1.0mm³
     - 默认值: 45.0mm³
     """
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析目标特征的 G-code 类型块、运动指令和尾部配置；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -149,6 +153,7 @@ def test_wipe_tower_rotation_angle(
     - wipe_tower_rotation_angle: Prime Tower 相对于 X 轴的旋转角度 (°)
     - 默认值: 0°
     """
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析Prime tower 分层路径、边界尺寸、工具切换及挤出/回抽量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -186,6 +191,7 @@ def test_prime_tower_enhance_type(
         expected_type: 期望的 prime_tower_enhance_type 值
         baseline_gcode: 基线 G-code 文件路径（可选，用于 Level 3 验证）
     """
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析Prime tower 分层路径、边界尺寸、工具切换及挤出/回抽量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -218,6 +224,7 @@ def test_wipe_tower_extra_flow(
     - 最大值: 300%
     - 默认值: 100%
     """
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析Prime tower 分层路径、边界尺寸、工具切换及挤出/回抽量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

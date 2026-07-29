@@ -47,6 +47,7 @@ def test_flush_into_infill(
     - 需要多色模型才能触发换料操作
     - 如果没有换料操作，会回退到 Level 1 配置对比
     """
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -96,6 +97,7 @@ def test_flush_into_support(
     - 需要多色模型且有支撑结构才能触发换料操作
     - 如果没有换料操作，会回退到 Level 1 配置对比
     """
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析换料后填充/支撑角色由 T0/T1 承担的挤出量和出现比例；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

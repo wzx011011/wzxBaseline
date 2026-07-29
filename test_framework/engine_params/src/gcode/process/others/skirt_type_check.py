@@ -16,6 +16,8 @@ Level 2 校验逻辑（特征检测）：
 from __future__ import annotations
 
 import re
+import math
+import statistics
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -51,6 +53,72 @@ def _normalize_to_int(value: object | None) -> int:
         return 0
 
 
+def _skirt_metrics(gcode_path: Path | str) -> Dict[str, object]:
+    number = r"-?(?:\d+(?:\.\d*)?|\.\d+)"
+    axis_pattern = re.compile(rf"\b([XYZEF])({number})")
+    current_type = ""
+    x = y = z = 0.0
+    feed = 0.0
+    in_run = False
+    runs = 0
+    path_length = 0.0
+    speeds: List[float] = []
+    skirt_layers: Dict[float, List[Tuple[float, float]]] = {}
+    wall_layers: Dict[float, List[Tuple[float, float]]] = {}
+    with Path(gcode_path).open("r", encoding="utf-8", errors="ignore") as stream:
+        for raw in stream:
+            line = raw.strip()
+            if line.startswith(";TYPE:"):
+                current_type = line[6:]
+                in_run = False
+                continue
+            if not line.startswith("G1"):
+                continue
+            values = {axis: float(value) for axis, value in axis_pattern.findall(line)}
+            old_x, old_y = x, y
+            x, y, z = values.get("X", x), values.get("Y", y), values.get("Z", z)
+            feed = values.get("F", feed)
+            extruding = values.get("E", 0.0) > 0 and ("X" in values or "Y" in values)
+            if current_type == "Skirt":
+                if extruding:
+                    if not in_run:
+                        runs += 1
+                    in_run = True
+                    skirt_layers.setdefault(round(z, 4), []).append((x, y))
+                    path_length += math.hypot(x - old_x, y - old_y)
+                    if feed > 0:
+                        speeds.append(feed / 60.0)
+                elif "X" in values or "Y" in values:
+                    in_run = False
+            elif current_type in {"Inner wall", "Outer wall"} and extruding:
+                wall_layers.setdefault(round(z, 4), []).append((x, y))
+
+    def bounds(points: List[Tuple[float, float]]) -> Dict[str, float]:
+        if not points:
+            return {}
+        xs = [point[0] for point in points]
+        ys = [point[1] for point in points]
+        return {"width": max(xs) - min(xs), "depth": max(ys) - min(ys)}
+
+    skirt_points = [point for points in skirt_layers.values() for point in points]
+    first_wall = wall_layers[min(wall_layers)] if wall_layers else []
+    skirt_bounds, wall_bounds = bounds(skirt_points), bounds(first_wall)
+    distance = 0.0
+    if skirt_bounds and wall_bounds:
+        distance = min(
+            (skirt_bounds["width"] - wall_bounds["width"]) / 2.0,
+            (skirt_bounds["depth"] - wall_bounds["depth"]) / 2.0,
+        )
+    return {
+        "layer_count": len(skirt_layers),
+        "loop_runs": runs,
+        "path_count": len(skirt_points),
+        "path_length": path_length,
+        "median_speed": statistics.median(speeds) if speeds else 0.0,
+        "skirt_bounds": skirt_bounds,
+        "first_layer_wall_bounds": wall_bounds,
+        "distance_from_wall": distance,
+    }
 # ================== skirt_type ==================
 
 def parse_skirt_type(
@@ -97,7 +165,10 @@ def parse_skirt_type(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    ok = (detected_value == expected_value)
+    behavior = _skirt_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 首层 Skirt/Wall 有效几何"
+    ok = (detected_value == expected_value) and bool(behavior["first_layer_wall_bounds"])
     
     if ok:
         details["message"] = f"Level 1 通过: skirt_type={detected_value}"
@@ -146,7 +217,10 @@ def parse_skirt_loops(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    ok = (detected_value == expected_value)
+    behavior = _skirt_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + Skirt 闭合挤出段数量"
+    ok = (detected_value == expected_value) and int(behavior["loop_runs"]) == expected_value
     
     if ok:
         details["message"] = f"Level 1 通过: skirt_loops={detected_value}"
@@ -196,7 +270,12 @@ def parse_skirt_distance(
     }
     
     # 浮点数比较，容差 0.01mm
-    ok = abs(detected_value - expected_value) < 0.01
+    behavior = _skirt_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + Skirt/首层外墙边界间距"
+    # Center-line coordinates include roughly one wall/skirt extrusion width.
+    distance_ok = abs(float(behavior["distance_from_wall"]) - expected_value) <= 1.0
+    ok = abs(detected_value - expected_value) < 0.01 and distance_ok
     
     if ok:
         details["message"] = f"Level 1 通过: skirt_distance={detected_value}mm"
@@ -245,7 +324,10 @@ def parse_skirt_height(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    ok = (detected_value == expected_value)
+    behavior = _skirt_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 含 Skirt 挤出的实际层数"
+    ok = (detected_value == expected_value) and int(behavior["layer_count"]) == expected_value
     
     if ok:
         details["message"] = f"Level 1 通过: skirt_height={detected_value} 层"
@@ -297,7 +379,11 @@ def parse_skirt_speed(
     }
     
     # 浮点数比较，容差 0.1 mm/s
-    ok = abs(detected_value - expected_value) < 0.1
+    behavior = _skirt_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + Skirt 挤出段中位速度"
+    speed_ok = abs(float(behavior["median_speed"]) - expected_value) <= 0.5
+    ok = abs(detected_value - expected_value) < 0.1 and speed_ok
     
     if ok:
         details["message"] = f"Level 1 通过: skirt_speed={detected_value} mm/s"
@@ -356,7 +442,12 @@ def parse_draft_shield(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    ok = (detected_value == expected_value)
+    behavior = _skirt_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 多层 Skirt 防风墙"
+    shield_present = int(behavior["layer_count"]) > 1
+    expected_present = str(expected_value).lower() not in {"disabled", "0", "false", "off"}
+    ok = (detected_value == expected_value) and shield_present == expected_present
     
     if ok:
         details["message"] = f"Level 1 通过: draft_shield={detected_value}"
@@ -409,7 +500,13 @@ def parse_min_skirt_length(
     }
     
     # 浮点数比较，容差 1 mm
-    ok = abs(detected_value - expected_value) < 1.0
+    behavior = _skirt_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + Skirt 实际 XY 路径总长"
+    ok = (
+        abs(detected_value - expected_value) < 1.0
+        and float(behavior["path_length"]) >= expected_value * 0.95
+    )
     
     if ok:
         details["message"] = f"Level 1 通过: min_skirt_length={detected_value} mm"

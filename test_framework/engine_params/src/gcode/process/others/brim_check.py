@@ -11,6 +11,8 @@
 from __future__ import annotations
 
 from pathlib import Path
+import math
+import re
 from typing import Dict, Tuple
 
 from engine_params.src.gcode.GCodeParser import GCodeParser
@@ -32,6 +34,60 @@ def _normalize_to_int(val: object) -> int:
     if isinstance(val, str):
         return int(float(val))
     return 0
+
+
+def _brim_metrics(gcode_path: Path | str) -> Dict[str, object]:
+    number = r"-?(?:\d+(?:\.\d*)?|\.\d+)"
+    axis_pattern = re.compile(rf"\b([XYZE])({number})")
+    current_type = ""
+    x = y = z = 0.0
+    path_length = 0.0
+    brim_layers: Dict[float, list[tuple[float, float]]] = {}
+    wall_layers: Dict[float, list[tuple[float, float]]] = {}
+    with Path(gcode_path).open("r", encoding="utf-8", errors="ignore") as stream:
+        for raw in stream:
+            line = raw.strip()
+            if line.startswith(";TYPE:"):
+                current_type = line[6:]
+                continue
+            if not line.startswith("G1"):
+                continue
+            values = {axis: float(value) for axis, value in axis_pattern.findall(line)}
+            old_x, old_y = x, y
+            x, y, z = values.get("X", x), values.get("Y", y), values.get("Z", z)
+            extruding = values.get("E", 0.0) > 0 and ("X" in values or "Y" in values)
+            if not extruding:
+                continue
+            if current_type == "Brim":
+                brim_layers.setdefault(round(z, 4), []).append((x, y))
+                path_length += math.hypot(x - old_x, y - old_y)
+            elif current_type in {"Inner wall", "Outer wall"}:
+                wall_layers.setdefault(round(z, 4), []).append((x, y))
+
+    def bounds(points: list[tuple[float, float]]) -> Dict[str, float]:
+        if not points:
+            return {}
+        xs, ys = [p[0] for p in points], [p[1] for p in points]
+        return {"width": max(xs) - min(xs), "depth": max(ys) - min(ys)}
+
+    brim_points = [point for points in brim_layers.values() for point in points]
+    wall_points = wall_layers[min(wall_layers)] if wall_layers else []
+    brim_bounds, wall_bounds = bounds(brim_points), bounds(wall_points)
+    radial_width = 0.0
+    if brim_bounds and wall_bounds:
+        radial_width = min(
+            (brim_bounds["width"] - wall_bounds["width"]) / 2.0,
+            (brim_bounds["depth"] - wall_bounds["depth"]) / 2.0,
+        )
+    return {
+        "layer_count": len(brim_layers),
+        "path_count": len(brim_points),
+        "path_length": path_length,
+        "brim_bounds": brim_bounds,
+        "first_layer_wall_bounds": wall_bounds,
+        "radial_width": radial_width,
+        "model_wall_present": bool(wall_points),
+    }
 
 
 # ================== brim_type ==================
@@ -75,7 +131,14 @@ def parse_brim_type(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    ok = detected_value == expected_value
+    behavior = _brim_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 首层 Brim/Wall 路径"
+    brim_required = expected_value in {"outer_only", "outer_and_inner"}
+    behavior_ok = bool(behavior["model_wall_present"]) and (
+        not brim_required or int(behavior["path_count"]) > 0
+    )
+    ok = detected_value == expected_value and behavior_ok
     
     if ok:
         details["message"] = f"Level 1 通过: brim_type={detected_value}"
@@ -126,8 +189,11 @@ def parse_brim_width(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    # 浮点数比较，容差 0.1 mm
-    ok = abs(detected_value - expected_value) < 0.1
+    behavior = _brim_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + Brim 相对首层外墙的径向扩展"
+    behavior_ok = int(behavior["path_count"]) > 0 and float(behavior["radial_width"]) >= expected_value * 0.55
+    ok = abs(detected_value - expected_value) < 0.1 and behavior_ok
     
     if ok:
         details["message"] = f"Level 1 通过: brim_width={detected_value} mm"
@@ -178,8 +244,10 @@ def parse_brim_object_gap(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    # 浮点数比较，容差 0.01 mm
-    ok = abs(detected_value - expected_value) < 0.01
+    behavior = _brim_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 首层 Brim/Wall 有效几何"
+    ok = abs(detected_value - expected_value) < 0.01 and bool(behavior["model_wall_present"])
     
     if ok:
         details["message"] = f"Level 1 通过: brim_object_gap={detected_value} mm"
@@ -230,8 +298,10 @@ def parse_brim_ears_max_angle(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    # 浮点数比较，容差 0.1 度
-    ok = abs(detected_value - expected_value) < 0.1
+    behavior = _brim_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 首层 Brim ears 路径"
+    ok = abs(detected_value - expected_value) < 0.1 and int(behavior["path_count"]) > 0
     
     if ok:
         details["message"] = f"Level 1 通过: brim_ears_max_angle={detected_value}°"
@@ -282,8 +352,10 @@ def parse_brim_ears_detection_length(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    # 浮点数比较，容差 0.1 mm
-    ok = abs(detected_value - expected_value) < 0.1
+    behavior = _brim_metrics(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 首层 Brim ears 路径"
+    ok = abs(detected_value - expected_value) < 0.1 and int(behavior["path_count"]) > 0
     
     if ok:
         details["message"] = f"Level 1 通过: brim_ears_detection_length={detected_value} mm"

@@ -27,6 +27,7 @@ def test_gap_fill_target(
         slice_and_export: Path,
         expected_target: str,
 ):
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
     ok, actual_target, details, warnings = parse_gap_fill_target(
@@ -46,6 +47,7 @@ def test_filter_out_gap_fill(
         slice_and_export: Path,
         expected_value: float,
 ):
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -67,6 +69,7 @@ def test_anchor_line(
         expected_anchor_line: float,
         threshold: float,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析目标特征的 G-code 类型块、运动指令和尾部配置；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -92,6 +95,9 @@ def test_sparse_infill_pattern(
         expected_match: bool,
         baseline_gcode: str,
 ) -> None:
+    """验证方法：解析各层 Sparse infill 轮廓并与当前引擎行为快照比较；
+    Lightning 因树枝生成非确定，改查上层路径数相对下层持续分叉增长。"""
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -119,6 +125,7 @@ def test_bottom_surface_pattern(
         expected_match: bool,
         baseline_gcode: str,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Top/Bottom surface 连续层数、厚度和路径形态；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -149,6 +156,7 @@ def test_ai_infill(
     """
     测试ai_infill参数是否有效，采用快照对比的方式。
     """
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -175,6 +183,7 @@ def test_infill_direction(
         slice_and_export: Path,
         expected_angle: float,
 ):
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -199,6 +208,7 @@ def test_internal_solid_infill_pattern(
         expected_match: bool,
         baseline_gcode: str,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -225,6 +235,7 @@ def test_solid_infill_direction(
         slice_and_export: Path,
         expected_angle: float,
 ):
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -249,6 +260,7 @@ def test_sparse_infill_density(
         expected_match: bool,
         baseline_gcode: str,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -275,6 +287,7 @@ def test_rotate_solid_infill_direction(
         slice_and_export: Path,
         expected_value: bool,
 ):
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -300,6 +313,7 @@ def test_top_surface_pattern(
         expected_match: bool,
         baseline_gcode: str,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Top/Bottom surface 连续层数、厚度和路径形态；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -322,6 +336,7 @@ def test_infill_wall_overlap(
         slice_and_export: Path,
         baseline_gcode: str | Path,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -346,6 +361,7 @@ def test_tmps_start_infill_density(
         expected_match: bool,
         baseline_gcode: str,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -370,6 +386,7 @@ def test_tmps_end_infill_density(
         expected_match: bool,
         baseline_gcode: str,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -394,6 +411,7 @@ def test_tpms_gradual_direction(
         expected_match: bool,
         baseline_gcode: str,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

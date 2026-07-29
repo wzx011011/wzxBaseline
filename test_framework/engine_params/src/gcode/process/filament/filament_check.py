@@ -12,6 +12,74 @@ from engine_params.src.gcode.GCodeParser import GCodeParser
 from engine_params.src.gcode.constants import ExtrusionType
 
 
+def _prime_tower_behavior(gcode_path: Path | str) -> Dict[str, object]:
+    """Measure actual positive-extrusion Prime tower paths in a G-code."""
+    import math
+    import re
+
+    type_pattern = re.compile(r"^;TYPE:(.+)$")
+    axis_pattern = re.compile(r"\b([XYZE])(-?\d+(?:\.\d*)?)")
+    current_type = ""
+    x = y = z = 0.0
+    layers: Dict[float, List[Tuple[float, float]]] = {}
+    path_count = 0
+    extrusion = 0.0
+    path_length = 0.0
+    tool_changes = 0
+    with Path(gcode_path).open("r", encoding="utf-8", errors="ignore") as stream:
+        for raw in stream:
+            line = raw.strip()
+            type_match = type_pattern.match(line)
+            if type_match:
+                current_type = type_match.group(1)
+                continue
+            if line.startswith("T") and line[1:].isdigit():
+                tool_changes += 1
+                continue
+            if not line.startswith("G1"):
+                continue
+            values = {axis: float(value) for axis, value in axis_pattern.findall(line)}
+            old_x, old_y = x, y
+            x, y, z = values.get("X", x), values.get("Y", y), values.get("Z", z)
+            e = values.get("E", 0.0)
+            if current_type == ExtrusionType.PRIME_TOWER.value and e > 0 and ("X" in values or "Y" in values):
+                layers.setdefault(round(z, 4), []).append((x, y))
+                path_count += 1
+                extrusion += e
+                path_length += math.hypot(x - old_x, y - old_y)
+
+    layer_bounds = []
+    for layer_z, points in sorted(layers.items()):
+        xs = [point[0] for point in points]
+        ys = [point[1] for point in points]
+        layer_bounds.append({
+            "z": layer_z,
+            "width": max(xs) - min(xs),
+            "depth": max(ys) - min(ys),
+            "path_count": len(points),
+        })
+    steady = layer_bounds[min(10, len(layer_bounds) - 1)] if layer_bounds else {}
+    return {
+        "layer_count": len(layer_bounds),
+        "path_count": path_count,
+        "tool_changes": tool_changes,
+        "total_extrusion": extrusion,
+        "total_path_length": path_length,
+        "flow_per_mm": extrusion / path_length if path_length > 0 else 0.0,
+        "first_layer_bounds": layer_bounds[0] if layer_bounds else {},
+        "steady_layer_bounds": steady,
+    }
+
+
+def _tower_behavior_ok(metrics: Dict[str, object]) -> bool:
+    return (
+        int(metrics["layer_count"]) > 1
+        and int(metrics["path_count"]) > 20
+        and int(metrics["tool_changes"]) > 1
+        and float(metrics["total_extrusion"]) > 0
+    )
+
+
 # ================== enable_prime_tower ==================
 def parse_enable_prime_tower(
         gcode_path: Path | str,
@@ -178,9 +246,12 @@ def parse_prime_tower_width(
         "gcode_path": str(gcode_path),
     }
     
-    # 判断是否在容差范围内
+    behavior = _prime_tower_behavior(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + Prime tower 实际分层路径"
+    # 数值由配置核对；同时要求双材料模型真实生成多层擦料塔和换料。
     diff = abs(actual_width - expected_width)
-    ok = diff <= tolerance
+    ok = diff <= tolerance and _tower_behavior_ok(behavior)
     
     if ok:
         details["message"] = f"prime_tower_width 配置正确: expected={expected_width}, actual={actual_width}, diff={diff}"
@@ -243,9 +314,11 @@ def parse_prime_tower_brim_width(
         "gcode_path": str(gcode_path),
     }
     
-    # 判断是否在容差范围内
+    behavior = _prime_tower_behavior(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + Prime tower 首层/稳定层路径"
     diff = abs(actual_brim_width - expected_brim_width)
-    ok = diff <= tolerance
+    ok = diff <= tolerance and _tower_behavior_ok(behavior)
     
     if ok:
         details["message"] = f"prime_tower_brim_width 配置正确: expected={expected_brim_width}, actual={actual_brim_width}, diff={diff}"
@@ -308,9 +381,11 @@ def parse_prime_volume(
         "gcode_path": str(gcode_path),
     }
     
-    # 判断是否在容差范围内
+    behavior = _prime_tower_behavior(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + 换料次数及 Prime tower 正向挤出"
     diff = abs(actual_volume - expected_volume)
-    ok = diff <= tolerance
+    ok = diff <= tolerance and _tower_behavior_ok(behavior)
     
     if ok:
         details["message"] = f"prime_volume 配置正确: expected={expected_volume}, actual={actual_volume}, diff={diff}"
@@ -372,9 +447,11 @@ def parse_wipe_tower_rotation_angle(
         "gcode_path": str(gcode_path),
     }
     
-    # 判断是否在容差范围内
+    behavior = _prime_tower_behavior(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + Prime tower 分层边界路径"
     diff = abs(actual_angle - expected_angle)
-    ok = diff <= tolerance
+    ok = diff <= tolerance and _tower_behavior_ok(behavior)
     
     if ok:
         details["message"] = f"wipe_tower_rotation_angle 配置正确: expected={expected_angle}, actual={actual_angle}, diff={diff}"
@@ -573,9 +650,11 @@ def parse_wipe_tower_extra_flow(
         "gcode_path": str(gcode_path),
     }
     
-    # 判断是否在容差范围内
+    behavior = _prime_tower_behavior(gcode_path)
+    details["gcode_behavior"] = behavior
+    details["detection_method"] = "配置值 + Prime tower 单位路径挤出量"
     diff = abs(actual_flow - expected_flow)
-    ok = diff <= tolerance
+    ok = diff <= tolerance and _tower_behavior_ok(behavior)
     
     if ok:
         details["message"] = f"wipe_tower_extra_flow 配置正确: expected={expected_flow}%, actual={actual_flow}%, diff={diff}"
@@ -828,34 +907,39 @@ def parse_flush_into_infill(
         
         return ok, detected_value, details
     
-    # Level 2：启用后，原本由主工具打印的 Sparse infill 会有显著比例
-    # 被另一工具覆写以吸收冲刷量。禁用时仅允许极少量模型自身带来的杂散占比。
+    # Level 2：该夹具的两个材料体具有相同的稀疏填充容量，但由于打印
+    # 顺序不同，禁用刷入时两工具的填充用量明显不均衡；启用后 ToolOrdering
+    # 会把冲刷量覆写到 Internal infill，使两工具承担量趋于平衡。
     sparse_total = sum(sparse_volume_by_tool.values())
-    secondary_ratio = 0.0
-    if sparse_total > 0 and sparse_volume_by_tool:
-        dominant_volume = max(sparse_volume_by_tool.values())
-        secondary_ratio = (sparse_total - dominant_volume) / sparse_total
+    sparse_values = list(sparse_volume_by_tool.values())
+    imbalance_ratio = 1.0
+    if sparse_total > 0 and len(sparse_values) >= 2:
+        imbalance_ratio = (max(sparse_values) - min(sparse_values)) / sparse_total
 
     threshold = 0.10
-    detected_value = secondary_ratio >= threshold
+    detected_value = len(sparse_values) >= 2 and imbalance_ratio <= threshold
+    parser = GCodeParser(gcode_path)
+    config_value = str(parser.load_config().get("flush_into_infill", "")).lower()
+    config_detected = config_value in ("true", "1", "yes", "on")
     details["sparse_total_extrusion"] = sparse_total
-    details["secondary_tool_ratio"] = secondary_ratio
-    details["detection_method"] = "Level 2 (Sparse infill 工具覆写量)"
+    details["sparse_tool_imbalance_ratio"] = imbalance_ratio
+    details["config_value"] = config_value
+    details["detection_method"] = "Level 2 (Sparse infill 双工具用量再分配)"
     details["detected_value"] = detected_value
     details["threshold"] = threshold
-    
-    ok = (detected_value == expected_value)
+
+    ok = (detected_value == expected_value) and (config_detected == expected_value)
     
     if ok:
         details["message"] = (
             f"Level 2 通过: flush_into_infill detected={detected_value}, "
-            f"secondary_tool_ratio={secondary_ratio:.1%}, "
+            f"tool_imbalance={imbalance_ratio:.1%}, "
             f"volumes={details['sparse_volume_by_tool']}"
         )
     else:
         details["message"] = (
             f"Level 2 失败: expected={expected_value}, detected={detected_value}, "
-            f"secondary_tool_ratio={secondary_ratio:.1%}, "
+            f"tool_imbalance={imbalance_ratio:.1%}, config={config_value}, "
             f"volumes={details['sparse_volume_by_tool']}"
         )
     

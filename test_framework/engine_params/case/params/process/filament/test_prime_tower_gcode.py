@@ -53,6 +53,7 @@ def test_tc_wt_001(
       ]
     }
     """
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析Prime tower 分层路径、边界尺寸、工具切换及挤出/回抽量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     assert gcode_path.exists(), f"GCode 文件不存在: {gcode_path}"
     
@@ -121,6 +122,7 @@ def test_tc_wt_007(
       ]
     }
     '''
+    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析Prime tower 分层路径、边界尺寸、工具切换及挤出/回抽量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path = slice_and_export
     assert gcode_path.exists(), f"GCode file does not exist: {gcode_path}"
     

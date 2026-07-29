@@ -1,4 +1,4 @@
-import os, time, json, socket, subprocess, atexit, signal, threading
+import os, time, json, socket, subprocess, atexit, signal, threading, ctypes
 from pathlib import Path
 from typing import Optional
 
@@ -7,15 +7,27 @@ from .constants import *
 
 # ----------------- 子进程（Server）托管 -----------------
 def is_process_running_by_name(name="CrealityPrint.exe"):
-    try:
-        out = subprocess.check_output(
-            ["tasklist", "/FI", f"IMAGENAME eq {name}"],
-            text=True,
-            creationflags=subprocess.CREATE_NO_WINDOW,
-        )
-        return name.lower() in out.lower()
-    except Exception:
+    return any(_pid_is_active(pid) for pid in _get_pids_by_name(name))
+
+
+def _pid_is_active(pid: int) -> bool:
+    """Return False for exited Windows process objects still listed by tasklist."""
+    if os.name != "nt":
+        return True
+    process_query_limited_information = 0x1000
+    still_active = 259
+    handle = ctypes.windll.kernel32.OpenProcess(
+        process_query_limited_information, False, pid
+    )
+    if not handle:
         return False
+    try:
+        exit_code = ctypes.c_ulong()
+        if not ctypes.windll.kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+            return False
+        return exit_code.value == still_active
+    finally:
+        ctypes.windll.kernel32.CloseHandle(handle)
 
 
 def _get_pids_by_name(name: str) -> list:

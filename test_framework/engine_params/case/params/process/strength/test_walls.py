@@ -8,6 +8,7 @@ from engine_params.src.gcode.process.strength.walls_check import parse_wall_loop
 @pytest.mark.engine_params
 def test_wall_loops(slice_and_export: Path,
                      expected_wall_loops: int):
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Inner/Outer wall 的每层路径数、顺序和几何覆盖；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -27,6 +28,7 @@ def test_alternate_extra_wall(slice_and_export: Path, expected_on: bool):
     2. 依赖条件验证  
     3. G-code效果验证
     """
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Inner/Outer wall 的每层路径数、顺序和几何覆盖；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -64,7 +66,9 @@ def test_alternate_extra_wall(slice_and_export: Path, expected_on: bool):
 # ================== detect_thin_wall ==================
 @pytest.mark.engine_params
 def test_detect_thin_wall(slice_and_export: Path, expected_detect_thin_wall: bool, tolerance: float):
-    """检测 detect_thin_wall：非首层 OUTER_WALL 分成双孤岛，一条线宽多变，一条线宽恒定。"""
+    """验证方法：窄壁模型关闭时每层仅有主外墙路径，开启后 C3DSlicer
+    的薄壁补偿会增加 OUTER_WALL 路径；同时核对 CONFIG_BLOCK 参数值。"""
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Inner/Outer wall 的每层路径数、顺序和几何覆盖；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     #assert gcode_path.exists()
 

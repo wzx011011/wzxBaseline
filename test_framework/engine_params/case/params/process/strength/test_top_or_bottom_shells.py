@@ -15,6 +15,7 @@ from engine_params.src.gcode.process.strength.top_or_bottom_shells_check import 
 # ================== top_shell_layers ==================
 @pytest.mark.engine_params
 def test_top_shell_layers(slice_and_export: Path, expected_layers: int):
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Top/Bottom surface 连续层数、厚度和路径形态；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -46,6 +47,7 @@ def test_top_shell_thickness(
         slice_and_export: Path,
         expected_top_shell_thickness: float,
 ):
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Top/Bottom surface 连续层数、厚度和路径形态；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -85,6 +87,7 @@ def test_top_bottom_infill_wall_overlap(
         slice_and_export: Path,
         baseline_gcode: str | Path,
 ) -> None:
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -106,6 +109,7 @@ def test_top_bottom_infill_wall_overlap(
 # ================== bottom_shell_layers ==================
 @pytest.mark.engine_params
 def test_bottom_shell_layers(slice_and_export: Path, expected_layers: int):
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Top/Bottom surface 连续层数、厚度和路径形态；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -122,6 +126,7 @@ def test_bottom_shell_thickness(
         slice_and_export: Path,
         expected_bottom_shell_thickness: float,
 ):
+    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Top/Bottom surface 连续层数、厚度和路径形态；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

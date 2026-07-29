@@ -57,6 +57,27 @@ def _normalize_to_float(value: object | None) -> float:
         return 0.0
 
 
+def _multi_material_metrics(gcode_path: Path | str) -> Dict[str, object]:
+    tools: List[int] = []
+    wall_blocks = 0
+    gap_blocks = 0
+    with Path(gcode_path).open("r", encoding="utf-8", errors="ignore") as stream:
+        for raw in stream:
+            line = raw.strip()
+            match = re.fullmatch(r"T(\d+)", line)
+            if match:
+                tools.append(int(match.group(1)))
+            elif line == ";TYPE:Inner wall" or line == ";TYPE:Outer wall":
+                wall_blocks += 1
+            elif line == ";TYPE:Gap infill":
+                gap_blocks += 1
+    return {
+        "tool_change_count": len(tools),
+        "tools": sorted(set(tools)),
+        "wall_blocks": wall_blocks,
+        "gap_infill_blocks": gap_blocks,
+        "confirmed": len(set(tools)) >= 2 and len(tools) > 2 and wall_blocks > 0,
+    }
 # ================== interlocking_beam ==================
 
 def parse_interlocking_beam(
@@ -388,9 +409,10 @@ def parse_interlocking_beam_width(
         }
     })
 
-    # 保守模式：ok 仍以配置为准（保持兼容性），但在 details 中提供 Level 2 诊断信息
-    details["detection_method"] = "Level 1 (配置对比) + Level 2 (保守诊断)"
-    ok = abs(detected_value - expected_value) < 0.01
+    behavior = _multi_material_metrics(gcode_path)
+    details["multi_material_behavior"] = behavior
+    details["detection_method"] = "配置值 + 多工具互锁墙/Gap 路径"
+    ok = abs(detected_value - expected_value) < 0.01 and bool(behavior["confirmed"])
 
     if ok:
         details["message"] = (
@@ -457,8 +479,10 @@ def parse_interlocking_orientation(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    # 浮点数比较，容差 0.1 度
-    ok = abs(detected_value - expected_value) < 0.1
+    behavior = _multi_material_metrics(gcode_path)
+    details["multi_material_behavior"] = behavior
+    details["detection_method"] = "配置值 + 多工具互锁墙路径"
+    ok = abs(detected_value - expected_value) < 0.1 and bool(behavior["confirmed"])
     
     if ok:
         details["message"] = f"Level 1 通过: interlocking_orientation={detected_value}°"
@@ -521,8 +545,10 @@ def parse_interlocking_beam_layer_count(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    # 整数精确匹配
-    ok = (detected_value == expected_value)
+    behavior = _multi_material_metrics(gcode_path)
+    details["multi_material_behavior"] = behavior
+    details["detection_method"] = "配置值 + 多工具逐层互锁路径"
+    ok = (detected_value == expected_value) and bool(behavior["confirmed"])
     
     if ok:
         details["message"] = f"Level 1 通过: interlocking_beam_layer_count={detected_value}"
@@ -583,8 +609,10 @@ def parse_interlocking_depth(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    # 浮点数比较，容差 0.01mm
-    ok = abs(detected_value - expected_value) < 0.01
+    behavior = _multi_material_metrics(gcode_path)
+    details["multi_material_behavior"] = behavior
+    details["detection_method"] = "配置值 + 多工具互锁墙/Gap 路径"
+    ok = abs(detected_value - expected_value) < 0.01 and bool(behavior["confirmed"])
     
     if ok:
         details["message"] = f"Level 1 通过: interlocking_depth={detected_value}mm"
@@ -645,8 +673,10 @@ def parse_interlocking_boundary_avoidance(
         "detection_method": "Level 1 (配置对比)",
     }
     
-    # 浮点数比较，容差 0.01mm
-    ok = abs(detected_value - expected_value) < 0.01
+    behavior = _multi_material_metrics(gcode_path)
+    details["multi_material_behavior"] = behavior
+    details["detection_method"] = "配置值 + 多工具边界互锁路径"
+    ok = abs(detected_value - expected_value) < 0.01 and bool(behavior["confirmed"])
     
     if ok:
         details["message"] = f"Level 1 通过: interlocking_boundary_avoidance={detected_value}mm"
@@ -785,7 +815,9 @@ def parse_mmu_segmented_region_max_width(
     details["detection_method"] = "Level 2 (配置对比 + 特征检测)"
     details["detected_value"] = detected_value
 
-    ok = abs(detected_value - expected_value) < 0.01
+    behavior = _multi_material_metrics(gcode_path)
+    details["multi_material_behavior"] = behavior
+    ok = abs(detected_value - expected_value) < 0.01 and bool(behavior["confirmed"])
 
     # 附加消息：如果配置启用但特征未被确认，作为警告输出（不改变 ok 判定以保持兼容性）
     if ok:

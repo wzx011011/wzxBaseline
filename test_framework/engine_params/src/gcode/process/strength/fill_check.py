@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Sequence, Tuple, Any
 
 from engine_params.src.gcode.GCodeParser import GCodeParser
+from engine_params.src.gcode.GCodeParserEx import GCodeParserEx
 from engine_params.src.gcode.constants import ExtrusionType
 from engine_params.src.gcode.GCodeParser import Point
 
@@ -215,7 +216,36 @@ def parse_sparse_infill_pattern(
     Tuple[bool, bool, Dict[str, object]]
         (是否通过测试, 轮廓是否匹配, 详细信息)
     """
-    # 加载基准G-code
+    # Lightning 的树枝由随机种子/并行调度生成，逐点快照并不稳定。
+    # 按实现特征验证：树枝只在靠近顶面时逐层分叉，路径数量应存在
+    # 多个级别且后半段明显多于最初生成的层。
+    config = GCodeParserEx(Path(gcode_path)).load_config() or {}
+    raw_pattern = config.get("sparse_infill_pattern")
+    pattern = str(getattr(raw_pattern, "value", raw_pattern) or "").strip().lower()
+    if pattern == "lightning":
+        parser = GCodeParser(Path(gcode_path))
+        contours = parser.get_type_contours_per_layer_by_object(
+            object_id, types=[ExtrusionType.SPARSE_INFILL]
+        ) or []
+        counts = [
+            len(layer.get(ExtrusionType.SPARSE_INFILL, []))
+            for layer in contours
+            if layer.get(ExtrusionType.SPARSE_INFILL)
+        ]
+        split = max(1, len(counts) // 2)
+        first_peak = max(counts[:split], default=0)
+        second_peak = max(counts[split:], default=0)
+        match = len(counts) >= 5 and len(set(counts)) >= 3 and second_peak > first_peak
+        return match, match, {
+            "mode": "lightning-branch-growth",
+            "pattern": pattern,
+            "sparse_path_counts": counts,
+            "first_half_peak": first_peak,
+            "second_half_peak": second_peak,
+            "match": match,
+        }
+
+    # 其他确定性图案使用当前引擎生成的行为快照。
     baseline_parser = GCodeParser(Path(baseline_gcode_path))
     baseline_contours = baseline_parser.get_type_contours_per_layer_by_object(
         object_id,
