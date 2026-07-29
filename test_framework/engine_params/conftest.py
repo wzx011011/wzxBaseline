@@ -4,6 +4,7 @@ import os
 import re
 import shutil
 import itertools
+import zipfile
 from typing import Optional
 from pathlib import Path
 import time
@@ -569,7 +570,38 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
         "output": str(output_gcode)
     }, timeout=300)
     export_res = export_fut.result(timeout=export_timeout)
-    assert export_res.get("code") == 0, f"导出 G-code 失败：{export_res}"
+    if export_res.get("code") != 0 and export_res.get("error") == "warnings_dialog rejected":
+        # Unsupported/bridge behavior models intentionally produce slicing
+        # warnings.  Plain headless export opens a modal warning dialog, which
+        # cannot be confirmed by the serialized automation command queue.
+        # Exporting a G-code 3MF uses the same completed slice without that
+        # modal; extract its single plate G-code and continue with the normal
+        # behavioral assertion instead of skipping the test.
+        archive_path = output_gcode.with_name(output_gcode.name + ".3mf")
+        archive_path.unlink(missing_ok=True)
+        archive_fut = engine_injector.submit("export_gcode", {
+            "export_all": True,
+            "output": str(archive_path),
+        }, timeout=300)
+        archive_res = archive_fut.result(timeout=export_timeout)
+        assert archive_res.get("code") == 0, (
+            f"普通导出遇到切片警告，G-code 3MF 回退导出也失败："
+            f"plain={export_res}, archive={archive_res}"
+        )
+        wait_for_file_written(archive_path, timeout=wait_written, settle_time=settle_seconds)
+        with zipfile.ZipFile(archive_path) as archive:
+            candidates = [
+                name for name in archive.namelist()
+                if name.lower().endswith(".gcode") and not name.lower().endswith(".gcode.md5")
+            ]
+            preferred = next((name for name in candidates if name.lower() == "metadata/plate_1.gcode"), None)
+            member = preferred or (candidates[0] if len(candidates) == 1 else None)
+            assert member is not None, f"G-code 3MF 中无法唯一确定盘1 G-code：{candidates}"
+            with archive.open(member) as source, output_gcode.open("wb") as target:
+                shutil.copyfileobj(source, target)
+        print(f"[slice_and_export] warning-safe export extracted: {member}")
+    else:
+        assert export_res.get("code") == 0, f"导出 G-code 失败：{export_res}"
 
     # ---- 5) wait until the exported file is stable and readable ----
     #   - 事件驱动，无需忙等

@@ -378,6 +378,7 @@ ARCHETYPE_BY_PARAM = {
     **{key: "seam_mixed" for key in ("seam_slope_conditional", "scarf_angle_threshold")},
     "scarf_overhang_threshold": "seam_overhang",
     "min_width_top_surface": "top_widths",
+    "is_infill_first": "box",
     "only_one_wall_first_layer": "box",
     "detect_thin_wall": "thin_ribs",
     **{key: "overhang" for key in ("detect_overhang_wall", "overhang_reverse", "overhang_reverse_internal_only")},
@@ -458,6 +459,29 @@ def dependency_settings(parameter: str) -> dict[str, str]:
     return result
 
 
+def mark_process_overrides(settings: dict[str, object], keys: list[str]) -> None:
+    """Tell GUI project loading which process values must override the preset.
+
+    CrealityPrint CLI consumes every value from ``project_settings.config``,
+    while the GUI project loader reapplies the selected system preset and only
+    preserves process keys listed in the first
+    ``different_settings_to_system`` slot.  Generated behavioral projects must
+    therefore register both the parameter under test and all prerequisite
+    settings, otherwise GUI pytest and CLI validation slice different configs.
+    """
+    raw_slots = settings.get("different_settings_to_system")
+    slots = [str(value) for value in raw_slots] if isinstance(raw_slots, list) else ["", "", ""]
+    if not slots:
+        slots = ["", "", ""]
+
+    process_keys = [key for key in slots[0].split(";") if key]
+    for key in keys:
+        if key and key not in process_keys:
+            process_keys.append(key)
+    slots[0] = ";".join(process_keys)
+    settings["different_settings_to_system"] = slots
+
+
 def model_xml(mesh: Mesh, title: str) -> bytes:
     vertices = "\n".join(
         f'     <vertex x="{x:.6f}" y="{y:.6f}" z="{z:.6f}"/>' for x, y, z in mesh.vertices
@@ -503,9 +527,11 @@ def rewrite_project(path: Path, parameter: str, archetype: str) -> None:
             legacy_start_heights = {"0.5": "0.1", "1.0": "0.15", "1": "0.15"}
             raw = str(settings.get(parameter))
             settings[parameter] = legacy_start_heights.get(raw, raw)
-        for key, value in dependency_settings(parameter).items():
+        dependencies = dependency_settings(parameter)
+        for key, value in dependencies.items():
             if key != parameter:
                 settings[key] = value
+        mark_process_overrides(settings, [parameter, *dependencies])
         replacements[PROJECT_SETTINGS] = (json.dumps(settings, ensure_ascii=False, indent=2) + "\n").encode("utf-8")
         if MODEL_SETTINGS in source.namelist():
             model_settings = source.read(MODEL_SETTINGS).decode("utf-8-sig")
@@ -548,10 +574,18 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--apply", action="store_true", help="rewrite the 3MF projects")
     parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[3])
+    parser.add_argument(
+        "--parameter",
+        action="append",
+        dest="parameters",
+        help="limit rewriting to one parameter; may be supplied more than once",
+    )
     args = parser.parse_args()
 
     count = 0
     for parameter, archetype, path in iter_projects(args.repo):
+        if args.parameters and parameter not in args.parameters:
+            continue
         if not path.exists():
             raise FileNotFoundError(path)
         print(f"{parameter:45s} {archetype:20s} {path.name}")

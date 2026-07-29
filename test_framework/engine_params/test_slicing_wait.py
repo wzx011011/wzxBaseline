@@ -1,6 +1,7 @@
 from concurrent.futures import Future
 from pathlib import Path
 from types import SimpleNamespace
+import zipfile
 
 import pytest
 
@@ -156,3 +157,40 @@ def test_slice_and_export_returns_missing_path_for_expected_empty_slice(tmp_path
     assert result == output
     assert not output.exists()
     assert "export_gcode" not in injector.commands
+
+
+def test_slice_and_export_falls_back_to_gcode_3mf_for_slice_warning(tmp_path: Path):
+    class WarningInjector(FakeInjector):
+        def submit(self, command, payload, **kwargs):
+            if command != "export_gcode":
+                return super().submit(command, payload, **kwargs)
+            self.commands.append(command)
+            if not payload.get("export_all"):
+                return _completed_future({"code": 3, "error": "warnings_dialog rejected", "payload": ""})
+            archive_path = Path(payload["output"])
+            with zipfile.ZipFile(archive_path, "w") as archive:
+                archive.writestr("Metadata/plate_1.gcode", "; warning-safe G-code\nG1 X2 Y2\n")
+            return _completed_future({"code": 0, "payload": {"output": str(archive_path)}})
+
+    model = tmp_path / "warning.3mf"
+    model.write_bytes(b"3mf")
+    output = tmp_path / "warning.gcode"
+    injector = WarningInjector(
+        [
+            {"state": "progress", "percentage": 50, "all_plate_finished": False},
+            {"state": "no_slicing", "percentage": 100, "all_plate_finished": True},
+        ]
+    )
+    request = SimpleNamespace(
+        param={
+            "input_3mf": str(model),
+            "output_gcode": str(output),
+            "timeouts": {"slice": 1, "poll": 0, "stall": 0, "wait": 1, "settle": 0.01},
+        }
+    )
+
+    result = slice_and_export.__wrapped__(request, injector, lambda: output)
+
+    assert result == output
+    assert output.read_text(encoding="utf-8").startswith("; warning-safe G-code")
+    assert injector.commands.count("export_gcode") == 2
