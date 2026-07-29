@@ -146,7 +146,12 @@ def test_enable_arc_fitting(
 # ================== slice_closing_radius ==================
 @pytest.mark.engine_params
 def test_slice_closing_radius(slice_and_export: Path, expected_slice_closing_radius: float):
-    """测试 slice_closing_radius 参数"""
+    """验证切片轮廓的闭缝半径。
+
+    C3DSlicer 将该值传给 ``PrintObjectSlice`` 的 closing operation；规划检查窄缝内轮廓，
+    小于闭合尺度的缝应消失，大于阈值的缝应保留，并与零半径基准比较。
+    3MF 在同一薄板上布置 0.04/0.08/0.12 mm 三条贯穿狭缝以跨越测试值。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -157,7 +162,12 @@ def test_slice_closing_radius(slice_and_export: Path, expected_slice_closing_rad
 # ================== resolution ==================
 @pytest.mark.engine_params
 def test_resolution(slice_and_export: Path, expected_resolution: float):
-    """测试 resolution 参数"""
+    """验证轮廓简化分辨率。
+
+    C3DSlicer 在 Layer/LayerRegion 中按该容差执行多边形 simplify；规划统计曲线外墙的
+    顶点数和相对高精度基准的最大偏差，容差增大时段数减少且几何误差不超过设置量级。
+    3MF 使用高细分正弦波边和圆弧边，避免普通立方体无法触发简化。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -168,7 +178,12 @@ def test_resolution(slice_and_export: Path, expected_resolution: float):
 # ================== hole_to_polyhole ==================
 @pytest.mark.engine_params
 def test_hole_to_polyhole(slice_and_export: Path, expected_hole_to_polyhole: bool):
-    """测试 hole_to_polyhole 参数"""
+    """验证圆孔是否转换为尺寸补偿后的规则多边形孔。
+
+    C3DSlicer ``_transform_hole_to_polyholes`` 会识别多于 8 点的近圆孔并外扩多边形半径；
+    规划比较孔内墙的边数、等边性和内切直径，开启时应形成稳定规则多边形且目标孔径更准。
+    3MF 使用高分段的 6/10 mm 竖直圆孔，孔壁高度不少于 5 层。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -179,7 +194,12 @@ def test_hole_to_polyhole(slice_and_export: Path, expected_hole_to_polyhole: boo
 # ================== hole_to_polyhole_threshold ==================
 @pytest.mark.engine_params
 def test_hole_to_polyhole_threshold(slice_and_export: Path, expected_hole_to_polyhole_threshold: float):
-    """测试 hole_to_polyhole_threshold 参数"""
+    """验证圆孔识别的允许径向变化阈值。
+
+    C3DSlicer 同时比较顶点半径和边中点半径的最大变化；规划在开启 polyhole 时检查
+    轻微椭圆/扰动孔是否被转换，变化小于阈值者转换、超过者保持原轮廓。
+    3MF 并列放置真圆、轻微椭圆和波纹孔，径向误差跨越 0.01/0.02 mm。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -190,7 +210,12 @@ def test_hole_to_polyhole_threshold(slice_and_export: Path, expected_hole_to_pol
 # ================== hole_to_polyhole_twisted ==================
 @pytest.mark.engine_params
 def test_hole_to_polyhole_twisted(slice_and_export: Path, expected_hole_to_polyhole_twisted: bool):
-    """测试 hole_to_polyhole_twisted 参数"""
+    """验证相邻层多边形孔是否交替旋转。
+
+    C3DSlicer 在 polyhole 转换时携带 twist 标记；规划提取每层孔内墙顶点方位，开启时
+    相邻层规则多边形相位交替，关闭时相位保持一致。
+    3MF 使用高分段直圆孔柱，固定层高并保证至少 12 个连续孔壁层。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -201,7 +226,12 @@ def test_hole_to_polyhole_twisted(slice_and_export: Path, expected_hole_to_polyh
 # ================== precise_outer_wall ==================
 @pytest.mark.engine_params
 def test_precise_outer_wall(slice_and_export: Path, expected_precise_outer_wall: bool):
-    """测试 precise_outer_wall 参数"""
+    """验证内墙先打印时的外墙定位补偿。
+
+    C3DSlicer 仅在 ``wall_sequence=InnerOuter`` 时用实际 width 而非 spacing 修正外墙偏移；
+    规划测量外墙与最近内墙的中心距；开启时应接近两种线宽之和的一半，关闭时
+    使用压扁后的 spacing，中心距更小。3MF 使用 24 mm 方盒和明显不同的内外墙线宽。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -212,7 +242,12 @@ def test_precise_outer_wall(slice_and_export: Path, expected_precise_outer_wall:
 # ================== precise_z_height ==================
 @pytest.mark.engine_params
 def test_precise_z_height(slice_and_export: Path, expected_precise_z_height: float):
-    """测试 precise_z_height 参数"""
+    """验证末层 Z 是否精确贴合模型高度。
+
+    C3DSlicer 将该开关传给 ``generate_object_layers``；规划解析所有打印层 Z，开启时
+    最后一层应精确到模型顶高且允许调整末层层高，关闭时保持名义层高步进。
+    3MF 使用高度不能被层高整除的方柱（例如 10.13 mm），避免两种模式结果相同。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

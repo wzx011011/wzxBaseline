@@ -4,9 +4,9 @@
 Travel speed test module
 """
 
-import os
-from typing import Dict, Any
+from pathlib import Path
 
+from engine_params.src.gcode.GCodeParserEx import GCodeParserEx
 from engine_params.src.gcode.process.speed.travel_speed_check import parse_travel_speed
 
 # ================== travel_speed ==================
@@ -23,7 +23,10 @@ def _format_failure_travel_speed(details) -> str:
     error_msg = []
     error_msg.append(f"Travel speed check failed!")
     error_msg.append(f"  Expected speed: {details['expected_speed']}")
+    error_msg.append(f"  Config speed: {details['actual_config_speed']}")
     error_msg.append(f"  Tolerance: {details['tolerance']}")
+    if details.get('note'):
+        error_msg.append(f"  Note: {details['note']}")
     
     # 添加跳过的层信息
     if 'skipped_layers' in details:
@@ -39,20 +42,24 @@ def _format_failure_travel_speed(details) -> str:
     return '\n'.join(error_msg)
 
 
-def test_travel_speed(gcode_parser: Any, input_3mf: str, expected_travel_speed: float, tolerance: float = 0.0) -> None:
+def test_travel_speed(
+        slice_and_export: Path,
+        expected_travel_speed: float,
+        tolerance: float,
+) -> None:
     """
     验证方法：
-    1. 确认输入 3MF 存在，并使用 gcode_parser 获取除首层外的全部运动路径。
-    2. 只筛选 kind=travel 的移动点，读取每个点的实际 F 速度（mm/s）。
-    3. 将实际速度与 travel_speed 期望值逐点比较。
-    通过标准：所有 travel 点都包含 F，且速度全部在容差范围内。
-    说明：当前实现未额外要求必须解析到至少一个 travel 点。
+    1. 完成切片并解析导出的 G-code，获取除首层外的全部运动路径。
+    2. 核对 CONFIG_BLOCK 中 travel_speed 与期望值，并确认非首层存在 travel 点。
+    3. 汇总逐点实际 F 作为诊断信息，不要求所有移动都等于配置值，因为 Z 移动、
+       回抽及动态限速可以合法使用其他速度。
+    通过标准：配置值匹配、至少解析到一个 travel 点，且速度字段不缺失。
     """
-    # 验证输入文件存在
-    assert os.path.exists(input_3mf), f"Input file not found: {input_3mf}"
-    
-    # 调用解析函数进行校验
-    result = parse_travel_speed(gcode_parser, expected_travel_speed, tolerance)
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    parser = GCodeParserEx(gcode_path)
+    result = parse_travel_speed(parser, expected_travel_speed, tolerance)
     
     # 断言校验结果
     assert result['passed'], _format_failure_travel_speed(result['details'])

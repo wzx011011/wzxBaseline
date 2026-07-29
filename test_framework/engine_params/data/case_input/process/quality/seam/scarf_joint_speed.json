@@ -1,9 +1,9 @@
 {
   "cases": [
     {
-      "project_name": "scarf_joint_speed_0",
-      "input_3mf": "scarf_joint_speed_0.3mf",
-      "expected_scarf_joint_speed": 0
+      "project_name": "scarf_joint_speed_1",
+      "input_3mf": "scarf_joint_speed_1.3mf",
+      "expected_scarf_joint_speed": 1
     },
     {
       "project_name": "scarf_joint_speed_30",

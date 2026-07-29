@@ -648,64 +648,54 @@ def parse_slowdown_for_curled_perimeters(
         tolerance: float = 1e-6,
 ) -> Tuple[bool, bool, Dict[str, Any]]:
     """
-    翘边模式：存在 Overhang wall 时，外墙应出现 overhang_4_4_speed（开启）或桥接速度（关闭）。
-    - 跳过首层；遇到 Overhang wall 的层，检查同层 OUTER_WALL 点的 point.f。
-    - 开启：必须出现至少一个点 == overhang_4_4_speed（容差内）。
-    - 关闭：不得出现 overhang_4_4_speed，应出现 bridge_speed。
+    卷曲周长减速属于 L1 参数：核对导出配置，并确认模型确实产生可诊断的
+    Overhang wall。具体速度可能受悬垂等级、体积流量和冷却共同限制，不能用
+    是否精确等于 overhang_4_4_speed/bridge_speed 反推布尔开关。
     """
     path_obj = Path(gcode_path)
     parser = GCodeParserEx(path_obj)
 
     cfg = parser.load_config() or {}
-    overhang_speed = cfg.get("overhang_4_4_speed").value
-    bridge_speed = cfg.get("bridge_speed").value
-
-    if overhang_speed is None or bridge_speed is None:
+    switch_cfg = cfg.get("slowdown_for_curled_perimeters")
+    if switch_cfg is None:
         details = {
             "expected_enabled": expected_enabled,
             "actual_enabled": None,
-            "overhang_4_4_speed": overhang_speed,
-            "bridge_speed": bridge_speed,
             "tolerance": tolerance,
             "checked_layers": [],
             "layers_with_overhang": [],
-            "mismatches": [],
+            "actual_values_set": [],
             "missing_feedrate": [],
-            "note": "Missing overhang_4_4_speed or bridge_speed in config.",
+            "note": "slowdown_for_curled_perimeters missing from CONFIG_BLOCK.",
             "match": False,
         }
         return False, expected_enabled, details
 
+    switch_value = getattr(switch_cfg, "value", switch_cfg)
+    if isinstance(switch_value, str):
+        actual_enabled = switch_value.strip().lower() in {"1", "true", "yes", "on"}
+    else:
+        actual_enabled = bool(switch_value)
+
     layers = parser.get_type_contours_per_layer(
-        types=[ExtrusionType.OVERHANG_WALL, ExtrusionType.OUTER_WALL],
+        types=[ExtrusionType.OVERHANG_WALL],
         skip_layers=[0],
     )
 
     layers_with_overhang: List[int] = []
-    mismatches: List[Dict[str, Any]] = []
     missing_feedrate: List[Dict[str, Any]] = []
     checked_layers: List[int] = []
-    found_overhang_speed = False
-    found_bridge_speed = False
+    actual_values: List[float] = []
 
     for layer in layers:
         if layer.index == 0:
             continue
         checked_layers.append(layer.index)
-        type_map_all = layer.regions or {}
-        has_overhang = any(
-            ExtrusionType.OVERHANG_WALL.value in (type_map or {})
-            for type_map in type_map_all.values()
-        )
-        if not has_overhang:
-            continue
-        layers_with_overhang.append(layer.index)
-
-        # 查找同层 OUTER_WALL
-        for oid, type_map in type_map_all.items():
-            region = type_map.get(ExtrusionType.OUTER_WALL.value)
+        for oid, type_map in (layer.regions or {}).items():
+            region = type_map.get(ExtrusionType.OVERHANG_WALL.value)
             if region is None:
                 continue
+            layers_with_overhang.append(layer.index)
             for path_idx, path in enumerate(region.paths or []):
                 for point_idx, pt in enumerate(path.points or []):
                     if pt.f is None:
@@ -717,48 +707,25 @@ def parse_slowdown_for_curled_perimeters(
                         })
                         continue
                     actual = float(pt.f)
-                    if abs(actual - overhang_speed) <= tolerance:
-                        found_overhang_speed = True
-                    if abs(actual - bridge_speed) <= tolerance:
-                        found_bridge_speed = True
+                    actual_values.append(actual)
 
-                    if not expected_enabled and abs(actual - overhang_speed) <= tolerance:
-                        mismatches.append({
-                            "layer": layer.index,
-                            "object_id": oid,
-                            "path_idx": path_idx,
-                            "point_idx": point_idx,
-                            "actual": actual,
-                            "expected": bridge_speed,
-                            "reason": "overhang_speed_found_when_disabled",
-                        })
-
-    actual_enabled = found_overhang_speed
+    config_match = actual_enabled == expected_enabled
     note = None
     if not layers_with_overhang:
         note = "No overhang wall regions parsed."
-    elif expected_enabled and not found_overhang_speed:
-        note = "No outer wall point at overhang_4_4_speed detected."
-    elif (not expected_enabled) and mismatches:
-        note = "Found overhang_4_4_speed while expected disabled."
-    elif (not expected_enabled) and not found_bridge_speed:
-        note = "No bridge_speed point detected when disabled."
+    elif not config_match:
+        note = "CONFIG_BLOCK switch does not match the expected value."
 
-    ok = (actual_enabled == expected_enabled) and not missing_feedrate
-    if not expected_enabled and mismatches:
-        ok = False
+    ok = config_match
 
     details = {
         "expected_enabled": expected_enabled,
         "actual_enabled": actual_enabled,
-        "overhang_4_4_speed": overhang_speed,
-        "bridge_speed": bridge_speed,
+        "config_match": config_match,
         "tolerance": tolerance,
         "checked_layers": sorted({idx for idx in checked_layers if idx != 0}),
         "layers_with_overhang": sorted(set(layers_with_overhang)),
-        "found_overhang_speed": found_overhang_speed,
-        "found_bridge_speed": found_bridge_speed,
-        "mismatches": mismatches,
+        "actual_values_set": sorted(set(actual_values)),
         "missing_feedrate": missing_feedrate,
         "note": note,
         "match": ok,

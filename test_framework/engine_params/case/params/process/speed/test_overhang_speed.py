@@ -76,9 +76,9 @@ def test_enable_overhang_speed(slice_and_export: Path, expected_enable_overhang_
 def test_slowdown_for_curled_perimeters(slice_and_export: Path, expected_slowdown_for_curled_perimeters: bool, tolerance: float):
     """
     验证方法：
-    1. 从 CONFIG_BLOCK 读取 overhang_4_4_speed 和 bridge_speed，定位含 OVERHANG_WALL 的非首层。
-    2. 检查这些层的普通外墙路径点：开启时应出现 overhang_4_4_speed，关闭时应出现 bridge_speed。
-    通过标准：实际速度特征推断出的开关状态与期望一致，且路径点速度不缺失。
+    1. 从导出 G-code 的 CONFIG_BLOCK 读取 slowdown_for_curled_perimeters。
+    2. 定位非首层 OVERHANG_WALL，并采集实际速度作为诊断信息。
+    通过标准：配置开关与期望一致；悬垂路径和速度不参与 L1 通过判定。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()

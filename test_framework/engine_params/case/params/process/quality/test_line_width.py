@@ -165,7 +165,12 @@ def test_support_line_width(slice_and_export: Path,
 # ================== line_width ==================
 @pytest.mark.engine_params
 def test_line_width(slice_and_export: Path, expected_line_width: float):
-    """测试 line_width 参数 - L1: CONFIG_BLOCK"""
+    """验证默认线宽对未单独覆盖的挤出角色生效。
+
+    C3DSlicer 将 ``line_width`` 作为各 role 专用线宽的回退值；规划选择普通内墙长直段，
+    统计引擎生成的 ``;WIDTH``，并记录 ``E/XY长度`` 作为实际挤出行为交叉证据。
+    3MF 使用三墙厚方盒，清空 inner_wall_line_width 等专用覆盖项。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -176,7 +181,12 @@ def test_line_width(slice_and_export: Path, expected_line_width: float):
 # ================== internal_solid_infill_line_width ==================
 @pytest.mark.engine_params
 def test_internal_solid_infill_line_width(slice_and_export: Path, expected_internal_solid_infill_line_width: float):
-    """测试 internal_solid_infill_line_width 参数 - L1: CONFIG_BLOCK"""
+    """验证内部实心填充专用线宽。
+
+    C3DSlicer 为 Internal Solid Infill role 单独构造 flow；规划只解析非首层该 role，
+    以长直段的 ``;WIDTH`` 中位数和命中长度占比验证，并记录 ``E/路径长度``。
+    3MF 使用带封闭内部台阶的实体，稳定产生多层内部实心填充而不是仅有顶/底面。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

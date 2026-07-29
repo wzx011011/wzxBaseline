@@ -7,6 +7,7 @@ from typing import Dict, Iterable, List, Optional, Sequence, Tuple, Union
 
 from engine_params.src.gcode.GCodeParser import GCodeParser, Point
 from engine_params.src.gcode.constants import ExtrusionType
+from engine_params.src.gcode.process.quality.behavior import BehaviorGCode, median_e_per_mm, median_width
 
 
 def compute_line_width(E: float, L: float, h: float, d: float = 1.75, flow_ratio: float = 0.95) -> float:
@@ -422,34 +423,17 @@ def parse_initial_layer_line_width(
     )
 
 
-# ============= 新增 L1 校验函数 =============
+# ============= behavior checks for former L1 cases =============
 
 def parse_line_width(
     gcode_path: Path | str,
     expected_value: float,
     tolerance: float = 0.01
 ) -> Tuple[bool, Optional[float], Dict[str, object]]:
-    """检测默认线宽参数 (line_width) - L1: CONFIG_BLOCK"""
-    parser = GCodeParser(str(gcode_path))
-    config = parser.load_config()
-    
-    raw_value = config.get("line_width")
-    if raw_value is None:
-        return (False, None, {"error": "未在 G-code 配置中找到 line_width 参数"})
-    
-    try:
-        actual_value = float(raw_value)
-        ok = abs(actual_value - expected_value) <= tolerance
-    except (ValueError, TypeError) as e:
-        return (False, None, {"error": f"无法解析 line_width 值: {raw_value}", "exception": str(e)})
-    
-    details = {
-        "config_value": actual_value,
-        "expected": expected_value,
-        "tolerance": tolerance,
-        "method": "L1 - CONFIG_BLOCK"
-    }
-    return (ok, actual_value, details)
+    """Measure stable generated Inner-wall WIDTH outside the first layer."""
+    return _parse_generated_role_width(
+        gcode_path, expected_value, ExtrusionType.INNER_WALL.value, tolerance
+    )
 
 
 def parse_internal_solid_infill_line_width(
@@ -457,27 +441,38 @@ def parse_internal_solid_infill_line_width(
     expected_value: float,
     tolerance: float = 0.01
 ) -> Tuple[bool, Optional[float], Dict[str, object]]:
-    """检测内部实心填充线宽参数 (internal_solid_infill_line_width) - L1: CONFIG_BLOCK"""
-    parser = GCodeParser(str(gcode_path))
-    config = parser.load_config()
-    
-    raw_value = config.get("internal_solid_infill_line_width")
-    if raw_value is None:
-        return (False, None, {"error": "未在 G-code 配置中找到 internal_solid_infill_line_width 参数"})
-    
-    try:
-        actual_value = float(raw_value)
-        ok = abs(actual_value - expected_value) <= tolerance
-    except (ValueError, TypeError) as e:
-        return (False, None, {"error": f"无法解析 internal_solid_infill_line_width 值: {raw_value}", "exception": str(e)})
-    
-    details = {
-        "config_value": actual_value,
-        "expected": expected_value,
-        "tolerance": tolerance,
-        "method": "L1 - CONFIG_BLOCK"
+    """Measure stable generated Internal-solid-infill WIDTH."""
+    return _parse_generated_role_width(
+        gcode_path, expected_value, ExtrusionType.INTERNAL_SOLID_INFILL.value, tolerance
+    )
+
+
+def _parse_generated_role_width(
+    gcode_path: Path | str,
+    expected_value: float,
+    role: str,
+    tolerance: float,
+) -> Tuple[bool, Optional[float], Dict[str, object]]:
+    behavior = BehaviorGCode(gcode_path)
+    moves = [
+        move for move in behavior.extrusion_moves(role)
+        if move.layer > 0 and move.xy_length >= 2.0 and move.width is not None
+    ]
+    actual = median_width(moves, min_length=2.0)
+    allowed = max(tolerance, 0.02)
+    total_length = sum(move.xy_length for move in moves)
+    matching_length = sum(
+        move.xy_length for move in moves
+        if move.width is not None and abs(move.width - expected_value) <= allowed
+    )
+    matching_ratio = matching_length / total_length if total_length > 0 else 0.0
+    ok = actual is not None and abs(actual - expected_value) <= allowed and matching_ratio >= 0.65
+    return ok, actual, {
+        "method": f"L2 - Generated {role} WIDTH and E/XY behavior",
+        "role": role, "long_segments": len(moves), "actual_median_width": actual,
+        "expected_width": expected_value, "matching_length_ratio": matching_ratio,
+        "median_e_per_mm": median_e_per_mm(moves), "tolerance": allowed,
     }
-    return (ok, actual_value, details)
 
 
 if __name__ == "__main__":

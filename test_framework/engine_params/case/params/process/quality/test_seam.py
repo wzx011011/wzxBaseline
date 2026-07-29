@@ -30,7 +30,12 @@ from engine_params.src.gcode.process.quality.seam_check import (
 # ================== seam_position ==================
 @pytest.mark.engine_params
 def test_seam_position(slice_and_export: Path, expected_seam_position: str):
-    """测试接缝位置参数 (aligned/nearest/random)"""
+    """验证外墙接缝的空间分布。
+
+    C3DSlicer ``SeamPlacer.cpp`` 按 aligned/nearest/random 选择闭环起点；规划提取每层
+    Outer Wall 首挤出点，aligned 应沿 Z 聚集、nearest 应靠近上一段终点、random 应分散。
+    3MF 使用无尖角圆柱并打印足够层数，避免几何角点替算法强制选点。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -41,7 +46,12 @@ def test_seam_position(slice_and_export: Path, expected_seam_position: str):
 # ================== seam_gap ==================
 @pytest.mark.engine_params
 def test_seam_gap(slice_and_export: Path, expected_seam_gap: float):
-    """测试接缝间隙参数"""
+    """验证闭环末端被裁掉的接缝间隙长度。
+
+    C3DSlicer 在 ``ExtrusionEntity.cpp`` 从闭环最后一段移除 ``seam_gap``；规划计算
+    外墙闭环首尾点沿轮廓的缺口长度，扣除 G-code 分辨率后应等于绝对值或喷嘴百分比换算值。
+    3MF 使用大直径圆柱，使接缝所在末段长度始终大于最大测试间隙。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -52,7 +62,12 @@ def test_seam_gap(slice_and_export: Path, expected_seam_gap: float):
 # ================== staggered_inner_seams ==================
 @pytest.mark.engine_params
 def test_staggered_inner_seams(slice_and_export: Path, expected_staggered: bool):
-    """测试交错内墙接缝参数"""
+    """验证内墙接缝相对外墙接缝的交错。
+
+    C3DSlicer 在 ``SeamPlacer.cpp`` 对 inner loop 按环长偏移起点；规划逐层比较同一岛
+    外墙和各内墙首点的弧长位置，开启时不应重合且各圈有规律错位，关闭时应基本对齐。
+    3MF 使用至少四圈墙的大圆筒，保证每个闭环都有清晰接缝。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -64,7 +79,12 @@ def test_staggered_inner_seams(slice_and_export: Path, expected_staggered: bool)
 @pytest.mark.engine_params
 @pytest.mark.xfail(reason="seam_slope_type parameter may not be supported by current slicer version")
 def test_seam_slope_type(slice_and_export: Path, expected_slope_type: str):
-    """测试接缝斜坡类型参数"""
+    """验证普通接缝与 scarf 接缝斜坡模式。
+
+    C3DSlicer 在 ``GCode.cpp`` 仅当类型非 none 时创建 ``ExtrusionLoopSloped``；规划检查
+    接缝邻域 Z/E 是否沿路径渐变，none 不应有渐变，scarf 模式应有连续升降坡。
+    3MF 使用光滑大圆柱，关闭 conditional 并固定接缝位置以稳定触发斜坡。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -75,7 +95,12 @@ def test_seam_slope_type(slice_and_export: Path, expected_slope_type: str):
 # ================== scarf_joint_flow_ratio ==================
 @pytest.mark.engine_params
 def test_scarf_joint_flow_ratio(slice_and_export: Path, expected_flow_ratio: float):
-    """测试斜接流量比参数"""
+    """验证 scarf 接缝重叠段的流量倍率。
+
+    C3DSlicer 在斜坡段将 ``mm3_per_mm`` 乘以该倍率；规划对同速同线宽的 scarf 段统计
+    ``E/XY长度``，相对普通外墙或 1.0 基准的比率应等于期望值。
+    3MF 使用大圆柱并强制启用整圈 scarf，提供足够长的稳定采样段。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -107,7 +132,12 @@ def test_wipe_speed(slice_and_export: Path, expected_has_wipe: bool) -> None:
 # ================== seam_slope_conditional ==================
 @pytest.mark.engine_params
 def test_seam_slope_conditional(slice_and_export: Path, expected_seam_slope_conditional: bool):
-    """测试 seam_slope_conditional 参数"""
+    """验证 scarf 是否受轮廓平滑度和悬垂条件限制。
+
+    C3DSlicer 开启 conditional 后调用 ``loop.is_smooth``，并可叠加 overhang threshold；
+    规划比较圆形光滑岛和尖角星形岛的斜坡段，开启时只在满足条件的岛出现。
+    3MF 同盘放置圆柱、方柱和带悬垂圆柱，形成正反样本。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -118,7 +148,12 @@ def test_seam_slope_conditional(slice_and_export: Path, expected_seam_slope_cond
 # ================== seam_slope_entire_loop ==================
 @pytest.mark.engine_params
 def test_seam_slope_entire_loop(slice_and_export: Path, expected_seam_slope_entire_loop: bool):
-    """测试 seam_slope_entire_loop 参数"""
+    """验证 scarf 斜坡覆盖整圈还是最小长度。
+
+    C3DSlicer 开启时令 slope_min_length 等于完整 loop_length；规划统计发生 Z/E 渐变的
+    外墙累计弧长，开启时接近整圈，关闭时接近 seam_slope_min_length。
+    3MF 使用周长远大于最小斜坡长度的圆柱以放大差异。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -129,7 +164,12 @@ def test_seam_slope_entire_loop(slice_and_export: Path, expected_seam_slope_enti
 # ================== seam_slope_inner_walls ==================
 @pytest.mark.engine_params
 def test_seam_slope_inner_walls(slice_and_export: Path, expected_seam_slope_inner_walls: bool):
-    """测试 seam_slope_inner_walls 参数"""
+    """验证 scarf 是否扩展到内墙。
+
+    C3DSlicer 的 enable 条件默认只含 External Perimeter，开关开启后加入 Perimeter；
+    规划分别扫描 Outer/Inner Wall 的 Z/E 渐变，外墙始终有 scarf，内墙仅开启时出现。
+    3MF 使用四墙厚圆筒并启用稳定的非条件 scarf。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -140,7 +180,11 @@ def test_seam_slope_inner_walls(slice_and_export: Path, expected_seam_slope_inne
 # ================== seam_slope_min_length ==================
 @pytest.mark.engine_params
 def test_seam_slope_min_length(slice_and_export: Path, expected_seam_slope_min_length: float):
-    """测试 seam_slope_min_length 参数"""
+    """验证局部 scarf 斜坡的目标弧长。
+
+    C3DSlicer 取 ``min(configured_length, loop_length)``；规划沿外墙累计斜坡段 XY 长度，
+    应等于期望值，超过周长时应钳制为整圈。3MF 使用周长已知的大圆柱并关闭 entire_loop。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -151,7 +195,12 @@ def test_seam_slope_min_length(slice_and_export: Path, expected_seam_slope_min_l
 # ================== seam_slope_start_height ==================
 @pytest.mark.engine_params
 def test_seam_slope_start_height(slice_and_export: Path, expected_seam_slope_start_height: float):
-    """测试 seam_slope_start_height 参数"""
+    """验证 scarf 起点相对本层的 Z 高度。
+
+    C3DSlicer 对绝对值用 ``value/layer_height``、百分比用 ``value/100`` 计算起始比例；
+    规划读取斜坡第一挤出点 Z，与上一层 Z 的差应等于期望起始高度并在斜坡内渐升。
+    3MF 使用固定层高圆柱，确保 0/0.5/1.0 的设置均能产生可区分轨迹。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -162,7 +211,11 @@ def test_seam_slope_start_height(slice_and_export: Path, expected_seam_slope_sta
 # ================== seam_slope_steps ==================
 @pytest.mark.engine_params
 def test_seam_slope_steps(slice_and_export: Path, expected_seam_slope_steps: float):
-    """测试 seam_slope_steps 参数"""
+    """验证 scarf 斜坡离散分段数。
+
+    C3DSlicer 使用 ``seam_slope_steps`` 设定最少细分数并据此限制最大段长；规划在
+    固定斜坡弧长内统计不同 Z 级数，验证 16 边形原始分段经最少步数约束后的结果。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -173,7 +226,12 @@ def test_seam_slope_steps(slice_and_export: Path, expected_seam_slope_steps: flo
 # ================== scarf_angle_threshold ==================
 @pytest.mark.engine_params
 def test_scarf_angle_threshold(slice_and_export: Path, expected_scarf_angle_threshold: float):
-    """测试 scarf_angle_threshold 参数"""
+    """验证 conditional scarf 的轮廓转角阈值。
+
+    C3DSlicer 将角度转为弧度传给 ``loop.is_smooth``；规划在多个已知转角的闭环上检测
+    scarf 是否生成，低于平滑阈值的轮廓通过、尖锐轮廓被拒绝。
+    3MF 同盘放置圆形、30°转折和60°转折轮廓，并开启 conditional。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -184,7 +242,12 @@ def test_scarf_angle_threshold(slice_and_export: Path, expected_scarf_angle_thre
 # ================== scarf_joint_speed ==================
 @pytest.mark.engine_params
 def test_scarf_joint_speed(slice_and_export: Path, expected_scarf_joint_speed: float):
-    """测试 scarf_joint_speed 参数"""
+    """验证 scarf 段速度上限。
+
+    C3DSlicer 对内外墙取 ``min(原墙速, scarf_joint_speed)``；规划解析 scarf 渐变段 F 值，
+    设置低于墙速时应被限速，0 或高于墙速时按实现回退/钳制为原墙速。
+    3MF 使用长圆周和固定墙速，保证存在恒速 scarf 段。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -195,7 +258,12 @@ def test_scarf_joint_speed(slice_and_export: Path, expected_scarf_joint_speed: f
 # ================== scarf_overhang_threshold ==================
 @pytest.mark.engine_params
 def test_scarf_overhang_threshold(slice_and_export: Path, expected_scarf_overhang_threshold: float):
-    """测试 scarf_overhang_threshold 参数"""
+    """验证悬垂接缝启用 scarf 的支撑宽度阈值。
+
+    C3DSlicer 将该百分比乘线宽，并要求 seam_overhang 小于结果；规划在不同悬空宽度的
+    外墙接缝处判断是否产生斜坡，跨越阈值时结果应翻转。
+    3MF 使用三组逐级横向错层圆柱，固定接缝落在悬垂方向并开启 conditional。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

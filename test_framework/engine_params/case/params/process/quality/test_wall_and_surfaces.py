@@ -128,7 +128,12 @@ def test_bottom_solid_infill_flow_ratio(
 # ================== min_width_top_surface ==================
 @pytest.mark.engine_params
 def test_min_width_top_surface(slice_and_export: Path, expected_min_width_top_surface: str):
-    """测试 min_width_top_surface 参数"""
+    """验证顶面识别的最小暴露宽度。
+
+    C3DSlicer ``PerimeterGenerator.cpp`` 先按该宽度腐蚀上层投影，再确定 top surface；
+    规划统计不同宽度台阶上 Top Surface 与外墙路径，窄于阈值的条带不应按顶面处理。
+    3MF 使用宽度渐变的阶梯顶面，条带宽度跨越线宽百分比换算后的阈值。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -139,7 +144,12 @@ def test_min_width_top_surface(slice_and_export: Path, expected_min_width_top_su
 # ================== only_one_wall_first_layer ==================
 @pytest.mark.engine_params
 def test_only_one_wall_first_layer(slice_and_export: Path, expected_only_one_wall_first_layer: bool):
-    """测试 only_one_wall_first_layer 参数"""
+    """验证首层强制单墙且不影响后续层。
+
+    C3DSlicer 在 classic 与 Arachne 分支都只对 layer_id=0 将额外 loop 数归零；规划按层
+    统计同一岛的墙圈数，开启时首层为 1、第二层恢复 wall_loops，关闭时两层均为配置圈数。
+    3MF 使用壁厚足够容纳四圈墙的直方柱，避免薄壁自动减墙。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -150,14 +160,14 @@ def test_only_one_wall_first_layer(slice_and_export: Path, expected_only_one_wal
 # ================== detect_thin_wall ==================
 @pytest.mark.engine_params
 def test_detect_thin_wall(slice_and_export: Path, expected_detect_thin_wall: bool):
-    """测试 detect_thin_wall 参数"""
+    """验证 classic 墙生成器对窄特征的保留。
+
+    C3DSlicer 在剩余区域仅当 detect_thin_wall 开启时生成 thin wall；规划检查多条不同宽度
+    薄肋的 Outer Wall 挤出，开启时可打印宽度的肋应保留，关闭时相应路径消失。
+    3MF 使用 0.25/0.35/0.45 mm 独立薄肋并固定 classic wall generator。
+    """
     gcode_path: Path = slice_and_export
-    #assert gcode_path.exists()
-    if not expected_detect_thin_wall :
-        if not gcode_path.exists():
-            return
-        else:
-            assert False, f"gcode文件存在，但expected_detect_thin_wall为False，无法测试detect_thin_wall参数"
+    assert gcode_path.exists()
 
     ok, actual, details = parse_detect_thin_wall(gcode_path, expected_detect_thin_wall)
     assert ok, f"detect_thin_wall expected {expected_detect_thin_wall}, actual {actual}, details: {details}"
@@ -166,7 +176,12 @@ def test_detect_thin_wall(slice_and_export: Path, expected_detect_thin_wall: boo
 # ================== detect_overhang_wall ==================
 @pytest.mark.engine_params
 def test_detect_overhang_wall(slice_and_export: Path, expected_detect_overhang_wall: bool):
-    """测试 detect_overhang_wall 参数"""
+    """验证悬垂墙角色识别。
+
+    C3DSlicer 将下层轮廓外扩半喷嘴后与当前墙求差来标记 overhang perimeter；规划统计
+    悬挑层 Overhang Wall 段长度，开启时应出现且使用悬垂属性，关闭时归为普通墙。
+    3MF 使用下窄上宽的半边悬挑台阶，另一半保持有支撑作为同层对照。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -177,7 +192,12 @@ def test_detect_overhang_wall(slice_and_export: Path, expected_detect_overhang_w
 # ================== overhang_reverse ==================
 @pytest.mark.engine_params
 def test_overhang_reverse(slice_and_export: Path, expected_overhang_reverse: bool):
-    """测试 overhang_reverse 参数"""
+    """验证悬垂墙的打印方向反转。
+
+    C3DSlicer 在 PerimeterGenerator 中按悬垂长度占比决定反转闭环方向；规划由 Outer Wall
+    路径有向面积判断 CW/CCW，开启且超过阈值时方向相对关闭组翻转。
+    3MF 使用大部分周长悬空的偏心上层，确保触发反转条件。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -188,7 +208,12 @@ def test_overhang_reverse(slice_and_export: Path, expected_overhang_reverse: boo
 # ================== overhang_reverse_internal_only ==================
 @pytest.mark.engine_params
 def test_overhang_reverse_internal_only(slice_and_export: Path, expected_overhang_reverse_internal_only: bool):
-    """测试 overhang_reverse_internal_only 参数"""
+    """验证悬垂反转是否只作用于内墙。
+
+    C3DSlicer 在 wall_direction=Auto 时用该开关限制反转对象；规划分别计算外墙和内墙
+    CW/CCW，开启时只内墙翻转，关闭时符合 overhang_reverse 的全墙策略。
+    3MF 使用至少三圈墙的偏心悬挑圆筒，并开启 detect_overhang_wall 与 overhang_reverse。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -199,7 +224,12 @@ def test_overhang_reverse_internal_only(slice_and_export: Path, expected_overhan
 # ================== overhang_reverse_threshold ==================
 @pytest.mark.engine_params
 def test_overhang_reverse_threshold(slice_and_export: Path, expected_overhang_reverse_threshold: str):
-    """测试 overhang_reverse_threshold 参数"""
+    """验证触发墙方向反转的悬垂占比阈值。
+
+    C3DSlicer 将百分比按 extrusion width 换算并参与悬垂判定；规划对多种悬空占比的闭环
+    判断路径方向，只有超过阈值的环发生反转。
+    3MF 同盘放置 35%/50%/65% 周长悬空的三个偏心台阶体。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -210,7 +240,12 @@ def test_overhang_reverse_threshold(slice_and_export: Path, expected_overhang_re
 # ================== wipe_on_loops ==================
 @pytest.mark.engine_params
 def test_wipe_on_loops(slice_and_export: Path, expected_wipe_on_loops: bool):
-    """测试 wipe_on_loops 参数"""
+    """验证外墙闭环结束后的沿环擦拭。
+
+    C3DSlicer 仅在外墙、墙数大于 1 且路径点充分时追加 wipe；规划在 Outer Wall 结束后
+    检查无 E 的沿轮廓移动，开启时存在且方向/位置连续，关闭时不存在。
+    3MF 使用三墙大圆柱，避免短折线不满足实现前置条件。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -221,7 +256,12 @@ def test_wipe_on_loops(slice_and_export: Path, expected_wipe_on_loops: bool):
 # ================== wipe_before_external_loop ==================
 @pytest.mark.engine_params
 def test_wipe_before_external_loop(slice_and_export: Path, expected_wipe_before_external_loop: bool):
-    """测试 wipe_before_external_loop 参数"""
+    """验证外墙开始前从相邻内墙执行擦拭过渡。
+
+    C3DSlicer 要求外墙路径前后均有效且 region 有多圈墙；规划检查进入 Outer Wall 前的
+    无 E 路径是否沿上一内墙延伸，开启时出现、关闭时直接 travel 到外墙起点。
+    3MF 使用四墙厚圆筒并固定 inner-to-outer 墙序。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -232,11 +272,11 @@ def test_wipe_before_external_loop(slice_and_export: Path, expected_wipe_before_
 # ================== small_area_infill_flow_compensation ==================
 @pytest.mark.engine_params
 def test_small_area_infill_flow_compensation(slice_and_export: Path, expected_small_area_infill_flow_compensation: bool):
-    """测试 small_area_infill_flow_compensation 参数
-    
-    该参数控制是否对小面积填充区域进行流量补偿。
-    - 启用时：切片器会自动调整小面积区域的挤出流量，改善打印质量
-    - 禁用时：使用标准流量，不进行额外补偿
+    """验证小面积填充的流量补偿开关。
+
+    C3DSlicer 在 ``GCode.cpp`` 对小面积 infill 调用补偿器修改 ``mm3_per_mm``；规划按岛
+    统计 Internal Solid Infill 的 ``E/长度``，开启时小岛按曲线降流，大面积对照岛接近 1。
+    3MF 同盘放置 0.2/0.8/2/10 mm² 的封闭实心填充小岛。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
@@ -248,16 +288,13 @@ def test_small_area_infill_flow_compensation(slice_and_export: Path, expected_sm
 # ================== small_area_infill_flow_compensation_model ==================
 @pytest.mark.engine_params
 def test_small_area_infill_flow_compensation_model(slice_and_export: Path, expected_small_area_infill_flow_compensation_model: list):
-    """测试 small_area_infill_flow_compensation_model 参数
-    
-    该参数定义小面积流量补偿的曲线模型，是一个数组参数，存储面积与流量比例的映射关系。
-    格式: ["0,0", "\n0.2,0.4444", "\n0.4,0.6145", ...]
-    - 数组中每个元素表示 "面积,流量比例" 的对应关系
-    - 切片器根据此曲线动态调整不同面积区域的流量补偿
-    
-    注意：当前切片器版本存在已知限制 - 数组类型参数无法通过 3MF 文件自定义，
-    即使在 different_settings_to_system 中标记也不会生效。因此测试用例暂时只
-    验证 template_model.3mf 中的默认值。
+    """验证面积—流量补偿曲线的插值结果。
+
+    C3DSlicer ``SmallAreaInfillFlowCompensator`` 读取每个 ``面积,倍率`` 节点并插值；
+    规划为每个面积小岛测量 ``E/长度`` 相对大面积基准的比例，节点处命中配置值，节点间
+    命中插值值。3MF 使用覆盖全部曲线关键点的多岛阵列，并开启补偿开关。
+
+    当前 3MF 数组参数写入限制需先修复；在此之前该用例只能验证系统默认曲线。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()

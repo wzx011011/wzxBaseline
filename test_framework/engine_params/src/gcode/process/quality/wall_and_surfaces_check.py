@@ -5,6 +5,15 @@ from pathlib import Path
 import math
 import mmap
 import re
+import statistics
+
+from engine_params.src.gcode.process.quality.behavior import (
+    BehaviorGCode,
+    median,
+    median_e_per_mm,
+    path_bbox,
+    path_signed_area,
+)
 
 
 # ================== wall_sequence ==================
@@ -903,5 +912,325 @@ def parse_small_area_infill_flow_compensation_model(
         "method": "L1 - CONFIG_BLOCK (Array)"
     }
     return (ok, actual_value, details)
+
+
+# ---------------------------------------------------------------------------
+# Behavioral implementations for the former CONFIG_BLOCK-only checks.
+# ---------------------------------------------------------------------------
+
+
+def _percent(raw: object) -> Optional[float]:
+    try:
+        return float(str(raw).strip().rstrip("%"))
+    except (TypeError, ValueError):
+        return None
+
+
+def _paths_by_layer(behavior: BehaviorGCode, roles: str | tuple[str, ...], min_length: float = 1.0):
+    result: dict[int, list[list]] = {}
+    for path in behavior.paths(roles, min_length=min_length):
+        if path:
+            result.setdefault(path[0].layer, []).append(path)
+    return result
+
+
+def parse_min_width_top_surface(
+    gcode_path: Path | str, expected_value: str
+) -> Tuple[bool, Optional[str], Dict[str, object]]:
+    """Count width-ladder channels removed from the first exposed top layer."""
+    behavior = BehaviorGCode(gcode_path)
+    top_layers = sorted(behavior.role_layers(ExtrusionType.TOP_SURFACE.value))
+    if not top_layers:
+        return False, None, {"method": "L2 - Top-surface channel filtering", "error": "no top surface"}
+    # The lower slab has an intermediate exposed top layer and the upper bars
+    # share the final top layer.  Only the first one exercises this filter.
+    layer = top_layers[0]
+    moves = [move for move in behavior.extrusion_moves(ExtrusionType.TOP_SURFACE.value)
+             if move.layer == layer]
+    intervals = sorted((min(move.x0, move.x), max(move.x0, move.x)) for move in moves)
+    merged: list[list[float]] = []
+    for start, end in intervals:
+        if not merged or start > merged[-1][1] + 0.08:
+            merged.append([start, end])
+        else:
+            merged[-1][1] = max(merged[-1][1], end)
+    # With all four channels retained the alternating wall/top regions produce
+    # twelve X components. Each filtered channel joins three into one.
+    observed_filtered = max(0, (12 - len(merged)) // 2)
+    expected_percent = _percent(expected_value)
+    wall_width = median(move.width for move in behavior.extrusion_moves(
+        ExtrusionType.OUTER_WALL.value) if move.width is not None)
+    threshold = None if expected_percent is None or wall_width is None else wall_width * expected_percent / 200.0
+    expected_filtered = None if threshold is None else sum(
+        gap <= threshold for gap in (0.36, 0.48, 0.60, 0.78))
+    ok = expected_filtered is not None and observed_filtered == expected_filtered
+    return ok, str(observed_filtered), {
+        "method": "L2 - Top-surface channel filtering", "representative_layer": layer,
+        "x_component_count": len(merged), "filtered_channel_count": observed_filtered,
+        "expected_filtered_channels": expected_filtered, "effective_width_limit_mm": threshold,
+        "observed_wall_width_mm": wall_width, "expected_setting": expected_value}
+
+
+def parse_only_one_wall_first_layer(
+    gcode_path: Path | str, expected_value: bool
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """Compare closed wall-path counts on the first and second layers."""
+    behavior = BehaviorGCode(gcode_path)
+    by_layer = _paths_by_layer(behavior, (ExtrusionType.OUTER_WALL.value, ExtrusionType.INNER_WALL.value), 5.0)
+    first, second = len(by_layer.get(0, [])), len(by_layer.get(1, []))
+    actual = first == 1 and second >= 2
+    return first > 0 and second > 0 and actual == expected_value, actual, {
+        "method": "L2 - First/second-layer wall path count", "first_layer_walls": first,
+        "second_layer_walls": second, "expected": expected_value}
+
+
+def parse_detect_thin_wall(
+    gcode_path: Path | str, expected_value: bool
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """Detect extrusion paths corresponding to sub-nozzle thin ribs."""
+    behavior = BehaviorGCode(gcode_path)
+    paths = behavior.paths((ExtrusionType.OUTER_WALL.value, ExtrusionType.GAP_INFILL.value), min_length=5.0)
+    # Classic thin-wall detection emits variable-width perimeter hints for the
+    # sub-nozzle ribs.  The disabled model still contains a 3 mm control rib,
+    # so a successful empty export cannot be mistaken for feature detection.
+    widths = [move.width for path in paths for move in path if move.width is not None]
+    variable_thin = [width for width in widths if 0.05 < width < 0.38]
+    actual = len(variable_thin) >= 3
+    return bool(paths) and actual == expected_value, actual, {
+        "method": "L2 - Variable-width thin-rib extrusion", "all_paths": len(paths),
+        "thin_width_samples": len(variable_thin),
+        "observed_width_range": (min(widths, default=None), max(widths, default=None)),
+        "expected": expected_value}
+
+
+def parse_detect_overhang_wall(
+    gcode_path: Path | str, expected_value: bool
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """Detect explicit Overhang wall extrusion roles."""
+    behavior = BehaviorGCode(gcode_path)
+    moves = behavior.extrusion_moves(ExtrusionType.OVERHANG_WALL.value)
+    actual = bool(moves)
+    return actual == expected_value, actual, {"method": "L2 - Overhang wall role presence",
+                                               "overhang_segments": len(moves), "expected": expected_value}
+
+
+def parse_overhang_reverse(
+    gcode_path: Path | str, expected_value: bool
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """Compare signed direction of normal and overhang closed wall paths."""
+    behavior = BehaviorGCode(gcode_path)
+    normal = behavior.paths(ExtrusionType.OUTER_WALL.value, min_length=10.0)
+    overhang = behavior.paths(ExtrusionType.OVERHANG_WALL.value, min_length=5.0)
+    normal_sign = median([1.0 if path_signed_area(path) > 0 else -1.0 for path in normal])
+    overhang_sign = median([1.0 if path_signed_area(path) > 0 else -1.0 for path in overhang])
+    actual = normal_sign is not None and overhang_sign is not None and normal_sign != overhang_sign
+    return bool(overhang) and actual == expected_value, actual, {
+        "method": "L2 - Signed wall-loop direction", "normal_direction_sign": normal_sign,
+        "overhang_direction_sign": overhang_sign, "normal_paths": len(normal),
+        "overhang_paths": len(overhang), "expected": expected_value}
+
+
+def parse_overhang_reverse_internal_only(
+    gcode_path: Path | str, expected_value: bool
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """Determine whether direction reversal is confined to Inner wall paths."""
+    behavior = BehaviorGCode(gcode_path)
+    outer_by_layer = _paths_by_layer(behavior, ExtrusionType.OUTER_WALL.value, 8.0)
+    inner_by_layer = _paths_by_layer(behavior, ExtrusionType.INNER_WALL.value, 8.0)
+    overhang_layers = behavior.role_layers(ExtrusionType.OVERHANG_WALL.value)
+    ordinary_outer = [path for layer, paths in outer_by_layer.items()
+                      if layer not in overhang_layers for path in paths]
+    base_signs = [1 if path_signed_area(path) > 0 else -1 for path in ordinary_outer]
+    base = statistics.mode(base_signs) if base_signs else None
+    evidence = []
+    for layer in sorted(overhang_layers):
+        outer_areas = [path_signed_area(path) for path in outer_by_layer.get(layer, [])]
+        inner_areas = [path_signed_area(path) for path in inner_by_layer.get(layer, [])]
+        # A role change can leave a short open fragment whose shoelace area is
+        # effectively zero.  It is not a loop and must not vote on direction.
+        outer_signs = [1 if area > 0 else -1 for area in outer_areas if abs(area) > 1.0]
+        inner_signs = [1 if area > 0 else -1 for area in inner_areas if abs(area) > 1.0]
+        if base is not None and outer_signs and inner_signs:
+            evidence.append({
+                "layer": layer,
+                "outer_reversed": any(sign != base for sign in outer_signs),
+                "inner_reversed": any(sign != base for sign in inner_signs),
+            })
+    actual = bool(evidence) and all(
+        item["inner_reversed"] and not item["outer_reversed"] for item in evidence)
+    return base is not None and bool(evidence) and actual == expected_value, actual, {
+        "method": "L2 - Transition-layer outer/inner loop direction",
+        "ordinary_direction_sign": base, "transition_layers": evidence,
+        "expected": expected_value}
+
+
+def parse_overhang_reverse_threshold(
+    gcode_path: Path | str, expected_value: str
+) -> Tuple[bool, Optional[str], Dict[str, object]]:
+    """Estimate reversal threshold from the fraction of overhang paths that reverse."""
+    behavior = BehaviorGCode(gcode_path)
+    by_layer = _paths_by_layer(behavior, ExtrusionType.OUTER_WALL.value, 8.0)
+    ordinary = [path for layer, paths in by_layer.items() if layer % 2 == 1 for path in paths]
+    base = statistics.mode([1 if path_signed_area(path) > 0 else -1 for path in ordinary]) if ordinary else None
+    layer_counts = {}
+    for layer, paths in by_layer.items():
+        if layer > 0 and layer % 2 == 0 and base is not None:
+            signs = [1 if path_signed_area(path) > 0 else -1 for path in paths]
+            layer_counts[layer] = sum(sign != base for sign in signs)
+    reversed_count = statistics.mode(layer_counts.values()) if layer_counts else 0
+    contour_count = statistics.mode([len(paths) for layer, paths in by_layer.items()
+                                     if layer > 0 and layer % 2 == 0]) if layer_counts else 0
+    ratio = reversed_count / contour_count if contour_count else None
+    expected = _percent(expected_value)
+    # The three slopes cross the 40/50/60 percent cut-offs one at a time.
+    expected_reversed = None if expected is None else {40.0: 3, 50.0: 2, 60.0: 1}.get(expected)
+    ok = expected_reversed is not None and reversed_count == expected_reversed
+    return ok, None if ratio is None else f"{ratio * 100:.1f}%", {
+        "method": "L2 - Reversed sloped-contour count", "contours_per_layer": contour_count,
+        "reversed_paths": reversed_count, "expected_reversed_paths": expected_reversed,
+        "reversed_by_even_layer": layer_counts, "threshold_percent": expected}
+
+
+def _wipe_contexts(path: Path | str) -> tuple[int, int]:
+    previous_type = None
+    lines = Path(path).read_text(encoding="utf-8", errors="ignore").splitlines()
+    after_outer = before_outer = 0
+    for index, raw in enumerate(lines):
+        line = raw.strip()
+        if line.startswith(";TYPE:"):
+            previous_type = line.split(":", 1)[1].strip()
+        if line != ";WIPE_START":
+            continue
+        next_type = None
+        for following in lines[index + 1:index + 80]:
+            following = following.strip()
+            if following.startswith(";TYPE:"):
+                next_type = following.split(":", 1)[1].strip()
+                break
+        if previous_type == ExtrusionType.OUTER_WALL.value:
+            after_outer += 1
+        if previous_type == ExtrusionType.INNER_WALL.value and next_type == ExtrusionType.OUTER_WALL.value:
+            before_outer += 1
+    return after_outer, before_outer
+
+
+def parse_wipe_on_loops(
+    gcode_path: Path | str, expected_value: bool
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """Detect WIPE blocks immediately following Outer wall loops."""
+    behavior = BehaviorGCode(gcode_path)
+    after_outer, before_outer = _short_outer_zero_moves(behavior)
+    actual = after_outer >= max(2, int(len(behavior.layers) * 0.8))
+    return actual == expected_value, actual, {"method": "L2 - Post-loop zero-E inward moves",
+                                               "post_outer_short_moves": after_outer,
+                                               "pre_outer_short_moves": before_outer,
+                                               "layer_count": len(behavior.layers), "expected": expected_value}
+
+
+def parse_wipe_before_external_loop(
+    gcode_path: Path | str, expected_value: bool
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """Detect WIPE blocks between Inner wall and the following Outer wall."""
+    behavior = BehaviorGCode(gcode_path)
+    after_outer, before_outer = _short_outer_zero_moves(behavior)
+    actual = before_outer >= max(2, int((len(behavior.layers) - 1) * 0.8))
+    return actual == expected_value, actual, {"method": "L2 - Pre-outer-loop zero-E seam moves",
+                                               "pre_outer_short_moves": before_outer,
+                                               "post_outer_short_moves": after_outer,
+                                               "layer_count": len(behavior.layers), "expected": expected_value}
+
+
+def _short_outer_zero_moves(behavior: BehaviorGCode) -> tuple[int, int]:
+    """Count the two source-level zero-extrusion seam-move placements."""
+    moves = behavior.moves
+    post_outer = pre_outer = 0
+    for index, move in enumerate(moves):
+        if (move.role != ExtrusionType.OUTER_WALL.value or move.e > 1e-9
+                or not 1e-5 < move.xy_length < 0.8):
+            continue
+        previous = next((item for item in reversed(moves[max(0, index - 3):index])
+                         if item.xy_length > 0), None)
+        following = next((item for item in moves[index + 1:index + 4]
+                          if item.xy_length > 0), None)
+        if previous and previous.is_extrusion and previous.role == ExtrusionType.OUTER_WALL.value:
+            post_outer += 1
+        if following and following.is_extrusion and following.role == ExtrusionType.OUTER_WALL.value:
+            pre_outer += 1
+    return post_outer, pre_outer
+
+
+def _small_area_samples(behavior: BehaviorGCode) -> list[tuple[float, float]]:
+    samples = []
+    for path in behavior.paths(ExtrusionType.INTERNAL_SOLID_INFILL.value, min_length=0.05):
+        bbox = path_bbox(path)
+        flow = median_e_per_mm(path)
+        if bbox and flow is not None:
+            area = max(0.0, (bbox[1] - bbox[0]) * (bbox[3] - bbox[2]))
+            samples.append((area, flow))
+    return samples
+
+
+def parse_small_area_infill_flow_compensation(
+    gcode_path: Path | str, expected_value: bool
+) -> Tuple[bool, Optional[bool], Dict[str, object]]:
+    """Detect area-dependent reduction of Internal solid infill E/mm."""
+    behavior = BehaviorGCode(gcode_path)
+    moves = [move for move in behavior.extrusion_moves(
+        (ExtrusionType.INTERNAL_SOLID_INFILL.value, ExtrusionType.TOP_SURFACE.value))
+        if move.xy_length >= 0.05 and move.width and move.height]
+    filament_area = math.pi * (1.75 / 2.0) ** 2
+    ratios = []
+    for move in moves:
+        section = (move.height * (move.width - move.height)
+                   + math.pi * move.height * move.height / 4.0)
+        if section > 0:
+            ratios.append((move.e / move.xy_length) * filament_area / section)
+    ratio = median(ratios)
+    actual = ratio is not None and ratio < 0.9
+    return bool(ratios) and actual == expected_value, actual, {
+        "method": "L2 - Emitted/theoretical solid-line flow ratio",
+        "normalized_flow_ratio": ratio, "sample_count": len(ratios),
+        "min_ratio": min(ratios, default=None), "max_ratio": max(ratios, default=None),
+        "expected": expected_value}
+
+
+def parse_small_area_infill_flow_compensation_model(
+    gcode_path: Path | str, expected_value: list
+) -> Tuple[bool, Optional[list], Dict[str, object]]:
+    """Compare observed per-island flow ratios with the configured curve nodes/interpolation."""
+    behavior = BehaviorGCode(gcode_path)
+    samples = sorted(_small_area_samples(behavior))
+    points = []
+    for item in expected_value:
+        try:
+            area, ratio = (float(value.strip()) for value in str(item).strip().split(",", 1))
+            points.append((area, ratio))
+        except (TypeError, ValueError):
+            continue
+    if not samples or not points:
+        return False, None, {"method": "L2 - Compensation curve interpolation", "samples": samples,
+                             "curve_points": points}
+    reference = max(flow for _, flow in samples)
+    observed = [(area, flow / reference) for area, flow in samples if reference > 0]
+    errors = []
+    for area, ratio in observed:
+        expected_ratio = _interpolate(points, area)
+        errors.append(abs(ratio - expected_ratio))
+    ok = bool(errors) and statistics.median(errors) <= 0.15
+    return ok, observed, {"method": "L2 - Compensation curve interpolation",
+                           "observed_area_ratios": observed, "curve_points": points,
+                           "ratio_errors": errors, "median_error": median(errors)}
+
+
+def _interpolate(points: list[tuple[float, float]], x: float) -> float:
+    points = sorted(points)
+    if x <= points[0][0]:
+        return points[0][1]
+    if x >= points[-1][0]:
+        return points[-1][1]
+    for (x0, y0), (x1, y1) in zip(points, points[1:]):
+        if x0 <= x <= x1:
+            return y0 + (y1 - y0) * (x - x0) / (x1 - x0)
+    return points[-1][1]
 
 

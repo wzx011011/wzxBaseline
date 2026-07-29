@@ -525,42 +525,52 @@ def parse_speed_limit_to_height_enable(
     else:
         min_height = max_height = None
 
-    target_types = [ExtrusionType.OUTER_WALL, ExtrusionType.INNER_WALL]
-    layers = parser.get_type_contours_per_layer(types=target_types, skip_layers=[0])
+    target_types = {
+        ExtrusionType.OUTER_WALL.value,
+        ExtrusionType.INNER_WALL.value,
+    }
+    motion_by_layer = parser.get_motion_paths(skip_layers=[0])
     samples_by_type: Dict[str, List[Dict[str, float]]] = {}
     missing_speed: List[Dict[str, Any]] = []
     missing_acceleration: List[Dict[str, Any]] = []
 
-    for layer in layers:
-        if layer.z is None or min_height is None or max_height is None:
-            continue
-        z = float(layer.z)
-        if z < min_height or z > max_height:
-            continue
-        for object_id, type_map in (layer.regions or {}).items():
-            for type_name, region in (type_map or {}).items():
-                if region.feedrate is None:
-                    missing_speed.append({
-                        "layer": layer.index,
-                        "z": z,
-                        "object_id": object_id,
-                        "type": type_name,
-                    })
-                    continue
-                acceleration = (region.velocity_limits or {}).get(ACCEL_KEY)
-                if acceleration is None:
-                    missing_acceleration.append({
-                        "layer": layer.index,
-                        "z": z,
-                        "object_id": object_id,
-                        "type": type_name,
-                    })
-                    continue
-                samples_by_type.setdefault(type_name, []).append({
+    for layer_index, points in sorted(motion_by_layer.items()):
+        for point_index, point in enumerate(points):
+            if getattr(point, "kind", None) != "extrude":
+                continue
+            type_name = getattr(point, "extrusion_type", None)
+            if type_name not in target_types:
+                continue
+            z_value = getattr(point, "z", None)
+            if z_value is None or min_height is None or max_height is None:
+                continue
+            z = float(z_value)
+            if z < min_height or z > max_height:
+                continue
+
+            speed = getattr(point, "f", None)
+            if speed is None:
+                missing_speed.append({
+                    "layer": layer_index,
+                    "point": point_index,
                     "z": z,
-                    "speed": float(region.feedrate),
-                    "acceleration": float(acceleration),
+                    "type": type_name,
                 })
+                continue
+            acceleration = (getattr(point, "velocity_limits", None) or {}).get(ACCEL_KEY)
+            if acceleration is None:
+                missing_acceleration.append({
+                    "layer": layer_index,
+                    "point": point_index,
+                    "z": z,
+                    "type": type_name,
+                })
+                continue
+            samples_by_type.setdefault(type_name, []).append({
+                "z": z,
+                "speed": float(speed),
+                "acceleration": float(acceleration),
+            })
 
     def _distinct(values: List[float], tolerance: float) -> List[float]:
         distinct: List[float] = []
@@ -595,10 +605,13 @@ def parse_speed_limit_to_height_enable(
 
     switch_match = actual_enabled == expected_speed_limit_to_height_enable
     behavior_changed = bool(types_with_speed_and_acceleration_change)
+    sample_count = sum(len(samples) for samples in samples_by_type.values())
+    behavior_match = behavior_changed if expected_speed_limit_to_height_enable else True
     ok = (
         switch_match
         and curve_match
-        and behavior_changed
+        and sample_count > 0
+        and behavior_match
         and not missing_speed
         and not missing_acceleration
     )
@@ -612,6 +625,7 @@ def parse_speed_limit_to_height_enable(
         "curve_match": curve_match,
         "checked_height_range": [min_height, max_height],
         "variation_by_type": variation_by_type,
+        "sample_count": sample_count,
         "types_with_speed_and_acceleration_change": types_with_speed_and_acceleration_change,
         "missing_speed": missing_speed,
         "missing_acceleration": missing_acceleration,
@@ -619,6 +633,8 @@ def parse_speed_limit_to_height_enable(
         "acc_tolerance": acc_tolerance,
         "match": ok,
         "note": None if ok else (
+            "No eligible wall motion points were sampled in the configured height range."
+            if sample_count == 0 else
             "The configured height limit did not produce observable speed and "
             "acceleration changes in the checked G-code range."
         ),

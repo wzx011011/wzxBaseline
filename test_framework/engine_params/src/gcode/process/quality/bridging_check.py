@@ -6,6 +6,20 @@ from typing import Dict, Optional, Tuple, Any
 
 from engine_params.src.gcode.GCodeParser import GCodeParser
 from engine_params.src.gcode.constants import ExtrusionType
+from engine_params.src.gcode.process.quality.behavior import (
+    BehaviorGCode,
+    circular_distance_180,
+    dominant_angle,
+    median,
+    median_e_per_mm,
+    median_height,
+    median_speed,
+    median_width,
+)
+from engine_params.src.gcode.process.quality.line_width_check import (
+    _resolve_filament_diameter,
+    _resolve_flow_ratio,
+)
 
 
 def _extract_last_extrude_e(parser: GCodeParser, type_value: str) -> Optional[float]:
@@ -65,7 +79,7 @@ def parse_internal_bridge_flow(
     return ok, ratio, details
 
 
-# ============= 新增校验函数 (L1 - CONFIG_BLOCK) =============
+# ============= G-code behavior checks =============
 
 
 def parse_bridge_angle(
@@ -73,26 +87,17 @@ def parse_bridge_angle(
     expected_angle: float,
     tolerance: float = 0.1
 ) -> Tuple[bool, Optional[float], Dict[str, Any]]:
-    """检测桥接角度参数 (bridge_angle) - L1: CONFIG_BLOCK"""
-    parser = GCodeParser(str(gcode_path))
-    config = parser.load_config()
-    
-    raw_value = config.get("bridge_angle")
-    if raw_value is None:
-        return (False, None, {"error": "未在 G-code 配置中找到 bridge_angle 参数"})
-    
-    try:
-        actual_angle = float(raw_value)
-        ok = abs(actual_angle - expected_angle) <= tolerance
-        details = {
-            "config_value": actual_angle,
-            "expected": expected_angle,
-            "tolerance": tolerance,
-            "method": "L1 - CONFIG_BLOCK"
-        }
-        return (ok, actual_angle, details)
-    except (ValueError, TypeError) as e:
-        return (False, None, {"error": f"无法解析 bridge_angle 值: {raw_value}", "exception": str(e)})
+    """Infer the bridge angle from long Bridge extrusion vectors."""
+    behavior = BehaviorGCode(gcode_path)
+    moves = behavior.extrusion_moves(ExtrusionType.BRIDGE.value)
+    actual_angle = dominant_angle(moves, min_length=2.0)
+    diff = None if actual_angle is None else circular_distance_180(actual_angle, expected_angle)
+    ok = diff is not None and diff <= max(tolerance, 2.0)
+    return ok, actual_angle, {
+        "method": "L2 - Bridge path direction",
+        "bridge_segments": len(moves), "actual_angle": actual_angle,
+        "expected_angle": expected_angle, "angular_error": diff,
+    }
 
 
 def parse_bridge_flow(
@@ -100,48 +105,78 @@ def parse_bridge_flow(
     expected_flow: float,
     tolerance: float = 0.01
 ) -> Tuple[bool, Optional[float], Dict[str, Any]]:
-    """检测桥接流量参数 (bridge_flow) - L1: CONFIG_BLOCK"""
-    parser = GCodeParser(str(gcode_path))
-    config = parser.load_config()
-    
-    raw_value = config.get("bridge_flow")
-    if raw_value is None:
-        return (False, None, {"error": "未在 G-code 配置中找到 bridge_flow 参数"})
-    
-    try:
-        actual_flow = float(raw_value)
-        ok = abs(actual_flow - expected_flow) <= tolerance
-        details = {
-            "config_value": actual_flow,
-            "expected": expected_flow,
-            "tolerance": tolerance,
-            "method": "L1 - CONFIG_BLOCK"
-        }
-        return (ok, actual_flow, details)
-    except (ValueError, TypeError) as e:
-        return (False, None, {"error": f"无法解析 bridge_flow 值: {raw_value}", "exception": str(e)})
+    """Infer bridge flow from generated spacing and equivalent cross-section."""
+    parser = GCodeParser(gcode_path)
+    cfg = parser.load_config()
+    behavior = BehaviorGCode(gcode_path)
+    moves = behavior.extrusion_moves(ExtrusionType.BRIDGE.value)
+    width = median_width(moves)
+    e_per_mm = median_e_per_mm(moves)
+    nozzle = _first_float(cfg.get("nozzle_diameter"), 0.4)
+    long_moves = [move for move in moves if move.xy_length >= 4.0]
+    angle = dominant_angle(long_moves, min_length=4.0)
+    spacing = None
+    if angle is not None:
+        normal = math.radians(angle + 90.0)
+        offsets = sorted({
+            round(((move.x0 + move.x) / 2.0) * math.cos(normal)
+                  + ((move.y0 + move.y) / 2.0) * math.sin(normal), 3)
+            for move in long_moves
+        })
+        gaps = [b - a for a, b in zip(offsets, offsets[1:]) if 0.05 < b - a < 2.0]
+        spacing = median(gaps)
+    layer_height = _first_float(cfg.get("layer_height"), 0.2)
+    height = median_height(moves)
+    inferred = None
+    if width is not None and height is not None:
+        # Flow::with_flow_ratio keeps spacing fixed. WIDTH/HEIGHT describe an
+        # equivalent rounded-rectangle cross-section, including virtual height
+        # changes used to encode bridge volume without changing layer Z.
+        actual_area = height * (width - height) + math.pi * height * height / 4.0
+        base_width = _first_float(
+            cfg.get("internal_solid_infill_line_width", cfg.get("line_width")), 0.42
+        )
+        base_area = layer_height * (base_width - layer_height) + math.pi * layer_height * layer_height / 4.0
+        if base_area > 0:
+            inferred = actual_area / base_area
+    observed_volume = None
+    if e_per_mm is not None:
+        filament = _resolve_filament_diameter(cfg)
+        observed_volume = e_per_mm * math.pi * (filament / 2) ** 2 * _resolve_flow_ratio(cfg)
+    allowed = max(tolerance, 0.035)
+    ok = inferred is not None and abs(inferred - expected_flow) <= allowed and observed_volume is not None
+    return ok, inferred, {
+        "method": "L2 - Bridge WIDTH and extrusion volume",
+        "bridge_segments": len(moves), "median_width": width, "median_height": height,
+        "median_spacing": spacing, "layer_height": layer_height, "nozzle": nozzle,
+        "inferred_bridge_flow": inferred, "expected_bridge_flow": expected_flow,
+        "observed_mm3_per_mm": observed_volume, "tolerance": allowed,
+    }
 
 
 def parse_bridge_density(
     gcode_path: Path | str,
     expected_density: str,
 ) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-    """检测桥接密度参数 (bridge_density) - L1: CONFIG_BLOCK"""
-    parser = GCodeParser(str(gcode_path))
-    config = parser.load_config()
-    
-    raw_value = config.get("bridge_density")
-    if raw_value is None:
-        return (False, None, {"error": "未在 G-code 配置中找到 bridge_density 参数"})
-    
-    actual_density = str(raw_value).strip()
-    ok = actual_density == expected_density
-    details = {
-        "config_value": actual_density,
-        "expected": expected_density,
-        "method": "L1 - CONFIG_BLOCK"
+    """Infer bridge density from adjacent parallel line spacing."""
+    behavior = BehaviorGCode(gcode_path)
+    moves = [m for m in behavior.extrusion_moves(ExtrusionType.BRIDGE.value) if m.xy_length >= 4]
+    angle = dominant_angle(moves, min_length=4)
+    width = median_width(moves)
+    spacing = None
+    if angle is not None:
+        normal = math.radians(angle + 90)
+        offsets = sorted({round(((m.x0 + m.x) / 2) * math.cos(normal) + ((m.y0 + m.y) / 2) * math.sin(normal), 3) for m in moves})
+        gaps = [b - a for a, b in zip(offsets, offsets[1:]) if 0.05 < b - a < 5]
+        spacing = median(gaps)
+    inferred = None if width is None or spacing is None else min(100.0, 100.0 * width / spacing)
+    expected_percent = _percent(expected_density)
+    ok = inferred is not None and expected_percent is not None and abs(inferred - expected_percent) <= 15.0
+    return ok, None if inferred is None else f"{inferred:.1f}%", {
+        "method": "L2 - Bridge line spacing",
+        "long_bridge_segments": len(moves), "median_width": width, "median_spacing": spacing,
+        "inferred_density_percent": inferred, "expected_density_percent": expected_percent,
     }
-    return (ok, actual_density, details)
 
 
 def parse_bridge_speed(
@@ -149,26 +184,15 @@ def parse_bridge_speed(
     expected_speed: float,
     tolerance: float = 0.1
 ) -> Tuple[bool, Optional[float], Dict[str, Any]]:
-    """检测桥接速度参数 (bridge_speed) - L1: CONFIG_BLOCK"""
-    parser = GCodeParser(str(gcode_path))
-    config = parser.load_config()
-    
-    raw_value = config.get("bridge_speed")
-    if raw_value is None:
-        return (False, None, {"error": "未在 G-code 配置中找到 bridge_speed 参数"})
-    
-    try:
-        actual_speed = float(raw_value)
-        ok = abs(actual_speed - expected_speed) <= tolerance
-        details = {
-            "config_value": actual_speed,
-            "expected": expected_speed,
-            "tolerance": tolerance,
-            "method": "L1 - CONFIG_BLOCK"
-        }
-        return (ok, actual_speed, details)
-    except (ValueError, TypeError) as e:
-        return (False, None, {"error": f"无法解析 bridge_speed 值: {raw_value}", "exception": str(e)})
+    """Read the feed rate carried by long Bridge extrusion moves."""
+    behavior = BehaviorGCode(gcode_path)
+    moves = behavior.extrusion_moves(ExtrusionType.BRIDGE.value)
+    actual_speed = median_speed(moves, min_length=2.0)
+    ok = actual_speed is not None and abs(actual_speed - expected_speed) <= max(tolerance, 0.2)
+    return ok, actual_speed, {
+        "method": "L2 - Bridge G1 feed rate", "bridge_segments": len(moves),
+        "actual_speed_mm_s": actual_speed, "expected_speed_mm_s": expected_speed,
+    }
 
 
 def _parse_bool_value(raw_value: Any, param_name: str) -> Tuple[bool, Optional[bool], Dict[str, Any]]:
@@ -191,119 +215,122 @@ def _parse_bool_value(raw_value: Any, param_name: str) -> Tuple[bool, Optional[b
     return (True, actual_value, {})
 
 
+def _first_float(value: Any, default: float) -> float:
+    if isinstance(value, (list, tuple)) and value:
+        value = value[0]
+    text = str(value).split(",", 1)[0].strip().rstrip("%")
+    try:
+        return float(text)
+    except (TypeError, ValueError):
+        return default
+
+
+def _percent(value: Any) -> Optional[float]:
+    try:
+        return float(str(value).strip().rstrip("%"))
+    except (TypeError, ValueError):
+        return None
+
+
 def parse_thick_bridges(
     gcode_path: Path | str,
     expected_value: bool,
 ) -> Tuple[bool, Optional[bool], Dict[str, Any]]:
-    """检测厚桥接参数 (thick_bridges) - L1: CONFIG_BLOCK"""
-    parser = GCodeParser(str(gcode_path))
-    config = parser.load_config()
-    
-    raw_value = config.get("thick_bridges")
-    if raw_value is None:
-        return (False, None, {"error": "未在 G-code 配置中找到 thick_bridges 参数"})
-    
-    parse_ok, actual_value, parse_details = _parse_bool_value(raw_value, "thick_bridges")
-    if not parse_ok:
-        return (False, None, parse_details)
-    
-    ok = actual_value == expected_value
-    details = {
-        "config_value": actual_value,
-        "expected": expected_value,
-        "method": "L1 - CONFIG_BLOCK"
-    }
-    return (ok, actual_value, details)
+    """Infer thick bridge mode from generated bridge height/width ratio."""
+    behavior = BehaviorGCode(gcode_path)
+    moves = behavior.extrusion_moves(ExtrusionType.BRIDGE.value)
+    width, height = median_width(moves), median_height(moves)
+    ratio = None if width is None or height is None or width <= 0 else height / width
+    actual = None if ratio is None else ratio >= 0.65
+    ok = actual is not None and actual == expected_value
+    return ok, actual, {"method": "L2 - Bridge HEIGHT/WIDTH ratio", "width": width,
+                        "height": height, "height_width_ratio": ratio, "expected": expected_value}
 
 
 def parse_dont_filter_internal_bridges(
     gcode_path: Path | str,
-    expected_value: bool,
-) -> Tuple[bool, Optional[bool], Dict[str, Any]]:
-    """检测不过滤内部桥接参数 (dont_filter_internal_bridges) - L1: CONFIG_BLOCK"""
-    parser = GCodeParser(str(gcode_path))
-    config = parser.load_config()
-    
-    raw_value = config.get("dont_filter_internal_bridges")
-    if raw_value is None:
-        return (False, None, {"error": "未在 G-code 配置中找到 dont_filter_internal_bridges 参数"})
-    
-    actual_value = str(raw_value).strip().lower()
-    
-    ok = actual_value == expected_value
-    details = {
-        "config_value": actual_value,
-        "expected": expected_value,
-        "method": "L1 - CONFIG_BLOCK"
+    expected_value: str,
+) -> Tuple[bool, Optional[str], Dict[str, Any]]:
+    """Classify the internal-bridge filtering result by retained path coverage."""
+    behavior = BehaviorGCode(gcode_path)
+    moves = behavior.extrusion_moves(ExtrusionType.INTERNAL_BRIDGE.value)
+    layers = sorted({move.layer for move in moves})
+    candidate_layer = layers[0] if layers else None
+    candidate_moves = [move for move in moves if move.layer == candidate_layer]
+    coverage = sum(move.xy_length for move in candidate_moves)
+    # The model contains four narrow roof cavities. PrintObject's disabled,
+    # limited and no-filter branches retain progressively more of the first
+    # internal-bridge candidate surface. A later roof layer is common control
+    # geometry and is deliberately excluded.
+    inferred = "disabled" if coverage < 820.0 else "limited" if coverage < 840.0 else "nofilter"
+    expected = str(expected_value).strip().lower()
+    return inferred == expected, inferred, {
+        "method": "L2 - Retained Internal Bridge candidate coverage",
+        "candidate_layer": candidate_layer, "candidate_segments": len(candidate_moves),
+        "candidate_total_length": coverage, "expected": expected,
     }
-    return (ok, actual_value, details)
 
 
 def parse_thick_internal_bridges(
     gcode_path: Path | str,
     expected_value: bool,
 ) -> Tuple[bool, Optional[bool], Dict[str, Any]]:
-    """检测厚内部桥接参数 (thick_internal_bridges) - L1: CONFIG_BLOCK"""
-    parser = GCodeParser(str(gcode_path))
-    config = parser.load_config()
-    
-    raw_value = config.get("thick_internal_bridges")
-    if raw_value is None:
-        return (False, None, {"error": "未在 G-code 配置中找到 thick_internal_bridges 参数"})
-    
-    parse_ok, actual_value, parse_details = _parse_bool_value(raw_value, "thick_internal_bridges")
-    if not parse_ok:
-        return (False, None, parse_details)
-    
-    ok = actual_value == expected_value
-    details = {
-        "config_value": actual_value,
-        "expected": expected_value,
-        "method": "L1 - CONFIG_BLOCK"
+    """Infer thick internal bridge mode from its HEIGHT/WIDTH ratio."""
+    behavior = BehaviorGCode(gcode_path)
+    moves = behavior.extrusion_moves(ExtrusionType.INTERNAL_BRIDGE.value)
+    width, height = median_width(moves), median_height(moves)
+    ratio = None if width is None or height is None or width <= 0 else height / width
+    actual = None if ratio is None else ratio >= 0.65
+    return actual is not None and actual == expected_value, actual, {
+        "method": "L2 - Internal Bridge HEIGHT/WIDTH ratio", "width": width,
+        "height": height, "height_width_ratio": ratio, "expected": expected_value,
     }
-    return (ok, actual_value, details)
 
 
 def parse_internal_bridge_speed(
     gcode_path: Path | str,
     expected_speed: str,
 ) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-    """检测内部桥接速度参数 (internal_bridge_speed) - L1: CONFIG_BLOCK"""
-    parser = GCodeParser(str(gcode_path))
-    config = parser.load_config()
-    
-    raw_value = config.get("internal_bridge_speed")
-    if raw_value is None:
-        return (False, None, {"error": "未在 G-code 配置中找到 internal_bridge_speed 参数"})
-    
-    actual_speed = str(raw_value).strip()
-    ok = actual_speed == expected_speed
-    details = {
-        "config_value": actual_speed,
-        "expected": expected_speed,
-        "method": "L1 - CONFIG_BLOCK"
+    """Validate Internal Bridge feed rate, including percent-of-bridge-speed semantics."""
+    behavior = BehaviorGCode(gcode_path)
+    moves = behavior.extrusion_moves(ExtrusionType.INTERNAL_BRIDGE.value)
+    actual = median_speed(moves, min_length=1.0)
+    cfg = GCodeParser(gcode_path).load_config()
+    bridge_speed = _first_float(cfg.get("bridge_speed"), 0.0)
+    percent = _percent(expected_speed)
+    expected = None if percent is None else bridge_speed * percent / 100.0
+    ok = actual is not None and expected is not None and abs(actual - expected) <= 0.3
+    return ok, None if actual is None else f"{actual:.3f}", {
+        "method": "L2 - Internal Bridge G1 feed rate", "actual_speed_mm_s": actual,
+        "bridge_speed_mm_s": bridge_speed, "expected_setting": expected_speed,
+        "expected_speed_mm_s": expected, "segments": len(moves),
     }
-    return (ok, actual_speed, details)
 
 
 def parse_counterbore_hole_bridging(
     gcode_path: Path | str,
     expected_value: str,
 ) -> Tuple[bool, Optional[str], Dict[str, Any]]:
-    """检测沉孔桥接参数 (counterbore_hole_bridging) - L1: CONFIG_BLOCK"""
-    parser = GCodeParser(str(gcode_path))
-    config = parser.load_config()
-    
-    raw_value = config.get("counterbore_hole_bridging")
-    if raw_value is None:
-        return (False, None, {"error": "未在 G-code 配置中找到 counterbore_hole_bridging 参数"})
-    
-    actual_value = str(raw_value).strip()
-    ok = actual_value == expected_value
-    details = {
-        "config_value": actual_value,
-        "expected": expected_value,
-        "method": "L1 - CONFIG_BLOCK"
+    """Classify counterbore treatment from bridge coverage at the stepped hole."""
+    behavior = BehaviorGCode(gcode_path)
+    moves = behavior.extrusion_moves(ExtrusionType.BRIDGE.value)
+    layers = sorted({move.layer for move in moves})
+    transition_layer = layers[0] if layers else None
+    transition_moves = [move for move in moves if move.layer == transition_layer]
+    total = sum(move.xy_length for move in transition_moves)
+    # On the designed annular step: partially bridged covers only bridgeable
+    # sectors, sacrificial-layer fills the annulus, and none leaves the native
+    # overhang/perimeter treatment. Their emitted bridge coverage is distinct.
+    if total > 380.0:
+        inferred = "sacrificiallayer"
+    elif total < 270.0:
+        inferred = "partiallybridge"
+    else:
+        inferred = "none"
+    expected = str(expected_value).strip().lower()
+    return inferred == expected, inferred, {
+        "method": "L2 - Counterbore transition-layer bridge coverage",
+        "transition_layer": transition_layer, "bridge_segments": len(transition_moves),
+        "bridge_total_length": total, "expected": expected,
     }
-    return (ok, actual_value, details)
 

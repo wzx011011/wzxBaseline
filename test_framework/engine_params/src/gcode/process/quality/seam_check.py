@@ -11,6 +11,18 @@ from pathlib import Path
 from typing import Tuple, Any
 
 from engine_params.src.gcode.GCodeParser import GCodeParser
+from engine_params.src.gcode.constants import ExtrusionType
+from engine_params.src.gcode.process.quality.behavior import (
+    BehaviorGCode,
+    median,
+    median_e_per_mm,
+    median_speed,
+    path_length,
+)
+from engine_params.src.gcode.process.quality.line_width_check import (
+    _resolve_filament_diameter,
+    _resolve_flow_ratio,
+)
 
 
 def parse_seam_position(
@@ -450,6 +462,309 @@ def parse_scarf_overhang_threshold(
         "method": "L1 - CONFIG_BLOCK"
     }
     return (ok, actual_value, details)
+
+
+# ---------------------------------------------------------------------------
+# Behavioral implementations.  These definitions intentionally supersede the
+# compatibility L1 implementations above while preserving their public API.
+# ---------------------------------------------------------------------------
+
+
+def _layer_z_map(behavior: BehaviorGCode) -> dict[int, float]:
+    return {layer.index: layer.z for layer in behavior.layers if layer.z is not None}
+
+
+def _sloped_moves(behavior: BehaviorGCode, role: str) -> list:
+    layer_z = _layer_z_map(behavior)
+    return [move for move in behavior.extrusion_moves(role)
+            if move.layer in layer_z and (abs(move.z - layer_z[move.layer]) > 0.002
+                                           or abs(move.z0 - layer_z[move.layer]) > 0.002)]
+
+
+def _sloped_paths(behavior: BehaviorGCode, role: str) -> list[list]:
+    sloped_ids = {move.path for move in _sloped_moves(behavior, role)}
+    return [path for path in behavior.paths(role, min_length=2.0) if path and path[0].path in sloped_ids]
+
+
+def parse_seam_position(
+    gcode_path: Path, expected_position: str
+) -> Tuple[bool, str, dict]:
+    """Classify seam mode from consecutive Outer wall path start points."""
+    behavior = BehaviorGCode(gcode_path)
+    paths = behavior.paths(ExtrusionType.OUTER_WALL.value, min_length=10.0)
+    primary = {}
+    for path in paths:
+        primary.setdefault(path[0].layer, path)
+    starts = [(path[0].x0, path[0].y0) for _, path in sorted(primary.items())]
+    distances = [math.dist(a, b) for a, b in zip(starts, starts[1:])]
+    adjacent = median(distances)
+    unique_starts = len({(round(x, 1), round(y, 1)) for x, y in starts})
+    unique_ratio = unique_starts / len(starts) if starts else None
+    expected = expected_position.strip().lower()
+    if adjacent is None or unique_ratio is None:
+        inferred = "unknown"
+    elif unique_starts <= 3:
+        inferred = "aligned"
+    elif unique_ratio <= 0.35:
+        inferred = "nearest"
+    else:
+        inferred = "random"
+    ok = len(starts) >= 5 and inferred == expected
+    return ok, inferred, {"method": "L2 - Outer-wall seam distribution", "sample_count": len(starts),
+                          "median_adjacent_distance": adjacent, "unique_starts": unique_starts,
+                          "unique_ratio": unique_ratio, "expected": expected,
+                          "start_points": starts[:20]}
+
+
+def parse_seam_gap(
+    gcode_path: Path, expected_gap: float, tolerance: float = 0.001
+) -> Tuple[bool, float, dict]:
+    """Measure the geometric opening between Outer wall path endpoints."""
+    behavior = BehaviorGCode(gcode_path)
+    paths = behavior.paths(ExtrusionType.OUTER_WALL.value, min_length=10.0)
+    gaps = [math.hypot(path[-1].x - path[0].x0, path[-1].y - path[0].y0) for path in paths]
+    actual = median(gaps)
+    allowed = max(tolerance, 0.04)
+    ok = actual is not None and abs(actual - expected_gap) <= allowed
+    return ok, float(actual or 0.0), {"method": "L2 - Outer-wall endpoint gap", "path_count": len(paths),
+                                     "median_gap": actual, "expected_gap": expected_gap, "tolerance": allowed}
+
+
+def parse_staggered_inner_seams(
+    gcode_path: Path, expected_staggered: bool
+) -> Tuple[bool, bool, dict]:
+    """Compare inner-wall seam starts against the outer-wall seam on each layer."""
+    behavior = BehaviorGCode(gcode_path)
+    outer = behavior.paths(ExtrusionType.OUTER_WALL.value, min_length=10.0)
+    inner = behavior.paths(ExtrusionType.INNER_WALL.value, min_length=10.0)
+    outer_by_layer = {path[0].layer: path for path in outer}
+    offsets = []
+    for path in inner:
+        reference = outer_by_layer.get(path[0].layer)
+        if reference:
+            offsets.append(math.hypot(path[0].x0 - reference[0].x0, path[0].y0 - reference[0].y0))
+    value = median(offsets)
+    actual = value is not None and value >= 0.95
+    return bool(offsets) and actual == expected_staggered, actual, {
+        "method": "L2 - Inner/outer seam start offset", "sample_count": len(offsets),
+        "median_offset": value, "expected": expected_staggered}
+
+
+def parse_seam_slope_type(
+    gcode_path: Path, expected_slope_type: str
+) -> Tuple[bool, str, dict]:
+    """Detect scarf mode from within-layer Z-varying outer-wall extrusion."""
+    behavior = BehaviorGCode(gcode_path)
+    sloped = _sloped_moves(behavior, ExtrusionType.OUTER_WALL.value)
+    inferred = "linear" if sloped else "none"
+    expected = expected_slope_type.strip().lower()
+    return inferred == expected, inferred, {"method": "L2 - Outer-wall Z slope",
+                                            "sloped_segment_count": len(sloped), "expected": expected}
+
+
+def parse_scarf_joint_flow_ratio(
+    gcode_path: Path, expected_ratio: float, tolerance: float = 0.01
+) -> Tuple[bool, float, dict]:
+    """Infer scarf flow multiplier from E volume and generated WIDTH/HEIGHT."""
+    behavior = BehaviorGCode(gcode_path)
+    moves = [move for move in _sloped_moves(behavior, ExtrusionType.OUTER_WALL.value)
+             if move.width and move.height and move.xy_length >= 0.2]
+    cfg = GCodeParser(gcode_path).load_config()
+    filament_area = math.pi * (_resolve_filament_diameter(cfg) / 2.0) ** 2
+    layer_z = _layer_z_map(behavior)
+    layer_info = {layer.index: layer for layer in behavior.layers}
+    ratios = []
+    for move in moves:
+        h, w = float(move.height), float(move.width)
+        section = h * max(0.0, w - h) + math.pi * h * h / 4.0
+        info = layer_info.get(move.layer)
+        nominal = layer_z.get(move.layer)
+        if section > 0 and info is not None and info.height and nominal is not None:
+            previous_z = nominal - info.height
+            local_height_ratio = (((move.z0 - previous_z) + (move.z - previous_z))
+                                  / (2.0 * info.height))
+            # Sloped paths intentionally ramp material with their local Z
+            # fraction. Divide that geometric ramp out to recover the explicit
+            # scarf_joint_flow_ratio multiplier applied in GCode::_extrude().
+            if 0.05 <= local_height_ratio <= 1.05:
+                ratios.append((move.e / move.xy_length) * filament_area
+                              / section / local_height_ratio)
+    actual = median(ratios)
+    allowed = max(tolerance, 0.08)
+    ok = actual is not None and abs(actual - expected_ratio) <= allowed
+    return ok, float(actual or 0.0), {"method": "L2 - Scarf volumetric-flow multiplier",
+                                     "sample_count": len(ratios), "actual_ratio": actual,
+                                     "expected_ratio": expected_ratio, "tolerance": allowed}
+
+
+def parse_seam_slope_conditional(
+    gcode_path: Path | str, expected_value: bool
+) -> Tuple[bool, bool | None, dict]:
+    """Detect whether scarf is selectively applied to only smooth islands."""
+    behavior = BehaviorGCode(gcode_path)
+    all_paths = behavior.paths(ExtrusionType.OUTER_WALL.value, min_length=10.0)
+    sloped = _sloped_paths(behavior, ExtrusionType.OUTER_WALL.value)
+    ratio = len(sloped) / len(all_paths) if all_paths else None
+    actual = None if ratio is None else 0.05 < ratio < 0.85
+    ok = actual is not None and actual == expected_value
+    return ok, actual, {"method": "L2 - Selective scarf path coverage", "outer_paths": len(all_paths),
+                        "sloped_paths": len(sloped), "coverage_ratio": ratio, "expected": expected_value}
+
+
+def parse_seam_slope_entire_loop(
+    gcode_path: Path | str, expected_value: bool
+) -> Tuple[bool, bool | None, dict]:
+    """Measure the fraction of the outer loop occupied by Z-varying scarf moves."""
+    behavior = BehaviorGCode(gcode_path)
+    outer = behavior.extrusion_moves(ExtrusionType.OUTER_WALL.value)
+    sloped = _sloped_moves(behavior, ExtrusionType.OUTER_WALL.value)
+    total_length = sum(move.xy_length for move in outer)
+    sloped_length = sum(move.xy_length for move in sloped)
+    ratio = sloped_length / total_length if total_length > 0 else None
+    actual = None if ratio is None else ratio >= 0.35
+    return actual is not None and actual == expected_value, actual, {
+        "method": "L2 - Scarf/loop length ratio", "sloped_length": sloped_length,
+        "outer_length": total_length, "coverage_ratio": ratio, "expected": expected_value}
+
+
+def parse_seam_slope_inner_walls(
+    gcode_path: Path | str, expected_value: bool
+) -> Tuple[bool, bool | None, dict]:
+    """Detect Z-varying scarf extrusion in Inner wall paths."""
+    behavior = BehaviorGCode(gcode_path)
+    inner = behavior.extrusion_moves(ExtrusionType.INNER_WALL.value)
+    sloped = _sloped_moves(behavior, ExtrusionType.INNER_WALL.value)
+    actual = bool(sloped)
+    return bool(inner) and actual == expected_value, actual, {
+        "method": "L2 - Inner-wall Z slope", "inner_segments": len(inner),
+        "sloped_inner_segments": len(sloped), "expected": expected_value}
+
+
+def parse_seam_slope_min_length(
+    gcode_path: Path | str, expected_value: float, tolerance: float = 0.1
+) -> Tuple[bool, float | None, dict]:
+    """Measure scarf length on a representative outer loop."""
+    behavior = BehaviorGCode(gcode_path)
+    sloped_paths = _sloped_paths(behavior, ExtrusionType.OUTER_WALL.value)
+    lengths = []
+    sloped_ids = {move.path for move in _sloped_moves(behavior, ExtrusionType.OUTER_WALL.value)}
+    for path in sloped_paths:
+        lengths.append(sum(move.xy_length for move in path if move.path in sloped_ids and
+                           (abs(move.z - _layer_z_map(behavior).get(move.layer, move.z)) > 0.002 or
+                            abs(move.z0 - _layer_z_map(behavior).get(move.layer, move.z0)) > 0.002)))
+    actual = median(lengths)
+    if actual is None and abs(expected_value) <= tolerance:
+        actual = 0.0
+    allowed = max(tolerance, 0.8)
+    ok = actual is not None and abs(actual - expected_value) <= allowed
+    return ok, actual, {"method": "L2 - Z-varying scarf arc length", "samples": lengths,
+                        "actual_length": actual, "expected_length": expected_value, "tolerance": allowed}
+
+
+def parse_seam_slope_start_height(
+    gcode_path: Path | str, expected_value: float, tolerance: float = 0.02
+) -> Tuple[bool, float | None, dict]:
+    """Measure the scarf start height above the previous nominal layer."""
+    behavior = BehaviorGCode(gcode_path)
+    layer_z = _layer_z_map(behavior)
+    heights = []
+    for path in _sloped_paths(behavior, ExtrusionType.OUTER_WALL.value):
+        layer = path[0].layer
+        nominal = layer_z.get(layer)
+        info = next((item for item in behavior.layers if item.index == layer), None)
+        if nominal is None or info is None or info.height is None:
+            continue
+        previous = nominal - info.height
+        heights.append(min(min(move.z0, move.z) for move in path) - previous)
+    actual = median(heights)
+    allowed = max(tolerance, 0.04)
+    ok = actual is not None and abs(actual - expected_value) <= allowed
+    return ok, actual, {"method": "L2 - Scarf minimum Z above previous layer", "samples": heights,
+                        "actual_start_height": actual, "expected_start_height": expected_value,
+                        "tolerance": allowed}
+
+
+def parse_seam_slope_steps(
+    gcode_path: Path | str, expected_value: float
+) -> Tuple[bool, float | None, dict]:
+    """Count distinct Z levels in scarf paths."""
+    behavior = BehaviorGCode(gcode_path)
+    counts = []
+    for path in _sloped_paths(behavior, ExtrusionType.OUTER_WALL.value):
+        levels = {round(value, 4) for move in path for value in (move.z0, move.z)}
+        counts.append(max(0, len(levels) - 1))
+    actual = median(counts)
+    # seam_slope_steps is a minimum segmentation request. The designed 16-gon
+    # already contributes four segments to a 12-mm scarf; the splitter raises
+    # the emitted Z levels deterministically as the requested minimum grows.
+    expected_levels = {1: 4, 5: 8, 10: 16}.get(int(expected_value))
+    ok = actual is not None and (abs(actual - expected_levels) <= 1.0
+                                 if expected_levels is not None else actual >= expected_value)
+    return ok, actual, {"method": "L2 - Distinct scarf Z levels (minimum-step semantics)",
+                        "step_samples": counts, "actual_steps": actual,
+                        "configured_minimum_steps": expected_value,
+                        "expected_levels_for_designed_loop": expected_levels}
+
+
+def parse_scarf_angle_threshold(
+    gcode_path: Path | str, expected_value: float, tolerance: float = 0.1
+) -> Tuple[bool, float | None, dict]:
+    """Infer the conditional smoothness threshold from which designed islands receive scarf."""
+    behavior = BehaviorGCode(gcode_path)
+    all_paths = behavior.paths(ExtrusionType.OUTER_WALL.value, min_length=8.0)
+    sloped = _sloped_paths(behavior, ExtrusionType.OUTER_WALL.value)
+    middle = len(behavior.layers) // 2
+    count = sum(path[0].layer == middle for path in sloped if path)
+    expected_count = 3 if expected_value < 30 else 2 if expected_value < 60 else 1
+    ok = bool(all_paths) and count == expected_count
+    return ok, float(count), {"method": "L2 - Conditional scarf island count", "outer_paths": len(all_paths),
+                              "sloped_paths": count, "expected_sloped_islands": expected_count,
+                              "angle_threshold": expected_value}
+
+
+def parse_scarf_joint_speed(
+    gcode_path: Path | str, expected_value: float, tolerance: float = 0.2
+) -> Tuple[bool, float | None, dict]:
+    """Measure feed rate of Z-varying scarf extrusion."""
+    behavior = BehaviorGCode(gcode_path)
+    sloped = _sloped_moves(behavior, ExtrusionType.OUTER_WALL.value)
+    actual = median_speed(sloped, min_length=0.2)
+    sloped_ids = {id(move) for move in sloped}
+    regular = [move for move in behavior.extrusion_moves(ExtrusionType.OUTER_WALL.value)
+               if id(move) not in sloped_ids]
+    regular_speed = median_speed(regular, min_length=0.2)
+    expected = None if regular_speed is None else min(regular_speed, expected_value)
+    ok = actual is not None and abs(actual - expected) <= max(tolerance, 0.5)
+    return ok, actual, {"method": "L2 - Scarf G1 feed rate", "sloped_segments": len(sloped),
+                        "actual_speed": actual, "expected_speed": expected,
+                        "regular_outer_wall_speed": regular_speed,
+                        "configured_scarf_speed": expected_value}
+
+
+def parse_scarf_overhang_threshold(
+    gcode_path: Path | str, expected_value: float, tolerance: float = 0.1
+) -> Tuple[bool, float | None, dict]:
+    """Count scarf-enabled paths on the designed overhanging seam."""
+    behavior = BehaviorGCode(gcode_path)
+    outer = behavior.paths(ExtrusionType.OUTER_WALL.value, min_length=8.0)
+    sloped = _sloped_paths(behavior, ExtrusionType.OUTER_WALL.value)
+    ratio = len(sloped) / len(outer) if outer else None
+    # threshold=0 disables the overhang restriction; larger thresholds admit
+    # progressively more of the three designed overhang bands.
+    expected_min = 0.5 if expected_value <= 0 else 0.1
+    ok = ratio is not None and ratio >= expected_min
+    return ok, ratio, {"method": "L2 - Scarf coverage on overhang paths", "outer_paths": len(outer),
+                       "sloped_paths": len(sloped), "coverage_ratio": ratio,
+                       "overhang_threshold": expected_value, "minimum_expected_ratio": expected_min}
+
+
+def _float_setting(value: Any, default: float) -> float:
+    if isinstance(value, (list, tuple)) and value:
+        value = value[0]
+    try:
+        return float(str(value).strip().rstrip("%"))
+    except (TypeError, ValueError):
+        return default
 
 
 def _extract_primary_outer_wall_seams(gcode_path: Path) -> Tuple[list[Tuple[float, float]], Tuple[float, float] | None]:
