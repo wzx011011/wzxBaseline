@@ -54,6 +54,7 @@ class FakeSlicer:
 
 
 def test_run_slice_flow_slices_then_moves_model_then_slices_again(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("ENABLE_SECOND_SLICE", "true")
     monkeypatch.setenv("SLICER_PROGRESS_POLL", "0.001")
     model_path = tmp_path / "case.3mf"
     model_path.write_bytes(b"fake 3mf")
@@ -80,6 +81,7 @@ def test_run_slice_flow_slices_then_moves_model_then_slices_again(tmp_path: Path
 
 
 def test_run_slice_flow_respects_second_slice_repeat_env(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("ENABLE_SECOND_SLICE", "true")
     monkeypatch.setenv("SLICER_PROGRESS_POLL", "0.001")
     monkeypatch.setenv("SECOND_SLICE_REPEAT", "5")
     model_path = tmp_path / "case.3mf"
@@ -93,6 +95,7 @@ def test_run_slice_flow_respects_second_slice_repeat_env(tmp_path: Path, monkeyp
 
 
 def test_run_slice_flow_stops_when_select_printer_fails(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("ENABLE_SECOND_SLICE", "true")
     monkeypatch.setenv("SLICER_PROGRESS_POLL", "0.001")
     monkeypatch.setenv("SECOND_SLICE_PRINTER_NAME", "Creality K2 Plus 0.4 nozzle")
     model_path = tmp_path / "case.3mf"
@@ -117,6 +120,7 @@ def test_run_slice_flow_stops_when_select_printer_fails(tmp_path: Path, monkeypa
 
 
 def test_run_slice_flow_uses_project_printer_when_printer_env_is_empty(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("ENABLE_SECOND_SLICE", "true")
     monkeypatch.setenv("SLICER_PROGRESS_POLL", "0.001")
     monkeypatch.delenv("SECOND_SLICE_PRINTER_NAME", raising=False)
     model_path = tmp_path / "case.3mf"
@@ -128,6 +132,25 @@ def test_run_slice_flow_uses_project_printer_when_printer_env_is_empty(tmp_path:
     assert result["slice_ok"] is True
     assert "select_printer" not in slicer.commands
     assert "trigger_load_project2" in slicer.commands
+
+
+def test_run_slice_flow_skips_second_slice_by_default(tmp_path: Path, monkeypatch):
+    monkeypatch.delenv("ENABLE_SECOND_SLICE", raising=False)
+    monkeypatch.setenv("SLICER_PROGRESS_POLL", "0.001")
+    model_path = tmp_path / "case.3mf"
+    model_path.write_bytes(b"fake 3mf")
+    slicer = FakeSlicer()
+
+    result = _run_slice_flow(slicer, model_path, tmp_path)
+
+    assert result["first_slice_ms"] is not None
+    assert result["second_slice_ms"] is None
+    assert result["second_slice_trials"] == []
+    assert result["slice_ms"] == result["first_slice_ms"]
+    assert result["slice_ok"] is True
+    assert result["export_ok"] is True
+    assert slicer.commands.count("trigger_slice") == 1
+    assert "move_model_instance" not in slicer.commands
 
 
 def test_is_slicing_done_uses_state_completed():

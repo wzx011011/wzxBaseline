@@ -203,6 +203,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--platform", default=os.getenv("PLATFORM", "windows"), help="Platform label used for env injection (e.g., windows/macos_x86/macos_arm64/linux)")
     parser.add_argument("--baseline-build-id", default=os.getenv("BASELINE_BUILD_ID", "1793"), help="Fixed Jenkins build number used as the second-slice baseline")
     parser.add_argument("--second-slice-model", default=os.getenv("SECOND_SLICE_MODEL", ""), help="Optional 3MF path used as the only second-slice case")
+    parser.add_argument("--enable-second-slice", action="store_true", default=_truthy(os.getenv("ENABLE_SECOND_SLICE", "0")), help="Enable moved-model second-slice performance checks")
     parser.add_argument("--update-baseline", action="store_true", default=os.getenv("UPDATE_BASELINE", "").lower() in {"1", "true", "yes", "on"}, help="Allow updating the persistent second-slice baseline CSV")
     parser.add_argument("--skip-tested-build", action="store_true", default=os.getenv("SKIP_TESTED_BUILD", "").lower() in {"1", "true", "yes", "on"}, help="Skip when the resolved build was already tested")
     parser.add_argument("--preserve-extracted-files", action="store_true", default=_truthy(os.getenv("PRESERVE_EXTRACTED_FILES", "1")), help="Overlay ZIP contents onto the extraction directory without removing existing files")
@@ -339,7 +340,8 @@ def main() -> int:
                 state.get("source_kind") in {None, "jenkins"}
                 and str(state.get("build_number") or "") == str(build_number)
             )
-        if same_source and str(state.get("test_command") or "").strip() == test_args:
+        same_mode = bool(state.get("enable_second_slice", False)) == bool(args.enable_second_slice)
+        if same_source and same_mode and str(state.get("test_command") or "").strip() == test_args:
             print(f"[info] {source_label} was already tested, skipping")
             if source_kind == "local" and downloaded.exists():
                 try:
@@ -356,12 +358,15 @@ def main() -> int:
     if existing_pythonpath:
         python_paths.append(existing_pythonpath)
     env["PYTHONPATH"] = os.pathsep.join(python_paths)
+    env["ENABLE_SECOND_SLICE"] = "1" if args.enable_second_slice else "0"
     env["SECOND_SLICE_BASELINE_CSV"] = str(baseline_csv)
     env["SECOND_SLICE_BASELINE_BUILD_ID"] = str(args.baseline_build_id if source_kind == "jenkins" else package_id)
-    allow_update_baseline = args.update_baseline or (
-        source_kind == "jenkins" and build_number == baseline_build_number and not baseline_csv.exists()
+    allow_update_baseline = args.enable_second_slice and (
+        args.update_baseline
+        or (source_kind == "jenkins" and build_number == baseline_build_number and not baseline_csv.exists())
     )
     env["SECOND_SLICE_UPDATE_BASELINE"] = "1" if allow_update_baseline else "0"
+    print(f"[info] second slice: {'enabled' if args.enable_second_slice else 'disabled'}")
     print(
         f"[info] second-slice baseline: scope={state_key}, "
         f"csv={baseline_csv}, update={'on' if allow_update_baseline else 'off'}"
@@ -464,6 +469,7 @@ def main() -> int:
                     "package_id": package_id,
                     "artifact_sha256": artifact_sha256 or None,
                     "test_command": test_args,
+                    "enable_second_slice": bool(args.enable_second_slice),
                 },
                 ensure_ascii=False,
                 indent=2,

@@ -36,6 +36,7 @@ def _complete_report_fixture(baseline_data, baseline_snapshot, current_results):
 
 
 def test_empty_session_rewrites_report_but_does_not_promote_legacy_baseline(tmp_path, monkeypatch):
+    monkeypatch.setenv("ENABLE_SECOND_SLICE", "true")
     monkeypatch.chdir(tmp_path)
     report_path = tmp_path / "performance" / "data" / "feishu_slice_report.csv"
     report_path.parent.mkdir(parents=True)
@@ -52,6 +53,7 @@ def test_empty_session_rewrites_report_but_does_not_promote_legacy_baseline(tmp_
 
 
 def test_setup_failure_with_loaded_baseline_does_not_promote_it(tmp_path, monkeypatch):
+    monkeypatch.setenv("ENABLE_SECOND_SLICE", "true")
     monkeypatch.chdir(tmp_path)
     persistent_baseline = tmp_path / "persistent-baseline.csv"
     persistent_baseline.write_text("keep-baseline\n", encoding="utf-8")
@@ -65,6 +67,7 @@ def test_setup_failure_with_loaded_baseline_does_not_promote_it(tmp_path, monkey
 
 
 def test_healthy_current_result_promotes_the_report(tmp_path, monkeypatch):
+    monkeypatch.setenv("ENABLE_SECOND_SLICE", "true")
     monkeypatch.chdir(tmp_path)
     persistent_baseline = tmp_path / "persistent-baseline.csv"
     persistent_baseline.write_text("old-baseline\n", encoding="utf-8")
@@ -81,6 +84,7 @@ def test_healthy_current_result_promotes_the_report(tmp_path, monkeypatch):
 
 
 def test_failed_current_result_does_not_promote_the_report(tmp_path, monkeypatch):
+    monkeypatch.setenv("ENABLE_SECOND_SLICE", "true")
     monkeypatch.chdir(tmp_path)
     persistent_baseline = tmp_path / "persistent-baseline.csv"
     persistent_baseline.write_text("keep-baseline\n", encoding="utf-8")
@@ -89,6 +93,21 @@ def test_failed_current_result_does_not_promote_the_report(tmp_path, monkeypatch
     failed_row = _healthy_row()
     failed_row.update({"move_ok": "False", "slice_ok": "False", "export_ok": "False", "error": "move failed"})
     current = {failed_row["record_id"]: failed_row}
+
+    _complete_report_fixture(dict(current), {}, current)
+
+    assert persistent_baseline.read_text(encoding="utf-8") == "keep-baseline\n"
+
+
+def test_disabled_second_slice_does_not_promote_the_report(tmp_path, monkeypatch):
+    monkeypatch.setenv("ENABLE_SECOND_SLICE", "false")
+    monkeypatch.chdir(tmp_path)
+    persistent_baseline = tmp_path / "persistent-baseline.csv"
+    persistent_baseline.write_text("keep-baseline\n", encoding="utf-8")
+    monkeypatch.setenv("SECOND_SLICE_BASELINE_CSV", str(persistent_baseline))
+    monkeypatch.setenv("SECOND_SLICE_UPDATE_BASELINE", "true")
+    current_row = _healthy_row()
+    current = {current_row["record_id"]: current_row}
 
     _complete_report_fixture(dict(current), {}, current)
 

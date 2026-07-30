@@ -896,6 +896,7 @@ def current_results():
 
 
 def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
+    second_slice_enabled = _truthy_env("ENABLE_SECOND_SLICE")
     timeouts = {
         "load": int(os.getenv("SLICER_LOAD_TIMEOUT", "90")),
         "slice": int(os.getenv("SLICER_SLICE_TIMEOUT", "600")),
@@ -1011,46 +1012,51 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     result["first_slice_ms"] = first_slice_ms
     if first_slice_ms is None:
         return result
-
-    move_ret = _run_command(
-        send_cmd_handle,
-        "move_model_instance",
-        {
-            "object_index": int(os.getenv("SECOND_SLICE_OBJECT_INDEX", "0")),
-            "instance_index": int(os.getenv("SECOND_SLICE_INSTANCE_INDEX", "0")),
-            "delta_x": float(os.getenv("SECOND_SLICE_MOVE_X", "10")),
-            "delta_y": float(os.getenv("SECOND_SLICE_MOVE_Y", "0")),
-            "delta_z": float(os.getenv("SECOND_SLICE_MOVE_Z", "0")),
-        },
-        timeout=int(os.getenv("SLICER_MOVE_TIMEOUT", "30")),
-    )
-    _log_command_result("move_model_instance", move_ret)
-    result["move_ok"] = move_ret["ok"]
-    result["move_ms"] = round(move_ret["elapsed_ms"], 2) if move_ret["ok"] else None
-    result["crashed"] = result["crashed"] or move_ret["crashed"]
-    if not move_ret["ok"]:
-        result["error"] = move_ret["error"] or "move_model_instance failed"
-        return result
-
-    # Second slice (slice after moving the model). One first slice + one
-    # moved-model slice is one test group. Repeat >1 only when a more stable
-    # mean is explicitly requested via SECOND_SLICE_REPEAT.
-    repeat = max(1, int(os.getenv("SECOND_SLICE_REPEAT", "1")))
-    second_trials = []
-    for i in range(repeat):
-        # Re-slicing: a previous slice result is already on disk, so use the
-        # live state signal (progress->completed) to avoid a stale "finished" flag.
-        trial = run_slice_once(f"second-{i + 1}", wait_for_transition=True)
-        if trial is None:
+    if not second_slice_enabled:
+        _safe_print("[second-slice] disabled; exporting the first-slice result")
+        result["move_ok"] = True
+        result["slice_ok"] = True
+        result["slice_ms"] = first_slice_ms
+    else:
+        move_ret = _run_command(
+            send_cmd_handle,
+            "move_model_instance",
+            {
+                "object_index": int(os.getenv("SECOND_SLICE_OBJECT_INDEX", "0")),
+                "instance_index": int(os.getenv("SECOND_SLICE_INSTANCE_INDEX", "0")),
+                "delta_x": float(os.getenv("SECOND_SLICE_MOVE_X", "10")),
+                "delta_y": float(os.getenv("SECOND_SLICE_MOVE_Y", "0")),
+                "delta_z": float(os.getenv("SECOND_SLICE_MOVE_Z", "0")),
+            },
+            timeout=int(os.getenv("SLICER_MOVE_TIMEOUT", "30")),
+        )
+        _log_command_result("move_model_instance", move_ret)
+        result["move_ok"] = move_ret["ok"]
+        result["move_ms"] = round(move_ret["elapsed_ms"], 2) if move_ret["ok"] else None
+        result["crashed"] = result["crashed"] or move_ret["crashed"]
+        if not move_ret["ok"]:
+            result["error"] = move_ret["error"] or "move_model_instance failed"
             return result
-        second_trials.append(trial)
-    result["second_slice_trials"] = second_trials
-    second_slice_ms = round(sum(second_trials) / len(second_trials), 2)
-    result["second_slice_ms"] = second_slice_ms
-    result["slice_ms"] = second_slice_ms
-    result["slice_ok"] = second_slice_ms is not None
-    if second_slice_ms is None:
-        return result
+
+        # Second slice (slice after moving the model). One first slice + one
+        # moved-model slice is one test group. Repeat >1 only when a more stable
+        # mean is explicitly requested via SECOND_SLICE_REPEAT.
+        repeat = max(1, int(os.getenv("SECOND_SLICE_REPEAT", "1")))
+        second_trials = []
+        for i in range(repeat):
+            # Re-slicing: a previous slice result is already on disk, so use the
+            # live state signal (progress->completed) to avoid a stale "finished" flag.
+            trial = run_slice_once(f"second-{i + 1}", wait_for_transition=True)
+            if trial is None:
+                return result
+            second_trials.append(trial)
+        result["second_slice_trials"] = second_trials
+        second_slice_ms = round(sum(second_trials) / len(second_trials), 2)
+        result["second_slice_ms"] = second_slice_ms
+        result["slice_ms"] = second_slice_ms
+        result["slice_ok"] = second_slice_ms is not None
+        if second_slice_ms is None:
+            return result
 
     # Export gcode
     output_gcode = tmp_dir / f"{model_path.stem}.gcode.3mf"
@@ -1165,7 +1171,7 @@ def test_feishu_slice(
             # Assert key metrics match baseline (only against a healthy baseline)
             assert result["crashed"] == (baseline_row["crashed"] == "True"), f"Crashed status mismatch with baseline for {key}"
             assert result["import_ok"] == (baseline_row["import_ok"] == "True"), f"Import status mismatch with baseline for {key}"
-            if "move_ok" in baseline_row:
+            if _truthy_env("ENABLE_SECOND_SLICE") and "move_ok" in baseline_row:
                 assert result["move_ok"] == (baseline_row.get("move_ok") == "True"), f"Move status mismatch with baseline for {key}"
             assert result["slice_ok"] == (baseline_row["slice_ok"] == "True"), f"Slice status mismatch with baseline for {key}"
             assert result["export_ok"] == (baseline_row["export_ok"] == "True"), f"Export status mismatch with baseline for {key}"
@@ -1177,9 +1183,10 @@ def test_feishu_slice(
     assert not result["crashed"], f"App crashed when handling {model_path}"
     assert result["import_ok"], f"Import failed for {model_path}: {result['error']}"
     assert result["first_slice_ms"] is not None, f"First slice failed for {model_path}: {result['error']}"
-    assert result["move_ok"], f"Move model failed for {model_path}: {result['error']}"
-    assert result["slice_ok"], f"Second slice failed for {model_path}: {result['error']}"
-    assert result["second_slice_ms"] is not None, f"Second slice timing missing for {model_path}: {result['error']}"
+    if _truthy_env("ENABLE_SECOND_SLICE"):
+        assert result["move_ok"], f"Move model failed for {model_path}: {result['error']}"
+        assert result["slice_ok"], f"Second slice failed for {model_path}: {result['error']}"
+        assert result["second_slice_ms"] is not None, f"Second slice timing missing for {model_path}: {result['error']}"
     assert result["export_ok"], f"Export failed for {model_path}: {result['error']}"
 
 
@@ -1233,6 +1240,10 @@ def write_report_to_feishu_after_tests(baseline_data, baseline_snapshot, current
             time.sleep(2)
     if last_exc is not None and not report_written_this_run:
         _safe_print(f"[csv-write] failed after retries: {last_exc}")
+
+    if not _truthy_env("ENABLE_SECOND_SLICE"):
+        _safe_print("Skip second-slice efficiency summary and baseline update: second slice is disabled.")
+        return
 
     summary = build_efficiency_summary(
         baseline_snapshot,

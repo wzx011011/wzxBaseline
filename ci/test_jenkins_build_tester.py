@@ -7,6 +7,7 @@ import pytest
 
 from ci.jenkins_build_tester import (
     main,
+    parse_args,
     prepare_slicer_datadir,
     resolve_manual_package_id,
     resolve_run_slicer_datadir,
@@ -55,6 +56,15 @@ def test_second_slice_model_is_opt_in(tmp_path: Path, monkeypatch):
 
     selected = test_slice._collect_feishu_cases(fixed_model)
     assert [case["path"] for case in selected] == [str(model.resolve())]
+
+
+def test_second_slice_execution_is_opt_in(monkeypatch):
+    monkeypatch.delenv("ENABLE_SECOND_SLICE", raising=False)
+    monkeypatch.setattr("sys.argv", ["jenkins_build_tester.py"])
+    assert parse_args().enable_second_slice is False
+
+    monkeypatch.setattr("sys.argv", ["jenkins_build_tester.py", "--enable-second-slice"])
+    assert parse_args().enable_second_slice is True
 
 
 def test_prepare_slicer_datadir_seeds_from_explicit_template(tmp_path: Path):
@@ -257,6 +267,7 @@ def test_main_runs_local_package_without_jenkins_and_preserves_source(tmp_path: 
     monkeypatch.delenv("JENKINS_BASE_URL", raising=False)
     monkeypatch.delenv("JENKINS_URL", raising=False)
     monkeypatch.delenv("SLICER_DATADIR_ISOLATED", raising=False)
+    monkeypatch.delenv("ENABLE_SECOND_SLICE", raising=False)
     monkeypatch.setattr(
         "sys.argv",
         [
@@ -278,6 +289,7 @@ def test_main_runs_local_package_without_jenkins_and_preserves_source(tmp_path: 
     assert len(calls) == 1
     assert "CrealityPrint.exe" in calls[0][0]
     assert calls[0][1]["CREALITY_PRINTER_PATH"].endswith("CrealityPrint.exe")
+    assert calls[0][1]["ENABLE_SECOND_SLICE"] == "0"
     assert not list((artifacts_dir / "windows" / "manual").glob("*.zip"))
     state = (artifacts_dir / "tested_builds" / "manual_windows.json").read_text(encoding="utf-8")
     assert '"source_kind": "local"' in state
@@ -355,3 +367,38 @@ def test_main_removes_staged_zip_when_skipping_an_unchanged_package(tmp_path: Pa
 
     assert len(calls) == 1
     assert not list((artifacts_dir / "windows" / "manual").glob("*.zip"))
+
+
+def test_main_reruns_an_unchanged_package_when_second_slice_mode_changes(tmp_path: Path, monkeypatch):
+    package = tmp_path / "manual-release.zip"
+    artifacts_dir = tmp_path / "artifacts"
+    calls = []
+
+    def fake_run_tests(command, env, repo_root):
+        calls.append(env["ENABLE_SECOND_SLICE"])
+        return SimpleNamespace(status="SUCCESS", return_code=0, output="ok")
+
+    monkeypatch.setattr("ci.jenkins_build_tester.load_env_file", lambda _root: None)
+    monkeypatch.setattr("ci.jenkins_build_tester.run_tests", fake_run_tests)
+    monkeypatch.delenv("JENKINS_BASE_URL", raising=False)
+    monkeypatch.delenv("JENKINS_URL", raising=False)
+    monkeypatch.delenv("SLICER_DATADIR_ISOLATED", raising=False)
+    monkeypatch.delenv("ENABLE_SECOND_SLICE", raising=False)
+    base_args = [
+        "jenkins_build_tester.py",
+        "--artifact-file",
+        str(package),
+        "--artifacts-dir",
+        str(artifacts_dir),
+        "--skip-tested-build",
+        "--test-command",
+        "performance/case/test_slice.py::test_feishu_slice",
+    ]
+    monkeypatch.setattr("sys.argv", base_args)
+
+    _write_release_zip(package)
+    assert main() == 0
+    monkeypatch.setattr("sys.argv", [*base_args, "--enable-second-slice"])
+    assert main() == 0
+
+    assert calls == ["0", "1"]
