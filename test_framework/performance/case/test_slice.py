@@ -8,6 +8,7 @@ Results are appended to performance/data/feishu_slice_report.csv.
 """
 
 import csv
+import hashlib
 import json
 import os
 import re
@@ -16,6 +17,7 @@ import subprocess
 import sys
 import time
 import zipfile
+from html import unescape as html_unescape
 from pathlib import Path
 from typing import Dict, List, Optional, Union
 from urllib.parse import urljoin, unquote
@@ -62,8 +64,24 @@ def _safe_pytest_id(text: str) -> str:
     return text.encode("ascii", errors="backslashreplace").decode("ascii")
 
 
-def _sanitize_path_component(text: str) -> str:
-    return re.sub(r"[^A-Za-z0-9_.-]+", "_", text)
+_MAX_GCODE_CASE_COMPONENT_LENGTH = 80
+
+
+def _sanitize_path_component(
+    text: str,
+    max_length: int = _MAX_GCODE_CASE_COMPONENT_LENGTH,
+) -> str:
+    sanitized = re.sub(r"[^A-Za-z0-9_.-]+", "_", text)
+    if len(sanitized) <= max_length:
+        return sanitized
+
+    # pytest node ids include the full parameter value and can easily exceed
+    # Windows path limits. Keep a readable prefix and a stable hash so that
+    # truncated case directories remain deterministic and collision-resistant.
+    digest = hashlib.sha256(text.encode("utf-8")).hexdigest()[:12]
+    prefix_length = max_length - len(digest) - 1
+    prefix = sanitized[:prefix_length].rstrip("._-")
+    return f"{prefix}_{digest}" if prefix else digest[:max_length]
 
 
 @pytest.fixture
@@ -220,21 +238,21 @@ def _safe_local_name(href: str) -> str:
     return name
 
 
-def _http_list_links(html: str) -> List[str]:
+def _http_list_links(page_html: str) -> List[str]:
     links: List[str] = []
     pos = 0
     while True:
-        idx = html.find("href=", pos)
+        idx = page_html.find("href=", pos)
         if idx == -1:
             break
-        quote = html[idx + 5]
+        quote = page_html[idx + 5]
         if quote not in ("'", '"'):
             pos = idx + 5
             continue
-        end = html.find(quote, idx + 6)
+        end = page_html.find(quote, idx + 6)
         if end == -1:
             break
-        href = html[idx + 6:end]
+        href = html_unescape(page_html[idx + 6:end])
         links.append(href)
         pos = end + 1
     return links
