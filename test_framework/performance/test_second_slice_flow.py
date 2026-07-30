@@ -2,7 +2,13 @@ import json
 import zipfile
 from pathlib import Path
 
-from test_framework.performance.case.test_slice import _run_slice_flow, _is_slicing_done
+from test_framework.performance.case import test_slice as slice_case
+from test_framework.performance.case.test_slice import (
+    _is_idle_no_slicing_progress,
+    _is_slicing_done,
+    _run_slice_flow,
+    _run_slice_flow_with_idle_retry,
+)
 
 
 class FakeSlicer:
@@ -186,3 +192,91 @@ def test_is_slicing_done_falls_back_to_all_plate_finished_without_state():
     # Engines that do not report state fall back to all_plate_finished.
     assert _is_slicing_done({"all_plate_finished": True}) is True
     assert _is_slicing_done({"all_plate_finished": False}) is False
+
+
+def test_idle_no_slicing_retry_match_is_exact():
+    assert _is_idle_no_slicing_progress({"percentage": -1, "state": "no_slicing"}) is True
+    assert _is_idle_no_slicing_progress({"percentage": 71, "state": "progress"}) is False
+    assert _is_idle_no_slicing_progress({"percentage": -1, "state": "progress"}) is False
+    assert _is_idle_no_slicing_progress({"percentage": 0, "state": "no_slicing"}) is False
+
+
+class FakeEngineManager:
+    def __init__(self):
+        self.restart_calls = 0
+
+    def restart(self):
+        self.restart_calls += 1
+
+
+def test_run_slice_flow_retries_idle_no_slicing_once(tmp_path: Path, monkeypatch):
+    attempts = []
+    results = [
+        {
+            "export_ok": False,
+            "retryable_idle_no_slicing": True,
+            "error": "percentage=-1.000, state=no_slicing",
+        },
+        {"export_ok": True, "retryable_idle_no_slicing": False, "error": None},
+    ]
+
+    def fake_run_slice_flow(*args):
+        attempts.append(args)
+        return results[len(attempts) - 1]
+
+    monkeypatch.setenv("SLICER_IDLE_NO_SLICING_RETRIES", "1")
+    monkeypatch.setattr(slice_case, "_run_slice_flow", fake_run_slice_flow)
+    manager = FakeEngineManager()
+
+    result = _run_slice_flow_with_idle_retry(object(), manager, tmp_path / "case.3mf", tmp_path)
+
+    assert result["export_ok"] is True
+    assert result["idle_no_slicing_retries"] == 1
+    assert len(attempts) == 2
+    assert manager.restart_calls == 1
+
+
+def test_run_slice_flow_does_not_retry_progress_stall(tmp_path: Path, monkeypatch):
+    attempts = []
+
+    def fake_run_slice_flow(*args):
+        attempts.append(args)
+        return {
+            "export_ok": False,
+            "retryable_idle_no_slicing": False,
+            "error": "percentage=71.000, state=progress",
+        }
+
+    monkeypatch.setenv("SLICER_IDLE_NO_SLICING_RETRIES", "1")
+    monkeypatch.setattr(slice_case, "_run_slice_flow", fake_run_slice_flow)
+    manager = FakeEngineManager()
+
+    result = _run_slice_flow_with_idle_retry(object(), manager, tmp_path / "case.3mf", tmp_path)
+
+    assert result["export_ok"] is False
+    assert result["idle_no_slicing_retries"] == 0
+    assert len(attempts) == 1
+    assert manager.restart_calls == 0
+
+
+def test_run_slice_flow_retries_idle_no_slicing_at_most_once(tmp_path: Path, monkeypatch):
+    attempts = []
+
+    def fake_run_slice_flow(*args):
+        attempts.append(args)
+        return {
+            "export_ok": False,
+            "retryable_idle_no_slicing": True,
+            "error": "percentage=-1.000, state=no_slicing",
+        }
+
+    monkeypatch.setenv("SLICER_IDLE_NO_SLICING_RETRIES", "9")
+    monkeypatch.setattr(slice_case, "_run_slice_flow", fake_run_slice_flow)
+    manager = FakeEngineManager()
+
+    result = _run_slice_flow_with_idle_retry(object(), manager, tmp_path / "case.3mf", tmp_path)
+
+    assert result["export_ok"] is False
+    assert result["idle_no_slicing_retries"] == 1
+    assert len(attempts) == 2
+    assert manager.restart_calls == 1

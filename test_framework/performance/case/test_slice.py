@@ -596,6 +596,15 @@ def _is_slicing_done(progress: Dict) -> bool:
     return bool(progress.get("all_plate_finished"))
 
 
+def _is_idle_no_slicing_progress(progress: Optional[Dict]) -> bool:
+    """Return whether slicing never left the engine's idle state."""
+    if not isinstance(progress, dict):
+        return False
+    percentage = _progress_percentage_0_100(progress.get("percentage"))
+    state = str(progress.get("state") or "").strip().lower()
+    return percentage == -1.0 and state == "no_slicing"
+
+
 def _wait_for_slicing_done(
     send_cmd_handle,
     timeout_s: float,
@@ -919,6 +928,8 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         "slice_ok": False,
         "export_ok": False,
         "crashed": False,
+        "retryable_idle_no_slicing": False,
+        "idle_no_slicing_retries": 0,
         "error": None,
     }
 
@@ -947,6 +958,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         result["crashed"] = result["crashed"] or wait_ret["crashed"]
         if not wait_ret["ok"]:
             result["slice_ok"] = False
+            result["retryable_idle_no_slicing"] = _is_idle_no_slicing_progress(wait_ret.get("progress"))
             result["error"] = wait_ret["error"] or f"{label} slicing did not finish"
             return None
         return round((time.perf_counter() - slice_start) * 1000, 2)
@@ -1096,6 +1108,37 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     return result
 
 
+def _run_slice_flow_with_idle_retry(
+    send_cmd_handle,
+    engine_manager,
+    model_path: Path,
+    tmp_dir: Path,
+) -> Dict:
+    """Retry a whole model once when slicing stays at -1/no_slicing."""
+    try:
+        max_retries = min(1, max(0, int(os.getenv("SLICER_IDLE_NO_SLICING_RETRIES", "1"))))
+    except ValueError:
+        max_retries = 1
+
+    retries_used = 0
+    while True:
+        result = _run_slice_flow(send_cmd_handle, model_path, tmp_dir)
+        result["idle_no_slicing_retries"] = retries_used
+        if not result.get("retryable_idle_no_slicing") or retries_used >= max_retries:
+            return result
+
+        retries_used += 1
+        _safe_print(
+            f"[retry] slicing stayed at percentage=-1/state=no_slicing; "
+            f"restarting engine and rerunning current model ({retries_used}/{max_retries}) ..."
+        )
+        try:
+            engine_manager.restart()
+        except Exception as exc:  # noqa: BLE001
+            _safe_print(f"[retry] engine restart failed: {exc}")
+            return result
+
+
 # ======== tests ========
 @pytest.mark.performance
 def test_feishu_slice(
@@ -1114,7 +1157,12 @@ def test_feishu_slice(
     model_path = Path(feishu_case["path"]).resolve()  # Ensure absolute path
     #model_path = Path("C:\work\C3DBaseline\test_framework\artifacts\feishu_3mf\baby-groot.3mf")
     _safe_print(f"Testing Feishu 3MF slicing: {model_path}")
-    result = _run_slice_flow(send_cmd_handle, model_path, performance_gcode_dir)
+    result = _run_slice_flow_with_idle_retry(
+        send_cmd_handle,
+        engine_manager_perf,
+        model_path,
+        performance_gcode_dir,
+    )
 
     # If the case failed (deadlock / timeout / crash), force-restart the engine
     # so the next parametrized case starts with a clean state.
