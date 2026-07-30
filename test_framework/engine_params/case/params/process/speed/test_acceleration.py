@@ -34,6 +34,11 @@ def _format_failure(details) -> str:
     actual_set = details.get("actual_values_set") or []
     if actual_set:
         lines.append(f"  collected ACCEL values: {actual_set}")
+    if details.get("matching_ratio") is not None:
+        lines.append(
+            f"  travel ACCEL matching ratio: {details['matching_ratio']:.3%} "
+            f"({details.get('matching_points')} matching points)"
+        )
 
     missing_limits = details.get("missing_velocity_limits") or []
     if missing_limits:
@@ -341,9 +346,9 @@ def test_travel_acceleration(
 ):
     """
     验证方法：
-    1. 跳过首层，通过 get_motion_paths 获取 kind=travel 的移动点。
-    2. 读取每个移动点继承的 velocity_limits.ACCEL；这里校验的是加速度，不是 F 速度。
-    通过标准：至少存在一个 travel 点，ACCEL 不缺失，且全部在容差范围内。
+    1. 跳过首层，通过 get_motion_paths 获取 kind=travel 的移动点及其 ACCEL 状态。
+    2. 回抽、Z-hop 和打印块内短连接也会被底层标成 travel，但会合法继承打印加速度。
+    通过标准：ACCEL 状态完整，且自由移动加速度为主导（有效点命中率至少 90%）。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()

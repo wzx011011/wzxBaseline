@@ -92,20 +92,85 @@ def parse_detect_narrow_internal_solid_infill(
 
 
 # ================== bridge_angle ==================
+def _bridge_path_metrics(
+        bridge_layers: List[Tuple[int, List[List[Point]]]],
+) -> List[Dict[str, Any]]:
+    """Return rotation- and segmentation-tolerant Bridge path metrics per layer."""
+
+    def convex_hull_area(points: List[Tuple[float, float]]) -> float:
+        unique = sorted(set(points))
+        if len(unique) < 3:
+            return 0.0
+
+        def cross(
+                origin: Tuple[float, float],
+                first: Tuple[float, float],
+                second: Tuple[float, float],
+        ) -> float:
+            return (
+                (first[0] - origin[0]) * (second[1] - origin[1])
+                - (first[1] - origin[1]) * (second[0] - origin[0])
+            )
+
+        lower: List[Tuple[float, float]] = []
+        for point in unique:
+            while len(lower) >= 2 and cross(lower[-2], lower[-1], point) <= 0:
+                lower.pop()
+            lower.append(point)
+
+        upper: List[Tuple[float, float]] = []
+        for point in reversed(unique):
+            while len(upper) >= 2 and cross(upper[-2], upper[-1], point) <= 0:
+                upper.pop()
+            upper.append(point)
+
+        hull = lower[:-1] + upper[:-1]
+        return abs(sum(
+            hull[index][0] * hull[(index + 1) % len(hull)][1]
+            - hull[(index + 1) % len(hull)][0] * hull[index][1]
+            for index in range(len(hull))
+        )) / 2.0
+
+    metrics: List[Dict[str, Any]] = []
+    for layer_index, polylines in bridge_layers:
+        path_length = 0.0
+        points: List[Tuple[float, float]] = []
+        for polyline in polylines:
+            points.extend((point.x, point.y) for point in polyline)
+            path_length += sum(
+                math.hypot(second.x - first.x, second.y - first.y)
+                for first, second in zip(polyline, polyline[1:])
+            )
+        metrics.append({
+            "layer_index": layer_index,
+            "polyline_count": len(polylines),
+            "point_count": len(points),
+            "path_length": path_length,
+            "coverage_area": convex_hull_area(points),
+        })
+    return metrics
+
+
 def parse_bridge_angle(
         gcode_path: Path | str,
         expected_bridge_angle: float,
         *,
         baseline_gcode: Path | str | None = None,
         tolerance: float = 1.0,
+        auto_metric_relative_tolerance: float = 0.05,
         object_id: int = 0,
 ) -> Tuple[bool, Optional[float], Dict[str, Any]]:
     """
     桥接角度校验：
-      - expected_bridge_angle == 0：依赖基线 G-code，对 Bridge 轮廓做快照比对；
+      - expected_bridge_angle == 0：自动角度允许方向和路径分段变化，使用基线
+        比较 Bridge 层号、总路径长度和凸包覆盖面积；
       - expected_bridge_angle != 0：取首条 Bridge polyline 的前两个点，计算与 X 轴的夹角。
     """
     parser = GCodeParser(Path(gcode_path))
+    config = parser.load_config()
+    if "bridge_angle" not in config:
+        raise ValueError("CONFIG_BLOCK 缺少 bridge_angle 字段")
+    config_angle = float(config["bridge_angle"])
     contours = parser.get_type_contours_per_layer_by_object(
         object_id,
         types=[ExtrusionType.BRIDGE],
@@ -123,39 +188,72 @@ def parse_bridge_angle(
     details: Dict[str, Any] = {
         "bridge_layers": [idx for idx, _ in bridge_layers],
         "expected_bridge_angle": expected_bridge_angle,
-        "mode": "angle" if expected_bridge_angle != 0.0 else "snapshot",
+        "config_bridge_angle": config_angle,
+        "mode": "angle" if expected_bridge_angle != 0.0 else "auto_behavior",
     }
 
-    # 当期望为0°的时候，应该使用快照法
+    # 0° 是自动桥接方向。自动算法或模型在盘上的旋转可能改变实际角度和
+    # G-code 点数，因此只比较不受旋转、路径分段影响的行为指标。
     if abs(expected_bridge_angle) < 1e-6:
         if not baseline_gcode:
-            raise ValueError("expected_bridge_angle=0 时必须提供 baseline_gcode 进行快照比对")
+            raise ValueError("expected_bridge_angle=0 时必须提供 baseline_gcode 进行行为对比")
 
         baseline_parser = GCodeParser(Path(baseline_gcode))
-        baseline_layers = baseline_parser.get_type_contours_per_layer_by_object(
+        baseline_contours = baseline_parser.get_type_contours_per_layer_by_object(
             object_id,
             types=[ExtrusionType.BRIDGE],
         ) or []
+        baseline_bridge_layers = [
+            (idx, layer_map.get(ExtrusionType.BRIDGE, []))
+            for idx, layer_map in enumerate(baseline_contours)
+            if layer_map.get(ExtrusionType.BRIDGE)
+        ]
+        if not baseline_bridge_layers:
+            raise ValueError("基线 G-code 中未找到 Bridge 挤出层")
 
-        bridge_layer_indices = {idx for idx, _ in bridge_layers}
-        for idx, layer_map in enumerate(baseline_layers):
-            if layer_map.get(ExtrusionType.BRIDGE):
-                bridge_layer_indices.add(idx)
+        baseline_metrics = _bridge_path_metrics(baseline_bridge_layers)
+        actual_metrics = _bridge_path_metrics(bridge_layers)
+        baseline_by_layer = {item["layer_index"]: item for item in baseline_metrics}
+        actual_by_layer = {item["layer_index"]: item for item in actual_metrics}
+        errors: List[str] = []
 
-        def _layer_filter(layer_idx: int, total_layers: int) -> bool:
-            return layer_idx in bridge_layer_indices
+        if set(baseline_by_layer) != set(actual_by_layer):
+            errors.append(
+                "Bridge 层号不一致: "
+                f"baseline={sorted(baseline_by_layer)}, actual={sorted(actual_by_layer)}"
+            )
 
-        ok, compare_details = GCodeParser.compare_type_contours(
-            baseline_parser,
-            parser,
-            object_id=object_id,
-            types=[ExtrusionType.BRIDGE],
-            tolerance=tolerance,
-            layer_filter=_layer_filter,
-        )
+        for layer_index in sorted(set(baseline_by_layer) & set(actual_by_layer)):
+            baseline_item = baseline_by_layer[layer_index]
+            actual_item = actual_by_layer[layer_index]
+            for metric_name in ("path_length", "coverage_area"):
+                baseline_value = float(baseline_item[metric_name])
+                actual_value = float(actual_item[metric_name])
+                if baseline_value <= 0.0 or actual_value <= 0.0:
+                    errors.append(
+                        f"Bridge 层 {layer_index} 的 {metric_name} 必须大于0: "
+                        f"baseline={baseline_value:.6f}, actual={actual_value:.6f}"
+                    )
+                    continue
+                relative_delta = abs(actual_value - baseline_value) / baseline_value
+                if relative_delta > auto_metric_relative_tolerance:
+                    errors.append(
+                        f"Bridge 层 {layer_index} 的 {metric_name} 相对差异过大: "
+                        f"baseline={baseline_value:.6f}, actual={actual_value:.6f}, "
+                        f"delta={relative_delta:.2%}, "
+                        f"limit={auto_metric_relative_tolerance:.2%}"
+                    )
+
+        config_ok = abs(config_angle) < 1e-6
+        if not config_ok:
+            errors.append(f"CONFIG bridge_angle 应为0（自动），实际为 {config_angle}")
+
         details["baseline_gcode"] = str(Path(baseline_gcode))
-        details["compare_details"] = compare_details
-        return ok, None, details
+        details["baseline_metrics"] = baseline_metrics
+        details["actual_metrics"] = actual_metrics
+        details["relative_tolerance"] = auto_metric_relative_tolerance
+        details["errors"] = errors
+        return not errors, None, details
 
     layer_idx, polylines = bridge_layers[0]
     first_polyline = polylines[0]
@@ -178,7 +276,8 @@ def parse_bridge_angle(
         angle = 180.0
 
     actual_angle = angle
-    ok = abs(actual_angle - expected_bridge_angle) <= tolerance
+    config_ok = abs(config_angle - expected_bridge_angle) <= tolerance
+    ok = config_ok and abs(actual_angle - expected_bridge_angle) <= tolerance
 
     details.update({
         "actual_bridge_angle": actual_angle,
@@ -186,6 +285,10 @@ def parse_bridge_angle(
         "point_pair": ((p0.x, p0.y), (p1.x, p1.y)),
         "tolerance": tolerance,
     })
+    if not config_ok:
+        details.setdefault("errors", []).append(
+            f"CONFIG bridge_angle 应为 {expected_bridge_angle}，实际为 {config_angle}"
+        )
 
     if (abs(actual_angle - 0.0) < tolerance or abs(
             actual_angle - 180.0) < tolerance) and expected_bridge_angle != 180.0:

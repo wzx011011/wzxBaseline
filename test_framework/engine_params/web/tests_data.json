@@ -628,7 +628,7 @@
       "jerk_xy": [
         "test_outer_wall_jerk[outer_wall_jerk_10]",
         "test_inner_wall_jerk[inner_wall_jerk_10]",
-        "test_top_surface_acceleration[top_surface_acceleration_500]",
+        "test_top_surface_jerk[top_surface_jerk_10]",
         "test_initial_layer_jerk[initial_layer_jerk_10]",
         "test_default_jerk[default_jerk_10]",
         "test_infill_jerk[infill_jerk_10]"

@@ -27,7 +27,6 @@ def test_gap_fill_target(
         slice_and_export: Path,
         expected_target: str,
 ):
-    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
     ok, actual_target, details, warnings = parse_gap_fill_target(
@@ -95,9 +94,12 @@ def test_sparse_infill_pattern(
         expected_match: bool,
         baseline_gcode: str,
 ) -> None:
-    """验证方法：解析各层 Sparse infill 轮廓并与当前引擎行为快照比较；
-    Lightning 因树枝生成非确定，改查上层路径数相对下层持续分叉增长。"""
-    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
+    """验证 Sparse infill 图案确实形成对应的 G-code 行为。
+
+    先核对图案配置身份和实际稀疏填充挤出，再与基线比较填充层覆盖、总路径
+    长度、包围盒及 15° 方向直方图。允许算法改变折线分段和起点顺序。
+    Lightning 不使用随机坐标快照，改查树枝路径随高度分叉增长。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -313,7 +315,11 @@ def test_top_surface_pattern(
         expected_match: bool,
         baseline_gcode: str,
 ) -> None:
-    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Top/Bottom surface 连续层数、厚度和路径形态；配置值仅用于确认输入，最终由实际 G-code 行为断言。
+    """核对顶面图案配置和真实 Top surface 路径行为。
+
+    与基线比较顶面层覆盖、路径总长、打印边界和方向分布，不比较折线点数及
+    坐标顺序；因此 Octagram spiral 的合法重新分段不会造成误报。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -411,7 +417,11 @@ def test_tpms_gradual_direction(
         expected_match: bool,
         baseline_gcode: str,
 ) -> None:
-    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
+    """验证 TPMS 渐变方向对稀疏填充路径的实际作用。
+
+    核对 ``tpms_gradual_direction`` 配置，并与对应方向基线比较稀疏填充的
+    有效层、路径长度、边界和逐段方向分布；允许新版 TPMS 将曲线重新分段。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

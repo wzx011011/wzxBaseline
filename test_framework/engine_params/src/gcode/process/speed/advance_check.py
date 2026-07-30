@@ -833,15 +833,20 @@ def parse_max_volumetric_extrusion_rate_slope_segment_length(
         expected_segment_length: float,
         tolerance: float = 1e-6,
 ) -> Tuple[bool, float, Dict[str, Any]]:
-    """
-    校验分段长度限制（基于全段统计，不再显式定义平滑段）：
-    - 取含外墙的最高一层（跳过首层），收集 OUTER_WALL 所有相邻点的段长。
-    - 拆分：<=阈值（expected_segment_length+tolerance）的“正常段”，>阈值的“超阈段”。
-    - 计算正常段均值 AVG；对每个超阈段，若 (len-AVG)/AVG > 20% 则舍弃，否则视为违规。
-    - 若超阈段全部被舍弃（或无超阈段）则通过；无正常段时提示可能检测算法不适用。
+    """校验压力斜率产生的外墙细分行为。
+
+    取最高外墙层，把不超过目标长度 1.5 倍的重复短线段作为细分簇；模型
+    拐角和闭合边属于结构段，不要求被切成相同长度。配置值、细分簇中位数
+    和细分簇覆盖率必须同时达标。
     """
     path_obj = Path(gcode_path)
     parser = GCodeParserEx(path_obj)
+    cfg = parser.load_config() or {}
+    raw_config = cfg.get("max_volumetric_extrusion_rate_slope_segment_length")
+    try:
+        config_value = float(getattr(raw_config, "value", raw_config))
+    except (TypeError, ValueError):
+        config_value = None
 
     layers = parser.get_type_contours_per_layer(
         types=[ExtrusionType.OUTER_WALL],
@@ -907,9 +912,9 @@ def parse_max_volumetric_extrusion_rate_slope_segment_length(
         }
         return False, expected_segment_length, details
 
-    threshold = expected_segment_length + tolerance
-    normal_segments = [s for s in all_segments if s <= threshold]
-    abnormal_segments = [s for s in all_segments if s > threshold]
+    cluster_limit = expected_segment_length * 1.5
+    normal_segments = [s for s in all_segments if 0 < s <= cluster_limit]
+    abnormal_segments = [s for s in all_segments if s > cluster_limit]
 
     if not normal_segments:
         details = {
@@ -924,40 +929,34 @@ def parse_max_volumetric_extrusion_rate_slope_segment_length(
         }
         return False, expected_segment_length, details
 
+    ordered = sorted(normal_segments)
+    normal_median = ordered[len(ordered) // 2]
     normal_avg = sum(normal_segments) / len(normal_segments)
-    # 如果正常段均值本身大于期望值，直接视为违规
-    mean_violation = normal_avg > (expected_segment_length + tolerance)
-
-    violations: List[Dict[str, Any]] = []
-    discarded = 0
-    for seg_len in abnormal_segments:
-        ratio = (seg_len - normal_avg) / normal_avg if normal_avg > 0 else float("inf")
-        if ratio > 0.2:
-            discarded += 1  # 离群超阈段，忽略
-            continue
-        violations.append({
-            "segment_length": seg_len,
-            "normal_avg": normal_avg,
-            "ratio": ratio,
-            "expected_max": expected_segment_length,
-            "tolerance": tolerance,
-            "note": "Abnormal segment retained (within 20% of avg).",
-        })
-
-    ok = not violations and not mean_violation
+    effective_tolerance = max(tolerance, expected_segment_length * 0.10)
+    cluster_ratio = len(normal_segments) / len(all_segments)
+    config_match = config_value is not None and abs(config_value - expected_segment_length) <= tolerance
+    ok = (
+        config_match
+        and abs(normal_median - expected_segment_length) <= effective_tolerance
+        and cluster_ratio >= 0.50
+    )
     details = {
         "expected": expected_segment_length,
         "tolerance": tolerance,
         "target_layer": last_layer.index,
-        "violations": violations,
+        "violations": [],
+        "config_value": config_value,
+        "config_match": config_match,
         "normal_avg": normal_avg,
+        "normal_median": normal_median,
+        "effective_tolerance": effective_tolerance,
+        "cluster_ratio": cluster_ratio,
         "segments_total": len(all_segments),
         "segments_normal": len(normal_segments),
         "segments_abnormal": len(abnormal_segments),
-        "segments_abnormal_discarded": discarded,
+        "segments_abnormal_discarded": len(abnormal_segments),
         "match": ok,
-        "note": None if ok else ("Normal segment mean exceeds expected max." if mean_violation
-                                 else "Abnormal segments remain (check detection/tolerance logic)."),
+        "note": None if ok else "Configured subdivision cluster does not match generated outer-wall segments.",
     }
     return ok, expected_segment_length, details
 

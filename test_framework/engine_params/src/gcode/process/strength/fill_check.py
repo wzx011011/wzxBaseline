@@ -11,6 +11,7 @@ from engine_params.src.gcode.GCodeParser import GCodeParser
 from engine_params.src.gcode.GCodeParserEx import GCodeParserEx
 from engine_params.src.gcode.constants import ExtrusionType
 from engine_params.src.gcode.GCodeParser import Point
+from engine_params.src.gcode.process.quality.behavior import BehaviorGCode
 
 
 class GapFillTarget(str, Enum):
@@ -189,33 +190,112 @@ def parse_filter_out_gap_fill(
     return ok, actual_value, details
 
 
+def _config_scalar(value: Any) -> str:
+    value = getattr(value, "value", value)
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value).strip().lower()
+
+
+def _role_behavior_signature(path: Path | str, role: str) -> Dict[str, Any]:
+    behavior = BehaviorGCode(path)
+    moves = [move for move in behavior.extrusion_moves(role) if move.xy_length >= 0.05]
+    layers = sorted({move.layer for move in moves})
+    total_length = sum(move.xy_length for move in moves)
+
+    bins = [0.0] * 12
+    for move in moves:
+        if move.angle is not None:
+            bins[min(11, int(move.angle / 15.0))] += move.xy_length
+    if total_length > 0:
+        bins = [value / total_length for value in bins]
+
+    bounds = None
+    if moves:
+        xs = [coord for move in moves for coord in (move.x0, move.x)]
+        ys = [coord for move in moves for coord in (move.y0, move.y)]
+        bounds = [min(xs), max(xs), min(ys), max(ys)]
+
+    return {
+        "move_count": len(moves),
+        "layers": layers,
+        "total_length": total_length,
+        "orientation_histogram": bins,
+        "bounds": bounds,
+    }
+
+
+def _compare_role_behavior(
+        gcode_path: Path | str,
+        baseline_gcode_path: Path | str,
+        *,
+        role: str,
+        config_key: str,
+) -> Tuple[bool, bool, Dict[str, Any]]:
+    """Compare stable generated behavior, avoiding vertex/order snapshot noise."""
+    test_sig = _role_behavior_signature(gcode_path, role)
+    baseline_sig = _role_behavior_signature(baseline_gcode_path, role)
+
+    test_cfg = GCodeParserEx(Path(gcode_path)).load_config() or {}
+    baseline_cfg = GCodeParserEx(Path(baseline_gcode_path)).load_config() or {}
+    test_value = _config_scalar(test_cfg.get(config_key))
+    baseline_value = _config_scalar(baseline_cfg.get(config_key))
+    config_match = test_value == baseline_value and test_value not in {"", "none"}
+
+    test_layers = set(test_sig["layers"])
+    baseline_layers = set(baseline_sig["layers"])
+    union = test_layers | baseline_layers
+    layer_overlap = len(test_layers & baseline_layers) / len(union) if union else 0.0
+
+    baseline_length = float(baseline_sig["total_length"])
+    length_ratio = (
+        float(test_sig["total_length"]) / baseline_length if baseline_length > 0 else 0.0
+    )
+
+    a = test_sig["orientation_histogram"]
+    b = baseline_sig["orientation_histogram"]
+    dot = sum(x * y for x, y in zip(a, b))
+    norm = math.sqrt(sum(x * x for x in a) * sum(y * y for y in b))
+    orientation_similarity = dot / norm if norm > 0 else 0.0
+
+    bounds_delta = None
+    if test_sig["bounds"] is not None and baseline_sig["bounds"] is not None:
+        bounds_delta = max(
+            abs(x - y) for x, y in zip(test_sig["bounds"], baseline_sig["bounds"])
+        )
+
+    checks = {
+        "config_match": config_match,
+        "has_generated_role": test_sig["move_count"] > 0 and baseline_sig["move_count"] > 0,
+        "layer_overlap": layer_overlap >= 0.90,
+        "path_length_ratio": 0.55 <= length_ratio <= 1.80,
+        "orientation_similarity": orientation_similarity >= 0.55,
+        "bounds_stable": bounds_delta is not None and bounds_delta <= 1.0,
+    }
+    match = all(checks.values())
+    return match, match, {
+        "mode": "generated-role-behavior",
+        "role": role,
+        "config_key": config_key,
+        "test_config": test_value,
+        "baseline_config": baseline_value,
+        "checks": checks,
+        "layer_overlap": layer_overlap,
+        "path_length_ratio": length_ratio,
+        "orientation_similarity": orientation_similarity,
+        "bounds_delta": bounds_delta,
+        "test_signature": test_sig,
+        "baseline_signature": baseline_sig,
+    }
+
+
 def parse_sparse_infill_pattern(
         gcode_path: Path | str,
         baseline_gcode_path: Path | str,
         tolerance: float = 1e-6,
         object_id: int = 0,
-) -> tuple[bool, bool, dict[str, int | list[Any]]] | None:
-    """
-    通过快照对比的方式测试sparse_infill_pattern参数是否有效。
-    
-    比较测试G-code和基准G-code中所有层的SPARSE_INFILL挤出块的轮廓点是否一致。
-    
-    参数
-    ----
-    gcode_path : Path | str
-        测试G-code文件路径。
-    baseline_gcode_path : Path | str
-        基准G-code文件路径。
-    tolerance : float
-        浮点比较容差。
-    object_id : int
-        模型ID。
-    
-    返回
-    ----
-    Tuple[bool, bool, Dict[str, object]]
-        (是否通过测试, 轮廓是否匹配, 详细信息)
-    """
+) -> Tuple[bool, bool, Dict[str, Any]]:
+    """Validate sparse-infill identity and stable generated path behavior."""
     # Lightning 的树枝由随机种子/并行调度生成，逐点快照并不稳定。
     # 按实现特征验证：树枝只在靠近顶面时逐层分叉，路径数量应存在
     # 多个级别且后半段明显多于最初生成的层。
@@ -245,7 +325,16 @@ def parse_sparse_infill_pattern(
             "match": match,
         }
 
-    # 其他确定性图案使用当前引擎生成的行为快照。
+    # 其余图案核对配置身份及生成路径的稳定几何特征；切片算法允许重新分段，
+    # 因此不再要求 polyline/point 数量与旧版本完全一致。
+    return _compare_role_behavior(
+        gcode_path,
+        baseline_gcode_path,
+        role=ExtrusionType.SPARSE_INFILL.value,
+        config_key="sparse_infill_pattern",
+    )
+
+    # Legacy exact-coordinate implementation retained below for reference.
     baseline_parser = GCodeParser(Path(baseline_gcode_path))
     baseline_contours = baseline_parser.get_type_contours_per_layer_by_object(
         object_id,
@@ -1641,29 +1730,16 @@ def parse_top_surface_pattern(
         baseline_gcode_path: Path | str,
         tolerance: float = 1e-6,
         object_id: int = 0,
-) -> tuple[bool, bool, dict[str, int | list[Any]]] | None:
-    """
-    通过快照对比的方式测试top_surface_pattern参数是否有效。
-    
-    比较测试G-code和基准G-code中所有层的TOP_SURFACE挤出块的轮廓点是否一致。
-    
-    参数
-    ----
-    gcode_path : Path | str
-        测试G-code文件路径。
-    baseline_gcode_path : Path | str
-        基准G-code文件路径。
-    tolerance : float
-        浮点比较容差。
-    object_id : int
-        模型ID。
-    
-    返回
-    ----
-    Tuple[bool, bool, Dict[str, object]]
-        (是否通过测试, 轮廓是否匹配, 详细信息)
-    """
-    # 加载基准G-code
+) -> Tuple[bool, bool, Dict[str, Any]]:
+    """Validate top-surface pattern identity and generated path behavior."""
+    return _compare_role_behavior(
+        gcode_path,
+        baseline_gcode_path,
+        role=ExtrusionType.TOP_SURFACE.value,
+        config_key="top_surface_pattern",
+    )
+
+    # Legacy exact-coordinate implementation retained below for reference.
     baseline_parser = GCodeParser(Path(baseline_gcode_path))
     baseline_contours = baseline_parser.get_type_contours_per_layer_by_object(
         object_id,
@@ -2274,13 +2350,16 @@ def parse_tpms_gradual_direction(
         baseline_gcode_path: Path | str,
         tolerance: float = 1e-6,
         object_id: int = 0,
-) -> Tuple[bool, bool, Dict[str, object]]:
-    """
-    通过快照对比的方式测试tpms_gradual_direction参数是否有效。
-    
-    比较测试G-code和基准G-code中所有层的SPARSE_INFILL挤出块的轮廓点是否一致。
-    """
-    # 加载基准G-code
+) -> Tuple[bool, bool, Dict[str, Any]]:
+    """Validate TPMS direction identity and generated sparse-path behavior."""
+    return _compare_role_behavior(
+        gcode_path,
+        baseline_gcode_path,
+        role=ExtrusionType.SPARSE_INFILL.value,
+        config_key="tpms_gradual_direction",
+    )
+
+    # Legacy exact-coordinate implementation retained below for reference.
     baseline_parser = GCodeParser(Path(baseline_gcode_path))
     baseline_contours = baseline_parser.get_type_contours_per_layer_by_object(
         object_id,

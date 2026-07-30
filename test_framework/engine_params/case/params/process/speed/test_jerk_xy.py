@@ -6,7 +6,7 @@ from engine_params.src.gcode.constants import ExtrusionType
 from engine_params.src.gcode.process.speed.jerk_xy_check import (
     parse_outer_wall_jerk,
     parse_inner_wall_jerk,
-    parse_top_surface_acceleration,
+    parse_top_surface_jerk,
     parse_initial_layer_jerk,
     parse_infill_jerk,
     parse_default_jerk,
@@ -116,10 +116,10 @@ def test_inner_wall_jerk(
 
 
 @pytest.mark.engine_params
-# ================== top_surface_acceleration ==================
-def test_top_surface_acceleration(
+# ================== top_surface_jerk ==================
+def test_top_surface_jerk(
         slice_and_export: Path,
-        expected_top_surface_acceleration: float,
+        expected_top_surface_jerk: float,
         tolerance: float,
 ):
     """
@@ -127,14 +127,15 @@ def test_top_surface_acceleration(
     1. 跳过首层，仅筛选 TOP_SURFACE（顶面）Region。
     2. 从 velocity_limits 读取 SQUARE_CORNER_VELOCITY 并与期望值比较。
     通过标准：至少存在一个顶面 Region，该字段不缺失，且全部在容差范围内。
-    注意：函数名沿用历史命名 acceleration，实际验证的是顶面 Jerk。
+    用例函数和 JSON 均使用 top_surface_jerk，避免误载同组下的
+    top_surface_acceleration_500 数据。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
-    ok, _, details = parse_top_surface_acceleration(
+    ok, _, details = parse_top_surface_jerk(
         gcode_path,
-        expected_top_surface_acceleration,
+        expected_top_surface_jerk,
         tolerance,
     )
     assert ok, _format_corner_failure(details)

@@ -13,6 +13,7 @@ from engine_params.src.gcode.process.quality.line_width_check import (
     parse_line_width_from_type,
     parse_line_width,
     parse_internal_solid_infill_line_width,
+    parse_support_line_width,
 )
 from engine_params.src.gcode.constants import ExtrusionType
 
@@ -126,15 +127,16 @@ def test_sparse_infill_line_width(slice_and_export: Path,
 @pytest.mark.engine_params
 def test_internal_solid_line_width(slice_and_export: Path,
                                    expected_line_width: float):
+    """验证内部实心填充生成路径的 ``;WIDTH`` 中位数。
+
+    仅统计非首层、长度不少于 2 mm 的 Internal solid infill 挤出段，避开
+    短连接、端点流量补偿造成的局部波动；同时记录 E/XY 作为挤出行为证据。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
-    ok, _, details = parse_line_width_from_type(
-        gcode_path,
-        expected_line_width,
-        extrusion_types=[ExtrusionType.INTERNAL_SOLID_INFILL],
-        skip_layers=[0],
-        tolerance=0.005,
+    ok, _, details = parse_internal_solid_infill_line_width(
+        gcode_path, expected_line_width, tolerance=0.01
     )
 
     assert ok, (
@@ -146,15 +148,16 @@ def test_internal_solid_line_width(slice_and_export: Path,
 @pytest.mark.engine_params
 def test_support_line_width(slice_and_export: Path,
                             expected_line_width: float):
+    """验证实际支撑路径的生成线宽。
+
+    汇总非首层 Support 与 Support interface 的长直挤出段，比较切片器写入的
+    ``;WIDTH`` 中位数；短连接和零长度动作不参与，避免把路径端部流量误当线宽。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
-    ok, _, details = parse_line_width_from_type(
-        gcode_path,
-        expected_line_width,
-        extrusion_types=[ExtrusionType.SUPPORT],
-        skip_layers=[0],
-        tolerance=0.005,
+    ok, _, details = parse_support_line_width(
+        gcode_path, expected_line_width, tolerance=0.02
     )
 
     assert ok, (

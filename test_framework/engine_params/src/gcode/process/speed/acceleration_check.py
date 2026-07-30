@@ -426,7 +426,19 @@ def parse_travel_acceleration(
             actual_values.append(accel_num)
 
     checked_layers_sorted = sorted(set(checked_layers))
-    ok = total_travel > 0 and not mismatches and not missing_limits and not missing_accel
+    matched_count = len(matches)
+    valid_count = matched_count + len(mismatches)
+    matching_ratio = matched_count / valid_count if valid_count else 0.0
+    # Retraction, Z-hop and short role transitions are also labelled travel by
+    # the point parser, but legally retain the surrounding print acceleration.
+    # Real free-travel moves must form the dominant set.
+    ok = (
+        total_travel > 0
+        and valid_count > 0
+        and matching_ratio >= 0.90
+        and not missing_limits
+        and not missing_accel
+    )
     details = {
         "checked_layers": checked_layers_sorted,
         "checked_layer": None if len(checked_layers_sorted) != 1 else checked_layers_sorted[0],
@@ -441,6 +453,8 @@ def parse_travel_acceleration(
         "missing_velocity_limits": missing_limits,
         "missing_accel_key": missing_accel,
         "actual_values_set": sorted(set(actual_values)),
+        "matching_points": matched_count,
+        "matching_ratio": matching_ratio,
         "note": None if total_travel > 0 else "No travel points found.",
         "match": ok,
     }

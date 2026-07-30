@@ -1,6 +1,10 @@
 {
-  "project_name": "travel_speed_test",
-  "input_3mf": "cube.3mf",
-  "expected_travel_speed": 120.0,
-  "tolerance": 0.0
+  "cases": [
+    {
+      "project_name": "travel_speed_1500",
+      "input_3mf": "travel_speed_1500.3mf",
+      "expected_travel_speed": 1500.0,
+      "tolerance": 0.0
+    }
+  ]
 }

@@ -287,7 +287,7 @@ def parse_initial_layer_jerk(
     )
 
 
-def parse_top_surface_acceleration(
+def parse_top_surface_jerk(
         gcode_path: Path | str,
         expected_value: float,
         tolerance: float = 1e-6,
@@ -296,7 +296,11 @@ def parse_top_surface_acceleration(
         gcode_path,
         expected_value,
         tolerance,
-        parameter="top_surface_acceleration",
+        parameter="top_surface_jerk",
         target_types=[ExtrusionType.TOP_SURFACE],
         skip_layers=[0],
     )
+
+
+# Compatibility for callers outside the parameter suite.
+parse_top_surface_acceleration = parse_top_surface_jerk

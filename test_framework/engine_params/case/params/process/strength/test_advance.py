@@ -47,7 +47,11 @@ def test_bridge_angle(
         expected_bridge_angle: float,
         baseline_gcode: str | Path | None,
 ) -> None:
-    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析Bridge 类型路径的数量、主方向和挤出行为；配置值仅用于确认输入，最终由实际 G-code 行为断言。
+    """
+    验证方法：解析 CONFIG 和实际 Bridge 挤出路径。显式角度校验首条
+    Bridge 路径方向；0° 自动模式不固定方向或路径点数，改为与基线比较
+    Bridge 层号、总路径长度和凸包覆盖面积，允许自动算法改变路径分段。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
@@ -59,9 +63,9 @@ def test_bridge_angle(
 
     if abs(expected_bridge_angle) < 1e-6:
         assert ok, (
-            "bridge_angle(0°) 快照对比失败: "
+            "bridge_angle(0°自动模式) 行为对比失败: "
             f"baseline={details.get('baseline_gcode')}, "
-            f"compare_details={details.get('compare_details')}"
+            f"details={details}"
         )
     else:
         assert actual_angle is not None

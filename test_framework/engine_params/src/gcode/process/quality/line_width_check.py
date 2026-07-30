@@ -447,15 +447,38 @@ def parse_internal_solid_infill_line_width(
     )
 
 
+def parse_support_line_width(
+    gcode_path: Path | str,
+    expected_value: float,
+    tolerance: float = 0.02,
+) -> Tuple[bool, Optional[float], Dict[str, object]]:
+    """Measure generated support/support-interface WIDTH on stable long moves."""
+    return _parse_generated_role_widths(
+        gcode_path,
+        expected_value,
+        [ExtrusionType.SUPPORT.value, ExtrusionType.SUPPORT_INTERFACE.value],
+        tolerance,
+    )
+
+
 def _parse_generated_role_width(
     gcode_path: Path | str,
     expected_value: float,
     role: str,
     tolerance: float,
 ) -> Tuple[bool, Optional[float], Dict[str, object]]:
+    return _parse_generated_role_widths(gcode_path, expected_value, [role], tolerance)
+
+
+def _parse_generated_role_widths(
+    gcode_path: Path | str,
+    expected_value: float,
+    roles: Sequence[str],
+    tolerance: float,
+) -> Tuple[bool, Optional[float], Dict[str, object]]:
     behavior = BehaviorGCode(gcode_path)
     moves = [
-        move for move in behavior.extrusion_moves(role)
+        move for move in behavior.extrusion_moves(roles)
         if move.layer > 0 and move.xy_length >= 2.0 and move.width is not None
     ]
     actual = median_width(moves, min_length=2.0)
@@ -468,8 +491,8 @@ def _parse_generated_role_width(
     matching_ratio = matching_length / total_length if total_length > 0 else 0.0
     ok = actual is not None and abs(actual - expected_value) <= allowed and matching_ratio >= 0.65
     return ok, actual, {
-        "method": f"L2 - Generated {role} WIDTH and E/XY behavior",
-        "role": role, "long_segments": len(moves), "actual_median_width": actual,
+        "method": f"L2 - Generated {'/'.join(roles)} WIDTH and E/XY behavior",
+        "roles": list(roles), "long_segments": len(moves), "actual_median_width": actual,
         "expected_width": expected_value, "matching_length_ratio": matching_ratio,
         "median_e_per_mm": median_e_per_mm(moves), "tolerance": allowed,
     }

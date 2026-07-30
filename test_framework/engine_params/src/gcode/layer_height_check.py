@@ -33,7 +33,8 @@ def parse_initial_layer_print_height(gcode_path: str | Path) -> dict[str, Option
     parser = GCodeParser(gcode_path)
     cfg = parser.load_config()
     layers = parser.extract_layers()
-    z, h = layers[0]
+    first = next(((z, h) for z, h in layers if z is not None or h is not None), (None, None))
+    z, h = first
     return {
         "config_initial_layer_print_height": cfg.get("initial_layer_print_height"),
         "first_layer_z": z,

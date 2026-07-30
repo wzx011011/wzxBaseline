@@ -25,10 +25,12 @@ from xml.sax.saxutils import escape
 
 CORE_NS = "http://schemas.microsoft.com/3dmanufacturing/core/2015/02"
 MODEL_ENTRY = "3D/3dmodel.model"
+MODEL_RELS = "3D/_rels/3dmodel.model.rels"
 MODEL_SETTINGS = "Metadata/model_settings.config"
 PROJECT_SETTINGS = "Metadata/project_settings.config"
 BED_CENTER = 110.0
 BED_OFFSET_Z = 10.0
+RELATIONSHIPS_NS = "http://schemas.openxmlformats.org/package/2006/relationships"
 
 
 def _matrix(raw: str | None) -> tuple[float, ...]:
@@ -143,6 +145,23 @@ def _multi_model_settings(payload: bytes, objects: list[tuple[int, object, objec
     return text.encode("utf-8")
 
 
+def _without_external_model_relationships(
+        payload: bytes,
+        external_entries: list[str],
+) -> bytes | None:
+    """Remove relationships to model parts superseded by an inline core mesh."""
+    root = ET.fromstring(payload)
+    external_targets = {name.lstrip("/") for name in external_entries}
+    for relationship in list(root):
+        target = relationship.get("Target", "").lstrip("/")
+        if target in external_targets:
+            root.remove(relationship)
+    if not list(root):
+        return None
+    ET.register_namespace("", RELATIONSHIPS_NS)
+    return ET.tostring(root, encoding="utf-8", xml_declaration=True)
+
+
 def normalize_project(path: Path, *, allow_multi: bool = False) -> bool:
     with zipfile.ZipFile(path, "r") as source:
         names = source.namelist()
@@ -206,7 +225,28 @@ def normalize_project(path: Path, *, allow_multi: bool = False) -> bool:
             application_text.startswith("C3DBaseline process L1")
             and path.stem != "filename_format_default"
         ):
-            return False
+            # Early versions of this normalizer embedded a core mesh but left
+            # the old production-extension model part and relationship in the
+            # archive.  Different CrealityPrint versions could then select
+            # different geometry.  Keep the inline mesh as the single source
+            # of truth and remove the superseded external model resources.
+            if not external_entries:
+                return False
+            removed_entries = set(external_entries)
+            replacements = {}
+            if MODEL_RELS in names:
+                relationships = _without_external_model_relationships(
+                    source.read(MODEL_RELS), external_entries
+                )
+                if relationships is None:
+                    removed_entries.add(MODEL_RELS)
+                else:
+                    replacements[MODEL_RELS] = relationships
+            entries = [
+                (info, replacements.get(info.filename, source.read(info.filename)))
+                for info in source.infolist()
+                if info.filename not in removed_entries
+            ]
 
         if allow_multi and entries is None and (
             not inline_meshes

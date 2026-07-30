@@ -16,12 +16,21 @@ from engine_params.src.gcode.layer_height_check import parse_layer_height,parse_
 @pytest.mark.engine_params
 def test_initial_layer_print_height(slice_and_export: Path,
                                     expected_first_layer_height: float):
+    """验证首层实际打印高度，而不是只回读项目配置。
+
+    解析首个有效 ``LAYER_CHANGE`` 的 ``HEIGHT``，它是首层实际挤出高度；
+    ``Z`` 仅保留作诊断，因为部分固件风格不会输出标准 Z 注释。通过标准：
+    首层 HEIGHT 与配置中的 ``initial_layer_print_height`` 均匹配期望值。
+    """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
     layer_cfg: dict[str, object] = parse_initial_layer_print_height(gcode_path)
-    assert layer_cfg is not None
-    first_layer_z = layer_cfg["first_layer_z"]
-    assert first_layer_z == expected_first_layer_height
+    actual_height = layer_cfg["first_layer_height"]
+    assert actual_height is not None, f"未解析到首层 HEIGHT: {layer_cfg}"
+    assert math.isclose(actual_height, expected_first_layer_height, abs_tol=1e-4), layer_cfg
+    config_height = layer_cfg["config_initial_layer_print_height"]
+    assert config_height is not None, layer_cfg
+    assert math.isclose(float(config_height), expected_first_layer_height, abs_tol=1e-4), layer_cfg
 
 
 # ================== layer_height ==================
