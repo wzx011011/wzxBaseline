@@ -615,7 +615,7 @@ def _wait_for_slicing_done(
     deadline = time.monotonic() + max(0.0, float(timeout_s))
     last_progress: Optional[Dict] = None
     last_error: Optional[str] = None
-    last_pct = None
+    last_progress_marker = None
     last_change_ts = time.monotonic()
     stall_seconds = 120.0
     # When re-slicing, the "all_plate_finished" flag stays True from the previous
@@ -639,8 +639,11 @@ def _wait_for_slicing_done(
                 pct = _progress_percentage_0_100(progress.get("percentage"))
                 now = time.monotonic()
                 if pct is not None:
-                    if last_pct is None or pct != last_pct:
-                        last_pct = pct
+                    # Long-running stages may keep the same percentage while reporting
+                    # completed layer counts in the status text.
+                    progress_marker = (pct, str(progress.get("text") or ""))
+                    if last_progress_marker is None or progress_marker != last_progress_marker:
+                        last_progress_marker = progress_marker
                         last_change_ts = now
                     elif now - last_change_ts >= stall_seconds:
                         pct_str = f"{pct:.3f}"
