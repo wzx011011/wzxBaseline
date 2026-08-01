@@ -34,6 +34,57 @@ def test_cpu_activity_delta_rejects_missing_or_decreasing_cpu_time():
     assert _cpu_activity_delta(previous, {"running": True, "pid": 42, "cpu_seconds": 9.0}) is None
 
 
+def test_wait_for_slicing_done_allows_changing_layer_progress_past_hard_timeout(monkeypatch):
+    class FakeClock:
+        def __init__(self):
+            self.now = 0.0
+
+        def monotonic(self):
+            return self.now
+
+        def perf_counter(self):
+            return self.now
+
+        def sleep(self, seconds):
+            self.now += seconds
+
+    progress_rows = iter(
+        [
+            {"state": "progress", "percentage": 65, "text": "layer 1", "all_plate_finished": False},
+            {"state": "progress", "percentage": 65, "text": "layer 2", "all_plate_finished": False},
+            {"state": "progress", "percentage": 65, "text": "layer 3", "all_plate_finished": False},
+            {"state": "no_slicing", "percentage": 100, "text": "done", "all_plate_finished": True},
+        ]
+    )
+
+    def send_cmd(command, _params_json, recvcmd_timeout=None, band_output=False):
+        assert command == "get_slicing_progress"
+        progress = next(progress_rows)
+        payload = {
+            "code": 0,
+            "payload": {
+                "all_plate_finished": progress["all_plate_finished"],
+                "progress": progress,
+            },
+        }
+        return True, "ok", f"{command}_respone;{json.dumps(payload)}".encode("utf-8")
+
+    clock = FakeClock()
+    monkeypatch.setattr(slice_case.time, "monotonic", clock.monotonic)
+    monkeypatch.setattr(slice_case.time, "perf_counter", clock.perf_counter)
+    monkeypatch.setattr(slice_case.time, "sleep", clock.sleep)
+    monkeypatch.setenv("SLICER_PROGRESS_STALL_SECONDS", "2")
+
+    result = slice_case._wait_for_slicing_done(
+        send_cmd,
+        timeout_s=2,
+        poll_interval_s=1,
+    )
+
+    assert result["ok"] is True
+    assert clock.now > 2
+
+
 class FakeSlicer:
     def __init__(
         self,

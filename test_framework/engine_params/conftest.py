@@ -488,7 +488,7 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     # 可选
     slice_btn_id = int(params.get("slice_btn_id", SLICE_BTN_ID))
     timeouts = params.get("timeouts", {})
-    load_timeout = int(timeouts.get("load", 90))
+    load_timeout = int(timeouts.get("load", os.getenv("SLICER_LOAD_TIMEOUT", "300")))
     slice_timeout = float(timeouts.get("slice", os.getenv("SLICER_SLICE_TIMEOUT", "600")))
     slice_poll = float(timeouts.get("poll", os.getenv("SLICER_PROGRESS_POLL", "1")))
     slice_stall = float(timeouts.get("stall", os.getenv("SLICER_STALL_TIMEOUT", "120")))
@@ -530,7 +530,7 @@ def slice_and_export(request, engine_injector, gcode_path_factory):
     load_fut = engine_injector.submit("trigger_load_project2",
                                       {"file": str(input_3mf),
                                        "discard_preset_changes": True},
-                                      timeout=60)
+                                      timeout=load_timeout)
     load_res = load_fut.result(timeout=load_timeout)
     assert load_res.get("code") == 0, f"加载模型失败：{load_res}"
 

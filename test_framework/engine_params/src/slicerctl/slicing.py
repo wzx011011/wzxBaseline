@@ -51,12 +51,24 @@ def wait_for_slicing_done(
     saw_unfinished = not require_transition
     last_progress: Optional[Dict[str, Any]] = None
     last_error: Optional[str] = None
-    last_percentage: Optional[float] = None
+    last_progress_marker = None
     last_change = started
     idle_since: Optional[float] = None
 
-    while time.monotonic() < deadline:
-        remaining = max(0.01, deadline - time.monotonic())
+    while True:
+        now = time.monotonic()
+        visible_progress_is_recent = (
+            last_progress_marker is not None
+            and stall_timeout > 0
+            and now - last_change < stall_timeout
+        )
+        if now >= deadline and not visible_progress_is_recent:
+            break
+
+        if now < deadline:
+            remaining = max(0.01, deadline - now)
+        else:
+            remaining = max(0.01, stall_timeout - (now - last_change))
         per_command_timeout = min(max(0.01, float(command_timeout)), remaining)
         try:
             future = engine_injector.submit(
@@ -96,8 +108,11 @@ def wait_for_slicing_done(
                         idle_since = None
 
                     if percentage is not None:
-                        if last_percentage is None or percentage != last_percentage:
-                            last_percentage = percentage
+                        # Some long stages keep the same percentage while the
+                        # status text reports continuously advancing layers.
+                        progress_marker = (percentage, str(progress.get("text") or ""))
+                        if last_progress_marker is None or progress_marker != last_progress_marker:
+                            last_progress_marker = progress_marker
                             last_change = now
                         elif (
                             not is_slicing_done(progress)
@@ -119,7 +134,14 @@ def wait_for_slicing_done(
             else:
                 last_error = str(response.get("error") or response)
 
-        sleep_for = min(max(0.0, float(poll_interval)), max(0.0, deadline - time.monotonic()))
+        now = time.monotonic()
+        if now < deadline:
+            wait_budget = deadline - now
+        elif last_progress_marker is not None and stall_timeout > 0:
+            wait_budget = stall_timeout - (now - last_change)
+        else:
+            wait_budget = 0.0
+        sleep_for = min(max(0.0, float(poll_interval)), max(0.0, wait_budget))
         if sleep_for:
             time.sleep(sleep_for)
 

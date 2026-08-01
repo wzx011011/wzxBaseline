@@ -816,6 +816,7 @@ def _wait_for_slicing_done(
     last_error: Optional[str] = None
     last_progress_marker = None
     last_change_ts = time.monotonic()
+    last_visible_change_ts = None
     last_activity_state = _send_handle_process_state(send_cmd_handle)
     stall_seconds = float(os.getenv("SLICER_PROGRESS_STALL_SECONDS", "120"))
     active_cpu_seconds = float(os.getenv("SLICER_ACTIVE_CPU_SECONDS", "1"))
@@ -825,7 +826,20 @@ def _wait_for_slicing_done(
     # stale True cannot short-circuit the wait of a subsequent slice.
     saw_unfinished = not wait_for_transition
 
-    while time.monotonic() < deadline:
+    while True:
+        now = time.monotonic()
+        visible_progress_is_recent = (
+            last_visible_change_ts is not None
+            and stall_seconds > 0
+            and now - last_visible_change_ts < stall_seconds
+        )
+        # The configured timeout is a hard limit only when the engine has not
+        # reported recent visible progress. Long slices whose percentage or
+        # status text (for example, the current layer) keeps changing are
+        # governed by the shorter stall detector instead.
+        if now >= deadline and not visible_progress_is_recent:
+            break
+
         progress_ret = _run_command(
             send_cmd_handle,
             "get_slicing_progress",
@@ -846,6 +860,7 @@ def _wait_for_slicing_done(
                     if last_progress_marker is None or progress_marker != last_progress_marker:
                         last_progress_marker = progress_marker
                         last_change_ts = now
+                        last_visible_change_ts = now
                         last_activity_state = _send_handle_process_state(send_cmd_handle)
                         _safe_print(
                             f"[slice-progress] percentage={pct:.3f}, "
@@ -1151,7 +1166,7 @@ def current_results():
 def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     second_slice_enabled = _truthy_env("ENABLE_SECOND_SLICE")
     timeouts = {
-        "load": int(os.getenv("SLICER_LOAD_TIMEOUT", "180")),
+        "load": int(os.getenv("SLICER_LOAD_TIMEOUT", "300")),
         # Complex tree-support / high-layer-count projects legitimately take
         # around 8 minutes on an otherwise idle workstation. Keep the shorter
         # activity-aware stall detector for hangs, and leave headroom for a

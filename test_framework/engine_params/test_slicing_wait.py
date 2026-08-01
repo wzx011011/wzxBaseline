@@ -6,6 +6,7 @@ import zipfile
 import pytest
 
 from engine_params.conftest import slice_and_export
+from engine_params.src.slicerctl import slicing as slicing_module
 from engine_params.src.slicerctl.slicing import SlicingWaitTimeout, wait_for_slicing_done
 
 
@@ -35,6 +36,7 @@ class FakeInjector:
                         "progress": {
                             "state": progress.get("state"),
                             "percentage": progress.get("percentage"),
+                            "text": progress.get("text"),
                         },
                     },
                 }
@@ -81,6 +83,40 @@ def test_wait_for_slicing_done_times_out_when_never_complete():
             poll_interval=0.001,
             stall_timeout=0,
         )
+
+
+def test_wait_for_slicing_done_allows_changing_layer_progress_past_hard_timeout(monkeypatch):
+    class FakeClock:
+        def __init__(self):
+            self.now = 0.0
+
+        def monotonic(self):
+            return self.now
+
+        def sleep(self, seconds):
+            self.now += seconds
+
+    clock = FakeClock()
+    monkeypatch.setattr(slicing_module.time, "monotonic", clock.monotonic)
+    monkeypatch.setattr(slicing_module.time, "sleep", clock.sleep)
+    injector = FakeInjector(
+        [
+            {"state": "progress", "percentage": 65, "text": "layer 1", "all_plate_finished": False},
+            {"state": "progress", "percentage": 65, "text": "layer 2", "all_plate_finished": False},
+            {"state": "progress", "percentage": 65, "text": "layer 3", "all_plate_finished": False},
+            {"state": "no_slicing", "percentage": 100, "text": "done", "all_plate_finished": True},
+        ]
+    )
+
+    progress = wait_for_slicing_done(
+        injector,
+        timeout=2,
+        poll_interval=1,
+        stall_timeout=2,
+    )
+
+    assert progress["all_plate_finished"] is True
+    assert clock.now > 2
 
 
 def test_wait_for_slicing_done_accepts_expected_empty_slice():
