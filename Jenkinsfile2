@@ -57,11 +57,11 @@ set "SLICER_LOAD_TIMEOUT=%LOAD_TIMEOUT_SECONDS%"
 set "SLICER_STDOUT_LOG=%WORKSPACE%/test_framework/artifacts/slicer_stdout.log"
 set "CREALITY_PRINTER_LOG_PATH=%WORKSPACE%/test_framework/artifacts/creality_logs"
 if not exist "%CREALITY_PRINTER_LOG_PATH%" mkdir "%CREALITY_PRINTER_LOG_PATH%"
-if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ARTIFACT_PATH%\""
-if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
-if not "%TEST_COMMAND%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --test-command \"%TEST_COMMAND%\""
-if not "%BASELINE_BUILD_ID%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --baseline-build-id \"%BASELINE_BUILD_ID%\""
-if /I "%ENABLE_SECOND_SLICE%"=="true" set "EXTRA_ARGS=!EXTRA_ARGS! --enable-second-slice"
+if defined ARTIFACT_PATH set EXTRA_ARGS=!EXTRA_ARGS! --artifact-path "!ARTIFACT_PATH!"
+if defined PLATFORM set EXTRA_ARGS=!EXTRA_ARGS! --platform "!PLATFORM!"
+if defined TEST_COMMAND set EXTRA_ARGS=!EXTRA_ARGS! --test-command "!TEST_COMMAND!"
+if defined BASELINE_BUILD_ID set EXTRA_ARGS=!EXTRA_ARGS! --baseline-build-id "!BASELINE_BUILD_ID!"
+if /I "!ENABLE_SECOND_SLICE!"=="true" set "EXTRA_ARGS=!EXTRA_ARGS! --enable-second-slice"
 
 python ci\\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --preserve-extracted-files !EXTRA_ARGS!
 endlocal
