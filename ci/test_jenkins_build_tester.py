@@ -15,6 +15,7 @@ from ci.jenkins_build_tester import (
     resolve_slicer_stdout_log,
     stage_local_package,
     should_use_isolated_slicer_datadir,
+    split_test_command_args,
 )
 from ci.jenkins_release_orchestrator import extract_artifact_zip
 from test_framework.performance.case import test_slice
@@ -36,6 +37,17 @@ def test_extract_artifact_zip_overlay_preserves_unrelated_files(tmp_path: Path):
     assert (target / "CrealityPrint.exe").read_text(encoding="utf-8") == "new executable"
     assert (target / "new.dll").read_text(encoding="utf-8") == "new library"
     assert (target / "keep.dll").read_text(encoding="utf-8") == "keep me"
+
+
+def test_split_test_command_args_preserves_regex_metacharacters():
+    regex = r"^(?:ty[\\/]a\x20b\.3mf|ty[\\/]c\.3mf)$"
+
+    args = split_test_command_args(
+        "performance/case/test_slice.py::test_feishu_slice "
+        f"-m performance --feishu-case-regex {regex}"
+    )
+
+    assert args[-2:] == ["--feishu-case-regex", regex]
 
 
 def test_second_slice_model_is_opt_in(tmp_path: Path, monkeypatch):
@@ -287,7 +299,7 @@ def test_main_runs_local_package_without_jenkins_and_preserves_source(tmp_path: 
     assert main() == 0
     assert package.is_file()
     assert len(calls) == 1
-    assert "CrealityPrint.exe" in calls[0][0]
+    assert any("CrealityPrint.exe" in str(arg) for arg in calls[0][0])
     assert calls[0][1]["CREALITY_PRINTER_PATH"].endswith("CrealityPrint.exe")
     assert calls[0][1]["ENABLE_SECOND_SLICE"] == "0"
     assert not list((artifacts_dir / "windows" / "manual").glob("*.zip"))

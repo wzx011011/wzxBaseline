@@ -9,7 +9,7 @@ import time
 import zipfile
 from dataclasses import dataclass, field
 from pathlib import Path, PurePosixPath
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import requests
 from git import Repo
@@ -397,12 +397,14 @@ def collect_change_scope(repo_root: Path, previous_ref: Optional[str], current_r
     return {"previous_ref": prev or "unknown", "current_ref": curr, "shortlog": shortlog, "diffstat": diffstat}
 
 
-def run_tests(command: str, env: Dict[str, str], cwd: Path) -> TestOutcome:
-    print(f"[info] running tests: {command}")
+def run_tests(command: Union[str, Sequence[str]], env: Dict[str, str], cwd: Path) -> TestOutcome:
+    use_shell = isinstance(command, str)
+    display_command = command if use_shell else subprocess.list2cmdline([str(part) for part in command])
+    print(f"[info] running tests: {display_command}")
     output_chunks: List[str] = []
     proc = subprocess.Popen(
         command,
-        shell=True,
+        shell=use_shell,
         cwd=str(cwd),
         env=env,
         stdout=subprocess.PIPE,

@@ -3,12 +3,16 @@
 Download a Jenkins build artifact by job/build id and run tests against it.
 """
 import argparse
+import ctypes
 import hashlib
 import json
 import os
+import shlex
 import shutil
+import subprocess
 import sys
 import uuid
+from ctypes import wintypes
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -24,6 +28,29 @@ from jenkins_release_orchestrator import (
 
 def _truthy(value: str) -> bool:
     return str(value).strip().lower() in {"1", "true", "yes", "on"}
+
+
+def split_test_command_args(command: str) -> List[str]:
+    """Split pytest arguments without losing Windows regex backslashes."""
+    value = str(command or "").strip()
+    if not value:
+        return []
+    if os.name != "nt":
+        return shlex.split(value)
+
+    # CommandLineToArgvW follows the same quoting rules used by Windows Python.
+    # Prefix a dummy executable because argv[0] has special parsing semantics.
+    argc = ctypes.c_int()
+    command_line_to_argv = ctypes.windll.shell32.CommandLineToArgvW
+    command_line_to_argv.argtypes = [wintypes.LPCWSTR, ctypes.POINTER(ctypes.c_int)]
+    command_line_to_argv.restype = ctypes.POINTER(wintypes.LPWSTR)
+    argv = command_line_to_argv(f"pytest {value}", ctypes.byref(argc))
+    if not argv:
+        raise ctypes.WinError()
+    try:
+        return [argv[index] for index in range(1, argc.value)]
+    finally:
+        ctypes.windll.kernel32.LocalFree(argv)
 
 
 def _template_relative_target(source: Path) -> Path:
@@ -433,29 +460,26 @@ def main() -> int:
     else:
         print("[info] using Jenkins user CrealityPrint datadir")
 
-    slicer_arg = f' --slicer-exe="{slicer_exe}"' if slicer_exe else ""
-    gcode_root_arg = "" if "--gcode-root" in test_args else f' --gcode-root="{gcode_root}"'
-    slicer_datadir_arg = ""
+    test_command = [sys.executable, "-u", "-m", "pytest", *split_test_command_args(test_args)]
+    if slicer_exe:
+        test_command.extend(["--slicer-exe", str(slicer_exe)])
+    if "--gcode-root" not in test_args:
+        test_command.extend(["--gcode-root", str(gcode_root)])
     if slicer_datadir and "--slicer-datadir" not in test_args:
-        slicer_datadir_arg = f' --slicer-datadir="{slicer_datadir}"'
+        test_command.extend(["--slicer-datadir", str(slicer_datadir)])
     allure_results_dir = Path(args.allure_results_dir).expanduser()
     if not allure_results_dir.is_absolute():
         allure_results_dir = repo_root / allure_results_dir
     allure_results_dir = allure_results_dir.resolve()
-    allure_results_arg = f' --alluredir="{allure_results_dir}"'
-    second_slice_model_arg = ""
+    test_command.extend(["-v", "--alluredir", str(allure_results_dir), "--capture=tee-sys"])
     if args.second_slice_model and "--second-slice-model" not in test_args:
         requested_model = Path(args.second_slice_model).expanduser()
         if not requested_model.is_absolute():
             requested_model = repo_root / requested_model
-        second_slice_model_arg = f' --second-slice-model="{requested_model.resolve()}"'
-    test_command = (
-        f"cd .\\test_framework\\&&python -u -m pytest {test_args}{slicer_arg}{gcode_root_arg}{slicer_datadir_arg}{second_slice_model_arg}"
-        f" -v{allure_results_arg} --capture=tee-sys"
-    )
+        test_command.extend(["--second-slice-model", str(requested_model.resolve())])
 
-    print(f"[info] running tests with command: {test_command}")
-    result = run_tests(test_command, env, repo_root)
+    print(f"[info] running tests with command: {subprocess.list2cmdline(test_command)}")
+    result = run_tests(test_command, env, repo_root / "test_framework")
     print(f"[info] tests finished with status: {result.status}, rc={result.return_code}")
     if result.status == "SUCCESS":
         state_path.write_text(
