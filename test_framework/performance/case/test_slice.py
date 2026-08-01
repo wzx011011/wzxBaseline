@@ -21,7 +21,7 @@ import xml.etree.ElementTree as ET
 from concurrent.futures import TimeoutError as FutureTimeoutError
 from html import unescape as html_unescape
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 from urllib.parse import urljoin, unquote
 
 import pytest
@@ -97,6 +97,62 @@ def _gcode_only_3mf_skip_reason(model_path: Path) -> Optional[str]:
         return None
 
     return "3MF contains embedded G-code but no printable model objects (G-code-only project)"
+
+
+def _prepare_3mf_without_empty_plates(model_path: Path, tmp_dir: Path) -> Tuple[Path, int]:
+    """Create a temporary 3MF without empty plates, leaving the source untouched."""
+    if model_path.suffix.lower() != ".3mf":
+        return model_path, 0
+
+    try:
+        with zipfile.ZipFile(model_path, "r") as source_zip:
+            settings_entry = next(
+                (
+                    name
+                    for name in source_zip.namelist()
+                    if name.replace("\\", "/").lower() == "metadata/model_settings.config"
+                ),
+                None,
+            )
+            if settings_entry is None:
+                return model_path, 0
+
+            root = ET.fromstring(source_zip.read(settings_entry))
+            plates = [child for child in list(root) if child.tag.rsplit("}", 1)[-1] == "plate"]
+            empty_plates = [
+                plate
+                for plate in plates
+                if not any(node.tag.rsplit("}", 1)[-1] == "model_instance" for node in plate.iter())
+            ]
+            if not empty_plates or len(empty_plates) == len(plates):
+                return model_path, 0
+
+            for plate in empty_plates:
+                root.remove(plate)
+
+            remaining_plates = [child for child in list(root) if child.tag.rsplit("}", 1)[-1] == "plate"]
+            for plate_number, plate in enumerate(remaining_plates, start=1):
+                for metadata in plate:
+                    if (
+                        metadata.tag.rsplit("}", 1)[-1] == "metadata"
+                        and metadata.get("key") == "plater_id"
+                    ):
+                        metadata.set("value", str(plate_number))
+                        break
+
+            prepared_dir = tmp_dir / "prepared_3mf"
+            prepared_dir.mkdir(parents=True, exist_ok=True)
+            digest = hashlib.sha256(str(model_path).encode("utf-8")).hexdigest()[:12]
+            prepared_path = prepared_dir / f"{_sanitize_path_component(model_path.stem, 48)}_{digest}.3mf"
+            settings_xml = ET.tostring(root, encoding="utf-8", xml_declaration=True)
+
+            with zipfile.ZipFile(prepared_path, "w") as target_zip:
+                for entry in source_zip.infolist():
+                    data = settings_xml if entry.filename == settings_entry else source_zip.read(entry.filename)
+                    target_zip.writestr(entry, data)
+            return prepared_path, len(empty_plates)
+    except (OSError, StopIteration, ET.ParseError, zipfile.BadZipFile):
+        return model_path, 0
 
 
 def _sanitize_path_component(
@@ -1035,6 +1091,13 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         result["skip_reason"] = gcode_only_reason
         return result
 
+    prepared_model_path, removed_empty_plates = _prepare_3mf_without_empty_plates(model_path, tmp_dir)
+    if removed_empty_plates:
+        _safe_print(
+            f"[3mf] removed {removed_empty_plates} empty plate(s); "
+            f"slicing temporary copy: {prepared_model_path}"
+        )
+
     def run_slice_once(label: str, wait_for_transition: bool = False) -> Optional[float]:
         slice_ret = _run_command(
             send_cmd_handle,
@@ -1096,7 +1159,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     import_ret = _run_command(
         send_cmd_handle,
         "trigger_load_project2",
-        {"file": str(model_path), "discard_preset_changes": True},
+        {"file": str(prepared_model_path), "discard_preset_changes": True},
         timeout=timeouts["load"],
     )
     _log_command_result("trigger_load_project2", import_ret)

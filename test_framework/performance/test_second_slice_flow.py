@@ -5,6 +5,7 @@ from pathlib import Path
 
 from test_framework.performance.case import test_slice as slice_case
 from test_framework.performance.case.test_slice import (
+    _prepare_3mf_without_empty_plates,
     _is_idle_no_slicing_progress,
     _is_blocking_import_error,
     _is_slicing_done,
@@ -166,6 +167,34 @@ def test_run_slice_flow_skips_gcode_only_3mf_before_resetting_project(tmp_path: 
     assert "G-code-only project" in result["skip_reason"]
     assert result["crashed"] is False
     assert slicer.commands == []
+
+
+def test_prepare_3mf_removes_empty_plates_without_modifying_source(tmp_path: Path):
+    model_path = tmp_path / "empty-plates.3mf"
+    settings_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<config>
+  <plate><metadata key="plater_id" value="1"/><model_instance/></plate>
+  <plate><metadata key="plater_id" value="2"/></plate>
+  <plate><metadata key="plater_id" value="3"/><model_instance/></plate>
+  <plate><metadata key="plater_id" value="4"/></plate>
+</config>
+"""
+    with zipfile.ZipFile(model_path, "w") as zf:
+        zf.writestr("Metadata/model_settings.config", settings_xml)
+        zf.writestr("3D/3dmodel.model", "<model/>")
+    original_bytes = model_path.read_bytes()
+
+    prepared_path, removed_count = _prepare_3mf_without_empty_plates(model_path, tmp_path)
+
+    assert removed_count == 2
+    assert prepared_path != model_path
+    assert model_path.read_bytes() == original_bytes
+    with zipfile.ZipFile(prepared_path, "r") as zf:
+        root = slice_case.ET.fromstring(zf.read("Metadata/model_settings.config"))
+        plates = [element for element in root if element.tag == "plate"]
+        assert len(plates) == 2
+        assert [plate.find("metadata").get("value") for plate in plates] == ["1", "2"]
+        assert zf.read("3D/3dmodel.model") == b"<model/>"
 
 
 def test_command_injector_does_not_retry_stateful_command_after_receive_timeout():
