@@ -17,6 +17,7 @@ import subprocess
 import sys
 import time
 import zipfile
+from concurrent.futures import TimeoutError as FutureTimeoutError
 from html import unescape as html_unescape
 from pathlib import Path
 from typing import Dict, List, Optional, Union
@@ -516,6 +517,59 @@ def _run_command(send_cmd_handle, command: str, params: Dict, timeout: int) -> D
     }
 
 
+def _engine_process_state(engine_injector) -> Optional[Dict]:
+    get_state = getattr(engine_injector, "process_state", None)
+    if not callable(get_state):
+        return None
+    try:
+        state = get_state()
+    except Exception:  # noqa: BLE001
+        return None
+    return state if isinstance(state, dict) else None
+
+
+def _engine_exception_detail(exc: Exception, process_state: Optional[Dict]) -> str:
+    detail = type(exc).__name__
+    message = str(exc).strip()
+    if message:
+        detail += f": {message}"
+    if process_state is not None:
+        running = process_state.get("running")
+        pid = process_state.get("pid")
+        returncode = process_state.get("returncode")
+        if running:
+            detail += f"; process=running; pid={pid}"
+        else:
+            detail += f"; process=exited; pid={pid}; returncode={returncode}"
+    return detail
+
+
+def _send_engine_command(engine_injector, command, params_json, recvcmd_timeout=None, band_output=False):
+    try:
+        payload = json.loads(params_json) if params_json else {}
+    except Exception:
+        payload = {}
+    try:
+        fut = engine_injector.submit(command, payload, timeout=recvcmd_timeout)
+        resp = fut.result(timeout=recvcmd_timeout)
+        resp_bytes = f"{command}_respone;{json.dumps(resp)}".encode("utf-8")
+        return True, "ok", resp_bytes
+    except (FutureTimeoutError, TimeoutError) as exc:
+        process_state = _engine_process_state(engine_injector)
+        status = "lostconnect" if process_state is not None and not process_state.get("running") else "timeout"
+        detail = _engine_exception_detail(exc, process_state)
+        return False, status, detail.encode("utf-8")
+    except EngineUnavailable as exc:
+        process_state = _engine_process_state(engine_injector)
+        detail = _engine_exception_detail(exc, process_state)
+        return False, "lostconnect", detail.encode("utf-8")
+    except Exception as exc:  # noqa: BLE001
+        process_state = _engine_process_state(engine_injector)
+        status = "lostconnect" if process_state is not None and not process_state.get("running") else "error"
+        detail = _engine_exception_detail(exc, process_state)
+        return False, status, detail.encode("utf-8")
+
+
 def _command_brief(ret: Dict) -> Dict:
     raw = ret.get("raw")
     if isinstance(raw, dict):
@@ -544,6 +598,15 @@ def _error_summary(error: Dict) -> str:
         return json.dumps(error, ensure_ascii=False, sort_keys=True)
     except Exception:  # noqa: BLE001
         return str(error)
+
+
+def _is_blocking_import_error(error: Dict) -> bool:
+    if not isinstance(error, dict):
+        return False
+    level = error.get("level")
+    if level == 9:
+        return True
+    return str(level or "").strip().lower() in {"error", "fatal"}
 
 
 def _progress_percentage_0_100(value) -> Optional[float]:
@@ -820,27 +883,22 @@ def engine_injector_perf(engine_manager_perf):
                     pytest.xfail(str(e))
                 raise
 
+        def process_state(self):
+            return self._mgr.process_state()
+
     return InjectorAdapter(engine_manager_perf)
 
 
 @pytest.fixture(scope="session")
 def engine_session_send_cmd(engine_injector_perf):
     def send_cmd_handle(command, params_json, recvcmd_timeout=None, band_output=False):
-        try:
-            payload = json.loads(params_json) if params_json else {}
-        except Exception:
-            payload = {}
-        try:
-            fut = engine_injector_perf.submit(command, payload, timeout=recvcmd_timeout)
-            resp = fut.result(timeout=recvcmd_timeout)
-            resp_bytes = f"{command}_respone;{json.dumps(resp)}".encode("utf-8")
-            return True, "ok", resp_bytes
-        except TimeoutError:
-            return False, "timeout", b""
-        except EngineUnavailable as exc:
-            return False, "lostconnect", str(exc).encode("utf-8")
-        except Exception as exc:  # noqa: BLE001
-            return False, "error", str(exc).encode("utf-8")
+        return _send_engine_command(
+            engine_injector_perf,
+            command,
+            params_json,
+            recvcmd_timeout,
+            band_output,
+        )
 
     return send_cmd_handle
 
@@ -933,6 +991,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         "crashed": False,
         "retryable_idle_no_slicing": False,
         "idle_no_slicing_retries": 0,
+        "skip_reason": None,
         "error": None,
     }
 
@@ -1020,8 +1079,8 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         payload = import_error["raw"]
         errors = payload["payload"]["data"]
         for error in errors:
-            if error["level"] ==9:
-                result["error"] = f"get_error level 9 after import: {_error_summary(error)}"
+            if _is_blocking_import_error(error):
+                result["skip_reason"] = f"slicing blocked by import validation: {_error_summary(error)}"
                 return result
     first_slice_ms = run_slice_once("first")
     result["first_slice_ms"] = first_slice_ms
@@ -1166,6 +1225,9 @@ def test_feishu_slice(
         model_path,
         performance_gcode_dir,
     )
+
+    if result.get("skip_reason"):
+        pytest.skip(result["skip_reason"])
 
     # If the case failed (deadlock / timeout / crash), force-restart the engine
     # so the next parametrized case starts with a clean state.

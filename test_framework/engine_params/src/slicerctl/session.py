@@ -138,6 +138,21 @@ class RestartingEngine:
     def client(self):
         return self._client
 
+    def process_state(self):
+        """Return the slicer subprocess state without changing its lifecycle."""
+        with self._lock:
+            session = self._session
+            slicer_proc = getattr(session, "proc", None) if session is not None else None
+            process = getattr(slicer_proc, "proc", None)
+            if process is None:
+                return {"running": False, "pid": None, "returncode": None}
+            returncode = process.poll()
+            return {
+                "running": returncode is None,
+                "pid": process.pid,
+                "returncode": returncode,
+            }
+
     def submit(self, cmd: str, payload: dict, **kwargs):
         self.ensure_alive()
         try:
