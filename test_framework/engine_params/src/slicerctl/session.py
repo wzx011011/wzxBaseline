@@ -1,3 +1,5 @@
+import ctypes
+import os
 import threading
 import time
 from typing import Optional
@@ -5,6 +7,53 @@ from typing import Optional
 from .client import SlicerProc
 from .client import EngineClient
 from .injector import CommandInjector
+
+
+def _process_cpu_seconds(pid: int) -> Optional[float]:
+    """Return Windows process CPU time without adding a psutil dependency."""
+    if os.name != "nt" or not pid:
+        return None
+
+    class FILETIME(ctypes.Structure):
+        _fields_ = [("low", ctypes.c_uint32), ("high", ctypes.c_uint32)]
+
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    kernel32.OpenProcess.argtypes = [ctypes.c_uint32, ctypes.c_int, ctypes.c_uint32]
+    kernel32.OpenProcess.restype = ctypes.c_void_p
+    kernel32.GetProcessTimes.argtypes = [
+        ctypes.c_void_p,
+        ctypes.POINTER(FILETIME),
+        ctypes.POINTER(FILETIME),
+        ctypes.POINTER(FILETIME),
+        ctypes.POINTER(FILETIME),
+    ]
+    kernel32.GetProcessTimes.restype = ctypes.c_int
+    kernel32.CloseHandle.argtypes = [ctypes.c_void_p]
+    kernel32.CloseHandle.restype = ctypes.c_int
+    handle = kernel32.OpenProcess(0x1000, False, int(pid))  # PROCESS_QUERY_LIMITED_INFORMATION
+    if not handle:
+        return None
+    try:
+        creation = FILETIME()
+        exit_time = FILETIME()
+        kernel = FILETIME()
+        user = FILETIME()
+        if not kernel32.GetProcessTimes(
+            handle,
+            ctypes.byref(creation),
+            ctypes.byref(exit_time),
+            ctypes.byref(kernel),
+            ctypes.byref(user),
+        ):
+            return None
+
+        def seconds(value: FILETIME) -> float:
+            ticks = (int(value.high) << 32) | int(value.low)
+            return ticks / 10_000_000.0
+
+        return seconds(kernel) + seconds(user)
+    finally:
+        kernel32.CloseHandle(handle)
 
 
 # ----------------- 起 Server + 建 Client + 起队列 -----------------
@@ -151,6 +200,7 @@ class RestartingEngine:
                 "running": returncode is None,
                 "pid": process.pid,
                 "returncode": returncode,
+                "cpu_seconds": _process_cpu_seconds(process.pid) if returncode is None else None,
             }
 
     def submit(self, cmd: str, payload: dict, **kwargs):

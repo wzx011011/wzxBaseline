@@ -619,6 +619,31 @@ def _engine_process_state(engine_injector) -> Optional[Dict]:
     return state if isinstance(state, dict) else None
 
 
+def _send_handle_process_state(send_cmd_handle) -> Optional[Dict]:
+    get_state = getattr(send_cmd_handle, "process_state", None)
+    if not callable(get_state):
+        return None
+    try:
+        state = get_state()
+    except Exception:  # noqa: BLE001
+        return None
+    return state if isinstance(state, dict) else None
+
+
+def _cpu_activity_delta(previous: Optional[Dict], current: Optional[Dict]) -> Optional[float]:
+    if not isinstance(previous, dict) or not isinstance(current, dict):
+        return None
+    if not previous.get("running") or not current.get("running"):
+        return None
+    if previous.get("pid") != current.get("pid"):
+        return None
+    try:
+        delta = float(current.get("cpu_seconds")) - float(previous.get("cpu_seconds"))
+    except (TypeError, ValueError):
+        return None
+    return delta if delta >= 0 else None
+
+
 def _engine_exception_detail(exc: Exception, process_state: Optional[Dict]) -> str:
     detail = type(exc).__name__
     message = str(exc).strip()
@@ -704,6 +729,22 @@ def _is_blocking_import_error(error: Dict) -> bool:
     return str(level or "").strip().lower() in {"error", "fatal"}
 
 
+def _blocking_validation_errors(ret: Dict) -> List[Dict]:
+    """Extract deterministic validation failures from a get_error response."""
+    if not ret.get("ok"):
+        return []
+    raw = ret.get("raw")
+    if not isinstance(raw, dict):
+        return []
+    payload = raw.get("payload")
+    if not isinstance(payload, dict):
+        return []
+    errors = payload.get("data")
+    if not isinstance(errors, list):
+        return []
+    return [error for error in errors if _is_blocking_import_error(error)]
+
+
 def _progress_percentage_0_100(value) -> Optional[float]:
     if value is None:
         return None
@@ -775,7 +816,9 @@ def _wait_for_slicing_done(
     last_error: Optional[str] = None
     last_progress_marker = None
     last_change_ts = time.monotonic()
-    stall_seconds = 120.0
+    last_activity_state = _send_handle_process_state(send_cmd_handle)
+    stall_seconds = float(os.getenv("SLICER_PROGRESS_STALL_SECONDS", "120"))
+    active_cpu_seconds = float(os.getenv("SLICER_ACTIVE_CPU_SECONDS", "1"))
     # When re-slicing, the "all_plate_finished" flag stays True from the previous
     # slice result until the new slice overwrites it. wait_for_transition requires
     # observing at least one False (slice in progress) before accepting True, so a
@@ -803,18 +846,61 @@ def _wait_for_slicing_done(
                     if last_progress_marker is None or progress_marker != last_progress_marker:
                         last_progress_marker = progress_marker
                         last_change_ts = now
+                        last_activity_state = _send_handle_process_state(send_cmd_handle)
+                        _safe_print(
+                            f"[slice-progress] percentage={pct:.3f}, "
+                            f"state={progress.get('state') or 'unknown'}, "
+                            f"text={progress_marker[1] or '<empty>'}"
+                        )
                     elif now - last_change_ts >= stall_seconds:
+                        current_activity_state = _send_handle_process_state(send_cmd_handle)
+                        cpu_delta = _cpu_activity_delta(last_activity_state, current_activity_state)
+                        if cpu_delta is not None and cpu_delta >= active_cpu_seconds:
+                            _safe_print(
+                                f"[slice-progress] API status unchanged for {stall_seconds}s, "
+                                f"but engine CPU advanced by {cpu_delta:.1f}s; extending stall window"
+                            )
+                            last_change_ts = now
+                            last_activity_state = current_activity_state
+                            continue
                         pct_str = f"{pct:.3f}"
                         state_str = str(progress.get("state") or "unknown")
+                        text_str = str(progress.get("text") or "")
                         return {
                             "ok": False,
                             "crashed": False,
                             "elapsed_ms": (time.perf_counter() - start) * 1000,
                             "progress": last_progress,
-                            "error": f"slicing progress stalled for {stall_seconds}s (percentage={pct_str}, state={state_str})",
+                            "error": (
+                                f"slicing progress stalled for {stall_seconds}s "
+                                f"(percentage={pct_str}, state={state_str}, text={text_str!r})"
+                            ),
                         }
                 if not _is_slicing_done(progress):
                     saw_unfinished = True
+                    # Some project validations are only raised after Slice All is
+                    # triggered (for example, a later plate using spiral-vase mode
+                    # with multiple objects). In that case the engine remains idle
+                    # at -1/no_slicing. Surface the deterministic validation error
+                    # immediately instead of treating it as an engine stall and
+                    # retrying the whole model after 120 seconds.
+                    if _is_idle_no_slicing_progress(progress):
+                        validation_ret = _run_command(
+                            send_cmd_handle,
+                            "get_error",
+                            {"type": "all"},
+                            timeout=5,
+                        )
+                        blocking_errors = _blocking_validation_errors(validation_ret)
+                        if blocking_errors:
+                            return {
+                                "ok": False,
+                                "crashed": False,
+                                "elapsed_ms": (time.perf_counter() - start) * 1000,
+                                "progress": last_progress,
+                                "blocking_validation": blocking_errors[0],
+                                "error": f"slicing blocked by validation: {_error_summary(blocking_errors[0])}",
+                            }
                 elif saw_unfinished:
                     return {
                         "ok": True,
@@ -995,6 +1081,8 @@ def engine_session_send_cmd(engine_injector_perf):
             band_output,
         )
 
+    send_cmd_handle.process_state = engine_injector_perf.process_state
+
     return send_cmd_handle
 
 
@@ -1064,7 +1152,11 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     second_slice_enabled = _truthy_env("ENABLE_SECOND_SLICE")
     timeouts = {
         "load": int(os.getenv("SLICER_LOAD_TIMEOUT", "180")),
-        "slice": int(os.getenv("SLICER_SLICE_TIMEOUT", "600")),
+        # Complex tree-support / high-layer-count projects legitimately take
+        # around 8 minutes on an otherwise idle workstation. Keep the shorter
+        # activity-aware stall detector for hangs, and leave headroom for a
+        # loaded Jenkins worker here.
+        "slice": int(os.getenv("SLICER_SLICE_TIMEOUT", "900")),
         "export": int(os.getenv("SLICER_EXPORT_TIMEOUT", "360")),
         "wait": float(os.getenv("SLICER_WAIT_WRITTEN", "180")),
         "settle": float(os.getenv("SLICER_SETTLE_SECONDS", "1.0")),
@@ -1129,7 +1221,14 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         result["crashed"] = result["crashed"] or wait_ret["crashed"]
         if not wait_ret["ok"]:
             result["slice_ok"] = False
-            result["retryable_idle_no_slicing"] = _is_idle_no_slicing_progress(wait_ret.get("progress"))
+            blocking_validation = wait_ret.get("blocking_validation")
+            if blocking_validation:
+                result["skip_reason"] = (
+                    f"slicing blocked by validation: {_error_summary(blocking_validation)}"
+                )
+                result["retryable_idle_no_slicing"] = False
+            else:
+                result["retryable_idle_no_slicing"] = _is_idle_no_slicing_progress(wait_ret.get("progress"))
             result["error"] = wait_ret["error"] or f"{label} slicing did not finish"
             return None
         return round((time.perf_counter() - slice_start) * 1000, 2)
@@ -1184,13 +1283,9 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     )
     _log_command_result("get_error.after_import", import_error)
     
-    if(import_error["ok"]):
-        payload = import_error["raw"]
-        errors = payload["payload"]["data"]
-        for error in errors:
-            if _is_blocking_import_error(error):
-                result["skip_reason"] = f"slicing blocked by import validation: {_error_summary(error)}"
-                return result
+    for error in _blocking_validation_errors(import_error):
+        result["skip_reason"] = f"slicing blocked by import validation: {_error_summary(error)}"
+        return result
     first_slice_ms = run_slice_once("first")
     result["first_slice_ms"] = first_slice_ms
     if first_slice_ms is None:
