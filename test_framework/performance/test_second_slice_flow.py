@@ -13,6 +13,7 @@ from test_framework.performance.case.test_slice import (
     _run_slice_flow_with_idle_retry,
     _send_engine_command,
 )
+from test_framework.engine_params.src.slicerctl.injector import CommandInjector
 
 
 class FakeSlicer:
@@ -143,6 +144,55 @@ def test_run_slice_flow_skips_slice_after_blocking_import_validation(tmp_path: P
     assert "validate_error" in result["skip_reason"]
     assert result["crashed"] is False
     assert "trigger_slice" not in slicer.commands
+
+
+def test_run_slice_flow_skips_gcode_only_3mf_before_resetting_project(tmp_path: Path, monkeypatch):
+    monkeypatch.delenv("ENABLE_SECOND_SLICE", raising=False)
+    model_path = tmp_path / "gcode-only.3mf"
+    model_xml = """<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02">
+  <resources/>
+  <build/>
+</model>
+"""
+    with zipfile.ZipFile(model_path, "w") as zf:
+        zf.writestr("3D/3dmodel.model", model_xml)
+        zf.writestr("Metadata/plate_1.gcode", "; already sliced\n")
+
+    slicer = FakeSlicer()
+    result = _run_slice_flow(slicer, model_path, tmp_path)
+
+    assert result["skip_reason"] is not None
+    assert "G-code-only project" in result["skip_reason"]
+    assert result["crashed"] is False
+    assert slicer.commands == []
+
+
+def test_command_injector_does_not_retry_stateful_command_after_receive_timeout():
+    class TimeoutClient:
+        def __init__(self):
+            self.send_calls = 0
+            self.reconnect_calls = 0
+
+        def send_command(self, *_args, **_kwargs):
+            self.send_calls += 1
+            raise TimeoutError("no response")
+
+        def _reconnect(self):
+            self.reconnect_calls += 1
+
+    client = TimeoutClient()
+    injector = CommandInjector(client, retries=1)
+
+    try:
+        injector._send_with_retry("trigger_load_project2", {"file": "case.3mf"}, timeout=1)
+    except TimeoutError:
+        pass
+    else:
+        raise AssertionError("receive timeout must propagate")
+
+    assert client.send_calls == 1
+    assert client.reconnect_calls == 0
 
 
 def test_run_slice_flow_slices_then_moves_model_then_slices_again(tmp_path: Path, monkeypatch):

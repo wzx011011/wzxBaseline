@@ -125,7 +125,12 @@ class CommandInjector:
         for i in range(tries):
             try:
                 return self.client.send_command(cmd, obj, timeout=timeout)
-            except (ConnectionError, socket.error, TimeoutError) as e:
+            except TimeoutError:
+                # A receive timeout does not prove that the GUI command was not
+                # accepted. Retrying load/slice can execute the same stateful
+                # operation twice after the GUI thread becomes responsive.
+                raise
+            except (ConnectionError, socket.error) as e:
                 last_exc = e
                 # 尝试自动重连一次（send_command 内部已做；这里可多给点缓冲）
                 try:

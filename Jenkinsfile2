@@ -11,6 +11,7 @@ pipeline {
     string(name: 'BASELINE_BUILD_ID', defaultValue: '81', description: 'Fixed baseline build number for second-slice comparison')
     booleanParam(name: 'ENABLE_SECOND_SLICE', defaultValue: false, description: 'Run moved-model second-slice performance checks')
     string(name: 'IDLE_NO_SLICING_RETRIES', defaultValue: '1', description: '0 disables retry; any positive value retries current model once only for -1/no_slicing')
+    string(name: 'LOAD_TIMEOUT_SECONDS', defaultValue: '180', description: 'Maximum time to import one 3MF model')
     string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
     string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
     string(name: 'TEST_COMMAND', defaultValue: '-m "engine_params or performance"', description: 'Override test command (optional)')
@@ -52,6 +53,7 @@ if "%BUILD_ID%"=="" (
 
 set "EXTRA_ARGS="
 set "SLICER_IDLE_NO_SLICING_RETRIES=%IDLE_NO_SLICING_RETRIES%"
+set "SLICER_LOAD_TIMEOUT=%LOAD_TIMEOUT_SECONDS%"
 set "SLICER_STDOUT_LOG=%WORKSPACE%\test_framework\artifacts\slicer_stdout.log"
 set "CREALITY_PRINTER_LOG_PATH=%WORKSPACE%\test_framework\artifacts\creality_logs"
 if not exist "%CREALITY_PRINTER_LOG_PATH%" mkdir "%CREALITY_PRINTER_LOG_PATH%"

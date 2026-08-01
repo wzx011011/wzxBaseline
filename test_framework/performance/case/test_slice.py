@@ -17,6 +17,7 @@ import subprocess
 import sys
 import time
 import zipfile
+import xml.etree.ElementTree as ET
 from concurrent.futures import TimeoutError as FutureTimeoutError
 from html import unescape as html_unescape
 from pathlib import Path
@@ -66,6 +67,36 @@ def _safe_pytest_id(text: str) -> str:
 
 
 _MAX_GCODE_CASE_COMPONENT_LENGTH = 80
+
+
+def _gcode_only_3mf_skip_reason(model_path: Path) -> Optional[str]:
+    """Return a skip reason only for a confidently identified G-code-only 3MF."""
+    if model_path.suffix.lower() != ".3mf":
+        return None
+
+    try:
+        with zipfile.ZipFile(model_path, "r") as zf:
+            entries = {name.replace("\\", "/").lower(): name for name in zf.namelist()}
+            model_entry = entries.get("3d/3dmodel.model")
+            has_embedded_gcode = any(
+                name.startswith("metadata/plate_") and name.endswith(".gcode")
+                for name in entries
+            )
+            if model_entry is None or not has_embedded_gcode:
+                return None
+            root = ET.fromstring(zf.read(model_entry))
+    except (OSError, KeyError, ET.ParseError, zipfile.BadZipFile):
+        # Let the slicer report malformed or unsupported projects normally.
+        return None
+
+    build = next((element for element in root if element.tag.rsplit("}", 1)[-1] == "build"), None)
+    has_build_items = build is not None and any(
+        child.tag.rsplit("}", 1)[-1] == "item" for child in build
+    )
+    if has_build_items:
+        return None
+
+    return "3MF contains embedded G-code but no printable model objects (G-code-only project)"
 
 
 def _sanitize_path_component(
@@ -551,7 +582,11 @@ def _send_engine_command(engine_injector, command, params_json, recvcmd_timeout=
         payload = {}
     try:
         fut = engine_injector.submit(command, payload, timeout=recvcmd_timeout)
-        resp = fut.result(timeout=recvcmd_timeout)
+        # Let the injector publish its socket timeout to the Future first. Using
+        # the exact same deadline here creates a race where FutureTimeoutError
+        # hides the underlying command exception and leaves the worker running.
+        future_timeout = None if recvcmd_timeout is None else recvcmd_timeout + 1.0
+        resp = fut.result(timeout=future_timeout)
         resp_bytes = f"{command}_respone;{json.dumps(resp)}".encode("utf-8")
         return True, "ok", resp_bytes
     except (FutureTimeoutError, TimeoutError) as exc:
@@ -968,7 +1003,7 @@ def current_results():
 def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
     second_slice_enabled = _truthy_env("ENABLE_SECOND_SLICE")
     timeouts = {
-        "load": int(os.getenv("SLICER_LOAD_TIMEOUT", "90")),
+        "load": int(os.getenv("SLICER_LOAD_TIMEOUT", "180")),
         "slice": int(os.getenv("SLICER_SLICE_TIMEOUT", "600")),
         "export": int(os.getenv("SLICER_EXPORT_TIMEOUT", "360")),
         "wait": float(os.getenv("SLICER_WAIT_WRITTEN", "180")),
@@ -994,6 +1029,11 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         "skip_reason": None,
         "error": None,
     }
+
+    gcode_only_reason = _gcode_only_3mf_skip_reason(model_path)
+    if gcode_only_reason:
+        result["skip_reason"] = gcode_only_reason
+        return result
 
     def run_slice_once(label: str, wait_for_transition: bool = False) -> Optional[float]:
         slice_ret = _run_command(
