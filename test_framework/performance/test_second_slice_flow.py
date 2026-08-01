@@ -188,6 +188,7 @@ def test_prepare_3mf_removes_empty_plates_without_modifying_source(tmp_path: Pat
 
     assert removed_count == 2
     assert prepared_path != model_path
+    assert len(str(prepared_path)) < 180
     assert model_path.read_bytes() == original_bytes
     with zipfile.ZipFile(prepared_path, "r") as zf:
         root = slice_case.ET.fromstring(zf.read("Metadata/model_settings.config"))
@@ -195,6 +196,7 @@ def test_prepare_3mf_removes_empty_plates_without_modifying_source(tmp_path: Pat
         assert len(plates) == 2
         assert [plate.find("metadata").get("value") for plate in plates] == ["1", "2"]
         assert zf.read("3D/3dmodel.model") == b"<model/>"
+    prepared_path.unlink()
 
 
 def test_command_injector_does_not_retry_stateful_command_after_receive_timeout():

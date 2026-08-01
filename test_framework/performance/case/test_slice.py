@@ -15,6 +15,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 import time
 import zipfile
 import xml.etree.ElementTree as ET
@@ -140,10 +141,13 @@ def _prepare_3mf_without_empty_plates(model_path: Path, tmp_dir: Path) -> Tuple[
                         metadata.set("value", str(plate_number))
                         break
 
-            prepared_dir = tmp_dir / "prepared_3mf"
+            # Keep the path short. performance_gcode_dir already contains the
+            # full pytest node id and may push Windows paths beyond MAX_PATH.
+            prepared_dir = Path(tempfile.gettempdir()) / "c3d3mf"
             prepared_dir.mkdir(parents=True, exist_ok=True)
-            digest = hashlib.sha256(str(model_path).encode("utf-8")).hexdigest()[:12]
-            prepared_path = prepared_dir / f"{_sanitize_path_component(model_path.stem, 48)}_{digest}.3mf"
+            digest_input = f"{model_path}|{tmp_dir}".encode("utf-8")
+            digest = hashlib.sha256(digest_input).hexdigest()[:16]
+            prepared_path = prepared_dir / f"{os.getpid()}_{digest}.3mf"
             settings_xml = ET.tostring(root, encoding="utf-8", xml_declaration=True)
 
             with zipfile.ZipFile(prepared_path, "w") as target_zip:
@@ -1083,6 +1087,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         "retryable_idle_no_slicing": False,
         "idle_no_slicing_retries": 0,
         "skip_reason": None,
+        "_prepared_model_path": None,
         "error": None,
     }
 
@@ -1093,6 +1098,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
 
     prepared_model_path, removed_empty_plates = _prepare_3mf_without_empty_plates(model_path, tmp_dir)
     if removed_empty_plates:
+        result["_prepared_model_path"] = str(prepared_model_path)
         _safe_print(
             f"[3mf] removed {removed_empty_plates} empty plate(s); "
             f"slicing temporary copy: {prepared_model_path}"
@@ -1307,6 +1313,7 @@ def _run_slice_flow_with_idle_retry(
 # ======== tests ========
 @pytest.mark.performance
 def test_feishu_slice(
+    request,
     feishu_case,
     engine_session_send_cmd,
     engine_manager_perf,
@@ -1328,6 +1335,18 @@ def test_feishu_slice(
         model_path,
         performance_gcode_dir,
     )
+
+    prepared_model_path = result.pop("_prepared_model_path", None)
+    if prepared_model_path:
+        def cleanup_prepared_model() -> None:
+            prepared_path = Path(prepared_model_path)
+            prepared_path.unlink(missing_ok=True)
+            try:
+                prepared_path.parent.rmdir()
+            except OSError:
+                pass
+
+        request.addfinalizer(cleanup_prepared_model)
 
     if result.get("skip_reason"):
         pytest.skip(result["skip_reason"])
