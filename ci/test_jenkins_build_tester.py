@@ -302,6 +302,10 @@ def test_main_runs_local_package_without_jenkins_and_preserves_source(tmp_path: 
     assert any("CrealityPrint.exe" in str(arg) for arg in calls[0][0])
     assert calls[0][1]["CREALITY_PRINTER_PATH"].endswith("CrealityPrint.exe")
     assert calls[0][1]["ENABLE_SECOND_SLICE"] == "0"
+    assert calls[0][1]["PERFORMANCE_SOURCE_KIND"] == "local"
+    assert calls[0][1]["PERFORMANCE_SOURCE_BUILD_ID"] == "manual-5243"
+    assert calls[0][1]["PERFORMANCE_PLATFORM"] == "windows"
+    assert calls[0][1]["PERFORMANCE_HISTORY_PATH"].endswith("manual_windows_performance_history.json")
     assert not list((artifacts_dir / "windows" / "manual").glob("*.zip"))
     state = (artifacts_dir / "tested_builds" / "manual_windows.json").read_text(encoding="utf-8")
     assert '"source_kind": "local"' in state

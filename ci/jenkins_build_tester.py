@@ -13,6 +13,7 @@ import subprocess
 import sys
 import uuid
 from ctypes import wintypes
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
 
@@ -386,6 +387,22 @@ def main() -> int:
         python_paths.append(existing_pythonpath)
     env["PYTHONPATH"] = os.pathsep.join(python_paths)
     env["ENABLE_SECOND_SLICE"] = "1" if args.enable_second_slice else "0"
+    env["PERFORMANCE_SOURCE_KIND"] = source_kind
+    env["PERFORMANCE_SOURCE_JOB"] = str(args.job_name or "")
+    env["PERFORMANCE_SOURCE_BUILD_ID"] = str(build_number)
+    env["PERFORMANCE_TESTER_BUILD_ID"] = str(env.get("BUILD_NUMBER") or "")
+    env["PERFORMANCE_TESTER_BUILD_URL"] = str(env.get("BUILD_URL") or "")
+    env["PERFORMANCE_AGENT"] = str(env.get("NODE_NAME") or env.get("COMPUTERNAME") or "")
+    env["PERFORMANCE_PLATFORM"] = str(args.platform)
+    env["PERFORMANCE_RUN_TIMESTAMP"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    env["PERFORMANCE_RUN_ID"] = str(env.get("BUILD_TAG") or f"{state_file_key}:{platform_file_key}:{build_number}")
+    env["PERFORMANCE_HISTORY_PATH"] = str(
+        state_dir / f"{state_file_key}_{platform_file_key}_performance_history.json"
+    )
+    if source_kind == "jenkins" and jenkins_base:
+        env["PERFORMANCE_SOURCE_URL"] = f"{jenkins_base}/job/{args.job_name}/{build_number}/"
+    else:
+        env["PERFORMANCE_SOURCE_URL"] = str(artifact_file)
     env["SECOND_SLICE_BASELINE_CSV"] = str(baseline_csv)
     env["SECOND_SLICE_BASELINE_BUILD_ID"] = str(args.baseline_build_id if source_kind == "jenkins" else package_id)
     allow_update_baseline = args.enable_second_slice and (

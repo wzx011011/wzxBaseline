@@ -24,3 +24,8 @@ AGENTS.md
 !/test_framework/artifacts/second_slice/
 !/test_framework/artifacts/second_slice/**
 /allure-results
+/test_framework/performance/data/performance_run.csv
+/test_framework/performance/data/performance_run.json
+/test_framework/performance/data/performance_history.json
+/test_framework/performance/data/performance_trend.html
+/test_framework/performance/data/performance_charts/

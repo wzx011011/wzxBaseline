@@ -12,6 +12,9 @@ pipeline {
     booleanParam(name: 'ENABLE_SECOND_SLICE', defaultValue: false, description: 'Run moved-model second-slice performance checks')
     string(name: 'IDLE_NO_SLICING_RETRIES', defaultValue: '1', description: '0 disables retry; any positive value retries current model once only for -1/no_slicing')
     string(name: 'LOAD_TIMEOUT_SECONDS', defaultValue: '300', description: 'Maximum time to import one 3MF model')
+    string(name: 'PERFORMANCE_HISTORY_BUILDS', defaultValue: '50', description: 'Number of tester runs retained in the performance trend')
+    string(name: 'PERFORMANCE_REGRESSION_PERCENT', defaultValue: '10', description: 'First-slice regression threshold in percent')
+    string(name: 'PERFORMANCE_MIN_DELTA_MS', defaultValue: '2000', description: 'Minimum first-slice regression in milliseconds')
     string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Artifact relativePath or filename (optional)')
     string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label for env injection (windows/macos_x86/macos_arm64/linux)')
     string(name: 'TEST_COMMAND', defaultValue: '-m "engine_params or performance"', description: 'Override test command (optional)')
@@ -93,7 +96,7 @@ endlocal
     }
     stage('Archive performance reports') {
       steps {
-        archiveArtifacts artifacts: 'test_framework/performance/data/*.csv,test_framework/performance/data/*.md,test_framework/performance/data/*.json,test_framework/artifacts/slicer_stdout.log,test_framework/artifacts/creality_logs/**/*', allowEmptyArchive: true
+        archiveArtifacts artifacts: 'test_framework/performance/data/*.csv,test_framework/performance/data/*.md,test_framework/performance/data/*.json,test_framework/performance/data/*.html,test_framework/performance/data/performance_charts/*.svg,test_framework/artifacts/slicer_stdout.log,test_framework/artifacts/creality_logs/**/*', allowEmptyArchive: true
       }
     }
   }

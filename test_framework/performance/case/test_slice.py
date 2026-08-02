@@ -36,6 +36,7 @@ from test_framework.engine_params.src.slicerctl.session import (
 from test_framework.engine_params.conftest import wait_for_file_written
 from test_framework.engine_params.src.slicerctl.constants import SLICE_BTN_ID
 from test_framework.performance.summary import build_efficiency_summary, write_summary_files
+from test_framework.performance.trend import write_performance_artifacts
 
 
 def _safe_print(*args, **kwargs) -> None:
@@ -1585,6 +1586,13 @@ def write_report_to_feishu_after_tests(baseline_data, baseline_snapshot, current
             time.sleep(2)
     if last_exc is not None and not report_written_this_run:
         _safe_print(f"[csv-write] failed after retries: {last_exc}")
+
+    try:
+        outputs = write_performance_artifacts(current_results, report_path.parent)
+        if outputs:
+            _safe_print(f"OK Wrote performance trend report: {outputs['trend_html']}")
+    except Exception as exc:  # noqa: BLE001
+        _safe_print(f"[performance-trend] failed to write report: {exc}")
 
     if not _truthy_env("ENABLE_SECOND_SLICE"):
         _safe_print("Skip second-slice efficiency summary and baseline update: second slice is disabled.")
