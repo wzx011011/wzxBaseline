@@ -38,6 +38,7 @@ def wait_for_slicing_done(
     stall_timeout: float = 120.0,
     require_transition: bool = False,
     accept_idle_after: Optional[float] = None,
+    command_params: Optional[Dict[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Poll ``get_slicing_progress`` until the current slice is complete.
 
@@ -73,7 +74,7 @@ def wait_for_slicing_done(
         try:
             future = engine_injector.submit(
                 "get_slicing_progress",
-                {},
+                dict(command_params or {}),
                 timeout=per_command_timeout,
             )
             response = future.result(timeout=per_command_timeout)
