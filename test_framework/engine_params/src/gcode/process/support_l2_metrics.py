@@ -16,7 +16,7 @@ BASELINE_FILE = (
     Path(__file__).resolve().parents[3]
     / "data"
     / "l2_baselines"
-    / "support_7_1_0_release_c.json"
+    / "support_7_2_1_build_108.json"
 )
 
 _MOVE_RE = re.compile(r"^G([0123])\b", re.IGNORECASE)
@@ -410,7 +410,7 @@ def validate_support_l2_behavior(
     expected_value: Any,
     baseline_path: Path | str = BASELINE_FILE,
 ) -> Tuple[bool, Dict[str, Any]]:
-    """Compare semantic metrics with a trusted 7.1.0.ReleaseC baseline."""
+    """Compare semantic metrics with the trusted 7.2.1 build 108 baseline."""
     path = Path(baseline_path)
     if not path.is_file():
         return False, {"error": f"L2 baseline not found: {path}"}

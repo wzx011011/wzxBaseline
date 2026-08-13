@@ -27,6 +27,14 @@ _ALLOWED_BEHAVIOR_ALIASES = {
         frozenset((canonical_expected("0.3"), canonical_expected("0.5"))):
             "support_new/TreeSupport.cpp reuses top interface spacing for the bottom interface",
     },
+    "support_bottom_z_distance": {
+        frozenset((canonical_expected("0.1"), canonical_expected("0.2"))):
+            "both distances quantize to the same observable support-bottom gap in build 108",
+        frozenset((canonical_expected("0.1"), canonical_expected("0.3"))):
+            "both distances quantize to the same observable support-bottom gap in build 108",
+        frozenset((canonical_expected("0.2"), canonical_expected("0.3"))):
+            "both distances quantize to the same observable support-bottom gap in build 108",
+    },
     "support_interface_pattern": {
         frozenset((canonical_expected("auto"), canonical_expected("rectilinear_interlaced"))):
             "auto resolves to the rectilinear-interlaced interface path for this geometry",
@@ -314,7 +322,13 @@ def _select_checks(
     return selected, aliases
 
 
-def generate(gcode_roots: Sequence[Path], case_root: Path, output: Path) -> Dict[str, Any]:
+def generate(
+    gcode_roots: Sequence[Path],
+    case_root: Path,
+    output: Path,
+    *,
+    generator_executable: str,
+) -> Dict[str, Any]:
     parameters: Dict[str, Dict[str, Any]] = {}
     generated_by = None
     for parameter, case in _case_files(case_root):
@@ -377,7 +391,7 @@ def generate(gcode_roots: Sequence[Path], case_root: Path, output: Path) -> Dict
         "schema_version": 2,
         "generator": {
             "product": generated_by,
-            "executable": r"D:\Program Files\Creality\Creality Print 7.1.0.ReleaseC\CrealityPrint.exe",
+            "executable": generator_executable,
             "validation_level": "L2 semantic G-code metrics",
             "replica_root_count": len(gcode_roots),
         },
@@ -399,8 +413,18 @@ def main() -> None:
         default=Path(__file__).resolve().parents[1] / "data" / "case_input" / "process" / "support",
     )
     parser.add_argument("--output", type=Path, default=BASELINE_FILE)
+    parser.add_argument(
+        "--generator-executable",
+        required=True,
+        help="Executable or immutable build reference used to generate the G-code roots",
+    )
     args = parser.parse_args()
-    baseline = generate(args.gcode_roots, args.case_root, args.output)
+    baseline = generate(
+        args.gcode_roots,
+        args.case_root,
+        args.output,
+        generator_executable=args.generator_executable,
+    )
     print(f"generated {baseline['parameter_count']} parameters / {baseline['case_count']} cases: {args.output}")
 
 
