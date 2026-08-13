@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "project_name": "feather_complex_islands_multiline_1",
+      "input_3mf": "feather_complex_islands_multiline_1.3mf",
+      "expected_max_block_lines": 800,
+      "expected_max_retractions": 24,
+      "expected_max_wipe_sections": 12,
+      "expected_max_z_hop_travels": 20
+    }
+  ]
+}

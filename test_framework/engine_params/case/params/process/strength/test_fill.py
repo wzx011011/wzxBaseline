@@ -7,6 +7,7 @@ from engine_params.src.gcode.process.strength.fill_check import (
     parse_filter_out_gap_fill,
     parse_anchor_line,
     parse_sparse_infill_pattern,
+    parse_rectilinear_path_continuity,
     parse_ai_infill,
     parse_sparse_infill_density,
     parse_internal_solid_infill_pattern,
@@ -116,6 +117,30 @@ def test_sparse_infill_pattern(
     assert actual_match == expected_match, (
         f"Pattern match result mismatch: expected {expected_match}, got {actual_match}"
     )
+
+
+# ================== rectilinear_path_continuity ==================
+@pytest.mark.engine_params
+def test_rectilinear_path_continuity(
+        slice_and_export: Path,
+        expected_max_block_lines: int,
+        expected_max_retractions: int,
+        expected_max_wipe_sections: int,
+        expected_max_z_hop_travels: int,
+) -> None:
+    """防止 fill_multiline=1 的复杂岛被多线连接器拆成大量短路径。"""
+    gcode_path: Path = slice_and_export
+    assert gcode_path.exists()
+
+    ok, details = parse_rectilinear_path_continuity(
+        gcode_path,
+        max_block_lines=expected_max_block_lines,
+        max_retractions=expected_max_retractions,
+        max_wipe_sections=expected_max_wipe_sections,
+        max_z_hop_travels=expected_max_z_hop_travels,
+    )
+
+    assert ok, f"rectilinear path continuity regression: {details}"
 
 
 # ================== bottom_surface_pattern ==================

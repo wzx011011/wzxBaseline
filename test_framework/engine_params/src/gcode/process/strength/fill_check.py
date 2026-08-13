@@ -289,6 +289,100 @@ def _compare_role_behavior(
     }
 
 
+def parse_rectilinear_path_continuity(
+        gcode_path: Path | str,
+        max_block_lines: int,
+        max_retractions: int,
+        max_wipe_sections: int,
+        max_z_hop_travels: int,
+) -> Tuple[bool, Dict[str, Any]]:
+    """检查首个 Sparse infill 块是否被拆成异常多的短路径。
+
+    该回归来自 fill_multiline=1 的复杂、含孔洞填充岛。错误实现把普通
+    Rectilinear 送入多线连接器，使同一块内的回抽、WIPE 和 Z-hop 数量
+    约增加到正常结果的四倍。这里使用宽松上限，避免依赖精确坐标或行号。
+    """
+    path = Path(gcode_path)
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+
+    fill_multiline = None
+    for line in lines:
+        match = re.match(r"^\s*;\s*fill_multiline\s*=\s*(.*?)\s*$", line)
+        if match:
+            fill_multiline = match.group(1)
+            break
+
+    start = next(
+        (index for index, line in enumerate(lines)
+         if line.strip().lower() == ";type:sparse infill"),
+        None,
+    )
+    if start is None:
+        return False, {
+            "error": "missing ';TYPE:Sparse infill' block",
+            "fill_multiline": fill_multiline,
+        }
+
+    end = len(lines)
+    for index in range(start + 1, len(lines)):
+        marker = lines[index].strip().lower()
+        if marker.startswith(";type:") or marker.startswith("; layer num/") or marker == ";layer_change":
+            end = index
+            break
+
+    block = lines[start:end]
+    number = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)"
+    token_re = re.compile(rf"(?:^|\s)([XYZE])({number})(?=\s|$)", re.IGNORECASE)
+
+    retractions = 0
+    wipe_sections = 0
+    z_hop_travels = 0
+    positive_extrusions = 0
+    for raw_line in block:
+        stripped = raw_line.strip()
+        if stripped.upper() == ";WIPE_START":
+            wipe_sections += 1
+
+        command = stripped.split(";", 1)[0]
+        if not re.match(r"^G[01](?:\s|$)", command, re.IGNORECASE):
+            continue
+        tokens = {key.upper(): float(value) for key, value in token_re.findall(command)}
+        extrusion = tokens.get("E")
+        if extrusion is not None and extrusion < 0:
+            retractions += 1
+        elif extrusion is not None and extrusion > 0:
+            positive_extrusions += 1
+        if "X" in tokens and "Y" in tokens and "Z" in tokens and "E" not in tokens:
+            z_hop_travels += 1
+
+    metrics = {
+        "block_lines": len(block),
+        "retractions": retractions,
+        "wipe_sections": wipe_sections,
+        "z_hop_travels": z_hop_travels,
+        "positive_extrusions": positive_extrusions,
+    }
+    limits = {
+        "block_lines": max_block_lines,
+        "retractions": max_retractions,
+        "wipe_sections": max_wipe_sections,
+        "z_hop_travels": max_z_hop_travels,
+    }
+    checks = {
+        "fill_multiline_is_one": fill_multiline is not None and fill_multiline.strip() == "1",
+        "has_extrusion": positive_extrusions > 0,
+        **{name: metrics[name] <= limit for name, limit in limits.items()},
+    }
+    return all(checks.values()), {
+        "mode": "rectilinear-path-continuity",
+        "fill_multiline": fill_multiline,
+        "metrics": metrics,
+        "limits": limits,
+        "checks": checks,
+        "block_line_range": [start + 1, end],
+    }
+
+
 def parse_sparse_infill_pattern(
         gcode_path: Path | str,
         baseline_gcode_path: Path | str,
