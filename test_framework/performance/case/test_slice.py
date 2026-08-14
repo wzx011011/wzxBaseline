@@ -10,6 +10,7 @@ Results are appended to performance/data/feishu_slice_report.csv.
 import csv
 import hashlib
 import json
+import math
 import os
 import re
 import shutil
@@ -609,6 +610,26 @@ def _run_command(send_cmd_handle, command: str, params: Dict, timeout: int) -> D
     }
 
 
+def _product_duration_ms(command_result: Dict) -> Optional[float]:
+    """Return a valid product-side duration_ms from a command response."""
+    raw = command_result.get("raw")
+    if not isinstance(raw, dict):
+        return None
+    payload = raw.get("payload")
+    if not isinstance(payload, dict):
+        return None
+    value = payload.get("duration_ms")
+    if isinstance(value, bool):
+        return None
+    try:
+        duration_ms = float(value)
+    except (TypeError, ValueError):
+        return None
+    if not math.isfinite(duration_ms) or duration_ms < 0:
+        return None
+    return duration_ms
+
+
 def _engine_process_state(engine_injector) -> Optional[Dict]:
     get_state = getattr(engine_injector, "process_state", None)
     if not callable(get_state):
@@ -950,48 +971,44 @@ def _wait_for_slicing_done(
     }
 
 
-def _write_report_line(report_path: Path, row: Dict) -> None:
-    report_path.parent.mkdir(parents=True, exist_ok=True)
-    header = [
-        "record_id",
-        "version",
-        "import_ms",
-        "first_slice_ms",
-        "move_ms",
-        "second_slice_trials",
-        "second_slice_ms",
-        "slice_ms",
-        "export_ms",
-        "import_ok",
-        "move_ok",
-        "slice_ok",
-        "export_ok",
-        "crashed",
-        "error",
-    ]
-    if not report_path.exists():
-        report_path.write_text(",".join(header) + "\n", encoding="utf-8")
+REPORT_FIELDS = (
+    "record_id",
+    "version",
+    "import_ms",
+    "first_slice_ms",
+    "move_ms",
+    "second_slice_trials",
+    "second_slice_ms",
+    "slice_ms",
+    "export_ms",
+    "import_ok",
+    "move_ok",
+    "slice_ok",
+    "export_ok",
+    "crashed",
+    "error",
+)
 
-    ordered = [
-        row.get("record_id", ""),
-        f"{row.get('version', '')}",
-        f"{row.get('import_ms', '')}",
-        f"{row.get('first_slice_ms', '')}",
-        f"{row.get('move_ms', '')}",
-        f"{row.get('second_slice_trials', '')}",
-        f"{row.get('second_slice_ms', '')}",
-        f"{row.get('slice_ms', '')}",
-        f"{row.get('export_ms', '')}",
-        str(row.get("import_ok", "")),
-        str(row.get("move_ok", "")),
-        str(row.get("slice_ok", "")),
-        str(row.get("export_ok", "")),
-        str(row.get("crashed", "")),
-        row.get("error", "") or "",
-    ]
-    ordered = ["" if v is None else str(v) for v in ordered]
-    with report_path.open("a", encoding="utf-8") as f:
-        f.write(",".join(ordered) + "\n")
+
+def _write_report_rows(report_path: Path, rows, *, append: bool = False) -> None:
+    """Write report rows with CSV quoting for free-text fields such as error."""
+    report_path.parent.mkdir(parents=True, exist_ok=True)
+    write_header = not append or not report_path.exists() or report_path.stat().st_size == 0
+    mode = "a" if append else "w"
+    with report_path.open(mode, encoding="utf-8", newline="") as stream:
+        writer = csv.DictWriter(
+            stream,
+            fieldnames=REPORT_FIELDS,
+            extrasaction="ignore",
+            lineterminator="\n",
+        )
+        if write_header:
+            writer.writeheader()
+        writer.writerows(rows)
+
+
+def _write_report_line(report_path: Path, row: Dict) -> None:
+    _write_report_rows(report_path, (row,), append=True)
 
 # ======== engine session fixture ========
 def _require_path(key: str) -> str:
@@ -1284,12 +1301,24 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         timeout=timeouts["load"],
     )
     _log_command_result("trigger_load_project2", import_ret)
-    result["import_ok"] = import_ret["ok"]
-    result["import_ms"] = round(import_ret["elapsed_ms"], 2) if import_ret["ok"] else None
     result["crashed"] = import_ret["crashed"]
     if not import_ret["ok"]:
         result["error"] = import_ret["error"]
         return result
+    import_ms = _product_duration_ms(import_ret)
+    result["import_ok"] = True
+    if import_ms is None:
+        result["import_ms"] = round(import_ret["elapsed_ms"], 2)
+        _safe_print(
+            "[timing] WARNING trigger_load_project2 did not return a valid "
+            "payload.duration_ms; using legacy client wall-clock timing"
+        )
+    else:
+        result["import_ms"] = round(import_ms, 2)
+        _safe_print(
+            f"[timing] open product={result['import_ms']}ms; "
+            f"client_wall={round(import_ret['elapsed_ms'], 2)}ms"
+        )
     #get error
     import_error = _run_command(
         send_cmd_handle,
@@ -1550,33 +1579,11 @@ def write_report_to_feishu_after_tests(baseline_data, baseline_snapshot, current
     _safe_print(f"Writing to: {report_path}")
 
     report_path.parent.mkdir(parents=True, exist_ok=True)
-    header = [
-        "record_id",
-        "version",
-        "import_ms",
-        "first_slice_ms",
-        "move_ms",
-        "second_slice_trials",
-        "second_slice_ms",
-        "slice_ms",
-        "export_ms",
-        "import_ok",
-        "move_ok",
-        "slice_ok",
-        "export_ok",
-        "crashed",
-        "error",
-    ]
-
     report_written_this_run = False
     last_exc = None
     for _attempt in range(5):
         try:
-            with open(report_path, "w", encoding="utf-8") as f:
-                f.write(",".join(header) + "\n")
-                for record in baseline_data.values():
-                    row = [str(record.get(field, "")) for field in header]
-                    f.write(",".join(row) + "\n")
+            _write_report_rows(report_path, baseline_data.values())
             _safe_print(f"OK Wrote {len(baseline_data)} records to {report_path}")
             report_written_this_run = True
             break

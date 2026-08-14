@@ -1,3 +1,4 @@
+import csv
 import json
 import zipfile
 from concurrent.futures import Future, TimeoutError as FutureTimeoutError
@@ -142,6 +143,14 @@ class FakeSlicer:
             self._since_trigger = 0
             self.triggered = True
             payload = {"code": 0, "payload": {}}
+        elif command == "trigger_load_project2":
+            payload = {
+                "code": 0,
+                "payload": {
+                    "status": "loaded",
+                    "duration_ms": 1234.56,
+                },
+            }
         elif command == "get_error":
             errors = self.post_trigger_errors if self.triggered else self.import_errors
             payload = {"code": 0, "payload": {"data": errors}}
@@ -432,6 +441,72 @@ def test_run_slice_flow_uses_project_printer_when_printer_env_is_empty(tmp_path:
     assert result["slice_ok"] is True
     assert "select_printer" not in slicer.commands
     assert "trigger_load_project2" in slicer.commands
+
+
+def test_run_slice_flow_uses_product_reported_import_duration(tmp_path: Path, monkeypatch):
+    monkeypatch.setenv("SLICER_PROGRESS_POLL", "0.001")
+    monkeypatch.delenv("SECOND_SLICE_PRINTER_NAME", raising=False)
+    monkeypatch.setattr(slice_case, "wait_for_file_written", lambda *_args, **_kwargs: None)
+    model_path = tmp_path / "case.3mf"
+    model_path.write_bytes(b"fake 3mf")
+
+    result = _run_slice_flow(FakeSlicer(), model_path, tmp_path)
+
+    assert result["import_ok"] is True
+    assert result["import_ms"] == 1234.56
+    assert "import_timing_source" not in result
+
+
+def test_run_slice_flow_falls_back_when_product_import_duration_is_missing(tmp_path: Path, monkeypatch, capsys):
+    monkeypatch.setenv("SLICER_PROGRESS_POLL", "0.001")
+    monkeypatch.delenv("SECOND_SLICE_PRINTER_NAME", raising=False)
+    monkeypatch.setattr(slice_case, "wait_for_file_written", lambda *_args, **_kwargs: None)
+    model_path = tmp_path / "case.3mf"
+    model_path.write_bytes(b"fake 3mf")
+    slicer = FakeSlicer()
+
+    def missing_duration(command, params_json, recvcmd_timeout=None, band_output=False):
+        response = slicer(command, params_json, recvcmd_timeout, band_output)
+        if command == "trigger_load_project2":
+            payload = {"code": 0, "payload": {"status": "loaded"}}
+            return True, "ok", f"{command}_respone;{json.dumps(payload)}".encode("utf-8")
+        return response
+
+    result = _run_slice_flow(missing_duration, model_path, tmp_path)
+
+    assert result["import_ok"] is True
+    assert result["import_ms"] is not None
+    assert result["import_ms"] != 1234.56
+    assert "import_timing_source" not in result
+    assert result["error"] is None
+    assert "trigger_slice" in slicer.commands
+    assert "using legacy client wall-clock timing" in capsys.readouterr().out
+
+
+def test_report_csv_round_trips_error_with_commas(tmp_path: Path):
+    report_path = tmp_path / "feishu_slice_report.csv"
+    expected_error = 'slicing stalled (percentage=65.000, state="progress")\n请检查模型'
+
+    slice_case._write_report_rows(
+        report_path,
+        (
+            {
+                "record_id": "case,with-comma.3mf",
+                "error": expected_error,
+                "ignored_local_field": "not written",
+            },
+        ),
+    )
+
+    with report_path.open("r", encoding="utf-8", newline="") as stream:
+        rows = list(csv.DictReader(stream))
+
+    assert len(rows) == 1
+    assert tuple(rows[0]) == slice_case.REPORT_FIELDS
+    assert rows[0]["record_id"] == "case,with-comma.3mf"
+    assert rows[0]["error"] == expected_error
+    assert "import_timing_source" not in rows[0]
+    assert None not in rows[0]
 
 
 def test_run_slice_flow_skips_second_slice_by_default(tmp_path: Path, monkeypatch):
