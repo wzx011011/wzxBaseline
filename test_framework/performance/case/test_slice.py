@@ -1407,6 +1407,8 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         timeout=timeouts["export"],
     )
     _log_command_result("export_gcode", export_ret)
+    client_export_ms = round(export_ret["elapsed_ms"], 2)
+    product_export_ms = _product_duration_ms(export_ret)
     _safe_print(output_gcode.exists())
     zip_ok = False
     if output_gcode.exists():
@@ -1419,7 +1421,21 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         except zipfile.BadZipFile:
             zip_ok = False
     result["export_ok"] = export_ret["ok"] and zip_ok
-    result["export_ms"] = round(export_ret["elapsed_ms"], 2) if result["export_ok"] else None
+    if result["export_ok"]:
+        if product_export_ms is None:
+            _safe_print(
+                "[timing] WARNING export_gcode did not return a valid "
+                "payload.duration_ms; using legacy client wall-clock timing"
+            )
+            result["export_ms"] = client_export_ms
+        else:
+            result["export_ms"] = round(product_export_ms, 2)
+            _safe_print(
+                f"[timing] export product={result['export_ms']}ms; "
+                f"client_wall={client_export_ms}ms"
+            )
+    else:
+        result["export_ms"] = None
     result["crashed"] = result["crashed"] or export_ret["crashed"]
     if not result["export_ok"]:
         result["error"] = export_ret["error"] or "gcode not generated"
