@@ -1230,6 +1230,7 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
         )
 
     def run_slice_once(label: str, wait_for_transition: bool = False) -> Optional[float]:
+        slice_client_started = time.perf_counter()
         slice_ret = _run_command(
             send_cmd_handle,
             "trigger_slice",
@@ -1243,12 +1244,15 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
             result["error"] = slice_ret["error"] or f"{label} trigger_slice failed: {_command_brief(slice_ret)}"
             return None
 
-        slice_start = time.perf_counter()
+        product_slice_ms = _product_duration_ms(slice_ret)
         wait_ret = _wait_for_slicing_done(
             send_cmd_handle,
             timeout_s=float(timeouts["slice"]),
             poll_interval_s=float(os.getenv("SLICER_PROGRESS_POLL", "1")),
-            wait_for_transition=wait_for_transition,
+            # A product duration means trigger_slice returned after this slice's
+            # first Preview frame. Legacy products return at slice start and still
+            # need the transition guard for second-slice polling.
+            wait_for_transition=wait_for_transition and product_slice_ms is None,
         )
         _log_command_result(f"{label}.wait_slicing_done", wait_ret)
         result["crashed"] = result["crashed"] or wait_ret["crashed"]
@@ -1264,7 +1268,20 @@ def _run_slice_flow(send_cmd_handle, model_path: Path, tmp_dir: Path) -> Dict:
                 result["retryable_idle_no_slicing"] = _is_idle_no_slicing_progress(wait_ret.get("progress"))
             result["error"] = wait_ret["error"] or f"{label} slicing did not finish"
             return None
-        return round((time.perf_counter() - slice_start) * 1000, 2)
+        client_slice_ms = round((time.perf_counter() - slice_client_started) * 1000, 2)
+        if product_slice_ms is None:
+            _safe_print(
+                "[timing] WARNING trigger_slice did not return a valid "
+                "payload.duration_ms; using legacy client wall-clock timing"
+            )
+            return client_slice_ms
+
+        product_slice_ms = round(product_slice_ms, 2)
+        _safe_print(
+            f"[timing] {label} slice product={product_slice_ms}ms; "
+            f"client_wall={client_slice_ms}ms"
+        )
+        return product_slice_ms
 
     # Reset project to avoid residue between runs.
     reset_ret = _run_command(

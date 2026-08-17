@@ -93,6 +93,7 @@ class FakeSlicer:
         import_errors=None,
         post_trigger_errors=None,
         idle_after_trigger: bool = False,
+        slice_duration_ms=2345.67,
     ):
         self.commands = []
         self.progress_calls = 0
@@ -102,6 +103,7 @@ class FakeSlicer:
         self.import_errors = list(import_errors or [])
         self.post_trigger_errors = list(post_trigger_errors or [])
         self.idle_after_trigger = idle_after_trigger
+        self.slice_duration_ms = slice_duration_ms
         self.triggered = False
         self._since_trigger = 0
 
@@ -139,10 +141,21 @@ class FakeSlicer:
                 },
             }
         elif command == "trigger_slice":
-            # A new slice starts: reset so progress reports in-progress first.
-            self._since_trigger = 0
             self.triggered = True
-            payload = {"code": 0, "payload": {}}
+            if self.slice_duration_ms is None:
+                # Legacy product: trigger_slice responds when slicing starts.
+                self._since_trigger = 0
+                payload = {"code": 0, "payload": {}}
+            else:
+                # New product: trigger_slice responds after the first Preview frame.
+                self._since_trigger = self.in_progress_polls
+                payload = {
+                    "code": 0,
+                    "payload": {
+                        "status": "sliced",
+                        "duration_ms": self.slice_duration_ms,
+                    },
+                }
         elif command == "trigger_load_project2":
             payload = {
                 "code": 0,
@@ -374,8 +387,8 @@ def test_run_slice_flow_slices_then_moves_model_then_slices_again(tmp_path: Path
     assert result["import_ok"] is True
     assert result["move_ok"] is True
     assert result["slice_ok"] is True
-    assert result["first_slice_ms"] is not None
-    assert result["second_slice_ms"] is not None
+    assert result["first_slice_ms"] == 2345.67
+    assert result["second_slice_ms"] == 2345.67
     assert result["slice_ms"] == result["second_slice_ms"]
     # second slice: one moved-model slice by default (first + second = one test group)
     assert result["second_slice_trials"]
@@ -483,6 +496,24 @@ def test_run_slice_flow_falls_back_when_product_import_duration_is_missing(tmp_p
     assert "using legacy client wall-clock timing" in capsys.readouterr().out
 
 
+def test_run_slice_flow_falls_back_for_legacy_slice_timing(tmp_path: Path, monkeypatch, capsys):
+    monkeypatch.setenv("ENABLE_SECOND_SLICE", "true")
+    monkeypatch.setenv("SLICER_PROGRESS_POLL", "0.001")
+    monkeypatch.delenv("SECOND_SLICE_PRINTER_NAME", raising=False)
+    monkeypatch.setattr(slice_case, "wait_for_file_written", lambda *_args, **_kwargs: None)
+    model_path = tmp_path / "case.3mf"
+    model_path.write_bytes(b"fake 3mf")
+
+    result = _run_slice_flow(FakeSlicer(slice_duration_ms=None), model_path, tmp_path)
+
+    assert result["slice_ok"] is True
+    assert result["first_slice_ms"] is not None
+    assert result["second_slice_ms"] is not None
+    assert result["first_slice_ms"] != 2345.67
+    assert result["second_slice_ms"] != 2345.67
+    assert "trigger_slice did not return a valid payload.duration_ms" in capsys.readouterr().out
+
+
 def test_report_csv_round_trips_error_with_commas(tmp_path: Path):
     report_path = tmp_path / "feishu_slice_report.csv"
     expected_error = 'slicing stalled (percentage=65.000, state="progress")\n请检查模型'
@@ -512,13 +543,14 @@ def test_report_csv_round_trips_error_with_commas(tmp_path: Path):
 def test_run_slice_flow_skips_second_slice_by_default(tmp_path: Path, monkeypatch):
     monkeypatch.delenv("ENABLE_SECOND_SLICE", raising=False)
     monkeypatch.setenv("SLICER_PROGRESS_POLL", "0.001")
+    monkeypatch.setattr(slice_case, "wait_for_file_written", lambda *_args, **_kwargs: None)
     model_path = tmp_path / "case.3mf"
     model_path.write_bytes(b"fake 3mf")
     slicer = FakeSlicer()
 
     result = _run_slice_flow(slicer, model_path, tmp_path)
 
-    assert result["first_slice_ms"] is not None
+    assert result["first_slice_ms"] == 2345.67
     assert result["second_slice_ms"] is None
     assert result["second_slice_trials"] == []
     assert result["slice_ms"] == result["first_slice_ms"]
