@@ -13,6 +13,7 @@ pipeline {
     string(name: 'HTTP_3MF_ROOT', defaultValue: 'http://172.20.180.14/shared/performance_qa_3mf/', description: 'HTTP directory containing the QA performance 3MF models')
     string(name: 'HTTP_3MF_DOWNLOAD_DIR', defaultValue: 'artifacts/http_3mf_qa', description: '3MF cache directory relative to test_framework')
     string(name: 'TEST_COMMAND', defaultValue: 'performance/case/test_slice.py::test_feishu_slice -m performance', description: 'Pytest selection for the QA performance flow')
+    string(name: 'PERFORMANCE_SUITE_REPEAT', defaultValue: '1', description: 'Run the complete model set 1-10 times; CrealityPrint restarts between rounds')
     booleanParam(name: 'ENABLE_SECOND_SLICE', defaultValue: false, description: 'Enable moved-model second-slice checks; keep disabled for the initial QA performance flow')
     string(name: 'IDLE_NO_SLICING_RETRIES', defaultValue: '1', description: 'Retry the current model once for -1/no_slicing when set to a positive value')
     string(name: 'LOAD_TIMEOUT_SECONDS', defaultValue: '300', description: 'Maximum time to import one 3MF model')
@@ -49,9 +50,19 @@ pipeline {
           if (!params.TEST_COMMAND?.trim()) {
             error('TEST_COMMAND is required.')
           }
+          def repeatCount
+          try {
+            repeatCount = Integer.parseInt(params.PERFORMANCE_SUITE_REPEAT?.trim() ?: '1')
+          } catch (Exception ignored) {
+            error('PERFORMANCE_SUITE_REPEAT must be an integer between 1 and 10.')
+          }
+          if (repeatCount < 1 || repeatCount > 10) {
+            error('PERFORMANCE_SUITE_REPEAT must be between 1 and 10.')
+          }
           currentBuild.description = "测试性能：${params.JOB_NAME} #${params.BUILD_ID}"
           echo "QA performance model root: ${modelRoot}"
           echo "QA performance pytest selection: ${params.TEST_COMMAND}"
+          echo "QA performance suite rounds: ${repeatCount}"
         }
       }
     }
@@ -80,6 +91,7 @@ if "%BUILD_ID%"=="" (
   echo BUILD_ID is required
   exit /b 1
 )
+if "%PERFORMANCE_SUITE_REPEAT%"=="" set "PERFORMANCE_SUITE_REPEAT=1"
 
 set "SLICER_IDLE_NO_SLICING_RETRIES=%IDLE_NO_SLICING_RETRIES%"
 set "SLICER_LOAD_TIMEOUT=%LOAD_TIMEOUT_SECONDS%"
@@ -88,7 +100,11 @@ if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ART
 if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
 if /I "%ENABLE_SECOND_SLICE%"=="true" set "EXTRA_ARGS=!EXTRA_ARGS! --enable-second-slice"
 
-python ci/jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --allure-results-dir "%ALLURE_RESULTS_DIR%" --test-command "%TEST_COMMAND%" --preserve-extracted-files !EXTRA_ARGS!
+if "%PERFORMANCE_SUITE_REPEAT%"=="1" (
+  python ci/jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --allure-results-dir "%ALLURE_RESULTS_DIR%" --test-command "%TEST_COMMAND%" --preserve-extracted-files !EXTRA_ARGS!
+) else (
+  python ci/run_performance_suite_repeat.py --repeat "%PERFORMANCE_SUITE_REPEAT%" -- --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --allure-results-dir "%ALLURE_RESULTS_DIR%" --test-command "%TEST_COMMAND%" --preserve-extracted-files !EXTRA_ARGS!
+)
 endlocal
 '''
           }
