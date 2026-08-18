@@ -550,17 +550,13 @@ def pytest_generate_tests(metafunc):
 def _extract_http_3mf_suffix(path: str) -> str:
     if not path:
         return ""
-    path_str = str(path)
-    # 查找 http_3mf 在路径中的位置
-    http_3mf_index = path_str.find("http_3mf")
-    if http_3mf_index != -1:
-        # 提取 http_3mf 后面的部分（跳过 http_3mf 和路径分隔符）
-        suffix_start = http_3mf_index + len("http_3mf")
-        # 跳过路径分隔符
-        while suffix_start < len(path_str) and path_str[suffix_start] in {"/", "\\"}:
-            suffix_start += 1
-        return path_str[suffix_start:]
-    return path_str
+    model_path = Path(path).expanduser()
+    download_dir = _http_3mf_download_dir().expanduser()
+    try:
+        return model_path.resolve().relative_to(download_dir.resolve()).as_posix()
+    except (OSError, ValueError):
+        # Fixed/local models may not come from the configured HTTP cache.
+        return model_path.name
 
 
 def _decode_response(raw: Union[bytes, str, None]) -> Dict:
