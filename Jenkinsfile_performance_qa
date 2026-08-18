@@ -1,0 +1,132 @@
+pipeline {
+  agent { label params.AGENT_LABEL }
+  options {
+    timestamps()
+    disableConcurrentBuilds()
+  }
+  parameters {
+    string(name: 'AGENT_LABEL', defaultValue: 'tester2', description: 'Jenkins agent label for the QA-side GUI performance test machine')
+    string(name: 'JOB_NAME', defaultValue: 'CrealityPrint_Release_Package_pipeline', description: 'Upstream Jenkins job that provides the CrealityPrint ZIP package')
+    string(name: 'BUILD_ID', defaultValue: 'lastSuccessfulBuild', description: 'Upstream Jenkins build number or lastSuccessfulBuild')
+    string(name: 'ARTIFACT_PATH', defaultValue: '', description: 'Optional ZIP artifact relative path or filename')
+    string(name: 'PLATFORM', defaultValue: 'windows', description: 'Platform label passed to the test runner')
+    string(name: 'HTTP_3MF_ROOT', defaultValue: 'http://172.20.180.14/shared/performance_qa_3mf/', description: 'HTTP directory containing the QA performance 3MF models')
+    string(name: 'HTTP_3MF_DOWNLOAD_DIR', defaultValue: 'artifacts/http_3mf_qa', description: '3MF cache directory relative to test_framework')
+    string(name: 'TEST_COMMAND', defaultValue: 'performance/case/test_slice.py::test_feishu_slice -m performance', description: 'Pytest selection for the QA performance flow')
+    booleanParam(name: 'ENABLE_SECOND_SLICE', defaultValue: false, description: 'Enable moved-model second-slice checks; keep disabled for the initial QA performance flow')
+    string(name: 'IDLE_NO_SLICING_RETRIES', defaultValue: '1', description: 'Retry the current model once for -1/no_slicing when set to a positive value')
+    string(name: 'LOAD_TIMEOUT_SECONDS', defaultValue: '300', description: 'Maximum time to import one 3MF model')
+    string(name: 'PERFORMANCE_HISTORY_BUILDS', defaultValue: '50', description: 'Number of QA performance runs retained in the performance trend')
+    string(name: 'PERFORMANCE_REGRESSION_PERCENT', defaultValue: '10', description: 'Performance regression threshold in percent')
+    string(name: 'PERFORMANCE_MIN_DELTA_MS', defaultValue: '2000', description: 'Minimum performance regression in milliseconds')
+    string(name: 'ALLURE_CMD', defaultValue: 'Allure', description: 'Allure command-line tool name configured in Jenkins')
+  }
+  environment {
+    PYTHONIOENCODING = 'utf-8'
+    SLICER_DATADIR_ISOLATED = '1'
+    SKIP_TESTED_BUILD = 'false'
+    FEISHU_NOTIFY = 'off'
+    ARTIFACTS_DIR = 'artifacts-performance-qa'
+    ALLURE_RESULTS_DIR = 'allure-results-performance-qa'
+  }
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+    stage('Validate QA performance configuration') {
+      steps {
+        script {
+          def modelRoot = params.HTTP_3MF_ROOT?.trim()
+          if (!modelRoot) {
+            error('HTTP_3MF_ROOT is required.')
+          }
+          if (!(modelRoot.startsWith('http://') || modelRoot.startsWith('https://'))) {
+            error('HTTP_3MF_ROOT must be an HTTP or HTTPS directory URL.')
+          }
+          if (!params.HTTP_3MF_DOWNLOAD_DIR?.trim()) {
+            error('HTTP_3MF_DOWNLOAD_DIR is required.')
+          }
+          if (!params.TEST_COMMAND?.trim()) {
+            error('TEST_COMMAND is required.')
+          }
+          currentBuild.description = "测试性能：${params.JOB_NAME} #${params.BUILD_ID}"
+          echo "QA performance model root: ${modelRoot}"
+          echo "QA performance pytest selection: ${params.TEST_COMMAND}"
+        }
+      }
+    }
+    stage('Install deps') {
+      steps {
+        bat '''
+python -m pip install -U pip
+python -m pip install -r requirements.txt
+if exist allure-results-performance-qa rd /s /q allure-results-performance-qa
+'''
+      }
+    }
+    stage('Download artifact and run QA performance tests') {
+      steps {
+        catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+          withCredentials([sshUserPrivateKey(credentialsId: 'cxsw-ssh-key', keyFileVariable: 'SSH_KEY', usernameVariable: 'SSH_USER')]) {
+            bat '''
+@echo off
+setlocal enabledelayedexpansion
+
+if "%JOB_NAME%"=="" (
+  echo JOB_NAME is required
+  exit /b 1
+)
+if "%BUILD_ID%"=="" (
+  echo BUILD_ID is required
+  exit /b 1
+)
+
+set "SLICER_IDLE_NO_SLICING_RETRIES=%IDLE_NO_SLICING_RETRIES%"
+set "SLICER_LOAD_TIMEOUT=%LOAD_TIMEOUT_SECONDS%"
+set "EXTRA_ARGS="
+if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ARTIFACT_PATH%\""
+if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
+if /I "%ENABLE_SECOND_SLICE%"=="true" set "EXTRA_ARGS=!EXTRA_ARGS! --enable-second-slice"
+
+python ci/jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --allure-results-dir "%ALLURE_RESULTS_DIR%" --test-command "%TEST_COMMAND%" --preserve-extracted-files !EXTRA_ARGS!
+endlocal
+'''
+          }
+        }
+      }
+    }
+    stage('Allure QA performance results') {
+      steps {
+        catchError(buildResult: 'UNSTABLE', stageResult: 'FAILURE') {
+          script {
+            def allurePath = 'allure-results-performance-qa'
+            if (fileExists(allurePath)) {
+              echo "Publishing QA performance Allure results from ${allurePath}"
+              def cmdName = params.ALLURE_CMD?.trim()
+              if (cmdName) {
+                allure includeProperties: false, jdk: '', commandline: cmdName, results: [[path: allurePath]]
+              } else {
+                allure includeProperties: false, jdk: '', results: [[path: allurePath]]
+              }
+            } else {
+              echo 'No QA performance Allure results found, skipping publish'
+            }
+          }
+        }
+      }
+    }
+    stage('Archive QA performance artifacts') {
+      steps {
+        archiveArtifacts artifacts: 'test_framework/performance/data/*.csv,test_framework/performance/data/*.md,test_framework/performance/data/*.json,test_framework/performance/data/*.html,test_framework/performance/data/performance_charts/*.svg,test_framework/artifacts/slicer_stdout*.log,artifacts-performance-qa/slicer_data/**/log/**/*', allowEmptyArchive: true
+      }
+    }
+  }
+  post {
+    success {
+      echo 'QA performance pipeline passed.'
+    }
+    failure {
+      echo 'QA performance pipeline failed; check the Allure report and archived slicer logs.'
+    }
+  }
+}
