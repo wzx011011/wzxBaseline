@@ -88,7 +88,7 @@ if not "%ARTIFACT_PATH%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --artifact-path \"%ART
 if not "%PLATFORM%"=="" set "EXTRA_ARGS=!EXTRA_ARGS! --platform \"%PLATFORM%\""
 if /I "%ENABLE_SECOND_SLICE%"=="true" set "EXTRA_ARGS=!EXTRA_ARGS! --enable-second-slice"
 
-python ci\jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --allure-results-dir "%ALLURE_RESULTS_DIR%" --test-command "%TEST_COMMAND%" --preserve-extracted-files !EXTRA_ARGS!
+python ci/jenkins_build_tester.py --job-name "%JOB_NAME%" --build-id "%BUILD_ID%" --artifacts-dir "%ARTIFACTS_DIR%" --allure-results-dir "%ALLURE_RESULTS_DIR%" --test-command "%TEST_COMMAND%" --preserve-extracted-files !EXTRA_ARGS!
 endlocal
 '''
           }
