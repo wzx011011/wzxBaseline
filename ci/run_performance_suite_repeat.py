@@ -89,53 +89,6 @@ STATISTICS_FIELDS = (
     "cv_percent",
 )
 
-COMBINED_REPORT_FIELDS = (
-    "row_type",
-    "record_id",
-    "round",
-    "result_status",
-    "version",
-    "stage",
-    "metric",
-    "import_ms",
-    "first_slice_ms",
-    "move_ms",
-    "second_slice_trials",
-    "second_slice_ms",
-    "slice_ms",
-    "export_ms",
-    "import_ok",
-    "move_ok",
-    "slice_ok",
-    "export_ok",
-    "crashed",
-    "error",
-    "rounds_planned",
-    "rounds_recorded",
-    "passed_rounds",
-    "failed_rounds",
-    "import_trials_ms",
-    "import_avg_ms",
-    "first_slice_trials_ms",
-    "first_slice_avg_ms",
-    "second_slice_trials_ms",
-    "second_slice_avg_ms",
-    "export_trials_ms",
-    "export_avg_ms",
-    "errors",
-    "valid_samples",
-    "missing_rounds",
-    "raw_values_ms",
-    "mean_ms",
-    "median_ms",
-    "min_ms",
-    "max_ms",
-    "range_ms",
-    "sample_variance_ms2",
-    "sample_stddev_ms",
-    "cv_percent",
-)
-
 STATISTIC_METRICS = (
     ("open", "打开", "import_ms", True),
     ("first_slice", "切片", "first_slice_ms", True),
@@ -454,36 +407,98 @@ def build_statistics_rows(
     return result
 
 
-def build_combined_report_rows(
+def build_readable_report(
     raw_rows: Sequence[Mapping[str, object]],
     summary_rows: Sequence[Mapping[str, object]],
     statistics_rows: Sequence[Mapping[str, object]],
-) -> List[Dict[str, object]]:
-    """Combine all new QA report views into one filterable CSV table."""
-    rows_by_record: Dict[str, Dict[str, List[Mapping[str, object]]]] = defaultdict(
-        lambda: {"summary": [], "statistics": [], "raw": []}
+    rounds_planned: int,
+    package_name: str,
+) -> Tuple[Tuple[str, ...], List[Dict[str, object]]]:
+    """Build one human-readable row per model and performance stage."""
+    stage_labels = {stage: label for stage, label, _metric, _required in STATISTIC_METRICS}
+    round_fields = tuple(f"第{index}轮(s)" for index in range(1, rounds_planned + 1))
+    fields = (
+        "包名",
+        "模型",
+        "版本",
+        "阶段",
+        *round_fields,
+        "有效/计划",
+        "缺失轮次",
+        "平均(s)",
+        "中位数(s)",
+        "最小值(s)",
+        "最大值(s)",
+        "极差(s)",
+        "方差(s²)",
+        "标准差(s)",
+        "波动率(%)",
+        "错误信息",
     )
-    for row_type, rows in (
-        ("summary", summary_rows),
-        ("statistics", statistics_rows),
-        ("raw", raw_rows),
-    ):
-        for row in rows:
-            record_id = str(row.get("record_id") or "").strip()
-            if record_id:
-                rows_by_record[record_id][row_type].append(row)
 
-    combined: List[Dict[str, object]] = []
-    for record_id in sorted(rows_by_record):
-        grouped = rows_by_record[record_id]
-        for row_type in ("summary", "statistics", "raw"):
-            for row in grouped[row_type]:
-                combined.append({"row_type": row_type, **row})
-    return combined
+    raw_by_record_round: Dict[Tuple[str, int], Mapping[str, object]] = {}
+    version_by_record: Dict[str, str] = {}
+    for raw_row in raw_rows:
+        record_id = str(raw_row.get("record_id") or "").strip()
+        try:
+            round_index = int(str(raw_row.get("round") or ""))
+        except ValueError:
+            continue
+        raw_by_record_round[(record_id, round_index)] = raw_row
+        version = str(raw_row.get("version") or "").strip()
+        if record_id and version:
+            version_by_record.setdefault(record_id, version)
+
+    errors_by_record = {
+        str(row.get("record_id") or "").strip(): str(row.get("errors") or "").strip()
+        for row in summary_rows
+    }
+    readable_rows: List[Dict[str, object]] = []
+    for statistics_row in statistics_rows:
+        record_id = str(statistics_row.get("record_id") or "").strip()
+        metric = str(statistics_row.get("metric") or "").strip()
+        stage = str(statistics_row.get("stage") or "").strip()
+        output: Dict[str, object] = {
+            "包名": package_name,
+            "模型": record_id,
+            "版本": version_by_record.get(record_id, ""),
+            "阶段": stage_labels.get(stage, stage),
+            "有效/计划": (
+                f"{statistics_row.get('valid_samples') or 0}/"
+                f"{statistics_row.get('rounds_planned') or rounds_planned}"
+            ),
+            "缺失轮次": statistics_row.get("missing_rounds") or "",
+            "平均(s)": _milliseconds_to_seconds(statistics_row.get("mean_ms")),
+            "中位数(s)": _milliseconds_to_seconds(statistics_row.get("median_ms")),
+            "最小值(s)": _milliseconds_to_seconds(statistics_row.get("min_ms")),
+            "最大值(s)": _milliseconds_to_seconds(statistics_row.get("max_ms")),
+            "极差(s)": _milliseconds_to_seconds(statistics_row.get("range_ms")),
+            "方差(s²)": _milliseconds_squared_to_seconds_squared(
+                statistics_row.get("sample_variance_ms2")
+            ),
+            "标准差(s)": _milliseconds_to_seconds(statistics_row.get("sample_stddev_ms")),
+            "波动率(%)": statistics_row.get("cv_percent") or "",
+            "错误信息": errors_by_record.get(record_id, ""),
+        }
+        for round_index, round_field in enumerate(round_fields, start=1):
+            raw_row = raw_by_record_round.get((record_id, round_index), {})
+            output[round_field] = _milliseconds_to_seconds(raw_row.get(metric))
+        readable_rows.append(output)
+    return fields, readable_rows
 
 
 def _format_number(value: Optional[float]) -> str:
     return "" if value is None else f"{value:.2f}"
+
+
+def _milliseconds_to_seconds(value: object) -> str:
+    number = _number(value)
+    return "" if number is None else f"{number / 1000:.3f}"
+
+
+def _milliseconds_squared_to_seconds_squared(value: object) -> str:
+    number = _number(value)
+    return "" if number is None else f"{number / 1_000_000:.6f}"
 
 
 def _seconds(value: object) -> str:
@@ -634,6 +649,30 @@ def _clean_previous_outputs(data_dir: Path) -> None:
             path.unlink()
 
 
+def _prepare_package_metadata(
+    data_dir: Path,
+    round_index: int,
+    round_env: Dict[str, str],
+) -> Path:
+    metadata_path = data_dir / f".qa_performance_package_round_{round_index:02d}.json"
+    metadata_path.unlink(missing_ok=True)
+    round_env["PERFORMANCE_PACKAGE_METADATA_PATH"] = str(metadata_path)
+    return metadata_path
+
+
+def _consume_package_name(metadata_path: Path) -> str:
+    if not metadata_path.exists():
+        return ""
+    try:
+        metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+        return str(metadata.get("package_name") or "").strip()
+    except (OSError, ValueError, TypeError) as exc:
+        print(f"[qa-repeat] unable to read package metadata: {exc}", flush=True)
+        return ""
+    finally:
+        metadata_path.unlink(missing_ok=True)
+
+
 def main() -> int:
     args = parse_args()
     repo_root = Path(__file__).resolve().parent.parent
@@ -661,6 +700,7 @@ def main() -> int:
 
     reports: List[Tuple[int, Sequence[Mapping[str, str]]]] = []
     round_return_codes: List[int] = []
+    package_names: List[str] = []
     original_build_number = str(os.getenv("BUILD_NUMBER") or "").strip()
 
     for round_index in range(1, args.repeat + 1):
@@ -682,6 +722,7 @@ def main() -> int:
         round_env = os.environ.copy()
         round_env["PERFORMANCE_SUITE_ROUND"] = str(round_index)
         round_env["PERFORMANCE_SUITE_REPEAT"] = str(args.repeat)
+        package_metadata_path = _prepare_package_metadata(data_dir, round_index, round_env)
         if original_build_number:
             round_env["QA_REPEAT_ORIGINAL_BUILD_NUMBER"] = original_build_number
             round_env["BUILD_NUMBER"] = f"{original_build_number}_round_{round_index:02d}"
@@ -690,6 +731,10 @@ def main() -> int:
         print(f"[qa-repeat] command: {subprocess.list2cmdline(command)}", flush=True)
         completed = subprocess.run(command, cwd=repo_root, env=round_env, check=False)
         round_return_codes.append(completed.returncode)
+
+        package_name = _consume_package_name(package_metadata_path)
+        if package_name and package_name not in package_names:
+            package_names.append(package_name)
 
         rows = _read_report(report_path)
         reports.append((round_index, rows))
@@ -705,7 +750,13 @@ def main() -> int:
     aggregate_rows, summary_rows = aggregate_reports(reports, args.repeat)
     raw_rows = build_raw_rows(reports, args.repeat)
     statistics_rows = build_statistics_rows(reports, args.repeat)
-    combined_rows = build_combined_report_rows(raw_rows, summary_rows, statistics_rows)
+    readable_fields, combined_rows = build_readable_report(
+        raw_rows,
+        summary_rows,
+        statistics_rows,
+        args.repeat,
+        " | ".join(package_names),
+    )
     _write_csv(report_path, REPORT_FIELDS, aggregate_rows)
     combined_csv = data_dir / "qa_performance_repeat_report.csv"
     raw_csv = data_dir / "qa_performance_repeat_raw.csv"
@@ -713,7 +764,7 @@ def main() -> int:
     summary_md = data_dir / "qa_performance_repeat_summary.md"
     statistics_csv = data_dir / "qa_performance_repeat_statistics.csv"
     statistics_md = data_dir / "qa_performance_repeat_statistics.md"
-    _write_csv(combined_csv, COMBINED_REPORT_FIELDS, combined_rows)
+    _write_csv(combined_csv, readable_fields, combined_rows)
     _write_csv(raw_csv, RAW_FIELDS, raw_rows)
     _write_csv(summary_csv, SUMMARY_FIELDS, summary_rows)
     _write_summary_markdown(summary_md, summary_rows, round_return_codes)

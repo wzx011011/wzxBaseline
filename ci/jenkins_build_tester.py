@@ -31,6 +31,32 @@ def _truthy(value: str) -> bool:
     return str(value).strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _write_package_metadata(downloaded: Path, source_kind: str, job_name: str, build_number: object) -> None:
+    """Expose the selected package to opt-in wrappers without changing test reports."""
+    output_value = str(os.getenv("PERFORMANCE_PACKAGE_METADATA_PATH") or "").strip()
+    if not output_value:
+        return
+
+    output_path = Path(output_value).expanduser()
+    try:
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(
+            json.dumps(
+                {
+                    "package_name": downloaded.name,
+                    "source_kind": source_kind,
+                    "job_name": str(job_name or ""),
+                    "build_number": str(build_number),
+                },
+                ensure_ascii=False,
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
+    except OSError as exc:
+        print(f"[warn] unable to write package metadata: {exc}", file=sys.stderr)
+
+
 def split_test_command_args(command: str) -> List[str]:
     """Split pytest arguments without losing Windows regex backslashes."""
     value = str(command or "").strip()
@@ -335,6 +361,8 @@ def main() -> int:
         print(f"[info] artifact saved to: {downloaded}")
         if artifact_url:
             print(f"[info] artifact URL: {artifact_url}")
+
+    _write_package_metadata(downloaded, source_kind, str(args.job_name or ""), build_number)
 
     state_file_key = _safe_filename_part(state_key)
     platform_file_key = _safe_filename_part(args.platform)
