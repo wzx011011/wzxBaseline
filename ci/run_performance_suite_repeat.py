@@ -89,6 +89,53 @@ STATISTICS_FIELDS = (
     "cv_percent",
 )
 
+COMBINED_REPORT_FIELDS = (
+    "row_type",
+    "record_id",
+    "round",
+    "result_status",
+    "version",
+    "stage",
+    "metric",
+    "import_ms",
+    "first_slice_ms",
+    "move_ms",
+    "second_slice_trials",
+    "second_slice_ms",
+    "slice_ms",
+    "export_ms",
+    "import_ok",
+    "move_ok",
+    "slice_ok",
+    "export_ok",
+    "crashed",
+    "error",
+    "rounds_planned",
+    "rounds_recorded",
+    "passed_rounds",
+    "failed_rounds",
+    "import_trials_ms",
+    "import_avg_ms",
+    "first_slice_trials_ms",
+    "first_slice_avg_ms",
+    "second_slice_trials_ms",
+    "second_slice_avg_ms",
+    "export_trials_ms",
+    "export_avg_ms",
+    "errors",
+    "valid_samples",
+    "missing_rounds",
+    "raw_values_ms",
+    "mean_ms",
+    "median_ms",
+    "min_ms",
+    "max_ms",
+    "range_ms",
+    "sample_variance_ms2",
+    "sample_stddev_ms",
+    "cv_percent",
+)
+
 STATISTIC_METRICS = (
     ("open", "打开", "import_ms", True),
     ("first_slice", "切片", "first_slice_ms", True),
@@ -407,6 +454,34 @@ def build_statistics_rows(
     return result
 
 
+def build_combined_report_rows(
+    raw_rows: Sequence[Mapping[str, object]],
+    summary_rows: Sequence[Mapping[str, object]],
+    statistics_rows: Sequence[Mapping[str, object]],
+) -> List[Dict[str, object]]:
+    """Combine all new QA report views into one filterable CSV table."""
+    rows_by_record: Dict[str, Dict[str, List[Mapping[str, object]]]] = defaultdict(
+        lambda: {"summary": [], "statistics": [], "raw": []}
+    )
+    for row_type, rows in (
+        ("summary", summary_rows),
+        ("statistics", statistics_rows),
+        ("raw", raw_rows),
+    ):
+        for row in rows:
+            record_id = str(row.get("record_id") or "").strip()
+            if record_id:
+                rows_by_record[record_id][row_type].append(row)
+
+    combined: List[Dict[str, object]] = []
+    for record_id in sorted(rows_by_record):
+        grouped = rows_by_record[record_id]
+        for row_type in ("summary", "statistics", "raw"):
+            for row in grouped[row_type]:
+                combined.append({"row_type": row_type, **row})
+    return combined
+
+
 def _format_number(value: Optional[float]) -> str:
     return "" if value is None else f"{value:.2f}"
 
@@ -547,6 +622,7 @@ def _clean_previous_outputs(data_dir: Path) -> None:
         if path.is_file():
             path.unlink()
     for name in (
+        "qa_performance_repeat_report.csv",
         "qa_performance_repeat_raw.csv",
         "qa_performance_repeat_summary.csv",
         "qa_performance_repeat_summary.md",
@@ -629,18 +705,22 @@ def main() -> int:
     aggregate_rows, summary_rows = aggregate_reports(reports, args.repeat)
     raw_rows = build_raw_rows(reports, args.repeat)
     statistics_rows = build_statistics_rows(reports, args.repeat)
+    combined_rows = build_combined_report_rows(raw_rows, summary_rows, statistics_rows)
     _write_csv(report_path, REPORT_FIELDS, aggregate_rows)
+    combined_csv = data_dir / "qa_performance_repeat_report.csv"
     raw_csv = data_dir / "qa_performance_repeat_raw.csv"
     summary_csv = data_dir / "qa_performance_repeat_summary.csv"
     summary_md = data_dir / "qa_performance_repeat_summary.md"
     statistics_csv = data_dir / "qa_performance_repeat_statistics.csv"
     statistics_md = data_dir / "qa_performance_repeat_statistics.md"
+    _write_csv(combined_csv, COMBINED_REPORT_FIELDS, combined_rows)
     _write_csv(raw_csv, RAW_FIELDS, raw_rows)
     _write_csv(summary_csv, SUMMARY_FIELDS, summary_rows)
     _write_summary_markdown(summary_md, summary_rows, round_return_codes)
     _write_csv(statistics_csv, STATISTICS_FIELDS, statistics_rows)
     _write_statistics_markdown(statistics_md, statistics_rows)
     print(f"[qa-repeat] aggregate report: {report_path}", flush=True)
+    print(f"[qa-repeat] combined CSV: {combined_csv}", flush=True)
     print(f"[qa-repeat] raw CSV: {raw_csv}", flush=True)
     print(f"[qa-repeat] summary CSV: {summary_csv}", flush=True)
     print(f"[qa-repeat] summary Markdown: {summary_md}", flush=True)
