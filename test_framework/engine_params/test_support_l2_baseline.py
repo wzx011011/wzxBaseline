@@ -25,6 +25,16 @@ def test_documented_behavior_alias_retains_real_l2_checks():
     assert aliases[0]["expected_values"] == ["0.3", "0.5"]
 
 
+def test_build_108_bottom_z_distances_are_documented_aliases():
+    checks, aliases = _select_checks(
+        "support_bottom_z_distance",
+        [_entry("0.1"), _entry("0.2"), _entry("0.3")],
+    )
+
+    assert checks
+    assert len(aliases) == 3
+
+
 def test_undocumented_behavior_alias_is_rejected():
     with pytest.raises(RuntimeError, match="undocumented pair"):
         _select_checks("unexpected_parameter", [_entry("a"), _entry("b")])
