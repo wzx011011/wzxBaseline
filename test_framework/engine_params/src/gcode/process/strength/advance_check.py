@@ -328,7 +328,7 @@ def parse_minimum_sparse_infill_area(
     """
     校验 minimum_sparse_infill_area：
       - 仅对中间层（排除 top/bottom shell）计算面积
-      - 面积 > 阈值时应存在 Internal solid infill，否则不应存在
+      - 面积 <= 阈值时应使用 Internal solid infill，否则应使用 Sparse infill
     """
     parser = GCodeParser(Path(gcode_path))
     cfg = parser.load_config()
@@ -355,6 +355,11 @@ def parse_minimum_sparse_infill_area(
         types=[ExtrusionType.INTERNAL_SOLID_INFILL],
     ) or []
 
+    sparse_contours = parser.get_type_contours_per_layer_by_object(
+        object_id,
+        types=[ExtrusionType.SPARSE_INFILL],
+    ) or []
+
     violations: List[Dict[str, Any]] = []
     layer_reports: List[Dict[str, Any]] = []
 
@@ -367,27 +372,38 @@ def parse_minimum_sparse_infill_area(
         if area is None:
             continue
 
-        expect_solid = area > threshold  # 超过阈值则期待出现 Internal solid infill
+        expect_solid = area <= threshold
+        expect_sparse = not expect_solid
         actual_solid = bool(
             layer_idx < len(solid_contours)
             and (solid_contours[layer_idx] or {}).get(ExtrusionType.INTERNAL_SOLID_INFILL)
+        )
+        actual_sparse = bool(
+            layer_idx < len(sparse_contours)
+            and (sparse_contours[layer_idx] or {}).get(ExtrusionType.SPARSE_INFILL)
         )
 
         report = {
             "layer_index": layer_idx,
             "area": area,
             "expect_solid": expect_solid,
+            "expect_sparse": expect_sparse,
             "actual_solid": actual_solid,
+            "actual_sparse": actual_sparse,
         }
         layer_reports.append(report)
-        if expect_solid != actual_solid:
+        if expect_solid != actual_solid or expect_sparse != actual_sparse:
             violations.append(report)
+
+    if not layer_reports:
+        violations.append({"reason": "no evaluable middle layers"})
 
     details: Dict[str, Any] = {
         "threshold": threshold,
         "bottom_shell_layers": bottom_shell_layers,
         "top_shell_layers": top_shell_layers,
         "line_width": line_width,
+        "actual_has_sparse_infill": any(report["actual_sparse"] for report in layer_reports),
         "layer_reports": layer_reports,
         "violations": violations,
     }

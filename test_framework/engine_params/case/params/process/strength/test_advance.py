@@ -79,18 +79,23 @@ def test_bridge_angle(
 @pytest.mark.engine_params
 def test_minimum_sparse_infill_area(
         slice_and_export: Path,
-        expected_has_sp_infill: bool,
+        expected_has_sparse_infill: bool,
 ) -> None:
-    # 验证方法：使用实体、薄壁、桥接或填充专用 3MF切片，解析各层填充类型、路径方向、间距及正向挤出量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
+    # 检查中间层面积与阈值的关系，并分别验证 Internal solid / Sparse 路径是否符合预期。
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 
     ok, details = parse_minimum_sparse_infill_area(gcode_path)
 
-    assert ok == expected_has_sp_infill, (
-        f"minimum_sparse_infill_area 结果不匹配: "
-        f"expected_has_sp_infill={expected_has_sp_infill}, actual_ok={ok}, "
+    assert ok, (
+        "minimum_sparse_infill_area 面积分类不正确: "
         f"violations={details['violations']}, reports={details['layer_reports']}"
+    )
+    assert details["actual_has_sparse_infill"] == expected_has_sparse_infill, (
+        "minimum_sparse_infill_area 稀疏填充状态不匹配: "
+        f"expected_has_sparse_infill={expected_has_sparse_infill}, "
+        f"actual_has_sparse_infill={details['actual_has_sparse_infill']}, "
+        f"reports={details['layer_reports']}"
     )
 
 
