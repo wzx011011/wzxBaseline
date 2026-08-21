@@ -36,8 +36,8 @@ _ALLOWED_BEHAVIOR_ALIASES = {
             "both distances quantize to the same observable support-bottom gap in build 108",
     },
     "support_interface_pattern": {
-        frozenset((canonical_expected("auto"), canonical_expected("rectilinear_interlaced"))):
-            "auto resolves to the rectilinear-interlaced interface path for this geometry",
+        frozenset((canonical_expected("auto"), canonical_expected("rectilinear"))):
+            "auto resolves to the rectilinear interface path for this non-soluble geometry",
     },
     "support_interface_min_area": {
         frozenset((canonical_expected("0.25"), canonical_expected("5"))):

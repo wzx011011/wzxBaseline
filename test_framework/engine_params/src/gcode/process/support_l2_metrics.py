@@ -16,7 +16,7 @@ BASELINE_FILE = (
     Path(__file__).resolve().parents[3]
     / "data"
     / "l2_baselines"
-    / "support_7_2_1_build_108.json"
+    / "support_release_260830.json"
 )
 
 _MOVE_RE = re.compile(r"^G([0123])\b", re.IGNORECASE)
