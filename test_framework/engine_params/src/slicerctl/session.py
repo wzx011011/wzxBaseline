@@ -65,7 +65,9 @@ class EngineSession:
                  *,
                  new_proc: bool = True,
                  timeout=30.0,
-                 inter_command_delay=0.2, retries=1, backoff=0.5):
+                 inter_command_delay=0.2, retries=1, backoff=0.5,
+                 startup_timeout=180.0):
+        self.startup_timeout = startup_timeout
         self.client: EngineClient = EngineClient(host=host, port=port, timeout=timeout)
         self.injector: CommandInjector = CommandInjector(self.client,
                                                          inter_command_delay=inter_command_delay,
@@ -78,10 +80,32 @@ class EngineSession:
                                    port)
 
     def __enter__(self) -> tuple[EngineClient, CommandInjector]:
-        self.proc.start_if_needed()
-        self.client.connect()
-        self.injector.start()
+        try:
+            self.proc.start_if_needed()
+            self.client.connect()
+            self._wait_until_ready()
+            self.injector.start()
+        except BaseException:
+            self.__exit__(None, None, None)
+            raise
         return self.client, self.injector
+
+    def _wait_until_ready(self):
+        deadline = time.monotonic() + self.startup_timeout
+        while True:
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise EngineUnavailable(
+                    f"引擎启动超时：{self.startup_timeout}s 内未就绪"
+                )
+            response = self.client.send_command(
+                "query_status", {"type": 0}, timeout=min(remaining, self.client.timeout)
+            )
+            if response.get("code") == 0:
+                return
+            if response.get("error") != "app not ready":
+                raise EngineUnavailable(f"引擎就绪检查失败：{response}")
+            time.sleep(min(0.25, max(0.0, deadline - time.monotonic())))
 
     def __exit__(self, exc_type, exc, tb):
         try:
