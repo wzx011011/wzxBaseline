@@ -211,7 +211,7 @@ def test_support_bottom_z_distance(
     expected_value: str,
 ):
     """Test support_bottom_z_distance parameter (Level 2 - semantic G-code baseline)"""
-    # 验证方法：核对底部 Z 间距配置；再比较内外墙、稀疏填充和内部实心填充路径的实际速度档位数，验证底部接触区的切片行为。
+    # 验证方法：核对配置；对 XY 重合的模型顶面与底部界面，实测打印 Z 减界面层厚后的空气间隙。
     gcode_path = slice_and_export
     ok, actual, details = parse_support_bottom_z_distance(gcode_path, expected_value)
 

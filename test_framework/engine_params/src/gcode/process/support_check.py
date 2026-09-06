@@ -11,6 +11,7 @@ import re
 from engine_params.src.gcode.GCodeParser import GCodeParser
 from engine_params.src.gcode.constants import ExtrusionType
 from engine_params.src.gcode.process.support_l2_metrics import validate_support_l2_behavior
+from engine_params.src.gcode.process.support_bottom_contact_check import validate_support_bottom_z_distance
 
 
 def _to_int_maybe(v: Any) -> int | None:
@@ -1110,16 +1111,19 @@ def _with_support_l2(parameter: str, parser):
     @wraps(parser)
     def validated(gcode_path: Path, expected_value: Any):
         value_ok, actual, value_details = parser(gcode_path, expected_value)
-        behavior_ok, behavior_details = validate_support_l2_behavior(
-            gcode_path,
-            parameter,
-            expected_value,
-        )
+        if parameter == "support_bottom_z_distance":
+            behavior_ok, behavior_details = validate_support_bottom_z_distance(gcode_path, expected_value)
+        else:
+            behavior_ok, behavior_details = validate_support_l2_behavior(
+                gcode_path,
+                parameter,
+                expected_value,
+            )
         return (
             value_ok and behavior_ok,
             actual,
             {
-                "detection_method": "Level 2 - semantic G-code baseline",
+                "detection_method": behavior_details.get("detection_method", "Level 2 - G-code behavior"),
                 "value_check": value_details,
                 "behavior_check": behavior_details,
             },

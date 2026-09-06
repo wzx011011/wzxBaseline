@@ -1,6 +1,7 @@
 from __future__ import annotations
 from pathlib import Path
 import pytest
+from engine_params.src.testing_utils.tolerances import GCODE_COORDINATE_TOLERANCE_MM
 from engine_params.src.gcode.process.strength.fill_check import (
     GapFillTarget,
     parse_gap_fill_target,
@@ -159,7 +160,7 @@ def test_bottom_surface_pattern(
     ok, actual_match, details = parse_bottom_surface_pattern(
         gcode_path,
         baseline_gcode,
-        tolerance=1e-6,
+        tolerance=GCODE_COORDINATE_TOLERANCE_MM,
         object_id=0,
     )
 
@@ -190,7 +191,7 @@ def test_ai_infill(
     ok, actual_match, details = parse_ai_infill(
         gcode_path,
         baseline_gcode,
-        tolerance=1e-6,
+        tolerance=GCODE_COORDINATE_TOLERANCE_MM,
         object_id=0,
     )
 
@@ -242,7 +243,7 @@ def test_internal_solid_infill_pattern(
     ok, actual_match, details = parse_internal_solid_infill_pattern(
         gcode_path,
         baseline_gcode,
-        tolerance=1e-6,
+        tolerance=GCODE_COORDINATE_TOLERANCE_MM,
         object_id=0,
     )
 
@@ -294,7 +295,7 @@ def test_sparse_infill_density(
     ok, actual_match, details = parse_sparse_infill_density(
         gcode_path,
         baseline_gcode,
-        tolerance=1e-6,
+        tolerance=GCODE_COORDINATE_TOLERANCE_MM,
         object_id=0,
     )
 
@@ -377,6 +378,7 @@ def test_infill_wall_overlap(
     ok, details = parse_infill_wall_overlap(
         gcode_path,
         baseline_gcode_path=baseline_path,
+        tolerance=GCODE_COORDINATE_TOLERANCE_MM,
     )
 
     assert ok, (
@@ -399,7 +401,7 @@ def test_tmps_start_infill_density(
     ok, actual_match, details = parse_tmps_start_infill_density(
         gcode_path,
         baseline_gcode,
-        tolerance=1e-6,
+        tolerance=GCODE_COORDINATE_TOLERANCE_MM,
         object_id=0,
     )
 
@@ -424,7 +426,7 @@ def test_tmps_end_infill_density(
     ok, actual_match, details = parse_tmps_end_infill_density(
         gcode_path,
         baseline_gcode,
-        tolerance=1e-6,
+        tolerance=GCODE_COORDINATE_TOLERANCE_MM,
         object_id=0,
     )
 

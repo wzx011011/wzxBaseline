@@ -130,9 +130,9 @@ def test_bottom_solid_infill_flow_ratio(
 def test_min_width_top_surface(slice_and_export: Path, expected_min_width_top_surface: str):
     """验证顶面识别的最小暴露宽度。
 
-    C3DSlicer ``PerimeterGenerator.cpp`` 先按该宽度腐蚀上层投影，再确定 top surface；
-    规划统计不同宽度台阶上 Top Surface 与外墙路径，窄于阈值的条带不应按顶面处理。
-    3MF 使用宽度渐变的阶梯顶面，条带宽度跨越线宽百分比换算后的阈值。
+    3MF 的四条通道跨越 Arachne 按内墙线宽换算的宽度阈值。
+    在中间暴露层逐通道检查两侧内墙是否保留，同时确认顶面仍有挤出；
+    不依赖会随填充分段变化的全局 X 连通块数。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()

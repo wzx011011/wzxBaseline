@@ -2,6 +2,7 @@ import math
 from pathlib import Path
 
 import pytest
+from engine_params.src.testing_utils.tolerances import GCODE_COORDINATE_TOLERANCE_MM
 
 from engine_params.src.gcode.process.strength.top_or_bottom_shells_check import (
     parse_bottom_shell_layers,
@@ -97,6 +98,7 @@ def test_top_bottom_infill_wall_overlap(
     ok, details = parse_top_bottom_infill_wall_overlap(
         gcode_path,
         baseline_gcode=baseline_path,
+        tolerance=GCODE_COORDINATE_TOLERANCE_MM,
     )
 
     assert ok, (

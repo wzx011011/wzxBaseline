@@ -91,10 +91,10 @@ def test_acceleration_limit_mess_enable(
 ):
     """
     验证方法：
-    1. 解析 acceleration_limit_mess 曲线；首层只累计挤出量，并结合丝径、密度换算耗材重量。
-    2. 从第 1 层开始，按外墙、内墙、稀疏填充、内部实心填充切分连续打印块。
-    3. 根据累计重量对配置速度/加速度线性裁剪，分别与 point.f 和 velocity_limits.ACCEL 比较。
-    通过标准：所有目标打印块的速度和加速度都在各自容差内，且 ACCEL 不缺失。
+    1. 核对开关、曲线、丝径和密度，累计完整 G-code 中各类正向挤出的重量。
+    2. 对曲线区间内的完整非首层，按层前后重量计算外墙/内墙的限速边界。
+    3. 校验真实挤出速度和加速度；允许其它限速降低速度，但拒绝越界和无有效采样。
+    通过标准：有可观测的速度/加速度限幅，所有采样均符合边界，且 ACCEL 不缺失。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()

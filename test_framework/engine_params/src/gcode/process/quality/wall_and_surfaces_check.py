@@ -937,38 +937,10 @@ def _paths_by_layer(behavior: BehaviorGCode, roles: str | tuple[str, ...], min_l
 def parse_min_width_top_surface(
     gcode_path: Path | str, expected_value: str
 ) -> Tuple[bool, Optional[str], Dict[str, object]]:
-    """Count width-ladder channels removed from the first exposed top layer."""
-    behavior = BehaviorGCode(gcode_path)
-    top_layers = sorted(behavior.role_layers(ExtrusionType.TOP_SURFACE.value))
-    if not top_layers:
-        return False, None, {"method": "L2 - Top-surface channel filtering", "error": "no top surface"}
-    # The lower slab has an intermediate exposed top layer and the upper bars
-    # share the final top layer.  Only the first one exercises this filter.
-    layer = top_layers[0]
-    moves = [move for move in behavior.extrusion_moves(ExtrusionType.TOP_SURFACE.value)
-             if move.layer == layer]
-    intervals = sorted((min(move.x0, move.x), max(move.x0, move.x)) for move in moves)
-    merged: list[list[float]] = []
-    for start, end in intervals:
-        if not merged or start > merged[-1][1] + 0.08:
-            merged.append([start, end])
-        else:
-            merged[-1][1] = max(merged[-1][1], end)
-    # With all four channels retained the alternating wall/top regions produce
-    # twelve X components. Each filtered channel joins three into one.
-    observed_filtered = max(0, (12 - len(merged)) // 2)
-    expected_percent = _percent(expected_value)
-    wall_width = median(move.width for move in behavior.extrusion_moves(
-        ExtrusionType.OUTER_WALL.value) if move.width is not None)
-    threshold = None if expected_percent is None or wall_width is None else wall_width * expected_percent / 200.0
-    expected_filtered = None if threshold is None else sum(
-        gap <= threshold for gap in (0.36, 0.48, 0.60, 0.78))
-    ok = expected_filtered is not None and observed_filtered == expected_filtered
-    return ok, str(observed_filtered), {
-        "method": "L2 - Top-surface channel filtering", "representative_layer": layer,
-        "x_component_count": len(merged), "filtered_channel_count": observed_filtered,
-        "expected_filtered_channels": expected_filtered, "effective_width_limit_mm": threshold,
-        "observed_wall_width_mm": wall_width, "expected_setting": expected_value}
+    """Inspect the wall/top layout beside each width-ladder channel."""
+    from engine_params.src.gcode.process.quality.top_surface_width_check import check_min_width_top_surface
+
+    return check_min_width_top_surface(gcode_path, expected_value)
 
 
 def parse_only_one_wall_first_layer(
