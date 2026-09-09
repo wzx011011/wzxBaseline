@@ -390,11 +390,12 @@ def metric_matches(
     if isinstance(expected, Mapping) and "min" in expected and "max" in expected:
         low = float(expected["min"])
         high = float(expected["max"])
+        metric_tolerance = float(expected.get("relative_tolerance", relative_tolerance))
         scale = max(abs(low), abs(high))
         absolute_tolerance = 0.05 if ".speed_" in key else 0.02
-        if relative_tolerance >= 0.1 and key.endswith(".block_count"):
+        if metric_tolerance >= 0.1 and key.endswith(".block_count"):
             absolute_tolerance = 1.0
-        padding = max(absolute_tolerance, scale * relative_tolerance)
+        padding = max(absolute_tolerance, scale * metric_tolerance)
         return low - padding <= float(actual) <= high + padding
     if key.endswith(_INTEGER_SUFFIXES) or re.search(r"\.tool_\d+_moves$", key):
         return int(actual) == int(expected)
@@ -430,24 +431,25 @@ def validate_support_l2_behavior(
         }
 
     metrics = analyze_support_gcode(gcode_path)
-    checks = parameter_data.get("checks", [])
+    default_checks = parameter_data.get("checks", [])
     relative_tolerance = float(parameter_data.get("relative_tolerance", 0.01))
     candidate_results = []
     for candidate in candidates:
+        checks = candidate.get("checks", default_checks)
         mismatches = []
         for key in checks:
             actual = metrics.get(key)
             expected = candidate.get("metrics", {}).get(key)
             if not metric_matches(key, actual, expected, relative_tolerance):
                 mismatches.append({"metric": key, "expected": expected, "actual": actual})
-        candidate_results.append((len(mismatches), candidate, mismatches))
-    _, best_candidate, best_mismatches = min(candidate_results, key=lambda item: item[0])
+        candidate_results.append((len(mismatches), candidate, mismatches, checks))
+    _, best_candidate, best_mismatches, best_checks = min(candidate_results, key=lambda item: item[0])
     return not best_mismatches, {
         "detection_method": "Level 2 - semantic G-code baseline",
         "baseline_generator": baseline.get("generator", {}),
         "parameter": parameter,
         "expected_key": expected_key,
         "matched_project": best_candidate.get("project_name"),
-        "checks": checks,
+        "checks": best_checks,
         "mismatches": best_mismatches,
     }

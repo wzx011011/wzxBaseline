@@ -1683,11 +1683,33 @@
           "expected_value": "tree_strong",
           "expected_key": "\"tree_strong\"",
           "replica_count": 3,
+          "checks": [
+            "role.Support total.layer_length_max",
+            "role.Support total.block_count",
+            "role.Support total.layer_count",
+            "role.Support total.path_length",
+            "role.Support total.extrusion",
+            "role.Support total.tool_count"
+          ],
           "metrics": {
             "role.Support total.layer_length_max": {
-              "min": 1022.13312,
-              "max": 1049.33806
-            }
+              "min": 861.60175,
+              "max": 1049.33806,
+              "relative_tolerance": 0.01
+            },
+            "role.Support total.block_count": 208,
+            "role.Support total.layer_count": 141,
+            "role.Support total.path_length": {
+              "min": 43177.0743,
+              "max": 43838.39809,
+              "relative_tolerance": 0.05
+            },
+            "role.Support total.extrusion": {
+              "min": 1623.01365,
+              "max": 1650.55353,
+              "relative_tolerance": 0.05
+            },
+            "role.Support total.tool_count": 1
           }
         },
         {

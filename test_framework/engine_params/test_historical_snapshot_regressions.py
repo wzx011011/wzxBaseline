@@ -1,4 +1,4 @@
-"""Keep the six reviewed snapshot updates narrow and regression-sensitive."""
+"""Keep reviewed snapshot updates narrow and regression-sensitive."""
 
 import json
 from pathlib import Path
@@ -22,6 +22,8 @@ SNAPSHOTS = [
      fill_cases.test_infill_wall_overlap, "Internal solid infill"),
 ]
 SUPPORT_PARAMETER = "support_bottom_interface_spacing"
+TREE_STRONG_PARAMETER = "support_style"
+TREE_STRONG_VALUE = "tree_strong"
 
 
 def _assert_snapshot(function, actual, baseline):
@@ -108,3 +110,56 @@ def test_support_geometry_and_out_of_range_counts_still_fail(monkeypatch, value,
 def test_unresolved_multimaterial_support_failures_are_not_relaxed(monkeypatch, parameter, value, metric, actual):
     monkeypatch.setattr(support_metrics, "analyze_support_gcode", lambda _: {metric: actual})
     assert not support_metrics.validate_support_l2_behavior("unused.gcode", parameter, value)[0]
+
+
+def _tree_strong_metrics(layer_length_max, path_length, extrusion):
+    return {
+        "role.Support total.layer_length_max": layer_length_max,
+        "role.Support total.block_count": 208,
+        "role.Support total.layer_count": 141,
+        "role.Support total.path_length": path_length,
+        "role.Support total.extrusion": extrusion,
+        "role.Support total.tool_count": 1,
+    }
+
+
+@pytest.mark.parametrize("metrics", [
+    _tree_strong_metrics(861.60175, 43177.0743, 1623.01365),
+    _tree_strong_metrics(965.12513, 43838.39809, 1650.55353),
+])
+def test_tree_strong_observed_topologies_pass(monkeypatch, metrics):
+    monkeypatch.setattr(support_metrics, "analyze_support_gcode", lambda _: metrics)
+    ok, details = support_metrics.validate_support_l2_behavior(
+        "unused.gcode", TREE_STRONG_PARAMETER, TREE_STRONG_VALUE
+    )
+    assert ok, details
+    assert len(details["checks"]) == 6
+
+
+@pytest.mark.parametrize("metric,actual", [
+    ("role.Support total.layer_length_max", 840),
+    ("role.Support total.block_count", 207),
+    ("role.Support total.layer_count", 140),
+    ("role.Support total.path_length", 40000),
+    ("role.Support total.extrusion", 1500),
+    ("role.Support total.tool_count", 2),
+])
+def test_tree_strong_still_rejects_geometry_degradation(monkeypatch, metric, actual):
+    metrics = _tree_strong_metrics(861.60175, 43177.0743, 1623.01365)
+    metrics[metric] = actual
+    monkeypatch.setattr(support_metrics, "analyze_support_gcode", lambda _: metrics)
+    ok, details = support_metrics.validate_support_l2_behavior(
+        "unused.gcode", TREE_STRONG_PARAMETER, TREE_STRONG_VALUE
+    )
+    assert not ok
+    assert [m["metric"] for m in details["mismatches"]] == [metric]
+
+
+def test_support_style_entry_checks_do_not_change_other_styles(monkeypatch):
+    metrics = {"role.Support total.layer_length_max": 2108.604}
+    monkeypatch.setattr(support_metrics, "analyze_support_gcode", lambda _: metrics)
+    ok, details = support_metrics.validate_support_l2_behavior(
+        "unused.gcode", TREE_STRONG_PARAMETER, "default"
+    )
+    assert ok, details
+    assert details["checks"] == ["role.Support total.layer_length_max"]
