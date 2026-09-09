@@ -69,6 +69,7 @@ def test_make_overhang_printable_hole_size(slice_and_export: Path, expected_make
     C3DSlicer 在 ``PrintObjectSlice.cpp`` 中以孔面积而非直径与该阈值比较；规划在同一层
     检查多组盲孔是否保留；源码会把面积小于阈值且被上层完全覆盖的孔从传播轮廓中
     扣除，从而保护孔形。3MF 使用含 2/3/4 mm 盲孔的实体，使面积跨越测试阈值。
+    孔圈计数包含 G2/G3 圆弧的极值点和弧长，不能只用圆弧起终点包围盒。
     """
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()

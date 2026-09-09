@@ -330,38 +330,9 @@ def parse_rectilinear_path_continuity(
             end = index
             break
 
-    block = lines[start:end]
-    number = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)"
-    token_re = re.compile(rf"(?:^|\s)([XYZE])({number})(?=\s|$)", re.IGNORECASE)
+    from engine_params.src.gcode.process.strength.continuity_metrics import first_block_metrics
 
-    retractions = 0
-    wipe_sections = 0
-    z_hop_travels = 0
-    positive_extrusions = 0
-    for raw_line in block:
-        stripped = raw_line.strip()
-        if stripped.upper() == ";WIPE_START":
-            wipe_sections += 1
-
-        command = stripped.split(";", 1)[0]
-        if not re.match(r"^G[01](?:\s|$)", command, re.IGNORECASE):
-            continue
-        tokens = {key.upper(): float(value) for key, value in token_re.findall(command)}
-        extrusion = tokens.get("E")
-        if extrusion is not None and extrusion < 0:
-            retractions += 1
-        elif extrusion is not None and extrusion > 0:
-            positive_extrusions += 1
-        if "X" in tokens and "Y" in tokens and "Z" in tokens and "E" not in tokens:
-            z_hop_travels += 1
-
-    metrics = {
-        "block_lines": len(block),
-        "retractions": retractions,
-        "wipe_sections": wipe_sections,
-        "z_hop_travels": z_hop_travels,
-        "positive_extrusions": positive_extrusions,
-    }
+    metrics, retraction_lines = first_block_metrics(path, lines, start, end)
     limits = {
         "block_lines": max_block_lines,
         "retractions": max_retractions,
@@ -370,7 +341,7 @@ def parse_rectilinear_path_continuity(
     }
     checks = {
         "fill_multiline_is_one": fill_multiline is not None and fill_multiline.strip() == "1",
-        "has_extrusion": positive_extrusions > 0,
+        "has_extrusion": metrics["printing_moves"] > 0,
         **{name: metrics[name] <= limit for name, limit in limits.items()},
     }
     return all(checks.values()), {
@@ -380,6 +351,7 @@ def parse_rectilinear_path_continuity(
         "limits": limits,
         "checks": checks,
         "block_line_range": [start + 1, end],
+        "retraction_event_lines": retraction_lines,
     }
 
 

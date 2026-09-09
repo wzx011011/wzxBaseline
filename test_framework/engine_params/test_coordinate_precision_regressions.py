@@ -1,11 +1,13 @@
 """Exercise the actual snapshot cases against perturbed checked-in G-code."""
 
+import json
 import re
 from pathlib import Path
 
 import pytest
 
 from engine_params.case.params.process.strength import test_fill as fill_cases
+from engine_params.case.params.process.strength import test_advance as advance_cases
 from engine_params.case.params.process.strength import test_top_or_bottom_shells as shell_cases
 from engine_params.src.gcode.process.strength.fill_check import parse_internal_solid_infill_pattern
 from engine_params.src.testing_utils.tolerances import GCODE_COORDINATE_TOLERANCE_MM
@@ -76,3 +78,22 @@ def test_coordinate_tolerance_does_not_allow_extra_points(tmp_path):
     ok, _, _ = parse_internal_solid_infill_pattern(
         target, baseline, tolerance=GCODE_COORDINATE_TOLERANCE_MM)
     assert not ok
+
+
+SHELL_CASES = json.loads((Path(__file__).parent / "data/case_input/process/strength/advance/ensure_vertical_shell_thickness.json")
+                        .read_text(encoding="utf-8"))["cases"]
+
+
+@pytest.mark.parametrize("case", SHELL_CASES, ids=[case["project_name"] for case in SHELL_CASES])
+@pytest.mark.parametrize("delta", [-.002, -.001, .001, .002])
+def test_vertical_shell_case_tolerance_is_one_output_quantum(tmp_path, case, delta):
+    baseline = MODELS / "advance/ensure_vertical_shell_thickness" / case["baseline_gcode"]
+    target = tmp_path / "shell.gcode"
+    _shift_xy(baseline, target, delta)
+    assert case["tolerance"] == pytest.approx(GCODE_COORDINATE_TOLERANCE_MM, abs=1e-12)
+    args = (target, case["expected_ensure_vertical_shell_thickness"], baseline, case["tolerance"])
+    if abs(delta) <= .001:
+        advance_cases.test_ensure_vertical_shell_thickness(*args)
+    else:
+        with pytest.raises(AssertionError):
+            advance_cases.test_ensure_vertical_shell_thickness(*args)

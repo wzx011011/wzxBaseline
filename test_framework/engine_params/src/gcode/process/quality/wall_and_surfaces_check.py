@@ -959,20 +959,10 @@ def parse_only_one_wall_first_layer(
 def parse_detect_thin_wall(
     gcode_path: Path | str, expected_value: bool
 ) -> Tuple[bool, Optional[bool], Dict[str, object]]:
-    """Detect extrusion paths corresponding to sub-nozzle thin ribs."""
-    behavior = BehaviorGCode(gcode_path)
-    paths = behavior.paths((ExtrusionType.OUTER_WALL.value, ExtrusionType.GAP_INFILL.value), min_length=5.0)
-    # Classic thin-wall detection emits variable-width perimeter hints for the
-    # sub-nozzle ribs.  The disabled model still contains a 3 mm control rib,
-    # so a successful empty export cannot be mistaken for feature detection.
-    widths = [move.width for path in paths for move in path if move.width is not None]
-    variable_thin = [width for width in widths if 0.05 < width < 0.38]
-    actual = len(variable_thin) >= 3
-    return bool(paths) and actual == expected_value, actual, {
-        "method": "L2 - Variable-width thin-rib extrusion", "all_paths": len(paths),
-        "thin_width_samples": len(variable_thin),
-        "observed_width_range": (min(widths, default=None), max(widths, default=None)),
-        "expected": expected_value}
+    """Detect open centerlines, not narrow closed perimeter rescue loops."""
+    from engine_params.src.gcode.process.quality.thin_wall_check import check_detect_thin_wall
+
+    return check_detect_thin_wall(gcode_path, expected_value)
 
 
 def parse_detect_overhang_wall(

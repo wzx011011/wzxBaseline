@@ -129,7 +129,7 @@ def test_rectilinear_path_continuity(
         expected_max_wipe_sections: int,
         expected_max_z_hop_travels: int,
 ) -> None:
-    """防止 fill_multiline=1 的复杂岛被多线连接器拆成大量短路径。"""
+    """防止复杂岛被拆成短路径；回抽按完整事件计数，擦拭负 E 分段不重复计数。"""
     gcode_path: Path = slice_and_export
     assert gcode_path.exists()
 

@@ -12,7 +12,7 @@ from typing import Tuple, Dict, Any, Optional
 
 from engine_params.src.gcode.GCodeParser import GCodeParser
 from engine_params.src.gcode.constants import ExtrusionType
-from engine_params.src.gcode.process.quality.behavior import BehaviorGCode, path_bbox
+from engine_params.src.gcode.process.quality.behavior import BehaviorGCode
 
 
 def _parse_bool_value(raw_value: Any, param_name: str) -> Tuple[bool, Optional[bool], Dict[str, Any]]:
@@ -91,24 +91,10 @@ def parse_make_overhang_printable_hole_size(
     expected_value: float,
     tolerance: float = 0.01
 ) -> Tuple[bool, Optional[float], Dict[str, Any]]:
-    """Count retained hole loops whose source areas exceed the threshold."""
-    behavior = BehaviorGCode(gcode_path)
-    middle = len(behavior.layers) // 2
-    paths = [path for path in behavior.paths(ExtrusionType.OUTER_WALL.value, min_length=1.0)
-             if path and path[0].layer == middle]
-    diameters = []
-    for path in paths:
-        bbox = path_bbox(path)
-        if bbox:
-            diameter = min(bbox[1] - bbox[0], bbox[3] - bbox[2])
-            if 1.0 <= diameter <= 5.5:
-                diameters.append(diameter)
-    observed = len(diameters)
-    expected_count = sum(area < expected_value - tolerance for area in (math.pi, math.pi * 2.25, math.pi * 4.0))
-    ok = observed == expected_count
-    return ok, float(observed), {"method": "L2 - Retained hole-loop count",
-                                 "observed_hole_count": observed, "observed_diameters": diameters,
-                                 "expected_hole_count": expected_count, "area_threshold": expected_value}
+    """Count retained holes below the area threshold, including G2/G3 arcs."""
+    from engine_params.src.gcode.process.quality.hole_loop_check import check_printable_hole_loops
+
+    return check_printable_hole_loops(gcode_path, expected_value, tolerance)
 
 
 def parse_overhang_optimization(

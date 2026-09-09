@@ -5,28 +5,28 @@
       "input_3mf": "ensure_vertical_shell_thickness_all.3mf",
       "expected_ensure_vertical_shell_thickness": "ensure_all",
       "baseline_gcode": "baseline_ensure_vertical_shell_thickness_all.gcode",
-      "tolerance": 0.0001
+      "tolerance": 0.001000001
     },
     {
       "project_name": "moderate",
       "input_3mf": "ensure_vertical_shell_thickness_moderate.3mf",
       "expected_ensure_vertical_shell_thickness": "ensure_moderate",
       "baseline_gcode": "baseline_ensure_vertical_shell_thickness_moderate.gcode",
-      "tolerance": 0.0001
+      "tolerance": 0.001000001
     },
     {
       "project_name": "critical",
       "input_3mf": "ensure_vertical_shell_thickness_critical.3mf",
       "expected_ensure_vertical_shell_thickness": "ensure_critical_only",
       "baseline_gcode": "baseline_ensure_vertical_shell_thickness_critical.gcode",
-      "tolerance": 0.0001
+      "tolerance": 0.001000001
     },
     {
       "project_name": "none",
       "input_3mf": "ensure_vertical_shell_thickness_none.3mf",
       "expected_ensure_vertical_shell_thickness": "none",
       "baseline_gcode": "baseline_ensure_vertical_shell_thickness_none.gcode",
-      "tolerance": 0.0001
+      "tolerance": 0.001000001
     }
   ]
 }
