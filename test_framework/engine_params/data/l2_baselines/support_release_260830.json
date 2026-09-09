@@ -610,7 +610,7 @@
               "max": 68
             },
             "role.Support total.move_count": {
-              "min": 6680,
+              "min": 6576,
               "max": 6680
             },
             "role.Support total.path_length": {
@@ -624,6 +624,26 @@
             "role.Support total.z_last": {
               "min": 0.0,
               "max": 0.0
+            },
+            "role.Support interface.layer_count": {
+              "min": 15,
+              "max": 15
+            },
+            "role.Support interface.path_length": {
+              "min": 10237.59949,
+              "max": 10237.59949
+            },
+            "role.Support interface.extrusion": {
+              "min": 408.38005,
+              "max": 408.38005
+            },
+            "role.Support interface.bbox_width": {
+              "min": 77.681,
+              "max": 77.681
+            },
+            "role.Support interface.bbox_height": {
+              "min": 51.788,
+              "max": 51.788
             }
           }
         },
@@ -643,7 +663,7 @@
               "max": 68
             },
             "role.Support total.move_count": {
-              "min": 6680,
+              "min": 6576,
               "max": 6680
             },
             "role.Support total.path_length": {
@@ -657,6 +677,26 @@
             "role.Support total.z_last": {
               "min": 0.0,
               "max": 0.0
+            },
+            "role.Support interface.layer_count": {
+              "min": 15,
+              "max": 15
+            },
+            "role.Support interface.path_length": {
+              "min": 10237.59949,
+              "max": 10237.59949
+            },
+            "role.Support interface.extrusion": {
+              "min": 408.38005,
+              "max": 408.38005
+            },
+            "role.Support interface.bbox_width": {
+              "min": 77.681,
+              "max": 77.681
+            },
+            "role.Support interface.bbox_height": {
+              "min": 51.788,
+              "max": 51.788
             }
           }
         }
@@ -667,7 +707,12 @@
         "role.Support total.move_count",
         "role.Support total.path_length",
         "role.Support total.z_first",
-        "role.Support total.z_last"
+        "role.Support total.z_last",
+        "role.Support interface.layer_count",
+        "role.Support interface.path_length",
+        "role.Support interface.extrusion",
+        "role.Support interface.bbox_width",
+        "role.Support interface.bbox_height"
       ],
       "relative_tolerance": 0.01,
       "behavior_aliases": [
@@ -678,7 +723,14 @@
           ],
           "reason": "support_new/TreeSupport.cpp reuses top interface spacing for the bottom interface"
         }
-      ]
+      ],
+      "review_notes": {
+        "date": "2026-09-09",
+        "scope": "Only support_bottom_interface_spacing 0.3/0.5; retain relative_tolerance=0.01 and all original checks.",
+        "evidence": "Reviewed 2026-09-07 local build-28 and rebuilt outputs: support moves 6576/6633; retain original 6680 upper bound. All 15 interface layers match geometrically within 0.001 mm with identical extrusion. Differences are support-body end connectors, not missing interface paths.",
+        "provenance": "Original generator and replica_count describe the original baseline. Expanded move range and added interface metrics come from these four locally reviewed G-code outputs, not three new replicas; see support_snapshot_updates.md.",
+        "limitation": "The existing 0.3/0.5 behavior alias remains; passing is not evidence that the two bottom-spacing settings produce different geometry."
+      }
     },
     "support_bottom_z_distance": {
       "entries": [
