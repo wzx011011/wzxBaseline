@@ -125,6 +125,23 @@ def canonical_expected(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
 
 
+def _select_project_candidate(
+    gcode_path: Path | str,
+    candidates: Sequence[Mapping[str, Any]],
+) -> Mapping[str, Any] | None:
+    """Resolve duplicate expected values from the pytest case id in the output filename."""
+    stem = Path(gcode_path).stem
+    matches = []
+    for candidate in candidates:
+        project_name = str(candidate.get("project_name") or "")
+        if not project_name:
+            continue
+        token = re.sub(r"[^A-Za-z0-9_.-]+", "_", project_name)
+        if re.search(rf"(?:^|_){re.escape(token)}(?:_+\d+)?$", stem):
+            matches.append(candidate)
+    return matches[0] if len(matches) == 1 else None
+
+
 def _percentile(values: Sequence[float], fraction: float) -> float:
     if not values:
         return 0.0
@@ -429,6 +446,15 @@ def validate_support_l2_behavior(
         return False, {
             "error": f"expected value missing from L2 baseline: {parameter}={expected_key}",
         }
+    if len(candidates) > 1:
+        project_candidate = _select_project_candidate(gcode_path, candidates)
+        if project_candidate is None:
+            return False, {
+                "error": f"ambiguous L2 baseline candidates: {parameter}={expected_key}",
+                "gcode": str(gcode_path),
+                "candidate_projects": [candidate.get("project_name") for candidate in candidates],
+            }
+        candidates = [project_candidate]
 
     metrics = analyze_support_gcode(gcode_path)
     default_checks = parameter_data.get("checks", [])

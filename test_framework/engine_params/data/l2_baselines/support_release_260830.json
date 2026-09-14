@@ -1733,8 +1733,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.layer_length_max": {
-              "min": 445.03815,
-              "max": 445.03815
+              "min": 368.61616,
+              "max": 368.61616
             }
           }
         }
@@ -1758,7 +1758,13 @@
           ],
           "reason": "their aggregate path difference is below ReleaseC tree-layout variance for this geometry"
         }
-      ]
+      ],
+      "review_notes": {
+        "date": "2026-09-14",
+        "scope": "Refresh only support_style=organic.",
+        "evidence": "Three serial G-code replicas from the current local build all measured role.Support total.layer_length_max=368.61616.",
+        "provenance": "CrealityPrint.exe SHA256 7F1BCA6D85A4B886070D3274994B41842968E443AC91B2065DC910E2E89CA3E6; CrealityPrint_Slicer.dll SHA256 BB7777B7C886EDE8616C3D6A3F7F1A6ECBF88808E9236976AA603EA20AF7E650; source HEAD 44e932bfc with existing local support changes."
+      }
     },
     "support_threshold_angle": {
       "entries": [
@@ -1890,8 +1896,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.bbox_area": {
-              "min": 204.85657,
-              "max": 204.85657
+              "min": 244.37911,
+              "max": 244.37911
             }
           }
         },
@@ -1916,8 +1922,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.bbox_area": {
-              "min": 204.85657,
-              "max": 204.85657
+              "min": 244.37911,
+              "max": 244.37911
             }
           }
         },
@@ -1968,7 +1974,13 @@
           ],
           "reason": "the painted regions constrain both tree modes to the same stochastic layout range"
         }
-      ]
+      ],
+      "review_notes": {
+        "date": "2026-09-14",
+        "scope": "Refresh only support_type=normal_auto_painted and support_type=normal_manual.",
+        "evidence": "Three serial G-code replicas for each case all measured role.Support interface.bbox_area=244.37911.",
+        "provenance": "CrealityPrint.exe SHA256 7F1BCA6D85A4B886070D3274994B41842968E443AC91B2065DC910E2E89CA3E6; CrealityPrint_Slicer.dll SHA256 BB7777B7C886EDE8616C3D6A3F7F1A6ECBF88808E9236976AA603EA20AF7E650; source HEAD 44e932bfc with existing local support changes."
+      }
     },
     "support_xy_overrides_z": {
       "entries": [

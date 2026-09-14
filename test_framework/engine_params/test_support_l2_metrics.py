@@ -1,9 +1,11 @@
+import json
 from pathlib import Path
 
 from engine_params.src.gcode.process.support_l2_metrics import (
     analyze_support_gcode,
     canonical_expected,
     metric_matches,
+    validate_support_l2_behavior,
 )
 
 
@@ -95,3 +97,54 @@ def test_metric_ranges_and_numeric_expected_values_are_stable():
         {"min": 100.0, "max": 110.0},
         relative_tolerance=0.02,
     )
+
+
+def test_duplicate_expected_value_uses_project_name_from_gcode_path(tmp_path: Path):
+    gcode = tmp_path / "test_support_type_normal_auto_painted__1.gcode"
+    gcode.write_text(
+        """; EXECUTABLE_BLOCK_START
+M83
+;LAYER_CHANGE
+;Z:0.2
+;TYPE:Support interface
+G1 X10 Y0 E1
+G1 X10 Y10 E1
+; EXECUTABLE_BLOCK_END
+""",
+        encoding="utf-8",
+    )
+    baseline = tmp_path / "baseline.json"
+    expected_key = canonical_expected("normal(auto)")
+    baseline.write_text(
+        json.dumps({
+            "parameters": {
+                "support_type": {
+                    "checks": ["role.Support interface.bbox_area"],
+                    "entries": [
+                        {
+                            "project_name": "normal_auto",
+                            "expected_key": expected_key,
+                            "metrics": {"role.Support interface.bbox_area": 100.0},
+                        },
+                        {
+                            "project_name": "normal_auto_painted",
+                            "expected_key": expected_key,
+                            "metrics": {"role.Support interface.bbox_area": 25.0},
+                        },
+                    ],
+                },
+            },
+        }),
+        encoding="utf-8",
+    )
+
+    ok, details = validate_support_l2_behavior(
+        gcode,
+        "support_type",
+        "normal(auto)",
+        baseline,
+    )
+
+    assert not ok
+    assert details["matched_project"] == "normal_auto_painted"
+    assert details["mismatches"][0]["expected"] == 25.0
