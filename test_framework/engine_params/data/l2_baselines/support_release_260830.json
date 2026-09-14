@@ -227,12 +227,12 @@
               "max": 50900.78997
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.6,
+              "max": 36.6
             }
           }
         },
@@ -260,12 +260,12 @@
               "max": 50901.64839
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.7,
+              "max": 36.7
             }
           }
         }
@@ -618,12 +618,12 @@
               "max": 68364.70675
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 19.8,
+              "max": 19.8
             },
             "role.Support interface.layer_count": {
               "min": 15,
@@ -671,12 +671,12 @@
               "max": 68364.70675
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 19.8,
+              "max": 19.8
             },
             "role.Support interface.layer_count": {
               "min": 15,
@@ -758,12 +758,12 @@
               "max": 68364.71575
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 19.8,
+              "max": 19.8
             }
           }
         },
@@ -791,12 +791,12 @@
               "max": 67550.99489
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 19.8,
+              "max": 19.8
             }
           }
         },
@@ -824,12 +824,12 @@
               "max": 68364.71575
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 19.8,
+              "max": 19.8
             }
           }
         }
@@ -2042,12 +2042,12 @@
               "max": 46171.98946
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 19.8,
+              "max": 19.8
             }
           }
         },
@@ -2075,12 +2075,12 @@
               "max": 46615.02043
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 19.8,
+              "max": 19.8
             }
           }
         },
@@ -2108,12 +2108,12 @@
               "max": 46362.88899
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 19.8,
+              "max": 19.8
             }
           }
         }
@@ -2271,12 +2271,12 @@
               "max": 25713.01109
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.0,
+              "max": 36.0
             }
           }
         },
@@ -2304,12 +2304,12 @@
               "max": 25710.66747
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.0,
+              "max": 36.0
             }
           }
         },
@@ -2337,12 +2337,12 @@
               "max": 25579.84877
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.0,
+              "max": 36.0
             }
           }
         }
@@ -2406,12 +2406,12 @@
               "max": 21024.48733
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.0,
+              "max": 36.0
             }
           }
         },
@@ -2439,12 +2439,12 @@
               "max": 20824.68575
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.0,
+              "max": 36.0
             }
           }
         },
@@ -2472,12 +2472,12 @@
               "max": 21195.63496
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.0,
+              "max": 36.0
             }
           }
         }
@@ -2541,12 +2541,12 @@
               "max": 46337.44683
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.0,
+              "max": 36.0
             }
           }
         },
@@ -2574,12 +2574,12 @@
               "max": 53632.65517
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.0,
+              "max": 36.0
             }
           }
         },
@@ -2607,12 +2607,12 @@
               "max": 53632.65517
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.0,
+              "max": 36.0
             }
           }
         }
@@ -2676,12 +2676,12 @@
               "max": 21141.36336
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.0,
+              "max": 36.0
             }
           }
         },
@@ -2709,12 +2709,12 @@
               "max": 15348.3409
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.0,
+              "max": 36.0
             }
           }
         },
@@ -2742,12 +2742,12 @@
               "max": 20807.64154
             },
             "role.Support total.z_first": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 0.2,
+              "max": 0.2
             },
             "role.Support total.z_last": {
-              "min": 0.0,
-              "max": 0.0
+              "min": 36.0,
+              "max": 36.0
             }
           }
         }
@@ -2785,5 +2785,30 @@
         }
       ]
     }
+  },
+  "layer_height_correction": {
+    "date": "2026-09-14",
+    "scope": "Correct only stored role.Support total.z_first/z_last for 22 entries; preserve all other metrics, checks, tolerances and previous review notes.",
+    "reason": "Historical ;: layer comments were ignored and missing heights were serialized as zero.",
+    "source_product": "Creality_Print V7.2.1.5476 (build 108)",
+    "evidence": "Reparsed three preserved historical G-code replicas per entry. All three agree exactly on support Z bounds. These bounds also agree with all 19 Z-only failures in parameter-test Jenkins build 33; three additional stored entries belong to support_bottom_z_distance.",
+    "source_manifests": [
+      {
+        "root": "artifacts/support_l2_build108_replica1",
+        "file_count": 22,
+        "sha256": "e8e327f0cd3d318cc1bcbefd7f1a4b41f1197184091e79caedc63eb645969beb"
+      },
+      {
+        "root": "artifacts/support_l2_build108_replica2",
+        "file_count": 22,
+        "sha256": "e64dfa8009109596d794afc144d9a9bb0461301763e6c80b55fab7cd711254a0"
+      },
+      {
+        "root": "artifacts/support_l2_build108_replica3",
+        "file_count": 22,
+        "sha256": "5d177c4159b06d5cb083a138a3feb95e0699ee3fdb904d6e81b5420c51e98f77"
+      }
+    ],
+    "manifest_format": "SHA256 of UTF-8 compact JSON (sort_keys=True) list of {path,sha256}, ordered by baseline parameter then entry; path is relative to source root with forward slashes."
   }
 }

@@ -1,6 +1,8 @@
 import json
 from pathlib import Path
 
+import pytest
+
 from engine_params.src.gcode.process.support_l2_metrics import (
     analyze_support_gcode,
     canonical_expected,
@@ -73,6 +75,42 @@ G1 X40 Y22 E1
     metrics = analyze_support_gcode(gcode)
 
     assert metrics["semantic.support_top_z_gap"] == 0.4
+
+
+@pytest.mark.parametrize("marker", [";Z:", ";:", None])
+def test_support_heights_use_both_comments_or_motion_z(tmp_path: Path, marker):
+    gcode = tmp_path / "support_heights.gcode"
+    lines = ["; EXECUTABLE_BLOCK_START", "M83"]
+    for z, x in ((0.2, 10), (0.6, 20), (1.0, 30)):
+        lines.append(";LAYER_CHANGE")
+        if marker is not None:
+            lines.append(f"{marker}{z}")
+        lines.extend([f"G1 Z{z}", ";TYPE:Support", f"G1 X{x} Y0 E1"])
+    lines.append("; EXECUTABLE_BLOCK_END")
+    gcode.write_text("\n".join(lines), encoding="utf-8")
+
+    metrics = analyze_support_gcode(gcode)
+
+    assert metrics["role.Support total.z_first"] == 0.2
+    assert metrics["role.Support total.z_last"] == 1.0
+    assert metrics["role.Support total.z_gap_min"] == 0.4
+    assert metrics["role.Support total.z_gap_p50"] == 0.4
+    assert metrics["role.Support total.z_gap_max"] == 0.4
+    assert metrics["role.Support total.move_count"] == 3
+
+
+def test_support_layer_comment_takes_precedence_over_z_hop(tmp_path: Path):
+    gcode = tmp_path / "support_hop.gcode"
+    gcode.write_text(
+        "; EXECUTABLE_BLOCK_START\nM83\n;LAYER_CHANGE\n;:0.2\n"
+        "G1 Z0.6\n;TYPE:Support\nG1 X10 Y0 E1\n; EXECUTABLE_BLOCK_END\n",
+        encoding="utf-8",
+    )
+
+    metrics = analyze_support_gcode(gcode)
+
+    assert metrics["role.Support total.z_first"] == 0.2
+    assert metrics["role.Support total.z_last"] == 0.2
 
 
 def test_metric_matches_uses_exact_counts_and_tolerant_geometry():

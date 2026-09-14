@@ -3,7 +3,7 @@
 
 包含以下参数的校验函数：
 - slicing_mode: Level 1 配置对比
-- print_sequence: Level 1 配置对比（原有实现）
+- print_sequence: Level 2 层高顺序检测（层高不足或缺失时无法判定）
 - print_order: Level 1 配置对比
 - spiral_mode: Level 2 特征检测（Z轴连续性）
 - spiral_mode_smooth: Level 1 配置对比
@@ -23,6 +23,7 @@ import re
 import math
 
 from engine_params.src.gcode.GCodeParser import GCodeParser
+from engine_params.src.gcode.layer_comments import read_layer_heights
 
 _PRINT_SEQUENCE_ALIASES: Dict[str, str] = {
     "by object": "by object",
@@ -184,48 +185,34 @@ def parse_print_sequence(
     parser = GCodeParser(gcode_path)
     cfg = parser.load_config()
     
-    # 从 G-code 中提取层 Z 高度序列
-    # Creality Print 格式: ";LAYER_CHANGE" 后紧跟 ";:0.2" 表示层的 Z 高度
-    layer_z_values = []
-    next_is_z = False
-    
-    try:
-        with open(gcode_path, 'r', encoding='utf-8') as f:
-            for line in f:
-                line = line.strip()
-                if line == ';LAYER_CHANGE':
-                    next_is_z = True
-                elif next_is_z and line.startswith(';:'):
-                    try:
-                        z_val = float(line[2:].strip())  # 去掉 ";:" 前缀
-                        layer_z_values.append(z_val)
-                    except (ValueError, IndexError):
-                        pass
-                    next_is_z = False
-    except FileNotFoundError:
-        pass
+    with gcode_path.open('r', encoding='utf-8') as stream:
+        layer_heights = read_layer_heights(stream)
+    layer_z_values = [height for height in layer_heights if height is not None]
+    missing_layer_count = len(layer_heights) - len(layer_z_values)
 
     # 检查 Z 高度序列是否单调递增
     # by layer: Z 单调递增 (0.2, 0.4, 0.6, ..., 19.8, 20.0)
     # by object: Z 会回退 (0.2, 0.4, ..., 20.0, 0.2, 0.4, ..., 20.0) - 打完一个对象后 Z 回到起点
-    is_monotonic = True
-    if len(layer_z_values) > 1:
+    is_monotonic = None
+    if len(layer_z_values) > 1 and missing_layer_count == 0:
+        is_monotonic = True
         for i in range(len(layer_z_values) - 1):
             # 如果下一层 Z 值明显小于当前层（回退），说明是 by object
             if layer_z_values[i+1] < layer_z_values[i] - 0.01:  # 容差 0.01mm
                 is_monotonic = False
                 break
 
-    detected_sequence = "by layer" if is_monotonic else "by object"
+    detected_sequence = None
+    if is_monotonic is not None:
+        detected_sequence = "by layer" if is_monotonic else "by object"
 
     raw_sequence = cfg.get("print_sequence")
     normalized_config = _normalize_sequence(raw_sequence)
     normalized_expected = _normalize_sequence(expected_sequence) if expected_sequence is not None else None
 
-    if normalized_expected is None:
-        ok = True
-    else:
-        ok = detected_sequence == normalized_expected
+    ok = detected_sequence is not None and (
+        normalized_expected is None or detected_sequence == normalized_expected
+    )
 
     details: Dict[str, object] = {
         "raw_print_sequence": raw_sequence,
@@ -234,11 +221,18 @@ def parse_print_sequence(
         "expected_sequence": normalized_expected,
         "is_monotonic_z": is_monotonic,
         "layer_count": len(layer_z_values),
+        "missing_layer_count": missing_layer_count,
         "first_10_z_values": layer_z_values[:10] if layer_z_values else [],
         "last_10_z_values": layer_z_values[-10:] if len(layer_z_values) >= 10 else layer_z_values,
         "detection_method": "Level 2 (Z 高度回退检测)",
         "message": f"检测到打印顺序: {detected_sequence}（分析了{len(layer_z_values)}层的 Z 高度）",
     }
+
+    if detected_sequence is None:
+        details["message"] = (
+            f"无法判定打印顺序：有效层高 {len(layer_z_values)} 个，"
+            f"缺失层高 {missing_layer_count} 个；需要至少两个完整的层高记录"
+        )
 
     return ok, detected_sequence, details
 

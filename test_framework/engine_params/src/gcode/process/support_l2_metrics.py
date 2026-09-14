@@ -11,6 +11,8 @@ from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, Sequence, Tuple
 
+from engine_params.src.gcode.layer_comments import parse_layer_z
+
 
 BASELINE_FILE = (
     Path(__file__).resolve().parents[3]
@@ -22,7 +24,6 @@ BASELINE_FILE = (
 _MOVE_RE = re.compile(r"^G([0123])\b", re.IGNORECASE)
 _TOKEN_RE = re.compile(r"\b([XYZEF])([+-]?(?:\d+(?:\.\d*)?|\.\d+))", re.IGNORECASE)
 _TYPE_RE = re.compile(r"^;TYPE:(.+)$")
-_Z_RE = re.compile(r"^;Z:([+-]?(?:\d+(?:\.\d*)?|\.\d+))")
 _TOOL_RE = re.compile(r"^T(\d+)\s*$", re.IGNORECASE)
 _FAN_RE = re.compile(r"^M106\b.*(?:\bS(\d+(?:\.\d*)?)\b)?", re.IGNORECASE)
 
@@ -311,9 +312,9 @@ def analyze_support_gcode(gcode_path: Path | str) -> Dict[str, float | int]:
                 current_layer += 1
                 current_layer_z = None
                 continue
-            z_match = _Z_RE.match(line)
-            if z_match:
-                current_layer_z = float(z_match.group(1))
+            layer_z = parse_layer_z(line)
+            if layer_z is not None:
+                current_layer_z = layer_z
                 continue
             type_match = _TYPE_RE.match(line)
             if type_match:
@@ -372,7 +373,7 @@ def analyze_support_gcode(gcode_path: Path | str) -> Dict[str, float | int]:
                 role_cells_by_z[current_role][round(actual_z, 5)].update(segment_cells)
                 kwargs = {
                     "layer_index": current_layer,
-                    "z_value": current_layer_z,
+                    "z_value": actual_z,
                     "start_xy": (x, y),
                     "end_xy": (new_x, new_y),
                     "length": length,
