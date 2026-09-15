@@ -1,30 +1,29 @@
 {
   "description": "TC-WT-007: 回抽量和装填量计算测试用例 - 验证不同耗材类型的回抽/装填参数",
-  "bugs": ["11460", "11462", "11463", "13303", "13309", "13379", "13534", "13537", "13555"],
+  "bugs": ["11460", "11462", "11463", "13303", "13309", "13379", "13534", "13537", "13555", "17817"],
   "level": "L2",
   "param_name": "tc_wt_007",
   "cases": [
     {
       "project_name": "tc_wt_007_pla_tpu",
       "input_3mf": "tc_wt_007_pla_tpu.3mf",
-      "expected_value": "{\"tool_params\": {\"T0\": {\"retraction_length\": 5.0, \"extra\": 0.0, \"before_change\": {\"before_wipe\": 4.0, \"during_wipe\": 0.95, \"after_wipe\": 0.05}}, \"T1\": {\"retraction_length\": 8.0, \"extra\": 0.2, \"after_infill_retract\": {\"first\": 6.4, \"second\": 1.52, \"third\": 0.08}}}, \"from_tool\": \"T0\", \"to_tool\": \"T1\", \"check_points\": [\"before_change\", \"after_change\", \"purge_line\", \"after_infill_retract\"]}",
-      "description": "PLA+TPU组合: T0(PLA 5.0mm) → T1(TPU 8.0mm+0.2mm) - 验证填充后回抽，公式: (1.52+0.08)=8×0.2, 6.4+1.6=8"
+      "expected_value": "{\"tool_params\": {\"T0\": {\"retraction_length\": 5.0, \"before_change\": {\"before_wipe\": 4.0, \"during_wipe\": 0.95, \"after_wipe\": 0.05}, \"retract_restart_extra\": 0, \"retract_before_wipe\": 0.8}, \"T1\": {\"retraction_length\": 8.0, \"after_infill_retract\": {\"first\": 6.4, \"second\": 1.52, \"third\": 0.08}, \"retract_restart_extra\": 0.5, \"retract_before_wipe\": 0.8}}, \"from_tool\": \"T0\", \"to_tool\": \"T1\", \"check_points\": [\"before_change\", \"after_change\", \"purge_line\", \"after_infill_retract\"]}",
+      "description": "PLA+TPU组合: T0回填5.0+0.0=5.0mm；T1额外回填0.5mm，擦拭前回抽比例80%，填充后回抽6.4+1.52+0.08=8mm"
     },
     {
       "project_name": "tc_wt_007_pla_petg",
       "input_3mf": "tc_wt_007_pla_petg.3mf",
-      "expected_value": "{\"tool_params\": {\"T0\": {\"retraction_length\": 5.0, \"extra\": 0.0, \"before_change\": {\"before_wipe\": 4.0, \"during_wipe\": 0.95, \"after_wipe\": 0.05}}, \"T1\": {\"retraction_length\": 6.0, \"extra\": 0.2, \"after_infill_retract\": {\"single\": 6.0}}}, \"from_tool\": \"T0\", \"to_tool\": \"T1\", \"check_points\": [\"before_change\", \"after_change\", \"purge_line\", \"after_infill_retract\"]}",
-      "description": "PLA+PETG组合: T0(PLA 5.0mm) → T1(PETG 6.0mm+0.2mm) - 验证填充后回抽，单段回抽6.0mm"
+      "expected_value": "{\"tool_params\": {\"T0\": {\"retraction_length\": 5.0, \"before_change\": {\"before_wipe\": 4.0, \"during_wipe\": 0.95, \"after_wipe\": 0.05}, \"retract_restart_extra\": 0, \"retract_before_wipe\": 0.8}, \"T1\": {\"retraction_length\": 6.0, \"after_infill_retract\": {\"single\": 6.0}, \"retract_restart_extra\": 0.2, \"retract_before_wipe\": 1}}, \"from_tool\": \"T0\", \"to_tool\": \"T1\", \"check_points\": [\"before_change\", \"after_change\", \"purge_line\", \"after_infill_retract\"]}",
+      "description": "PLA+PETG组合: T0回填5.0+0.0=5.0mm；T1额外回填0.2mm，擦拭前回抽比例100%，填充后单段回抽6.0mm"
     },
     {
       "project_name": "tc_wt_007_petg_tpu",
       "input_3mf": "tc_wt_007_petg_tpu.3mf",
-      "expected_value": "{\"tool_params\": {\"T0\": {\"retraction_length\": 6.0, \"extra\": 0.2, \"before_change\": {\"before_wipe\": 4.2, \"during_wipe\": 1.71, \"after_wipe\": 0.09}}, \"T1\": {\"retraction_length\": 8.0, \"extra\": 0.3, \"after_infill_retract\": {\"first\": 5.6, \"second\": 2.28, \"third\": 0.12}}}, \"from_tool\": \"T0\", \"to_tool\": \"T1\", \"check_points\": [\"before_change\", \"after_change\", \"purge_line\", \"after_infill_retract\"]}",
-      "description": "PETG+TPU组合: T0(PETG 6.0mm+0.2mm) → T1(TPU 8.0mm+0.3mm) - 验证填充后回抽，公式: (2.28+0.12)=8×0.3, 5.6+2.4=8"
+      "expected_value": "{\"tool_params\": {\"T0\": {\"retraction_length\": 6.0, \"before_change\": {\"before_wipe\": 4.2, \"during_wipe\": 1.71, \"after_wipe\": 0.09}, \"retract_restart_extra\": 0.2, \"retract_before_wipe\": 0.7}, \"T1\": {\"retraction_length\": 8.0, \"after_infill_retract\": {\"first\": 5.6, \"second\": 2.28, \"third\": 0.12}, \"retract_restart_extra\": 0.5, \"retract_before_wipe\": 0.7}}, \"from_tool\": \"T0\", \"to_tool\": \"T1\", \"check_points\": [\"before_change\", \"after_change\", \"purge_line\", \"after_infill_retract\"]}",
+      "description": "PETG+TPU组合: T0回填6.0+0.2=6.2mm；T1额外回填0.5mm，擦拭前回抽比例70%，填充后回抽5.6+2.28+0.12=8mm"
     }
   ],
   "notes": [
-    "需要配置双挤出头(T0/T1)，分别使用不同耗材类型",
     "每种耗材配置不同的回抽长度(retraction_length)",
     "TPU等软性材料通常需要更大的回抽量",
     "回抽量由以下参数共同决定:",
@@ -32,11 +31,13 @@
     "  - retract_before_wipe: 擦拭前回抽的比例(如70%)",
     "  - filament_retract_before_wipe: 每个耗材的擦拭前回抽比例配置",
     "Bug 11460: 换料前回抽 - 擦拭前、擦拭时、擦拭后三个回抽应使用当前耗材(T0)的retraction_length参数，校验总和是否等于T0的参数",
-    "Bug 11462: 换料后装填量 - 擦拭塔填充时的装填量应使用当前耗材(T0)的retraction_length + extra参数，与回抽保持一致",
+    "Bug 11462: 换料后装填量 - 擦拭塔填充时的装填量应使用当前耗材(T0)的retraction_length + retract_restart_extra参数，与回抽保持一致",
     "Bug 11463: 擦嘴线装填量 - 擦嘴线处的装填量应使用正确的T1参数",
-    "Bug 13303: 打完填充后的回抽 - 三段回抽总量应使用T1参数，验证公式: (retraction_length + extra)部分 = retraction_length × 0.2，总回抽量约等于retraction_length",
     "Bug 13309: 填充和外墙的装填量应使用正确的耗材参数",
-    "Bug 13379: 额外装填量(extra_prime_amount)计算正确性 - extra参数遵循公式: extra = retraction_length × 0.2的比例关系",
-    "Bug 13534-13555: 关注层间换色场景的参数正确性"
+    "Bug 13534-13555: 关注层间换色场景的参数正确性",
+    "工程使用单喷嘴多耗材（single_extruder_multi_material=1）和相对E；T0/T1表示耗材工具。",
+    "retract_restart_extra 对应 filament_retract_restart_extra，单位mm；retract_before_wipe 对应 filament_retract_before_wipe，比例范围0~1。",
+    "填充后回抽总和等于T1的retraction_length；后续回抽=总长度×(1-retract_before_wipe)，与额外回填长度无关。",
+    "Bug 17817: 换料后回填恢复共享回抽状态，必须包含T0额外回填；以0.01mm容差识别漏加0.2mm，浮点边界包含在容差内。"
   ]
 }

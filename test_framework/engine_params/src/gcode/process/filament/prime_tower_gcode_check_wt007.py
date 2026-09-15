@@ -7,6 +7,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import List, Dict, Tuple, Optional, Any
 import json
+import math
 import re
 
 from .prime_tower_gcode_check import (
@@ -14,6 +15,83 @@ from .prime_tower_gcode_check import (
     GCodeMove,
     GCodeMoveType,
 )
+
+
+# 独立 E 指令的输出精度远小于 0.01 mm；此容差能识别漏加 0.2 mm 的回填。
+UNRETRACT_TOLERANCE = 0.01
+
+
+def _within_tolerance(actual: float, expected: float, tolerance: float) -> bool:
+    """包含容差边界，只吸收浮点运算噪声，不扩大业务容差。"""
+    if not all(math.isfinite(value) for value in (actual, expected, tolerance)):
+        return False
+    difference = abs(actual - expected)
+    return difference <= tolerance or math.isclose(
+        difference, tolerance, rel_tol=0.0, abs_tol=1e-9
+    )
+
+
+def _restart_extra(params: Dict[str, Any]) -> float:
+    """extra 兼容旧输入，仅表示毫米；擦拭比例使用 retract_before_wipe。"""
+    return params.get("retract_restart_extra", params.get("extra", 0.0))
+
+
+def _check_infill_retraction(
+    parser: WipeTowerGCodeParser, tool_change_line: int, params: Dict[str, Any]
+) -> List[str]:
+    """校验当前擦拭塔尾部回抽，支持用例声明的单段和三段模式。"""
+    unretract = find_first_unretraction_after(parser.moves, tool_change_line)
+    if unretract is None:
+        return ["未找到填充前装填，无法校验填充后回抽"]
+    end = None
+    for i in range(unretract.line_num, len(parser.lines)):
+        line = parser.lines[i].strip()
+        if re.match(r'^T\d+\b', line) or 'WIPE_TOWER_START' in line:
+            break
+        if 'WIPE_TOWER_END' in line:
+            end = i
+            break
+    if end is None:
+        return ["未找到当前换料对应的 WIPE_TOWER_END"]
+
+    # 只收集最后一次正向挤出之后的回抽，避免包含填充过程中的其他回抽。
+    retractions = []
+    for line in parser.lines[unretract.line_num:end]:
+        code = line.split(';', 1)[0].strip()
+        if not re.match(r'^G1\s', code):
+            continue
+        match = re.search(r'E([+-]?(?:\d+(?:\.\d*)?|\.\d+))', code)
+        if match:
+            amount = float(match.group(1))
+            if amount > 0:
+                retractions.clear()
+            elif amount < 0:
+                retractions.append(-amount)
+    if not retractions:
+        return ["未找到填充后回抽"]
+
+    failures = []
+    length = params["retraction_length"]
+    if not _within_tolerance(sum(retractions), length, 0.3):
+        failures.append(f"填充后回抽总量{sum(retractions):.4f}mm，期望{length:.4f}mm")
+    phases = params.get("after_infill_retract", {})
+    names = ["single"] if "single" in phases else ["first", "second", "third"]
+    if phases:
+        if len(retractions) != len(names):
+            failures.append(f"填充后回抽段数{len(retractions)}，期望{len(names)}")
+        else:
+            for name, actual in zip(names, retractions):
+                if name in phases and not _within_tolerance(actual, phases[name], UNRETRACT_TOLERANCE):
+                    failures.append(f"填充后回抽{name}={actual:.4f}mm，期望{phases[name]:.4f}mm")
+    if "retract_before_wipe" in params:
+        expected_tail = length * (1.0 - params["retract_before_wipe"])
+        actual_tail = sum(retractions[1:])
+        if not _within_tolerance(actual_tail, expected_tail, 0.1):
+            failures.append(
+                f"擦拭回抽比例不符：后续回抽{actual_tail:.4f}mm，"
+                f"期望 retraction_length × (1 - retract_before_wipe)={expected_tail:.4f}mm"
+            )
+    return failures
 
 
 def parse_tc_wt_007(
@@ -30,9 +108,9 @@ def parse_tc_wt_007(
     2. after_change: 擦拭塔填充装填 - Bug 11462  
     3. purge_line: 擦嘴线装填 - Bug 11463
     4. after_infill_retract: 打完擦拭塔填充后的回抽（三段式）- Bug 13303 & 13379
-       验证公式: (second + third) = retraction_length × extra
+       验证公式: (second + third) = retraction_length × (1 - retract_before_wipe)
        以及: first + (second + third) = retraction_length
-       其中 extra 参数遵循公式关系，三段回抽符合比例要求
+       其中 retract_before_wipe 是比例，retract_restart_extra 是额外回填长度（毫米）
     5. infill_perimeter: 填充和外墙装填 - Bug 13309
     6. layer_change: 层间换色装填 - Bug 13534-13555
     
@@ -41,8 +119,8 @@ def parse_tc_wt_007(
         expected_value: 期望值（JSON字符串）
             {
                 "tool_params": {
-                    "T0": {"retraction_length": 5.0, "extra": 0.0},
-                    "T1": {"retraction_length": 8.0, "extra": 0.5}
+                    "T0": {"retraction_length": 5.0, "retract_restart_extra": 0.0},
+                    "T1": {"retraction_length": 8.0, "retract_restart_extra": 0.5}
                 },
                 "from_tool": "T0",
                 "to_tool": "T1",
@@ -113,7 +191,7 @@ def parse_tc_wt_007(
                     print(f"  擦拭后回抽: {after_wipe:.2f}mm")
                 
                 # 验证总量
-                if abs(total_retract - expected_retract) > 0.2:
+                if not _within_tolerance(total_retract, expected_retract, 0.2):
                     failures.append(
                         f"换料点{idx} 行{tc['line']}: "
                         f"换料前回抽分解 - 擦拭前:{before_wipe:.2f}mm, "
@@ -134,24 +212,27 @@ def parse_tc_wt_007(
         
         # 检查换料后的装填（如果需要）
         # Bug 11462: 装填量应该使用from_tool（当前工具）的retraction_length，与回抽保持一致
-        # Bug 13379: extra参数在实际场景中不添加（仅验证base值）
+        # Bug 17817: 单喷嘴多耗材共用回抽状态，回填包含换料前工具的额外回填长度。
         if "after_change" in check_points:
             unretract_after = find_first_unretraction_after(parser.moves, tc['line'])
             if unretract_after:
                 expected_base = tool_params[from_tool]["retraction_length"]
-                # 不验证extra，因为实际场景中装填量等于retraction_length
-                expected_unretract = expected_base
+                expected_extra = _restart_extra(tool_params[from_tool])
+                expected_unretract = expected_base + expected_extra
                 actual_unretract = unretract_after.e
                 
-                if abs(actual_unretract - expected_unretract) > 0.2:
+                if not _within_tolerance(actual_unretract, expected_unretract, UNRETRACT_TOLERANCE):
                     failures.append(
                         f"换料点{idx} 行{tc['line']}: "
-                        f"换料后装填量{actual_unretract:.2f}mm，"
-                        f"期望{from_tool}参数{expected_unretract:.2f}mm (retraction_length)，"
-                        f"差值{abs(actual_unretract - expected_unretract):.2f}mm"
+                        f"换料后装填量{actual_unretract:.4f}mm，"
+                        f"期望{from_tool}参数{expected_unretract:.4f}mm "
+                        f"(retraction_length={expected_base} + retract_restart_extra={expected_extra})，"
+                        f"差值{abs(actual_unretract - expected_unretract):.4f}mm"
                     )
                 checked_count += 1
-        
+            else:
+                failures.append(f"换料点{idx} 行{tc['line']}: 未找到换料后装填")
+
         # Bug 11463: 检查擦嘴线装填
         # 擦嘴线是在换料后、返回模型前的清理动作，应该使用to_tool（T1）的参数
         if "purge_line" in check_points:
@@ -162,11 +243,11 @@ def parse_tc_wt_007(
             )
             if unretract_purge:
                 expected_base = tool_params[to_tool]["retraction_length"]
-                expected_extra = tool_params[to_tool].get("extra", 0.0)
+                expected_extra = _restart_extra(tool_params[to_tool])
                 expected_unretract = expected_base + expected_extra
                 actual_unretract = unretract_purge.e
                 
-                if abs(actual_unretract - expected_unretract) > 0.2:
+                if not _within_tolerance(actual_unretract, expected_unretract, 0.2):
                     failures.append(
                         f"换料点{idx} 行{tc['line']}: "
                         f"擦嘴线装填量{actual_unretract:.2f}mm，"
@@ -188,7 +269,7 @@ def parse_tc_wt_007(
                 expected_unretract = expected_base
                 actual_unretract = unretract_infill.e
                 
-                if abs(actual_unretract - expected_unretract) > 0.2:
+                if not _within_tolerance(actual_unretract, expected_unretract, 0.2):
                     failures.append(
                         f"换料点{idx} 行{tc['line']}: "
                         f"填充完成后装填量{actual_unretract:.2f}mm，"
@@ -197,175 +278,12 @@ def parse_tc_wt_007(
                     )
                 checked_count += 1
         
-        # Bug 13303: 检查打完擦拭塔填充后的三阶段回抽
-        # 这是在每层擦拭塔结束之前的最后三次回抽（固定模式）
+        # 填充后使用新耗材的回抽长度和擦拭比例，额外回填不参与比例计算。
         if "after_infill_retract" in check_points:
-            # 先找到换料后的装填（擦拭塔填充装填）
-            unretract_after = find_first_unretraction_after(parser.moves, tc['line'])
-            if unretract_after:
-                # 在装填后向前查找更大范围，找到";WIPE_TOWER_END"标记
-                search_start = unretract_after.line_num
-                search_end = min(len(parser.lines), search_start + 300)  # 扩大搜索范围
-                
-                wipe_tower_end_line = None
-                for i in range(search_start, search_end):
-                    if i >= len(parser.lines):
-                        break
-                    if 'WIPE_TOWER_END' in parser.lines[i]:
-                        wipe_tower_end_line = i + 1  # 行号从1开始
-                        break
-                
-                # 打印调试信息（只打印第一个换料点）
-                if idx == 0:
-                    print(f"\n=== Bug 13303 查找信息 (换料点0) ===")
-                    print(f"换料点在行: {tc['line']}")
-                    print(f"装填在行: {unretract_after.line_num}")
-                    if wipe_tower_end_line:
-                        print(f"找到WIPE_TOWER_END标记在行{wipe_tower_end_line}")
-                        print(f"查找标记之前的最后三次回抽...")
-                    else:
-                        print(f"未找到WIPE_TOWER_END标记")
-                
-                if wipe_tower_end_line:
-                    # 在WIPE_TOWER_END之前向后查找最后三次回抽
-                    # 这三次回抽是：擦拭前主回抽、擦拭时回抽、擦拭后小回抽
-                    retractions = []
-                    
-                    # 向前查找50行范围内的所有回抽
-                    for i in range(wipe_tower_end_line - 1, max(wipe_tower_end_line - 51, search_start - 1), -1):
-                        if i < 0:
-                            break
-                        line = parser.lines[i].strip()
-                        if line.startswith('G1') and 'E-' in line:
-                            import re
-                            match = re.search(r'E(-?[\d.]+)', line)
-                            if match:
-                                e_val = float(match.group(1))
-                                if e_val < 0:
-                                    retractions.insert(0, {'line': i + 1, 'value': abs(e_val)})
-                    
-                    # 取最后三次回抽
-                    if len(retractions) >= 3:
-                        last_three = retractions[-3:]
-                        before_wipe = last_three[0]['value']
-                        during_wipe = last_three[1]['value']
-                        after_wipe = last_three[2]['value']
-                        
-                        if idx == 0:
-                            print(f"找到最后三次回抽:")
-                            print(f"  行{last_three[0]['line']}: {before_wipe:.2f}mm")
-                            print(f"  行{last_three[1]['line']}: {during_wipe:.2f}mm")
-                            print(f"  行{last_three[2]['line']}: {after_wipe:.2f}mm")
-                        
-                        # 使用T1参数计算期望的三阶段回抽值
-                        # 根据公式: (retraction_length + extra) 的某部分 = retraction_length × 比例
-                        # 这里验证三段回抽总和是否符合公式要求
-                        retraction_length = tool_params[to_tool]["retraction_length"]
-                        extra = tool_params[to_tool].get("extra", 0.0)
-                        
-                        # 按照公式，期望的回抽总量应该是:
-                        # 回抽分两部分：基础回抽 + 额外回抽
-                        # 其中 extra 部分的回抽量 = retraction_length × 比例（如0.2）
-                        # 完整回抽 = 基础回抽 + (retraction_length × 比例)
-                        # 即: retraction_length + extra_retract = retraction_length + (retraction_length × extra_ratio)
-                        # 简化为: 期望回抽总量需要满足公式关系
-                        
-                        # 实际回抽总量
-                        actual_total = before_wipe + during_wipe + after_wipe
-                        
-                        # 期望回抽总量根据公式计算
-                        # 如果 extra = 0.2，则额外回抽部分应该约等于 retraction_length × 0.2 / retraction_length 的比例部分
-                        # 这里简化验证：检查实际回抽是否在合理范围内
-                        # 根据公式 (retraction_length + extra) = retraction_length × 某比例
-                        # 推导: 如果 extra = 0.2，retraction_length = 8.0
-                        # 则 (8.0 + X) = 8.0 × 0.2 的部分参与，总回抽应该约为 retraction_length
-                        expected_total = retraction_length  # 基础验证：总回抽应该约等于 retraction_length
-                        
-                        # 打印调试信息（只打印第一个换料点）
-                        if idx == 0:
-                            print(f"\n=== Bug 13303 填充后三阶段回抽 (换料点0) ===")
-                            print(f"参数: {to_tool} retraction_length={retraction_length}, extra={extra}")
-                            print(f"公式验证: (retraction_length + extra) = {retraction_length + extra}")
-                            print(f"实际回抽:")
-                            print(f"  擦拭前回抽: {before_wipe:.2f}mm")
-                            print(f"  擦拭时回抽: {during_wipe:.2f}mm")
-                            print(f"  擦拭后回抽: {after_wipe:.2f}mm")
-                            print(f"  总计: {actual_total:.2f}mm")
-                            print(f"期望回抽总量: 约{expected_total:.2f}mm (基于{to_tool}的retraction_length)")
-                        
-                        # 验证总回抽量是否符合预期
-                        tolerance = 0.3  # 允许更大的容差
-                        if abs(actual_total - expected_total) > tolerance:
-                            failures.append(
-                                f"换料点{idx} 行{tc['line']}: "
-                                f"打完填充后三阶段回抽总量{actual_total:.2f}mm，"
-                                f"期望约{expected_total:.2f}mm (基于{to_tool}参数)，"
-                                f"差值{abs(actual_total - expected_total):.2f}mm超出容差"
-                            )
-                        checked_count += 1
-        
-        # Bug 13379: 检查 extra 参数的公式正确性
-        # 验证公式: (后两段回抽之和) 应该约等于 retraction_length × extra_ratio
-        # 其中 extra_ratio = extra / retraction_length 的某个比例
-        if "after_infill_retract" in check_points and idx == 0:
-            # 只对第一个换料点进行公式验证
-            if wipe_tower_end_line and len(retractions) >= 3:
-                last_three = retractions[-3:]
-                second = last_three[1]['value']
-                third = last_three[2]['value']
-                
-                retraction_length = tool_params[to_tool]["retraction_length"]
-                extra = tool_params[to_tool].get("extra", 0.0)
-                
-                # 验证公式: (second + third) 应该约等于 retraction_length × (extra / retraction_length)
-                # 即: (second + third) ≈ extra (但这个逻辑不对)
-                # 正确的公式应该是: (second + third) = retraction_length × 某个比例
-                # 根据实际数据推断比例
-                if retraction_length > 0:
-                    actual_ratio = (second + third) / retraction_length
-                    
-                    # 验证 extra 参数是否符合公式关系
-                    # 根据公式: extra 应该使得 (second + third) = retraction_length × actual_ratio
-                    # 反推: 如果 extra = 0.2, retraction_length = 8.0
-                    # 则 (second + third) = 1.6 = 8.0 × 0.2
-                    expected_second_third_sum = retraction_length * extra if extra > 0 else second + third
-                    actual_second_third_sum = second + third
-                    
-                    if extra > 0:
-                        print(f"\n=== Bug 13379 extra 参数公式验证 ===")
-                        print(f"{to_tool} retraction_length={retraction_length}, extra={extra}")
-                        print(f"公式验证: (second + third) = retraction_length × extra")
-                        print(f"  期望: {expected_second_third_sum:.2f}mm = {retraction_length} × {extra}")
-                        print(f"  实际: {actual_second_third_sum:.2f}mm = {second:.2f} + {third:.2f}")
-                        print(f"  差值: {abs(actual_second_third_sum - expected_second_third_sum):.2f}mm")
-                        
-                        # 验证是否符合公式
-                        tolerance = 0.1
-                        if abs(actual_second_third_sum - expected_second_third_sum) > tolerance:
-                            failures.append(
-                                f"换料点{idx} Bug 13379: "
-                                f"extra参数公式验证失败，"
-                                f"(second + third) = {actual_second_third_sum:.2f}mm，"
-                                f"期望 {retraction_length} × {extra} = {expected_second_third_sum:.2f}mm，"
-                                f"差值{abs(actual_second_third_sum - expected_second_third_sum):.2f}mm超出容差"
-                            )
-                        
-                        # 同时验证总回抽公式: first + (second + third) = retraction_length
-                        first = last_three[0]['value']
-                        total = first + actual_second_third_sum
-                        print(f"总回抽验证: {first:.2f} + {actual_second_third_sum:.2f} = {total:.2f}mm")
-                        print(f"  期望总回抽: {retraction_length}mm")
-                        
-                        if abs(total - retraction_length) > 0.3:
-                            failures.append(
-                                f"换料点{idx} Bug 13379: "
-                                f"总回抽验证失败，"
-                                f"{first:.2f} + {actual_second_third_sum:.2f} = {total:.2f}mm，"
-                                f"期望{retraction_length}mm"
-                            )
-                        
-                        checked_count += 1
-        
+            infill_failures = _check_infill_retraction(parser, tc['line'], tool_params[to_tool])
+            failures.extend(f"换料点{idx} 行{tc['line']}: {failure}" for failure in infill_failures)
+            checked_count += 1
+
         # Bug 13309: 检查填充和外墙装填
         if "infill_perimeter" in check_points:
             # 在Internal infill或Perimeter段落中查找装填
@@ -384,7 +302,7 @@ def parse_tc_wt_007(
                 expected_unretract = expected_base
                 actual_unretract = unretract_ip.e
                 
-                if abs(actual_unretract - expected_unretract) > 0.2:
+                if not _within_tolerance(actual_unretract, expected_unretract, 0.2):
                     failures.append(
                         f"换料点{idx} 行{tc['line']}: "
                         f"填充/外墙装填量{actual_unretract:.2f}mm，"
@@ -405,7 +323,7 @@ def parse_tc_wt_007(
                 expected_unretract = expected_base
                 actual_unretract = unretract_layer.e
                 
-                if abs(actual_unretract - expected_unretract) > 0.2:
+                if not _within_tolerance(actual_unretract, expected_unretract, 0.2):
                     failures.append(
                         f"换料点{idx} 行{tc['line']}: "
                         f"层间换色装填量{actual_unretract:.2f}mm，"

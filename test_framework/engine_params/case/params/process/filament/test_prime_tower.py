@@ -172,14 +172,15 @@ def test_wipe_tower_rotation_angle(
 def test_prime_tower_enhance_type(
         slice_and_export: Path,
         expected_type: str,
+        expected_cone_angle: float,
         baseline_gcode: Path,
 ) -> None:
     """
     测试 prime_tower_enhance_type 参数是否正确生效。
     
     校验逻辑（Level 1 配置对比 + Level 3 基线对比）：
-    1. Level 1: 对比配置中的 prime_tower_enhance_type 值与期望值是否一致
-    2. Level 3: 如果提供了基线 G-code，对比 Prime tower 区域路径是否一致
+    1. Level 1: 检查形状类型和有效锥角，防止预设覆盖为 0°
+    2. Level 3: 对比逐层实际挤出轮廓（含圆弧），不包含空移与回抽
     
     参数说明：
     - prime_tower_enhance_type: Prime Tower 底部增强类型
@@ -189,6 +190,7 @@ def test_prime_tower_enhance_type(
     参数:
         slice_and_export: 切片生成的 G-code 文件路径
         expected_type: 期望的 prime_tower_enhance_type 值
+        expected_cone_angle: 最终导出的有效锥角；60°用于区分锥形与倒角
         baseline_gcode: 基线 G-code 文件路径（可选，用于 Level 3 验证）
     """
     # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析Prime tower 分层路径、边界尺寸、工具切换及挤出/回抽量；配置值仅用于确认输入，最终由实际 G-code 行为断言。
@@ -199,6 +201,7 @@ def test_prime_tower_enhance_type(
         gcode_path,
         expected_type,
         baseline_gcode_path=baseline_gcode,
+        expected_cone_angle=expected_cone_angle,
     )
 
     assert ok, (

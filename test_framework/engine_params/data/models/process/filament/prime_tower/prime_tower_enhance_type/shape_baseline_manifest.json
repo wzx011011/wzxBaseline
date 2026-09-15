@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "date": "2026-09-15",
+  "reason": "Exclude non-extruding tool-change travel, include I/J arc extrema and compare deposited dimensions per layer. Set an explicit effective cone angle to distinguish the two shapes.",
+  "generator": {
+    "executable": "F:/work/C3DSlicer/out/weiyusuo-release/build/src/CrealityPrint.exe",
+    "exe_sha256": "44ba08751acf9c264eeb0148f09a4c0f7deed6a0de6f720050743c5acbb817e3",
+    "slicer_dll": "F:\\work\\C3DSlicer\\out\\weiyusuo-release\\build\\src\\CrealityPrint_Slicer.dll",
+    "dll_sha256": "933cdd25e9fad0dbeb9623b43a1b9a9dc5d34b605187c4884bea772849cdc732",
+    "dll_modified": "2026-09-14T21:33:26.869154",
+    "ai_off_control": false,
+    "nodes": [
+      "engine_params/case/params/process/filament/test_prime_tower.py::test_prime_tower_enhance_type"
+    ]
+  },
+  "product": "Creality_Print V7.3.0.0; existing local binary, not the original Jenkins #327 package",
+  "effective_cone_angle_degrees": 60,
+  "coordinate_tolerance_mm": 0.1,
+  "extrusion_count_relative_tolerance": 0.1,
+  "normalization": "UTF-8, LF newlines, strip trailing whitespace on each line, final newline; G-code commands unchanged. Baseline hashes use this normalization, source hashes use raw exported bytes.",
+  "validation": "First run generated candidates (cone correctly rejected its old zero-angle baseline). After refresh, two fresh pytest runs passed 2/2 each. All six exports pass replay against the final baselines; opposite-shape baselines are rejected in both directions.",
+  "baselines": [
+    {
+      "shape": "cone",
+      "input_project": "prime_tower_enhance_type_cone.3mf",
+      "input_sha256": "a4b2f6dd54a64962b9c3047c4a594f4f8b7a011c6d85861f7ff598a24d7b8eb0",
+      "baseline_gcode": "prime_tower_enhance_type_cone_baseline.gcode",
+      "baseline_normalized_sha256": "570866543379d9d0e3378f9c0b6bf5447bc66fefa8a7bd523cc2cfb64494bebe",
+      "source_gcode": "output/tower_shape_fixed_run1_20260915_090634/mod_process.filament.test_prime_tower/test_prime_tower_enhance_type_prime_tower_enhance_type_cone__1.gcode",
+      "extrusion_move_count": 7012,
+      "layer_count": 100,
+      "first_layer_width": 22.898,
+      "first_layer_depth": 29.23921
+    },
+    {
+      "shape": "chamfer",
+      "input_project": "prime_tower_enhance_type_chamfer.3mf",
+      "input_sha256": "48ddf5ed9a4c66365986db71590ef3582ab0cf99200ece6362e66d536bf100f9",
+      "baseline_gcode": "prime_tower_enhance_type_chamfer_baseline.gcode",
+      "baseline_normalized_sha256": "cd511331f7cedef00f1d28b86a0ffbc33d042401b0baeadfdc6c835adaad7f42",
+      "source_gcode": "output/tower_shape_fixed_run1_20260915_090634/mod_process.filament.test_prime_tower/test_prime_tower_enhance_type_prime_tower_enhance_type_chamfer__1.gcode",
+      "extrusion_move_count": 6788,
+      "layer_count": 100,
+      "first_layer_width": 22.898,
+      "first_layer_depth": 22.898
+    }
+  ],
+  "samples": [
+    {
+      "path": "output/tower_shape_fixed_run1_20260915_090634/mod_process.filament.test_prime_tower/test_prime_tower_enhance_type_prime_tower_enhance_type_cone__1.gcode",
+      "sha256": "0411ce85932b84f03337dc21398f163cd36be011543fd298f5a76602e46bfe50",
+      "shape": "cone",
+      "passed": true,
+      "opposite_shape_rejected": true
+    },
+    {
+      "path": "output/tower_shape_fixed_run1_20260915_090634/mod_process.filament.test_prime_tower/test_prime_tower_enhance_type_prime_tower_enhance_type_chamfer__1.gcode",
+      "sha256": "93363af5af2542d0bb641188f81608b8999fbad71eeaba84e2752df0981fa548",
+      "shape": "chamfer",
+      "passed": true,
+      "opposite_shape_rejected": true
+    },
+    {
+      "path": "output/tower_shape_fixed_run2_20260915_090744/mod_process.filament.test_prime_tower/test_prime_tower_enhance_type_prime_tower_enhance_type_cone__1.gcode",
+      "sha256": "3b6f2216ba3111e72d6719f0446c3fd6009a57c100f1dbd6d4b2fe823af1f9f1",
+      "shape": "cone",
+      "passed": true,
+      "opposite_shape_rejected": true
+    },
+    {
+      "path": "output/tower_shape_fixed_run2_20260915_090744/mod_process.filament.test_prime_tower/test_prime_tower_enhance_type_prime_tower_enhance_type_chamfer__1.gcode",
+      "sha256": "57246b6237d90f38261c3c313e9165644eb16d8477cd8edf87b22de588c67176",
+      "shape": "chamfer",
+      "passed": true,
+      "opposite_shape_rejected": true
+    },
+    {
+      "path": "output/tower_shape_fixed_run3_20260915_090815/mod_process.filament.test_prime_tower/test_prime_tower_enhance_type_prime_tower_enhance_type_cone__1.gcode",
+      "sha256": "95dbb15b8d5e4b82e742ced317b82851fc9dc30da5f5df3ea23b3943b1ff889b",
+      "shape": "cone",
+      "passed": true,
+      "opposite_shape_rejected": true
+    },
+    {
+      "path": "output/tower_shape_fixed_run3_20260915_090815/mod_process.filament.test_prime_tower/test_prime_tower_enhance_type_prime_tower_enhance_type_chamfer__1.gcode",
+      "sha256": "3c0f449e7005eb8b8e6c1c630948ba93f9b1e7c1790c48edb4033ea4356b03f8",
+      "shape": "chamfer",
+      "passed": true,
+      "opposite_shape_rejected": true
+    }
+  ]
+}

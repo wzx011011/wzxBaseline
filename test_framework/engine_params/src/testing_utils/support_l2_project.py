@@ -233,6 +233,9 @@ def _configure(settings: dict, parameter: str, expected_value: Any) -> dict:
         settings["support_interface_top_layers"] = "2"
         settings["support_interface_bottom_layers"] = "2"
         settings["support_interface_min_area"] = "0"
+    if parameter == "support_interface_min_area":
+        # Isolate contact-area thresholds from short-bridge filtering (#11937).
+        settings["max_bridge_length"] = "0"
     if parameter == "ironing_support_layer":
         settings["support_interface_not_for_body"] = "0"
 
@@ -259,6 +262,9 @@ def _configure(settings: dict, parameter: str, expected_value: Any) -> dict:
         if original.get(key) != value
     }
     changed.add(parameter)
+    if parameter == "support_interface_min_area":
+        # Keep the prerequisite explicit even when the template already has 0.
+        changed.add("max_bridge_length")
     changed.update(filter(None, str(differences[0]).split(";")))
     differences[0] = ";".join(sorted(changed))
     settings["different_settings_to_system"] = differences

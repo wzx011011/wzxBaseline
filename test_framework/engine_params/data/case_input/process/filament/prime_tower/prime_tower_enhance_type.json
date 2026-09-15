@@ -4,13 +4,15 @@
       "project_name": "prime_tower_enhance_type cone",
       "input_3mf": "prime_tower_enhance_type_cone.3mf",
       "expected_type": "cone",
-      "baseline_gcode": "prime_tower_enhance_type_cone_baseline.gcode"
+      "baseline_gcode": "prime_tower_enhance_type_cone_baseline.gcode",
+      "expected_cone_angle": 60
     },
     {
       "project_name": "prime_tower_enhance_type chamfer",
       "input_3mf": "prime_tower_enhance_type_chamfer.3mf",
       "expected_type": "chamfer",
-      "baseline_gcode": "prime_tower_enhance_type_chamfer_baseline.gcode"
+      "baseline_gcode": "prime_tower_enhance_type_chamfer_baseline.gcode",
+      "expected_cone_angle": 60
     }
   ]
 }
