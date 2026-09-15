@@ -155,8 +155,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.layer_moves_max": {
-              "min": 562,
-              "max": 605
+              "min": 551,
+              "max": 551
             }
           }
         },
@@ -168,8 +168,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.layer_moves_max": {
-              "min": 568,
-              "max": 606
+              "min": 566,
+              "max": 566
             }
           }
         },
@@ -181,8 +181,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.layer_moves_max": {
-              "min": 392,
-              "max": 404
+              "min": 330,
+              "max": 330
             }
           }
         }
@@ -191,15 +191,80 @@
         "role.Support total.layer_moves_max"
       ],
       "relative_tolerance": 0.12,
-      "behavior_aliases": [
-        {
-          "expected_values": [
-            "10",
-            "5"
-          ],
-          "reason": "both thresholds retain the same bridge contacts after geometric quantization"
-        }
-      ]
+      "baseline_refresh": {
+        "date": "2026-09-15",
+        "scope": "max_bridge_length=5/10/20 only; three current-version replicas per entry; retain existing metric and 12% tolerance.",
+        "source_product": "Creality_Print V7.3.0.0 (local executable; slicer DLL modified 2026-09-14)",
+        "source_executable": "F:/work/C3DSlicer/out/weiyusuo-release/build/src/CrealityPrint.exe",
+        "exe_sha256": "44ba08751acf9c264eeb0148f09a4c0f7deed6a0de6f720050743c5acbb817e3",
+        "slicer_dll_sha256": "933cdd25e9fad0dbeb9623b43a1b9a9dc5d34b605187c4884bea772849cdc732",
+        "slicer_dll_modified": "2026-09-14T21:33:26.869154",
+        "source_fix": "7ef00d67e4d76bbe2cbd8a478da6088fc2e15f9d (#11937)",
+        "version_note": "Revalidated with the recorded local binary, not the Jenkins #327 V7.3.0.5908 package. The top-level generator describes the original baseline; this refresh applies only to max_bridge_length.",
+        "reason": "The short-bridge fix removes support below spans shorter than the threshold and prevents roof collection from adding it back. Old V7.3.0.5695 yielded 399 moves for value 20; current replicas all yield 330.",
+        "behavior": "On the canonical 8/14/24 mm bridge model, 5 retains all three bridge contacts; 10 removes the 8 mm contact; 20 removes the 8 and 14 mm contacts and retains the 24 mm contact. Values 5 and 10 are no longer behavior aliases.",
+        "replica_root_count": 3,
+        "project_model_sha256": {
+          "3D/3dmodel.model": "0b982c97c3caef6e22a2cac61aea21593c22d807ea7271bffb5875308d8ba994",
+          "3D/Objects/object_2.model": "832dcd5d507b64e7b7612701ba670b1c7e5dcc4fd8ebc4b6016a6b6dc06c8e8a"
+        },
+        "samples": [
+          {
+            "path": "output/max_bridge_current_run1_20260915_083356/mod_process.support.test_support/test_max_bridge_length_max_bridge_length_10__1.gcode",
+            "sha256": "d784a5a95ea4a3c2c794316bf6aa052f9ec1a927a1d17c46185e5ae72c9175b9",
+            "expected_value": "10",
+            "layer_moves_max": 551
+          },
+          {
+            "path": "output/max_bridge_current_run1_20260915_083356/mod_process.support.test_support/test_max_bridge_length_max_bridge_length_20__1.gcode",
+            "sha256": "c776e99e85d2557621d8af2a58f2b7be5a528ad4bab36590acc46d768668659c",
+            "expected_value": "20",
+            "layer_moves_max": 330
+          },
+          {
+            "path": "output/max_bridge_current_run1_20260915_083356/mod_process.support.test_support/test_max_bridge_length_max_bridge_length_5__1.gcode",
+            "sha256": "2080f155eb670bc4993115e52661c5f22cdc3062f3e9b4531d4f71160490de47",
+            "expected_value": "5",
+            "layer_moves_max": 566
+          },
+          {
+            "path": "output/max_bridge_current_run2_20260915_083610/mod_process.support.test_support/test_max_bridge_length_max_bridge_length_10__1.gcode",
+            "sha256": "761b87db71c629680f131a57793216184dff844f8ebc6d8a6e8890ec37d2f6e9",
+            "expected_value": "10",
+            "layer_moves_max": 551
+          },
+          {
+            "path": "output/max_bridge_current_run2_20260915_083610/mod_process.support.test_support/test_max_bridge_length_max_bridge_length_20__1.gcode",
+            "sha256": "331e161ab55db3b91d3d48db508c57129a10d2fe44c0edaa213346480cfa3039",
+            "expected_value": "20",
+            "layer_moves_max": 330
+          },
+          {
+            "path": "output/max_bridge_current_run2_20260915_083610/mod_process.support.test_support/test_max_bridge_length_max_bridge_length_5__1.gcode",
+            "sha256": "bf8cce4929089ce7ceb5427489e4305aefd239839fbd332cbf3a86958fb6c50e",
+            "expected_value": "5",
+            "layer_moves_max": 566
+          },
+          {
+            "path": "output/max_bridge_current_run3_20260915_083653/mod_process.support.test_support/test_max_bridge_length_max_bridge_length_10__1.gcode",
+            "sha256": "872178df15467231ee55abe8cea368419f8e6f7f883efe473c70e77f36b54cb7",
+            "expected_value": "10",
+            "layer_moves_max": 551
+          },
+          {
+            "path": "output/max_bridge_current_run3_20260915_083653/mod_process.support.test_support/test_max_bridge_length_max_bridge_length_20__1.gcode",
+            "sha256": "7b2ebd0265acf7b3c25795dccd3daf2ca544547f9484008df908d00088db945f",
+            "expected_value": "20",
+            "layer_moves_max": 330
+          },
+          {
+            "path": "output/max_bridge_current_run3_20260915_083653/mod_process.support.test_support/test_max_bridge_length_max_bridge_length_5__1.gcode",
+            "sha256": "b3056188cbec5e24ee2e6cdd9e7cee8f37694024e47918d847ed122b080eda36",
+            "expected_value": "5",
+            "layer_moves_max": 566
+          }
+        ]
+      }
     },
     "raft_contact_distance": {
       "entries": [
