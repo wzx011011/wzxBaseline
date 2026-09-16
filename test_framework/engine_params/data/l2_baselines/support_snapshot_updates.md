@@ -60,6 +60,37 @@ output/rebuilt_failed42_20260907_124334/mod_process.support.test_support/
 如果需要验证两值之间的功能差异，应另外处理输入/引擎行为，不能用刷新统计基线代替。
 本次未重新切片、未编译，未修改或放行多耗材支撑六项失败。
 
+## 2026-09-15：普通支撑转换层基线
+
+C3D 从 Bambu Studio 移植普通支撑 `Support transition` 后，使用修复了多材料
+transition 输出过滤问题的本地 Release 构建完整执行 124 项支撑测试。结果为
+88 passed / 36 failed；其中 35 项是普通支撑转换层引起的指标变化，另 1 项是既有的
+`support_on_build_plate_only[hybrid_tree_enabled]` 候选基线歧义。
+
+本次仅更新这 35 个案例在 JUnit 中明确失败的既有检查指标，不重新选择 checks，
+不修改参数级容差，也不改其他 89 个案例。已经通过的历史范围继续保留，例如
+`support_bottom_interface_spacing` 的 Support total move_count `[6576, 6680]`。
+
+更新前后的 35 份输入 3MF 内容一致，支撑运动所在 Z 集合一致。7 项的支撑路径坐标和
+逐段 E 完全一致，仅从 Support interface 重新分类为 Support transition；其余案例的
+变化来自转换区域重新填充。多材料定向检查确认 transition 使用普通支撑材料，自动材料
+分配到两个工具的转换区域互不重叠；熨烫最后单独输出的顺序保持不变。
+
+来源：
+
+```text
+JUnit: test_framework/support_rolefix_full.xml
+G-code: test_framework/engine_params/output_rolefix_full/
+测试结果: 88 passed, 36 failed in 1945.26s
+C3DSlicer source HEAD: 5c7ca096b9a077004fd9c0e68f25956f15927e58
+CrealityPrint.exe SHA256: 7F1BCA6D85A4B886070D3274994B41842968E443AC91B2065DC910E2E89CA3E6
+CrealityPrint_Slicer.dll SHA256: DAD0422DEEA131CB552F676BA2F2237BCCB96A19F28A8FF1A7E19FBF677F4278
+35-file manifest SHA256: a556b72c1f42389066db8323e3d034f3739e2fcafea03c646915c7c69d67fa80
+```
+
+全局 generator 与各 entry 的 replica_count 保留原始基线语义；本次更新值来自上述一轮
+完整本地测试，而不是三份新重复样本。歧义项未借此次更新放行。
+
 ## 2026-09-09：tree_strong 非确定性拓扑基线
 
 Jenkins #31 使用切片软件提交 `c23e8de6f` 时，`tree_strong` 的

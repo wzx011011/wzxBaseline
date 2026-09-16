@@ -19,8 +19,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 408.37357,
-              "max": 408.37357
+              "min": 299.97044,
+              "max": 299.97044
             }
           }
         },
@@ -32,8 +32,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 194.06787,
-              "max": 194.06787
+              "min": 139.01789,
+              "max": 139.01789
             }
           }
         }
@@ -87,8 +87,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.block_count": {
-              "min": 242,
-              "max": 242
+              "min": 257,
+              "max": 257
             }
           }
         },
@@ -100,8 +100,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.block_count": {
-              "min": 205,
-              "max": 205
+              "min": 220,
+              "max": 220
             }
           }
         }
@@ -121,8 +121,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.block_count": {
-              "min": 192,
-              "max": 192
+              "min": 256,
+              "max": 256
             }
           }
         },
@@ -134,8 +134,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.block_count": {
-              "min": 286,
-              "max": 286
+              "min": 414,
+              "max": 414
             }
           }
         }
@@ -276,16 +276,16 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.block_count": {
-              "min": 207,
-              "max": 207
+              "min": 222,
+              "max": 222
             },
             "role.Support total.layer_count": {
               "min": 147,
               "max": 147
             },
             "role.Support total.move_count": {
-              "min": 4849,
-              "max": 4849
+              "min": 4966,
+              "max": 4966
             },
             "role.Support total.path_length": {
               "min": 50900.78997,
@@ -309,16 +309,16 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.block_count": {
-              "min": 207,
-              "max": 207
+              "min": 222,
+              "max": 222
             },
             "role.Support total.layer_count": {
               "min": 147,
               "max": 147
             },
             "role.Support total.move_count": {
-              "min": 4852,
-              "max": 4852
+              "min": 4969,
+              "max": 4969
             },
             "role.Support total.path_length": {
               "min": 50901.64839,
@@ -691,16 +691,16 @@
               "max": 19.8
             },
             "role.Support interface.layer_count": {
-              "min": 15,
-              "max": 15
+              "min": 11,
+              "max": 11
             },
             "role.Support interface.path_length": {
-              "min": 10237.59949,
-              "max": 10237.59949
+              "min": 7584.97418,
+              "max": 7584.97418
             },
             "role.Support interface.extrusion": {
-              "min": 408.38005,
-              "max": 408.38005
+              "min": 299.97044,
+              "max": 299.97044
             },
             "role.Support interface.bbox_width": {
               "min": 77.681,
@@ -744,16 +744,16 @@
               "max": 19.8
             },
             "role.Support interface.layer_count": {
-              "min": 15,
-              "max": 15
+              "min": 11,
+              "max": 11
             },
             "role.Support interface.path_length": {
-              "min": 10237.59949,
-              "max": 10237.59949
+              "min": 7584.97418,
+              "max": 7584.97418
             },
             "role.Support interface.extrusion": {
-              "min": 408.38005,
-              "max": 408.38005
+              "min": 299.97044,
+              "max": 299.97044
             },
             "role.Support interface.bbox_width": {
               "min": 77.681,
@@ -1023,8 +1023,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 334.35532,
-              "max": 334.35532
+              "min": 294.64295,
+              "max": 294.64295
             }
           }
         }
@@ -1044,8 +1044,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 378.11898,
-              "max": 378.11898
+              "min": 269.71549,
+              "max": 269.71549
             }
           }
         },
@@ -1057,8 +1057,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 408.37357,
-              "max": 408.37357
+              "min": 299.97044,
+              "max": 299.97044
             }
           }
         },
@@ -1070,8 +1070,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 438.62816,
-              "max": 438.62816
+              "min": 330.22539,
+              "max": 330.22539
             }
           }
         }
@@ -1091,8 +1091,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 334.35532,
-              "max": 334.35532
+              "min": 294.64295,
+              "max": 294.64295
             }
           }
         },
@@ -1125,8 +1125,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.layer_length_max": {
-              "min": 171.91,
-              "max": 171.91
+              "min": 166.07389,
+              "max": 166.07389
             }
           }
         },
@@ -1138,8 +1138,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.layer_length_max": {
-              "min": 191.56489,
-              "max": 191.56489
+              "min": 189.37588,
+              "max": 189.37588
             }
           }
         }
@@ -1228,8 +1228,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.tool_0_extrusion": {
-              "min": 455.86625,
-              "max": 455.86625
+              "min": 473.35053,
+              "max": 473.35053
             }
           }
         },
@@ -1241,8 +1241,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.tool_0_extrusion": {
-              "min": 821.89447,
-              "max": 821.89447
+              "min": 857.4006,
+              "max": 857.4006
             }
           }
         }
@@ -1314,8 +1314,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.layer_moves_max": {
-              "min": 52,
-              "max": 52
+              "min": 53,
+              "max": 53
             }
           }
         },
@@ -1357,8 +1357,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 240.137,
-              "max": 240.137
+              "min": 205.44498,
+              "max": 205.44498
             }
           }
         },
@@ -1370,8 +1370,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 213.62544,
-              "max": 213.62544
+              "min": 185.48664,
+              "max": 185.48664
             }
           }
         },
@@ -1383,8 +1383,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 358.96189,
-              "max": 358.96189
+              "min": 298.09865,
+              "max": 298.09865
             }
           }
         }
@@ -1451,8 +1451,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 185.48412,
-              "max": 185.48412
+              "min": 160.67594,
+              "max": 160.67594
             }
           }
         },
@@ -1464,8 +1464,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 213.62544,
-              "max": 213.62544
+              "min": 185.48664,
+              "max": 185.48664
             }
           }
         },
@@ -1477,8 +1477,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 241.69842,
-              "max": 241.69842
+              "min": 213.62888,
+              "max": 213.62888
             }
           }
         }
@@ -1554,8 +1554,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 213.62544,
-              "max": 213.62544
+              "min": 185.48664,
+              "max": 185.48664
             }
           }
         },
@@ -1567,8 +1567,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 213.65016,
-              "max": 213.65016
+              "min": 185.51133,
+              "max": 185.51133
             }
           }
         },
@@ -1580,8 +1580,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 209.12925,
-              "max": 209.12925
+              "min": 181.96607,
+              "max": 181.96607
             }
           }
         }
@@ -1841,8 +1841,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.block_count": {
-              "min": 65,
-              "max": 65
+              "min": 64,
+              "max": 64
             }
           }
         },
@@ -2057,8 +2057,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 213.62544,
-              "max": 213.62544
+              "min": 185.48664,
+              "max": 185.48664
             }
           }
         },
@@ -2070,8 +2070,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support interface.extrusion": {
-              "min": 224.36255,
-              "max": 224.36255
+              "min": 196.2264,
+              "max": 196.2264
             }
           }
         }
@@ -2590,16 +2590,16 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.block_count": {
-              "min": 205,
-              "max": 205
+              "min": 220,
+              "max": 220
             },
             "role.Support total.layer_count": {
               "min": 143,
               "max": 143
             },
             "role.Support total.move_count": {
-              "min": 4568,
-              "max": 4568
+              "min": 4685,
+              "max": 4685
             },
             "role.Support total.path_length": {
               "min": 46337.44683,
@@ -2623,8 +2623,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.block_count": {
-              "min": 205,
-              "max": 205
+              "min": 220,
+              "max": 220
             },
             "role.Support total.layer_count": {
               "min": 143,
@@ -2656,8 +2656,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.block_count": {
-              "min": 205,
-              "max": 205
+              "min": 220,
+              "max": 220
             },
             "role.Support total.layer_count": {
               "min": 143,
@@ -2875,5 +2875,61 @@
       }
     ],
     "manifest_format": "SHA256 of UTF-8 compact JSON (sort_keys=True) list of {path,sha256}, ordered by baseline parameter then entry; path is relative to source root with forward slashes."
+  },
+  "normal_support_transition_update": {
+    "date": "2026-09-15",
+    "scope": "Refresh the existing checks for 35 normal-support cases affected by the new Support transition role; preserve all other cases, checks and tolerances.",
+    "reason": "The previous baseline predates normal-support transition layers. Multi-material transition output was fixed before this snapshot.",
+    "source_report": "support_rolefix_full.xml",
+    "source_gcode_root": "engine_params/output_rolefix_full",
+    "source_head": "5c7ca096b9a077004fd9c0e68f25956f15927e58",
+    "source_worktree": "Source HEAD plus the reviewed local normal-support transition and G-code role-filter changes.",
+    "executable_sha256": "7f1bca6d85a4b886070d3274994b41842968e443ac91b2065dc910e2e89ca3e6",
+    "slicer_dll_sha256": "dad0422deea131cb552f676ba2f2237bccb96a19f28a8ff1a7e19fbf677f4278",
+    "updated_case_count": 35,
+    "updated_cases": [
+      "test_bridge_no_support[bridge_no_support_0]",
+      "test_bridge_no_support[bridge_no_support_1]",
+      "test_independent_support_layer_height[independent_support_layer_height_0]",
+      "test_independent_support_layer_height[independent_support_layer_height_1]",
+      "test_ironing_support_layer[ironing_support_layer_0]",
+      "test_ironing_support_layer[ironing_support_layer_1]",
+      "test_raft_contact_distance[raft_contact_distance_0.1]",
+      "test_raft_contact_distance[raft_contact_distance_0.2]",
+      "test_support_bottom_interface_spacing[support_bottom_interface_spacing_0.3]",
+      "test_support_bottom_interface_spacing[support_bottom_interface_spacing_0.5]",
+      "test_support_filament[support_filament_2]",
+      "test_support_interface_bottom_layers[support_interface_bottom_layers_1]",
+      "test_support_interface_bottom_layers[support_interface_bottom_layers_2]",
+      "test_support_interface_bottom_layers[support_interface_bottom_layers_3]",
+      "test_support_interface_filament[support_interface_filament_0]",
+      "test_support_interface_loop_pattern[disabled]",
+      "test_support_interface_loop_pattern[enabled]",
+      "test_support_interface_not_for_body[disabled]",
+      "test_support_interface_not_for_body[enabled]",
+      "test_support_interface_pattern[grid]",
+      "test_support_interface_spacing[support_interface_spacing_0.3]",
+      "test_support_interface_spacing[support_interface_spacing_0.5]",
+      "test_support_interface_spacing[support_interface_spacing_0]",
+      "test_support_interface_top_layers[support_interface_top_layers_1]",
+      "test_support_interface_top_layers[support_interface_top_layers_2]",
+      "test_support_interface_top_layers[support_interface_top_layers_3]",
+      "test_support_object_xy_distance[support_object_xy_distance_0.2]",
+      "test_support_object_xy_distance[support_object_xy_distance_0.35]",
+      "test_support_object_xy_distance[support_object_xy_distance_0.6]",
+      "test_support_threshold_angle[support_threshold_angle_30]",
+      "test_support_xy_overrides_z[xy_overrides_z]",
+      "test_support_xy_overrides_z[z_overrides_xy]",
+      "test_tree_support_wall_count[tree_support_wall_count_0]",
+      "test_tree_support_wall_count[tree_support_wall_count_1]",
+      "test_tree_support_wall_count[tree_support_wall_count_2]"
+    ],
+    "source_manifest": {
+      "file_count": 35,
+      "sha256": "a556b72c1f42389066db8323e3d034f3739e2fcafea03c646915c7c69d67fa80",
+      "format": "SHA256 of compact sorted JSON list of {path,sha256}, ordered by path."
+    },
+    "provenance": "The baseline generator and replica_count fields describe the original baseline. These 35 metric snapshots come from one reviewed full-suite run.",
+    "excluded": "test_support_on_build_plate_only[hybrid_tree_enabled] remains unchanged because its failure is an existing ambiguous-baseline issue."
   }
 }
