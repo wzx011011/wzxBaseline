@@ -1762,16 +1762,16 @@
               "max": 1049.33806,
               "relative_tolerance": 0.01
             },
-            "role.Support total.block_count": 208,
+            "role.Support total.block_count": 265,
             "role.Support total.layer_count": 141,
             "role.Support total.path_length": {
-              "min": 43177.0743,
-              "max": 43838.39809,
+              "min": 46050.09782,
+              "max": 46710.08975,
               "relative_tolerance": 0.05
             },
             "role.Support total.extrusion": {
-              "min": 1623.01365,
-              "max": 1650.55353,
+              "min": 1718.47568,
+              "max": 1745.95467,
               "relative_tolerance": 0.05
             },
             "role.Support total.tool_count": 1
@@ -2320,8 +2320,8 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.block_count": {
-              "min": 311,
-              "max": 313
+              "min": 355,
+              "max": 355
             },
             "role.Support total.layer_count": {
               "min": 141,
@@ -2463,12 +2463,12 @@
               "max": 141
             },
             "role.Support total.move_count": {
-              "min": 13452,
-              "max": 13659
+              "min": 15783,
+              "max": 15783
             },
             "role.Support total.path_length": {
-              "min": 20490.07021,
-              "max": 21024.48733
+              "min": 23634.70912,
+              "max": 23634.70912
             },
             "role.Support total.z_first": {
               "min": 0.2,
@@ -2488,20 +2488,20 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.block_count": {
-              "min": 286,
-              "max": 297
+              "min": 340,
+              "max": 340
             },
             "role.Support total.layer_count": {
               "min": 141,
               "max": 141
             },
             "role.Support total.move_count": {
-              "min": 13384,
-              "max": 13799
+              "min": 15783,
+              "max": 15783
             },
             "role.Support total.path_length": {
-              "min": 20179.24461,
-              "max": 20824.68575
+              "min": 23634.70912,
+              "max": 23634.70912
             },
             "role.Support total.z_first": {
               "min": 0.2,
@@ -2725,16 +2725,16 @@
           "replica_count": 3,
           "metrics": {
             "role.Support total.block_count": {
-              "min": 293,
-              "max": 303
+              "min": 340,
+              "max": 340
             },
             "role.Support total.layer_count": {
               "min": 141,
               "max": 141
             },
             "role.Support total.move_count": {
-              "min": 13576,
-              "max": 13786
+              "min": 15783,
+              "max": 15783
             },
             "role.Support total.path_length": {
               "min": 20382.20261,
@@ -2766,12 +2766,12 @@
               "max": 141
             },
             "role.Support total.move_count": {
-              "min": 9113,
-              "max": 9505
+              "min": 11360,
+              "max": 11360
             },
             "role.Support total.path_length": {
-              "min": 14710.61829,
-              "max": 15348.3409
+              "min": 17717.13598,
+              "max": 17717.13598
             },
             "role.Support total.z_first": {
               "min": 0.2,
@@ -2799,12 +2799,12 @@
               "max": 141
             },
             "role.Support total.move_count": {
-              "min": 13273,
-              "max": 13545
+              "min": 15718,
+              "max": 15718
             },
             "role.Support total.path_length": {
-              "min": 20236.11607,
-              "max": 20807.64154
+              "min": 23480.77574,
+              "max": 23480.77574
             },
             "role.Support total.z_first": {
               "min": 0.2,
@@ -2931,5 +2931,82 @@
     },
     "provenance": "The baseline generator and replica_count fields describe the original baseline. These 35 metric snapshots come from one reviewed full-suite run.",
     "excluded": "test_support_on_build_plate_only[hybrid_tree_enabled] remains unchanged because its failure is an existing ambiguous-baseline issue."
+  },
+  "tree_support_transition_contour_update": {
+    "date": "2026-09-18",
+    "reason": "Restore the printed perimeter on Roof1stLayer. Six slim-tree cases retain identical base support extrusion geometry; increased transition paths invalidate the old snapshots. Three strong-tree repeats retain 265 blocks, 141 layers and one tool.",
+    "scope": "Only 15 failed metrics of seven reviewed cases; preserve checks, tolerances, other cases and the historical tree_strong maximum-layer-length range.",
+    "source_reports": [
+      "support_contour_20260918_133846.xml",
+      "tree_strong_repeat_20260918_143640_1.xml",
+      "tree_strong_repeat_20260918_143640_2.xml",
+      "tree_strong_repeat_20260918_143640_3.xml"
+    ],
+    "source_head": "c6357784d53bce1df402790ee49cd1fb4552ba43",
+    "source_worktree": "HEAD plus local TreeSupport.cpp perimeter output, shared first-wall geometry, empty-infill contour planning and ironing changes; SupportParameters.hpp soluble-interface style guard.",
+    "source_files_sha256": {
+      "src/libslic3r/support_new/TreeSupport.cpp": "ed64eef9a3cd600e3aaefd428b6a3724e5a103a7079583bad2dae2fd9569a0aa",
+      "src/libslic3r/support_new/SupportParameters.hpp": "2d246cfc229d1481d6bbfd57b8fa389fa5bf95c4523d71131c5d008a4bed1b34"
+    },
+    "executable_sha256": "7F1BCA6D85A4B886070D3274994B41842968E443AC91B2065DC910E2E89CA3E6",
+    "slicer_dll_sha256": "D49D64E7D491D9E3BDE71ED68365C2DECCC111877D4BEDEB81CAF856D36C3565",
+    "updated_cases": [
+      "test_support_style[tree_strong]",
+      "test_tree_support_branch_distance[tree_support_branch_distance_0.5]",
+      "test_tree_support_tip_diameter[tree_support_tip_diameter_0.6]",
+      "test_tree_support_tip_diameter[tree_support_tip_diameter_0.8]",
+      "test_tree_support_wall_count_tree[tree_support_wall_count_tree_0]",
+      "test_tree_support_wall_count_tree[tree_support_wall_count_tree_1]",
+      "test_tree_support_wall_count_tree[tree_support_wall_count_tree_2]"
+    ],
+    "updated_metric_count": 15,
+    "sample_counts": {
+      "tree_strong": 4,
+      "other_updated_cases": 1
+    },
+    "provenance": "One full-suite run plus three new tree_strong repeats. Original generator/replica_count metadata remains historical; this update records its own sample counts.",
+    "excluded": "hybrid_tree_enabled retains its existing ambiguous-baseline failure.",
+    "source_manifest": [
+      {
+        "path": "engine_params/output_support_contour_20260918_133846/mod_process.support.test_support/test_support_style_tree_strong__1.gcode",
+        "sha256": "c5e32b1474594f9dfe0ef1f32ce7b835a240b90fe1c18e2b7bcb7272c34324cb"
+      },
+      {
+        "path": "engine_params/output_tree_strong_repeat_20260918_143640_1/mod_process.support.test_support/test_support_style_tree_strong__1.gcode",
+        "sha256": "87c737ae293e1fc63233269aae161593fb4c8ad3d53f22f6c8b37d290afe721c"
+      },
+      {
+        "path": "engine_params/output_tree_strong_repeat_20260918_143640_2/mod_process.support.test_support/test_support_style_tree_strong__1.gcode",
+        "sha256": "901275760adde30e9e591a8201f6ba95ebbe81c4e670af9ff7aa4d7486e4f671"
+      },
+      {
+        "path": "engine_params/output_tree_strong_repeat_20260918_143640_3/mod_process.support.test_support/test_support_style_tree_strong__1.gcode",
+        "sha256": "437f3b1e619aa46d60c2cda78ac8451a52b93e8c03abeef92979441efc46767a"
+      },
+      {
+        "path": "engine_params/output_support_contour_20260918_133846/mod_process.support.test_support/test_tree_support_branch_distance_tree_support_branch_distance_0.5__1.gcode",
+        "sha256": "d276f275e72b6e5bcadc8dad1bb37372615c219042c025e1825d5551dd6f6248"
+      },
+      {
+        "path": "engine_params/output_support_contour_20260918_133846/mod_process.support.test_support/test_tree_support_tip_diameter_tree_support_tip_diameter_0.6__1.gcode",
+        "sha256": "6ce8d2a40b8fcdf9c2d1a36a54cd113f0315bf94de36bc19ae10630c1342896d"
+      },
+      {
+        "path": "engine_params/output_support_contour_20260918_133846/mod_process.support.test_support/test_tree_support_tip_diameter_tree_support_tip_diameter_0.8__1.gcode",
+        "sha256": "5627363fcceb13dbee6f25098b3a4935e0a5f29af50cf8b6311edc641fc1bb97"
+      },
+      {
+        "path": "engine_params/output_support_contour_20260918_133846/mod_process.support.test_support/test_tree_support_wall_count_tree_tree_support_wall_count_tree_0__1.gcode",
+        "sha256": "f4e058b8471bff1729caa488d0066e3ae82f821de2997a2a675e636cf91ec955"
+      },
+      {
+        "path": "engine_params/output_support_contour_20260918_133846/mod_process.support.test_support/test_tree_support_wall_count_tree_tree_support_wall_count_tree_1__1.gcode",
+        "sha256": "e05a80d2bd562fd0f05125cd4cbc78cc07c5844905ad4908dd6e9000a359323e"
+      },
+      {
+        "path": "engine_params/output_support_contour_20260918_133846/mod_process.support.test_support/test_tree_support_wall_count_tree_tree_support_wall_count_tree_2__1.gcode",
+        "sha256": "b56ad9aebcfd9ff31c7a3a1b6b2f90e34c0bc19bd797a2bb745bb1ce72cefffa"
+      }
+    ]
   }
 }

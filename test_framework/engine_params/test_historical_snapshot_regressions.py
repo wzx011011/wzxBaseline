@@ -115,7 +115,7 @@ def test_unresolved_multimaterial_support_failures_are_not_relaxed(monkeypatch, 
 def _tree_strong_metrics(layer_length_max, path_length, extrusion):
     return {
         "role.Support total.layer_length_max": layer_length_max,
-        "role.Support total.block_count": 208,
+        "role.Support total.block_count": 265,
         "role.Support total.layer_count": 141,
         "role.Support total.path_length": path_length,
         "role.Support total.extrusion": extrusion,
@@ -124,8 +124,10 @@ def _tree_strong_metrics(layer_length_max, path_length, extrusion):
 
 
 @pytest.mark.parametrize("metrics", [
-    _tree_strong_metrics(861.60175, 43177.0743, 1623.01365),
-    _tree_strong_metrics(965.12513, 43838.39809, 1650.55353),
+    # Reviewed full-suite output and the distinct topologies from three repeats.
+    _tree_strong_metrics(861.60175, 46050.09782, 1718.47568),
+    _tree_strong_metrics(965.12513, 46710.08975, 1745.95467),
+    _tree_strong_metrics(985.52211, 46562.398, 1738.76075),
 ])
 def test_tree_strong_observed_topologies_pass(monkeypatch, metrics):
     monkeypatch.setattr(support_metrics, "analyze_support_gcode", lambda _: metrics)
@@ -138,14 +140,17 @@ def test_tree_strong_observed_topologies_pass(monkeypatch, metrics):
 
 @pytest.mark.parametrize("metric,actual", [
     ("role.Support total.layer_length_max", 840),
-    ("role.Support total.block_count", 207),
+    ("role.Support total.block_count", 264),
+    ("role.Support total.block_count", 208),
     ("role.Support total.layer_count", 140),
     ("role.Support total.path_length", 40000),
+    ("role.Support total.path_length", 50000),
     ("role.Support total.extrusion", 1500),
+    ("role.Support total.extrusion", 1900),
     ("role.Support total.tool_count", 2),
 ])
 def test_tree_strong_still_rejects_geometry_degradation(monkeypatch, metric, actual):
-    metrics = _tree_strong_metrics(861.60175, 43177.0743, 1623.01365)
+    metrics = _tree_strong_metrics(965.12513, 46710.08975, 1745.95467)
     metrics[metric] = actual
     monkeypatch.setattr(support_metrics, "analyze_support_gcode", lambda _: metrics)
     ok, details = support_metrics.validate_support_l2_behavior(
