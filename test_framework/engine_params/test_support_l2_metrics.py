@@ -186,3 +186,43 @@ G1 X10 Y10 E1
     assert not ok
     assert details["matched_project"] == "normal_auto_painted"
     assert details["mismatches"][0]["expected"] == 25.0
+
+
+@pytest.mark.parametrize("project_name,expected_ok", [
+    ("enabled", False),
+    ("hybrid_tree_enabled", True),
+    ("unknown_enabled", False),
+])
+def test_build_plate_only_selects_complete_case_id(tmp_path, project_name, expected_ok):
+    gcode = tmp_path / f"test_support_on_build_plate_only_{project_name}__1.gcode"
+    gcode.write_text(
+        "; EXECUTABLE_BLOCK_START\nM83\n;LAYER_CHANGE\n;Z:0.2\n"
+        ";TYPE:Support\nG1 X10 Y0 E1\n; EXECUTABLE_BLOCK_END\n",
+        encoding="utf-8",
+    )
+    baseline = tmp_path / "baseline.json"
+    metric = "role.Support total.path_length"
+    baseline.write_text(json.dumps({
+        "parameters": {
+            "support_on_build_plate_only": {
+                "checks": [metric],
+                "entries": [
+                    {"project_name": name, "expected_key": canonical_expected(1),
+                     "metrics": {metric: length}}
+                    for name, length in [("enabled", 20.0), ("hybrid_tree_enabled", 10.0)]
+                ],
+            },
+        },
+    }), encoding="utf-8")
+
+    ok, details = validate_support_l2_behavior(
+        gcode, "support_on_build_plate_only", 1, baseline,
+    )
+
+    assert ok is expected_ok
+    if project_name == "unknown_enabled":
+        assert "ambiguous L2 baseline candidates" in details["error"]
+    else:
+        assert details["matched_project"] == project_name
+        if not expected_ok:
+            assert details["mismatches"][0]["expected"] == 20.0

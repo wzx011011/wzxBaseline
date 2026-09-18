@@ -129,16 +129,26 @@ def canonical_expected(value: Any) -> str:
 def _select_project_candidate(
     gcode_path: Path | str,
     candidates: Sequence[Mapping[str, Any]],
+    parameter: str,
 ) -> Mapping[str, Any] | None:
     """Resolve duplicate expected values from the pytest case id in the output filename."""
     stem = Path(gcode_path).stem
+    case_prefix = f"test_{parameter}_"
+    case_id = stem[len(case_prefix):] if stem.startswith(case_prefix) else None
     matches = []
     for candidate in candidates:
         project_name = str(candidate.get("project_name") or "")
         if not project_name:
             continue
         token = re.sub(r"[^A-Za-z0-9_.-]+", "_", project_name)
-        if re.search(rf"(?:^|_){re.escape(token)}(?:_+\d+)?$", stem):
+        # Generated filenames contain the full case id, not just a project suffix.
+        # Keep suffix matching for legacy filenames without the test prefix.
+        matched = (
+            re.fullmatch(rf"{re.escape(token)}(?:_+\d+)?", case_id)
+            if case_id is not None
+            else re.search(rf"(?:^|_){re.escape(token)}(?:_+\d+)?$", stem)
+        )
+        if matched:
             matches.append(candidate)
     return matches[0] if len(matches) == 1 else None
 
@@ -448,7 +458,7 @@ def validate_support_l2_behavior(
             "error": f"expected value missing from L2 baseline: {parameter}={expected_key}",
         }
     if len(candidates) > 1:
-        project_candidate = _select_project_candidate(gcode_path, candidates)
+        project_candidate = _select_project_candidate(gcode_path, candidates, parameter)
         if project_candidate is None:
             return False, {
                 "error": f"ambiguous L2 baseline candidates: {parameter}={expected_key}",
