@@ -3,17 +3,20 @@
     {
       "project_name": "22.5deg",
       "input_3mf": "interlocking_orientation_0.3mf",
-      "expected_value": 22.5
+      "expected_value": 22.5,
+      "geometry_baseline": "interlocking_orientation/22.5deg"
     },
     {
       "project_name": "45deg",
       "input_3mf": "interlocking_orientation_45.3mf",
-      "expected_value": 45.0
+      "expected_value": 45.0,
+      "geometry_baseline": "interlocking_orientation/45deg"
     },
     {
       "project_name": "90deg",
       "input_3mf": "interlocking_orientation_90.3mf",
-      "expected_value": 90.0
+      "expected_value": 90.0,
+      "geometry_baseline": "interlocking_orientation/90deg"
     }
   ]
 }

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
@@ -15,37 +16,46 @@ from engine_params.src.gcode.process.filament.interlocking_check import (
 )
 
 
-# ================== interlocking_beam ==================
+def _assert_geometry(parser, gcode_path, expected_value, baseline_id):
+    ok, actual, details = parser(gcode_path, expected_value, baseline_id=baseline_id)
+    print(json.dumps(details, ensure_ascii=False, indent=2))
+    assert ok, f"{baseline_id}: expected {expected_value}, config {actual}: {details}"
+
 
 @pytest.mark.engine_params
-def test_interlocking_beam(
-        slice_and_export: Path,
-        expected_value: bool,
-):
-    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
-    gcode_path = slice_and_export
-    ok, actual_value, details = parse_interlocking_beam(
-        gcode_path,
-        expected_value,
-    )
-    
-    # 打印检测详情
-    print(f"\n=== interlocking_beam Level 2 检测详情 ===")
-    print(f"  期望值: {expected_value}")
-    print(f"  检测值: {actual_value}")
-    print(f"  检测方法: {details.get('detection_method', 'N/A')}")
-    print(f"  换料次数: {details.get('tool_changes_count', 0)}")
-    print(f"  墙体交替次数: {details.get('wall_alternations', 0)}")
-    print(f"  墙体交替比率: {details.get('alternation_ratio', 0):.2f} (阈值: 2.5)")
-    print(f"  Gap infill 次数: {details.get('gap_infill_count', 0)}")
-    print(f"  Gap infill 比率: {details.get('gap_infill_ratio', 0):.2f} (阈值: 0.5)")
-    print(f"  特征检测结果: {details.get('feature_detected', False)}")
-    print(f"  结果消息: {details.get('message', 'N/A')}")
-    print("=" * 45)
+def test_interlocking_beam(slice_and_export: Path, expected_value: bool, geometry_baseline: str):
+    """Compare actual per-material outer contours with the reviewed 7.2.2 reference."""
+    _assert_geometry(parse_interlocking_beam, slice_and_export, expected_value, geometry_baseline)
 
-    assert ok, (
-        f"interlocking_beam expected {expected_value}, actual {actual_value}, details: {details}"
-    )
+
+@pytest.mark.engine_params
+def test_interlocking_beam_width(slice_and_export: Path, expected_value: float, geometry_baseline: str):
+    """Compare actual per-material outer contours with the reviewed 7.2.2 reference."""
+    _assert_geometry(parse_interlocking_beam_width, slice_and_export, expected_value, geometry_baseline)
+
+
+@pytest.mark.engine_params
+def test_interlocking_orientation(slice_and_export: Path, expected_value: float, geometry_baseline: str):
+    """Compare actual per-material outer contours with the reviewed 7.2.2 reference."""
+    _assert_geometry(parse_interlocking_orientation, slice_and_export, expected_value, geometry_baseline)
+
+
+@pytest.mark.engine_params
+def test_interlocking_beam_layer_count(slice_and_export: Path, expected_value: int, geometry_baseline: str):
+    """Compare actual per-material outer contours with the reviewed 7.2.2 reference."""
+    _assert_geometry(parse_interlocking_beam_layer_count, slice_and_export, expected_value, geometry_baseline)
+
+
+@pytest.mark.engine_params
+def test_interlocking_depth(slice_and_export: Path, expected_value: float, geometry_baseline: str):
+    """Compare actual per-material outer contours with the reviewed 7.2.2 reference."""
+    _assert_geometry(parse_interlocking_depth, slice_and_export, expected_value, geometry_baseline)
+
+
+@pytest.mark.engine_params
+def test_interlocking_boundary_avoidance(slice_and_export: Path, expected_value: float, geometry_baseline: str):
+    """Compare actual per-material outer contours with the reviewed 7.2.2 reference."""
+    _assert_geometry(parse_interlocking_boundary_avoidance, slice_and_export, expected_value, geometry_baseline)
 
 
 # ================== mmu_segmented_region_max_width ==================
@@ -55,7 +65,7 @@ def test_mmu_segmented_region_max_width(
         slice_and_export: Path,
         expected_value: float,
 ):
-    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
+    # 保留分段区域原有配置/多材料路径检查；不作为联锁榫卯的几何验收。
     gcode_path = slice_and_export
     ok, actual_value, details = parse_mmu_segmented_region_max_width(
         gcode_path,
@@ -76,139 +86,4 @@ def test_mmu_segmented_region_max_width(
 
     assert ok, (
         f"mmu_segmented_region_max_width expected {expected_value}mm, actual {actual_value}mm, details: {details}"
-    )
-
-
-# ================== interlocking_beam_width ==================
-
-@pytest.mark.engine_params
-def test_interlocking_beam_width(
-        slice_and_export: Path,
-        expected_value: float,
-):
-    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
-    gcode_path = slice_and_export
-    ok, actual_value, details = parse_interlocking_beam_width(
-        gcode_path,
-        expected_value,
-    )
-    
-    # 打印检测详情
-    print(f"\n=== interlocking_beam_width Level 1 检测详情 ===")
-    print(f"  期望值: {expected_value}mm")
-    print(f"  检测值: {actual_value}mm")
-    print(f"  检测方法: {details.get('detection_method', 'N/A')}")
-    print(f"  结果消息: {details.get('message', 'N/A')}")
-    print("=" * 50)
-
-    assert ok, (
-        f"interlocking_beam_width expected {expected_value}mm, actual {actual_value}mm, details: {details}"
-    )
-
-
-# ================== interlocking_orientation ==================
-
-@pytest.mark.engine_params
-def test_interlocking_orientation(
-        slice_and_export: Path,
-        expected_value: float,
-):
-    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
-    gcode_path = slice_and_export
-    ok, actual_value, details = parse_interlocking_orientation(
-        gcode_path,
-        expected_value,
-    )
-    
-    # 打印检测详情
-    print(f"\n=== interlocking_orientation Level 1 检测详情 ===")
-    print(f"  期望值: {expected_value}°")
-    print(f"  检测值: {actual_value}°")
-    print(f"  检测方法: {details.get('detection_method', 'N/A')}")
-    print(f"  结果消息: {details.get('message', 'N/A')}")
-    print("=" * 50)
-
-    assert ok, (
-        f"interlocking_orientation expected {expected_value}°, actual {actual_value}°, details: {details}"
-    )
-
-
-# ================== interlocking_beam_layer_count ==================
-
-@pytest.mark.engine_params
-def test_interlocking_beam_layer_count(
-        slice_and_export: Path,
-        expected_value: int,
-):
-    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
-    gcode_path = slice_and_export
-    ok, actual_value, details = parse_interlocking_beam_layer_count(
-        gcode_path,
-        expected_value,
-    )
-    
-    # 打印检测详情
-    print(f"\n=== interlocking_beam_layer_count Level 1 检测详情 ===")
-    print(f"  期望值: {expected_value}")
-    print(f"  检测值: {actual_value}")
-    print(f"  检测方法: {details.get('detection_method', 'N/A')}")
-    print(f"  结果消息: {details.get('message', 'N/A')}")
-    print("=" * 55)
-
-    assert ok, (
-        f"interlocking_beam_layer_count expected {expected_value}, actual {actual_value}, details: {details}"
-    )
-
-
-# ================== interlocking_depth ==================
-
-@pytest.mark.engine_params
-def test_interlocking_depth(
-        slice_and_export: Path,
-        expected_value: float,
-):
-    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
-    gcode_path = slice_and_export
-    ok, actual_value, details = parse_interlocking_depth(
-        gcode_path,
-        expected_value,
-    )
-    
-    # 打印检测详情
-    print(f"\n=== interlocking_depth Level 1 检测详情 ===")
-    print(f"  期望值: {expected_value}mm")
-    print(f"  检测值: {actual_value}mm")
-    print(f"  检测方法: {details.get('detection_method', 'N/A')}")
-    print(f"  结果消息: {details.get('message', 'N/A')}")
-    print("=" * 50)
-
-    assert ok, (
-        f"interlocking_depth expected {expected_value}mm, actual {actual_value}mm, details: {details}"
-    )
-
-
-# ================== interlocking_boundary_avoidance ==================
-
-@pytest.mark.engine_params
-def test_interlocking_boundary_avoidance(
-        slice_and_export: Path,
-        expected_value: float,
-):
-    # 验证方法：使用双材料悬挑及擦料塔专用 3MF切片，解析T0/T1 材料边界附近的交错路径、层周期、宽度和深度；配置值仅用于确认输入，最终由实际 G-code 行为断言。
-    gcode_path = slice_and_export
-    ok, actual_value, details = parse_interlocking_boundary_avoidance(
-        gcode_path,
-        expected_value,
-    )
-    
-    # 打印检测详情
-    print(f"\n=== interlocking_boundary_avoidance Level 1 检测详情 ===")
-    print(f"  期望值: {expected_value}mm")
-    print(f"  检测值: {actual_value}mm")
-    print(f"  检测方法: {details.get('detection_method', 'N/A')}")
-    print(f"  结果消息: {details.get('message', 'N/A')}")
-    print("=" * 60)
-
-    assert ok, (
-        f"interlocking_boundary_avoidance expected {expected_value}mm, actual {actual_value}mm, details: {details}"
     )

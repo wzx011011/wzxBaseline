@@ -3,12 +3,26 @@
     {
       "project_name": "enabled",
       "input_3mf": "interlocking_beam_true.3mf",
-      "expected_value": true
+      "expected_value": true,
+      "geometry_baseline": "interlocking_beam/enabled"
     },
     {
       "project_name": "disabled",
       "input_3mf": "interlocking_beam_false.3mf",
-      "expected_value": false
+      "expected_value": false,
+      "geometry_baseline": "interlocking_beam/disabled"
+    },
+    {
+      "project_name": "bug18042_four_material",
+      "input_3mf": "bug18042_four_material.3mf",
+      "expected_value": true,
+      "geometry_baseline": "interlocking_beam/bug18042_four_material"
+    },
+    {
+      "project_name": "bug18042_four_material_disabled",
+      "input_3mf": "bug18042_four_material_disabled.3mf",
+      "expected_value": false,
+      "geometry_baseline": "interlocking_beam/bug18042_four_material_disabled"
     }
   ]
 }

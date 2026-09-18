@@ -3,17 +3,20 @@
     {
       "project_name": "0.5mm",
       "input_3mf": "interlocking_beam_width_0.5.3mf",
-      "expected_value": 0.5
+      "expected_value": 0.5,
+      "geometry_baseline": "interlocking_beam_width/0.5mm"
     },
     {
       "project_name": "0.8mm",
       "input_3mf": "interlocking_beam_width_0.8.3mf",
-      "expected_value": 0.8
+      "expected_value": 0.8,
+      "geometry_baseline": "interlocking_beam_width/0.8mm"
     },
     {
       "project_name": "1.2mm",
       "input_3mf": "interlocking_beam_width_1.2.3mf",
-      "expected_value": 1.2
+      "expected_value": 1.2,
+      "geometry_baseline": "interlocking_beam_width/1.2mm"
     }
   ]
 }
