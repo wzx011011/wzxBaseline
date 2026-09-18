@@ -101,11 +101,16 @@ def engine_manager(pytestconfig):
     if not exe_path:
         pytest.skip(f"未提供 --slicer-exe 或 {ENV_KEY}，跳过依赖引擎的会话")
 
+    cli_args = [exe_path, "test#157369"]
+    datadir = (pytestconfig.getoption("--slicer-datadir") or "").strip()
+    if datadir:
+        cli_args.append(f"--datadir={Path(datadir).expanduser().resolve()}")
+
     def _mk_session():
         return EngineSession(
             exe_path=exe_path,
             log_path=pytestconfig.getoption("--slicer-log"),
-            cli_args=[exe_path, "test#157369"],
+            cli_args=list(cli_args),
             host=pytestconfig.getoption("--slicer-host"),
             port=pytestconfig.getoption("--slicer-port"),
             timeout=pytestconfig.getoption("--slicer-timeout"),

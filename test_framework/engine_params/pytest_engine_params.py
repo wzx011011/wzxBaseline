@@ -1,7 +1,7 @@
 ﻿def pytest_addoption(parser):
     grp = parser.getgroup("slicer")
     grp.addoption("--slicer-exe", help="CrealityPrint.exe path (higher priority than CREALITY_PRINTER_PATH)")
-    grp.addoption("--slicer-datadir", default="", help="Isolated CrealityPrint data directory for this test run")
+    grp.addoption("--slicer-datadir", default="", help="Optional CrealityPrint data directory; omitted uses the current user's default presets")
     grp.addoption("--slicer-log", default="slicer_stdout.log")
     grp.addoption("--slicer-host", default="127.0.0.1")
     grp.addoption("--slicer-port", type=int, default=12345)

@@ -23,7 +23,6 @@ pipeline {
   }
   environment {
     PYTHONIOENCODING = 'utf-8'
-    SLICER_DATADIR_ISOLATED = '1'
     SKIP_TESTED_BUILD = 'true'
     ALLURE_RESULTS_DIR = 'allure-results-params'
   }
