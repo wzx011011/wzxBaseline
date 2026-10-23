@@ -98,7 +98,7 @@ def test_slice_model(wzx_case, slicer_exe, harness_config):
             # Keep the faster number so future comparisons stay honest.
             upsert(cfg["baseline_csv"], row)
 
-    row["verdict"] = verdict
+    row["verdict"] = verdict.status
     row["reasons"] = reasons
     row["baseline_ms"] = float(baseline_row["total_ms"]) if baseline_row else 0.0
     LEDGER["entries"].append(row)

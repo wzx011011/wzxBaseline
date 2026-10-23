@@ -20,6 +20,7 @@ def write_summary(
     for e in entries:
         counts[e["verdict"]] = counts.get(e["verdict"], 0) + 1
 
+    artifacts_dir.mkdir(parents=True, exist_ok=True)
     md_path = artifacts_dir / "slice_summary.md"
     json_path = artifacts_dir / "slice_summary.json"
 
