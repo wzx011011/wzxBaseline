@@ -17,7 +17,7 @@ import pytest
 
 from conftest import LEDGER
 from utils import runner
-from utils.baseline import judge, load_baseline, now_iso, upsert
+from utils.baseline import Verdict, judge, load_baseline, now_iso, upsert
 from utils.collect import collect_models, resolve_models_dirs
 
 
@@ -63,6 +63,7 @@ def test_slice_model(wzx_case, slicer_exe, orca_exe, harness_config):
         "total_ms": f"{best.total_ms:.1f}",
         "exit_code": best.exit_code,
         "gcode_bytes": best.gcode_bytes,
+        "gcode_layers": best.gcode_layers,
         # CSV round-trip: judge() compares against the string "True".
         "slice_ok": str(best.slice_ok),
         "export_ok": str(best.export_ok),
@@ -81,6 +82,7 @@ def test_slice_model(wzx_case, slicer_exe, orca_exe, harness_config):
             shutil.rmtree(orca_dir, ignore_errors=True)
         row["orca_ms"] = f"{orca_run.total_ms:.1f}"
         row["orca_ok"] = str(orca_run.slice_ok)
+        row["orca_layers"] = orca_run.gcode_layers
         if orca_run.slice_ok:
             row["orca_ratio"] = f"{best.total_ms / orca_run.total_ms:.3f}"
 
@@ -99,7 +101,8 @@ def test_slice_model(wzx_case, slicer_exe, orca_exe, harness_config):
                 f"(exit={best.exit_code}, {best.error})"
             )
         upsert(cfg["baseline_csv"], row)
-        verdict, reasons = "new", ["first run; baseline recorded"]
+        verdict = Verdict("new", ["first run; baseline recorded"])
+        reasons = verdict.reasons
     else:
         verdict = judge(row, baseline_row)
         reasons = verdict.reasons

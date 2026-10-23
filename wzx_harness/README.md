@@ -102,3 +102,27 @@ CLI 子进程调用，飞书下载器和 Windows 专用代码未移植。二次�
 3. Orca CLI 的事实标准用法与坑：`--slice 0 --outputdir <dir>`；布尔选项不吞
    下一个 token（必须 `--key=value`）；3MF 内嵌工程配置与 CLI 覆盖可能冲突
    （wipe tower + relative-E 组合会 -51/-205）。
+
+### 受控对比：同一个 3MF 工程文件、参数强制一致（2026-10-23）
+
+方法：切片测试_无支撑.3mf（内嵌 Creality 工程参数，layer_height=0.2），
+Orca 原生读取内嵌配置；owzx-cli 由 harness 自动解出内嵌
+project_settings.config 经 --load-settings 注入。**双方 G-code 层数
+756 = 756，参数一致性有硬证据**：
+
+| 模型 | owzx | Orca | owzx/Orca |
+|---|---:|---:|---:|
+| 切片测试_无支撑.3mf（756 层） | 11.74s | 11.48s | **1.023** |
+
+结论：参数一致后两者性能基本持平（±2%，噪声范围内）。此前 STL 对比
+的 1.7~2.3× 全部来自"两边各用各的默认参数"（owzx 默认 0.08mm 层厚 vs
+Orca 0.2mm），与封装层性能无关。
+
+顺带发现的两个产品事实：
+
+1. **owzx-cli 加载 3MF 时不读内嵌工程参数**（几何照收、配置走自己的
+   preset，同一文件切出 1891 层 vs Orca 756 层）。GUI 加载工程文件应
+   会应用参数，CLI 漏了——harness 已用自动提取+--load-settings 绕过，
+   产品侧值得补。
+2. **Orca CLI 加载 owzx 导出的工程 3MF 直接段错误**（exit 139，可稳定
+   复现）——第三方产 3mf 的兼容性/健壮性问题，属 Orca 侧。

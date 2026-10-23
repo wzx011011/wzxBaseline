@@ -24,6 +24,7 @@ class SliceRun:
     total_ms: float = 0.0
     gcode_path: Path | None = None
     gcode_bytes: int = 0
+    gcode_layers: int = 0
     timed_out: bool = False
     error: str = ""
     stdout: str = ""  # head+tail capped trace for stage checking
@@ -113,6 +114,10 @@ def run_slice(
 ) -> SliceRun:
     """Slice one model; wall-clock timed; never raises for slicer failures."""
     out_dir.mkdir(parents=True, exist_ok=True)
+    if engine == "owzx":
+        embedded = extract_embedded_config(model, out_dir)
+        if embedded is not None:
+            extra_args = ["--load-settings", str(embedded)] + list(extra_args or [])
     cmd = build_cmd(exe, model, out_dir, engine) + list(extra_args or [])
 
     run = _execute(cmd, model, out_dir, timeout_s)
@@ -176,7 +181,47 @@ def _execute(cmd: list[str], model: Path, out_dir: Path, timeout_s: int) -> Slic
     if gcodes:
         run.gcode_path = gcodes[0]
         run.gcode_bytes = sum(p.stat().st_size for p in out_dir.rglob("*.gcode"))
+        run.gcode_layers = _gcode_layer_count(run.gcode_path)
     return run
+
+
+def _gcode_layer_count(gcode_path: Path) -> int:
+    """Read '; total layer number: N' from the gcode header (0 if absent)."""
+    try:
+        with gcode_path.open(errors="replace") as handle:
+            for _ in range(200):
+                line = handle.readline()
+                if not line:
+                    break
+                match = re.search(r"total layer number:\s*(\d+)", line, re.IGNORECASE)
+                if match:
+                    return int(match.group(1))
+    except OSError:
+        pass
+    return 0
+
+
+def extract_embedded_config(model: Path, out_dir: Path) -> Path | None:
+    """Pull Metadata/project_settings.config out of a project 3MF.
+
+    owzx-cli ignores a 3MF's embedded project settings when slicing (it only
+    takes geometry and applies its own preset); feeding the extracted JSON
+    back via --load-settings makes the headless run parameter-identical to
+    what a GUI load — and Orca — would use.
+    """
+    if model.suffix.lower() != ".3mf":
+        return None
+    try:
+        import zipfile
+
+        with zipfile.ZipFile(model) as zf:
+            if "Metadata/project_settings.config" not in zf.namelist():
+                return None
+            dst = out_dir / "embedded_project_settings.json"
+            dst.write_bytes(zf.read("Metadata/project_settings.config"))
+            return dst
+    except (OSError, ValueError):
+        return None
 
 
 def make_case_out_dir(artifacts_dir: Path, case_id: str) -> Path:

@@ -26,6 +26,7 @@ FIELDS = [
     "total_ms",
     "exit_code",
     "gcode_bytes",
+    "gcode_layers",
     "slice_ok",
     "export_ok",
     "crashed",
@@ -34,6 +35,7 @@ FIELDS = [
     # informational only — recorded when --orca-exe is passed, never judged
     "orca_ms",
     "orca_ok",
+    "orca_layers",
     "orca_ratio",
 ]
 
