@@ -26,6 +26,8 @@ class SliceRun:
     gcode_bytes: int = 0
     timed_out: bool = False
     error: str = ""
+    stdout: str = ""  # head+tail capped trace for stage checking
+    stderr: str = ""  # SliceService markers land here, also capped
 
     @property
     def crashed(self) -> bool:
@@ -73,11 +75,24 @@ def slicer_version(exe: Path) -> str:
     return match.group(2) if match else out.strip()[:40] or "unknown"
 
 
-def build_cmd(exe: Path, model: Path, out_dir: Path, engine: str) -> list[str]:
+def build_cmd(
+    exe: Path,
+    model: Path,
+    out_dir: Path,
+    engine: str,
+    force_absolute_e: bool = False,
+) -> list[str]:
     """Per-engine slice command; both write .gcode into out_dir."""
     if engine == "orca":
         # Upstream Orca/Bambu CLI: --slice <plate 0=all>, gcode into --outputdir.
-        return [str(exe), "--slice", "0", "--outputdir", str(out_dir), str(model)]
+        # Bare STLs use Orca's default config which fails its relative-E
+        # validation ("Add G92 E0"); bool options consume no next token, so
+        # the override must use the --key=value form. 3MFs with embedded
+        # project settings must NOT get this override (wipe tower conflicts).
+        cmd = [str(exe), "--slice", "0", "--outputdir", str(out_dir)]
+        if force_absolute_e:
+            cmd.append("--use-relative-e-distances=0")
+        return cmd + [str(model)]
     return [
         str(exe),
         "--load",
@@ -100,6 +115,29 @@ def run_slice(
     out_dir.mkdir(parents=True, exist_ok=True)
     cmd = build_cmd(exe, model, out_dir, engine) + list(extra_args or [])
 
+    run = _execute(cmd, model, out_dir, timeout_s)
+    if (
+        engine == "orca"
+        and not run.slice_ok
+        and "relative extruder addressing" in (run.error or "").lower()
+    ):
+        # Bare-STL default config hits Orca's relative-E validation.
+        # Retry once with absolute E forced on.
+        for stale in out_dir.rglob("*"):
+            if stale.is_file():
+                stale.unlink()
+        cmd = build_cmd(exe, model, out_dir, engine, force_absolute_e=True) + list(
+            extra_args or []
+        )
+        retry = _execute(cmd, model, out_dir, timeout_s)
+        if retry.slice_ok or retry.exit_code == run.exit_code:
+            return retry
+        # Keep whichever run got further (heuristic: the one without error).
+        return retry if not retry.error else run
+    return run
+
+
+def _execute(cmd: list[str], model: Path, out_dir: Path, timeout_s: int) -> SliceRun:
     run = SliceRun(model=model)
     start = time.perf_counter()
     try:
@@ -109,9 +147,25 @@ def run_slice(
         run.exit_code = proc.returncode
         if proc.returncode != 0:
             run.error = _brief(proc.stderr or proc.stdout)
-    except subprocess.TimeoutExpired:
+        out = proc.stdout or ""
+        err = proc.stderr or ""
+    except subprocess.TimeoutExpired as exc:
         run.timed_out = True
         run.error = f"timeout after {timeout_s}s"
+        out = (exc.stdout or b"").decode("utf-8", errors="replace") if isinstance(
+            exc.stdout, bytes
+        ) else (exc.stdout or "")
+        err = (exc.stderr or b"").decode("utf-8", errors="replace") if isinstance(
+            exc.stderr, bytes
+        ) else (exc.stderr or "")
+    # Keep enough trace for stage-order checks without hoarding huge logs.
+    if len(out) > 500_000:
+        out = out[:100_000] + "\n...<truncated>...\n" + out[-400_000:]
+    run.stdout = out
+    # SliceService markers are logged on stderr; cap the same way.
+    if len(err) > 300_000:
+        err = err[:50_000] + "\n...<truncated>...\n" + err[-250_000:]
+    run.stderr = err
     run.total_ms = (time.perf_counter() - start) * 1000.0
 
     gcodes = sorted(

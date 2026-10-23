@@ -50,6 +50,25 @@ python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 CLI 子进程调用，飞书下载器和 Windows 专用代码未移植。二次切片效率场景
 （move 置脏 → 重切）留给 P1 的 `--benchmark-reslice`。
 
+## 用例两套
+
+- `case/test_slice.py` — 性能基线（计时/回退判定，见上文）
+- `case/test_stages.py` — **切片流程阶段覆盖**（对应 CrealityPrint GUI 的切片进度条文案）：
+  强制 `--enable_support 1` 切片后断言：
+  1. 核心阶段齐全且骨干有序：Preparing slice → Slicing mesh → Generating walls →
+     Optimizing toolpath → Generating G-code → Slice complete
+  2. 支撑阶段真实运行（Generating support / Checking support necessity 二选一）
+     + 悬空检测（Detect overhangs）
+  3. 逐层进度单调、不虚报（progress ≤ slice finished layers，且 ≥90%）
+  4. G-code 文件自洽：LAYER_CHANGE 数 == 文件头 total layer number ≤ 计划层数
+  5. 走线类型齐全且支撑真实出料：SUPPORT / SUPPORT INTERFACE 长度 > 0
+     （对应 GUI 预览的走线类型表：内墙/外墙/支撑/支撑界面/桥接…）
+  6. 软检查：estimated printing time / filament used 统计块存在；
+     多物体冲突警告（GUI 功能，CLI 不触发，仅记录）
+
+  ⚠️ 用例假定模型有悬空（如 `bench_overhang_tower.stl`）；球体等无悬空模型
+  不会生成支撑，会在此用例上失败——模型库请把无悬空模型排除在本用例外。
+
 ## 已知问题（来自 P0 验证过程）
 
 - `3DPrinter_Qt6/build/r7_model.stl`（684 字节）会让 owzx-cli 静默死锁

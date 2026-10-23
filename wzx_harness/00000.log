@@ -1,0 +1,98 @@
+cli mode, Current OrcaSlicer Version 2.5.0-dev
+Will start to read model file now, file count :1
+allow_multicolor_oneplate 1, allow_rotations 1 skip_modified_gcodes 0 avoid_extrusion_cali_region 0 loaded_filament_ids size 0, clone_objects size 0, skip_useless_pick 0, allow_newer_file 0, allow_mix_temp 0
+plate_to_slice=0, normative_check=1, use_first_fila_as_default=0
+read model file:/tmp/wzx_smoke_models/hotend.stl
+object hotend.stl, id :5, from stl or other 3mf
+run:before load settings, file count=0
+current printer , new printer , current process , new process 
+current printer inherits , new printer inherits , current process inherits , new process inherits 
+old 3mf, no compatible printers, set to compatible
+old printer , inherited from , old process , inherited from  ,compatible 1
+no filament colors found in projects
+total 1 models, 0 objects
+3778, remove_wrapping_detect 0, old value 0
+translate_old 0, shrink_to_new_bed 0, old bed size {200, 200, 100}
+reset_size:before size: plate_width 0, plate_depth 0, plate_height 0
+reset_size:after size: plate_width 200, plate_depth 200, plate_height 100
+set_pos_and_size: plate_id 0, before, origin {0,0,0}, plate_width 0, plate_depth 0, plate_height 0
+set_pos_and_size: with_instance_move 0, after, origin {0,0,0}, plate_width 200, plate_depth 200, plate_height 100
+update_slice_result_valid_state: plate 0 , update slice result from 0 to 0
+set_pos_and_size: plate_id 1, before, origin {0,0,0}, plate_width 0, plate_depth 0, plate_height 0
+set_pos_and_size: with_instance_move 0, after, origin {240,0,0}, plate_width 200, plate_depth 200, plate_height 100
+update_slice_result_valid_state: plate 1 , update slice result from 0 to 0
+update_slice_result_valid_state: plate 0 , update slice result from 0 to 0
+update_slice_result_valid_state: plate 1 , update slice result from 0 to 0
+will start transforms, commands count 0
+finished model pre-process commands
+before arrange, need_arrange=1, duplicate_count 0, filament_color_changed 0
+Arrange full params: {"min_obj_distance":0,"accuracy":1.000000,"parallel":1,"allow_rotations":1,"do_final_align":1,"allow_multi_materials_on_same_plate":1,"avoid_extrusion_cali_region":0,"is_seq_print":0,"bed_shrink_x":3.400000,"bed_shrink_y":3.400000,"brim_skirt_distance":2.400000,"clearance_height_to_rod":40.000000,"clearance_height_to_lid":120.000000,"clearance_radius":40.000000,"printable_height":100.000000,
+arrange: items selected before arranging: 1
+arrange: items unselected before arranging: 0
+start 1 th arranging...
+finished 1 th arranging...
+update_slice_result_valid_state: plate 0 , update slice result from 0 to 0
+update_slice_result_valid_state: plate 1 , update slice result from 0 to 0
+rebuild_plates_after_arrangement:before rebuild, plates count 1, recycle_plates 1
+update_slice_result_valid_state: plate 0 , update slice result from 0 to 0
+update_slice_result_valid_state: plate 1 , update slice result from 0 to 0
+add_instance: plate 0 , m_ready_for_slice changes to 1
+rebuild_plates_after_arrangement:after rebuild, plates count 1
+Need to slice for plate 0, total plate count 1 partplates!
+Plate 1: pre_check 1, start
+update_print_volume_state, print_volume {0, 0, 0} to {200, 200, 100}, got 1 printable istances
+plate 1: load cached data success, go on.
+apply, Line 1205: enter
+apply, has_scarf_joint_seam:false
+apply, got print_diff 1, object_diff 0, region_diff 0, set status to APPLY_STATUS_CHANGED
+apply 1470: found full_config_diff changed.
+apply 1811: found print object changed.
+apply 2051: finished,  this 0x60e9c06afbc0, m_modified_count 1, apply_status 1, m_support_used 0
+set no_check to 0:
+new_printer_name: , current_printer_system_name , is_bbl_vendor_preset 0
+got warnings: The acceleration setting exceeds the printer's maximum acceleration (machine_max_acceleration_extruding).
+Orca will automatically cap the acceleration speed to ensure it doesn't surpass the printer's capabilities.
+You can adjust the machine_max_acceleration_extruding value in your printer's configuration to get higher speeds.
+start Print::process for partplate 1
+cli callback mgr started:  false
+set print's callback to default_status_callback.
+process: this=0x60e9c06afbc0, enter, use_cache=0, object size=1
+process: total object counts 1 in current print, need to slice 1
+Starting the slicing process. Resident memory: 91MB; Shared memory: 73MB; Private memory: 18MB; Peak memory usage: 90MB
+Slicing volumes... Resident memory: 91MB; Shared memory: 73MB; Private memory: 18MB; Peak memory usage: 90MB
+Make overhang printable...
+angle 0.959931 maxHoleArea 0 tan_angle 1.42815
+layer_thickness 0.2 max_dist_from_lower_layer 0.28563
+Generating walls... Resident memory: 96MB; Shared memory: 74MB; Private memory: 22MB; Peak memory usage: 94MB
+Detecting solid surfaces... Resident memory: 102MB; Shared memory: 75MB; Private memory: 27MB; Peak memory usage: 99MB
+Preparing fill surfaces... Resident memory: 102MB; Shared memory: 75MB; Private memory: 27MB; Peak memory usage: 100MB
+Discovering vertical shells... Resident memory: 102MB; Shared memory: 75MB; Private memory: 27MB; Peak memory usage: 100MB
+Processing external surfaces... Resident memory: 102MB; Shared memory: 75MB; Private memory: 27MB; Peak memory usage: 100MB
+Bridge over infill - Start Resident memory: 102MB; Shared memory: 75MB; Private memory: 27MB; Peak memory usage: 100MB
+Bridge over infill - Directions and expanded surfaces computed Resident memory: 102MB; Shared memory: 75MB; Private memory: 27MB; Peak memory usage: 100MB
+Bridge over infill - End Resident memory: 102MB; Shared memory: 75MB; Private memory: 27MB; Peak memory usage: 100MB
+max_cantilever_dist=0
+is_support_necessary takes 0 secs.
+update_filament_maps_to_config: filament maps changed after pre-slicing.
+gcode path conflicts check takes 0 secs.
+Slicing process finished. Resident memory: 103MB; Shared memory: 75MB; Private memory: 28MB; Peak memory usage: 102MB
+print::process: first time_using_cache is 0 secs.
+process finished, will export gcode temporarily to /home/admins/公共/CP/C3DBaseline/wzx_harness/artifacts/orca_hotend.stl__kkhc_fv6/plate_1.gcode
+reset 2566: this=0x7fff19713d98 reset finished
+Will export G-code to /home/admins/公共/CP/C3DBaseline/wzx_harness/artifacts/orca_hotend.stl__kkhc_fv6/plate_1.gcode soon
+Exporting G-code... Resident memory: 103MB; Shared memory: 75MB; Private memory: 28MB; Peak memory usage: 102MB
+reset 2566: this=0x7fff19713d98 reset finished
+rename_file from /home/admins/公共/CP/C3DBaseline/wzx_harness/artifacts/orca_hotend.stl__kkhc_fv6/plate_1.gcode.tmp to /home/admins/公共/CP/C3DBaseline/wzx_harness/artifacts/orca_hotend.stl__kkhc_fv6/plate_1.gcode successfully
+Exporting G-code finished Resident memory: 108MB; Shared memory: 76MB; Private memory: 32MB; Peak memory usage: 106MB
+export_gcode finished: time_using_cache update to 0 secs.
+Slicing result exported to /home/admins/公共/CP/C3DBaseline/wzx_harness/artifacts/orca_hotend.stl__kkhc_fv6/plate_1.gcode
+update_slice_result_valid_state: plate 0 , update slice result from 0 to 1
+cli_callback_mgr_t::stop enter.
+cli_callback_mgr_t::stop not started before, return directly.
+run, Finished
+record_exit_reson:466, saved config to /home/admins/公共/CP/C3DBaseline/wzx_harness/artifacts/orca_hotend.stl__kkhc_fv6/result.json
+update_slice_result_valid_state: plate 0 , update slice result from 1 to 0
+update_slice_result_valid_state: plate 0 , update slice result from 0 to 0
+~PrintObject: this=0x60e9c0730df0, m_shared_object 0
+update_slice_result_valid_state: plate 1 , update slice result from 0 to 0
+update_slice_result_valid_state: plate 1 , update slice result from 0 to 0
