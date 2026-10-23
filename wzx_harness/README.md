@@ -79,3 +79,26 @@ CLI 子进程调用，飞书下载器和 Windows 专用代码未移植。二次�
   冒烟集必须选在本机内存安全范围内
 - OOM 时 harness 记 `crashed=True` 并判回退——这是期望行为：模型在
   CI 机上炸内存应当红
+
+## Orca 对比（--orca-exe）实测记录（2026-10-23，Linux）
+
+同模型双引擎对比首次实测（OrcaSlicer 2.5.0-dev CLI，源码同源子模块构建）：
+
+| 模型 | owzx(ms) | Orca(ms) | owzx/Orca |
+|---|---:|---:|---:|
+| hotend.stl | 290 | 144 | 2.02 |
+| bench_sphere_400k.stl | 4855 | 2862 | 1.70 |
+| bench_overhang_tower.stl | 5541 | 2428 | 2.28 |
+| tuboshu.3mf（拥挤双板） | 360746 | **拒绝导出** | — |
+
+解读注意：
+
+1. **比值主要反映默认配置差异，不是封装开销**。owzx 的 STL 走内置默认
+   （Creality 系 profile），Orca CLI 用它自己的默认（层厚 0.2mm vs 前者更细），
+   切片工作量差 ~2 倍，与比值同量级。受控对比需两边钉相同 layer_height。
+2. **Orca CLI 对拥挤板是硬拒绝**：tuboshu 双板切片 6 分钟后死于 G-code 路径
+   冲突校验（-101，"Potentially lost branch"）。GUI 里这只是个可继续的警告，
+   CLI 直接不导出；`--no-check` 也绕不过。owzx 对同一模型正常导出 1.5GB。
+3. Orca CLI 的事实标准用法与坑：`--slice 0 --outputdir <dir>`；布尔选项不吞
+   下一个 token（必须 `--key=value`）；3MF 内嵌工程配置与 CLI 覆盖可能冲突
+   （wipe tower + relative-E 组合会 -51/-205）。
