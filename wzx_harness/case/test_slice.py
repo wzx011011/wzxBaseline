@@ -11,6 +11,7 @@ downloader and the Windows-only plumbing.
 from __future__ import annotations
 
 import re
+import shutil
 
 import pytest
 
@@ -46,6 +47,8 @@ def test_slice_model(wzx_case, slicer_exe, harness_config):
         run = runner.run_slice(
             slicer_exe, wzx_case["path"], out_dir, cfg["case_timeout"]
         )
+        if run.slice_ok:
+            shutil.rmtree(out_dir, ignore_errors=True)  # keep failures for triage
         if best is None:
             best = run
         elif run.slice_ok and run.total_ms < best.total_ms:
@@ -60,9 +63,10 @@ def test_slice_model(wzx_case, slicer_exe, harness_config):
         "total_ms": f"{best.total_ms:.1f}",
         "exit_code": best.exit_code,
         "gcode_bytes": best.gcode_bytes,
-        "slice_ok": best.slice_ok,
-        "export_ok": best.export_ok,
-        "crashed": best.crashed,
+        # CSV round-trip: judge() compares against the string "True".
+        "slice_ok": str(best.slice_ok),
+        "export_ok": str(best.export_ok),
+        "crashed": str(best.crashed),
         "measured_at": now_iso(),
         "error": best.error,
     }

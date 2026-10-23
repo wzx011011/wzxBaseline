@@ -97,7 +97,7 @@ def slicer_exe(request) -> Path:
             "Pass --slicer-exe / OWZX_SLICER_EXE pointing at owzx-cli.",
             returncode=4,
         )
-    return exe
+    return exe.resolve()
 
 
 @pytest.fixture(scope="session")

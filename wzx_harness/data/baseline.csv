@@ -1,1 +1,4 @@
 model,os,machine,version,total_ms,exit_code,gcode_bytes,slice_ok,export_ok,crashed,measured_at,error
+bench_sphere_400k.stl,linux,admins-HP-Pro-Tower-288-G9-PCI-Desktop-PC,2.4.0-dev,4967.9,0,62641937,True,True,False,2026-10-23T06:37:23Z,
+hotend.stl,linux,admins-HP-Pro-Tower-288-G9-PCI-Desktop-PC,2.4.0-dev,290.2,0,911923,True,True,False,2026-10-23T06:37:23Z,
+tuboshu.3mf,linux,admins-HP-Pro-Tower-288-G9-PCI-Desktop-PC,2.4.0-dev,360285.2,0,1535326677,True,True,False,2026-10-23T06:43:24Z,

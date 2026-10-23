@@ -54,3 +54,9 @@ CLI 子进程调用，飞书下载器和 Windows 专用代码未移植。二次�
 
 - `3DPrinter_Qt6/build/r7_model.stl`（684 字节）会让 owzx-cli 静默死锁
   （加载后 futex 永久等待）——模型文件或 STL 解析疑有 bug，待查
+- **内存分级**：C3DBaseline 的 `maorongxiong.3mf`（407 层多板模型）切片
+  G-code 生成阶段峰值内存 ~30GB，31GB 内存的机器直接 OOM（内核击杀
+  owzx-cli）。这类重型模型归入 `models/heavy/`，只在大内存测试机上跑；
+  冒烟集必须选在本机内存安全范围内
+- OOM 时 harness 记 `crashed=True` 并判回退——这是期望行为：模型在
+  CI 机上炸内存应当红
