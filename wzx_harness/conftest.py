@@ -69,6 +69,14 @@ def pytest_addoption(parser):
         help="Per-run wall clock timeout in seconds (default 900).",
     )
     group.addoption(
+        "--orca-exe",
+        action="store",
+        default=None,
+        help="Optional path to the upstream OrcaSlicer CLI binary. When set, "
+        "each model is additionally sliced with Orca and the run reports "
+        "orca_ms and the owzx/orca ratio (defaults to OWZX_ORCA_EXE).",
+    )
+    group.addoption(
         "--baseline-csv",
         action="store",
         default=str(DEFAULT_BASELINE),
@@ -97,6 +105,18 @@ def slicer_exe(request) -> Path:
             "Pass --slicer-exe / OWZX_SLICER_EXE pointing at owzx-cli.",
             returncode=4,
         )
+    return exe.resolve()
+
+
+@pytest.fixture(scope="session")
+def orca_exe(request) -> Path | None:
+    """Optional upstream-Orca CLI for the same-model time comparison."""
+    raw = request.config.getoption("--orca-exe") or os.environ.get("OWZX_ORCA_EXE")
+    if not raw:
+        return None
+    exe = Path(raw).expanduser()
+    if not exe.is_file():
+        pytest.exit(f"--orca-exe given but not found: {exe}", returncode=4)
     return exe.resolve()
 
 
@@ -172,6 +192,8 @@ def pytest_sessionfinish(session, exitstatus):
                     "reasons": e.get("reasons", []),
                     "total_ms": float(e.get("total_ms") or 0),
                     "baseline_ms": float(e.get("baseline_ms") or 0),
+                    "orca_ms": e.get("orca_ms") or "",
+                    "orca_ratio": e.get("orca_ratio") or "",
                 }
                 for e in entries
             ],

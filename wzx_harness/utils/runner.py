@@ -73,16 +73,12 @@ def slicer_version(exe: Path) -> str:
     return match.group(2) if match else out.strip()[:40] or "unknown"
 
 
-def run_slice(
-    exe: Path,
-    model: Path,
-    out_dir: Path,
-    timeout_s: int,
-    extra_args: list[str] | None = None,
-) -> SliceRun:
-    """Slice one model; wall-clock timed; never raises for slicer failures."""
-    out_dir.mkdir(parents=True, exist_ok=True)
-    cmd = [
+def build_cmd(exe: Path, model: Path, out_dir: Path, engine: str) -> list[str]:
+    """Per-engine slice command; both write .gcode into out_dir."""
+    if engine == "orca":
+        # Upstream Orca/Bambu CLI: --slice <plate 0=all>, gcode into --outputdir.
+        return [str(exe), "--slice", "0", "--outputdir", str(out_dir), str(model)]
+    return [
         str(exe),
         "--load",
         str(model),
@@ -90,7 +86,19 @@ def run_slice(
         "--output-dir",
         str(out_dir),
     ]
-    cmd += list(extra_args or [])
+
+
+def run_slice(
+    exe: Path,
+    model: Path,
+    out_dir: Path,
+    timeout_s: int,
+    engine: str = "owzx",
+    extra_args: list[str] | None = None,
+) -> SliceRun:
+    """Slice one model; wall-clock timed; never raises for slicer failures."""
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cmd = build_cmd(exe, model, out_dir, engine) + list(extra_args or [])
 
     run = SliceRun(model=model)
     start = time.perf_counter()
@@ -107,13 +115,13 @@ def run_slice(
     run.total_ms = (time.perf_counter() - start) * 1000.0
 
     gcodes = sorted(
-        (p for p in out_dir.glob("*.gcode") if p.is_file()),
+        (p for p in out_dir.rglob("*.gcode") if p.is_file()),
         key=lambda p: p.stat().st_size,
         reverse=True,
     )
     if gcodes:
         run.gcode_path = gcodes[0]
-        run.gcode_bytes = gcodes[0].stat().st_size
+        run.gcode_bytes = sum(p.stat().st_size for p in out_dir.rglob("*.gcode"))
     return run
 
 

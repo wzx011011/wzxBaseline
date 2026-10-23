@@ -33,13 +33,16 @@ def write_summary(
         f"- 结果：回退 {counts.get('regressed', 0)} / 新基线 {counts.get('new', 0)} / "
         f"改善 {counts.get('improved', 0)} / 持平 {counts.get('ok', 0)}",
         "",
-        "| 结果 | 模型 | 本次(ms) | 基线(ms) | 说明 |",
-        "|---|---|---:|---:|---|",
+        "| 结果 | 模型 | 本次(ms) | 基线(ms) | Orca(ms) | owzx/Orca | 说明 |",
+        "|---|---|---:|---:|---:|---:|---|",
     ]
     for e in entries:
+        orca_ms = f"{float(e['orca_ms']):.0f}" if e.get("orca_ms") else "-"
+        ratio = e.get("orca_ratio") or "-"
         lines.append(
             f"| {e['verdict']} | {e['model']} | {e['total_ms']:.0f} | "
-            f"{e['baseline_ms']:.0f} | {'; '.join(e['reasons']) or '-'} |"
+            f"{e['baseline_ms']:.0f} | {orca_ms} | {ratio} | "
+            f"{'; '.join(e['reasons']) or '-'} |"
         )
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 

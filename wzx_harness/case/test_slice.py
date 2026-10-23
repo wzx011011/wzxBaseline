@@ -37,7 +37,7 @@ def pytest_generate_tests(metafunc):
 
 
 @pytest.mark.slice
-def test_slice_model(wzx_case, slicer_exe, harness_config):
+def test_slice_model(wzx_case, slicer_exe, orca_exe, harness_config):
     cfg = harness_config
     model: str = wzx_case["rel"]
 
@@ -70,6 +70,19 @@ def test_slice_model(wzx_case, slicer_exe, harness_config):
         "measured_at": now_iso(),
         "error": best.error,
     }
+
+    # Optional same-model Orca comparison: informational only, never gates.
+    if orca_exe is not None and best.slice_ok:
+        orca_dir = runner.make_case_out_dir(cfg["artifacts_dir"], f"orca_{model}")
+        orca_run = runner.run_slice(
+            orca_exe, wzx_case["path"], orca_dir, cfg["case_timeout"], engine="orca"
+        )
+        if orca_run.slice_ok:
+            shutil.rmtree(orca_dir, ignore_errors=True)
+        row["orca_ms"] = f"{orca_run.total_ms:.1f}"
+        row["orca_ok"] = str(orca_run.slice_ok)
+        if orca_run.slice_ok:
+            row["orca_ratio"] = f"{best.total_ms / orca_run.total_ms:.3f}"
 
     baseline = load_baseline(cfg["baseline_csv"])
     baseline_row = baseline.get((model, cfg["platform"]))

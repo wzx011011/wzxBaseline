@@ -31,6 +31,10 @@ FIELDS = [
     "crashed",
     "measured_at",
     "error",
+    # informational only — recorded when --orca-exe is passed, never judged
+    "orca_ms",
+    "orca_ok",
+    "orca_ratio",
 ]
 
 REGRESS_RATIO = 0.05
