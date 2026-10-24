@@ -178,6 +178,20 @@ def pytest_sessionfinish(session, exitstatus):
         writer.writeheader()
         writer.writerows(entries)
 
+    stage_tables = LEDGER.get("stage_tables") or []
+    if stage_tables:
+        from utils.compare_stages import _STAGE_MARKERS  # noqa: F401
+
+        stage_md = artifacts / "stage_comparison.md"
+        header = (
+            "# 阶段级基线对比（用户切分的 CP 流程段）\n\n"
+            "owzx 侧各阶段 = 进度标记到下一标记的窗口；Orca CLI 不输出阶段\n"
+            "进度，其列只有总时长（—¹），阶段格以 —¹ 标注不可得。\n\n"
+            + "\n".join(stage_tables)
+        )
+        stage_md.write_text(header + "\n", encoding="utf-8")
+        print(f"[wzx-harness] stage comparison: {stage_md}")
+
     try:
         from summary import write_summary
 

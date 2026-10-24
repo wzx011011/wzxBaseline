@@ -29,6 +29,7 @@ class SliceRun:
     error: str = ""
     stdout: str = ""  # head+tail capped trace for stage checking
     stderr: str = ""  # SliceService markers land here, also capped
+    timeline: list = None  # [(ms, line)] stdout stamps — stage timing source
 
     @property
     def crashed(self) -> bool:
@@ -145,24 +146,42 @@ def run_slice(
 def _execute(cmd: list[str], model: Path, out_dir: Path, timeout_s: int) -> SliceRun:
     run = SliceRun(model=model)
     start = time.perf_counter()
+
+    # Stream stdout with per-line timestamps: the '[NN%] Stage' trace is the
+    # raw material for the per-stage timing table (CP caption chain).
+    proc = subprocess.Popen(
+        cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True
+    )
+    err_buf: list[str] = []
+
+    def _drain_stderr():
+        for line in proc.stderr:
+            err_buf.append(line)
+
+    import threading
+
+    err_thread = threading.Thread(target=_drain_stderr, daemon=True)
+    err_thread.start()
+
+    timeline: list[tuple[float, str]] = []
     try:
-        proc = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=timeout_s, check=False
-        )
-        run.exit_code = proc.returncode
-        if proc.returncode != 0:
-            run.error = _brief(proc.stderr or proc.stdout)
-        out = proc.stdout or ""
-        err = proc.stderr or ""
-    except subprocess.TimeoutExpired as exc:
+        for line in proc.stdout:
+            timeline.append(((time.perf_counter() - start) * 1000.0, line.rstrip()))
+        proc.wait(timeout=timeout_s)
+    except subprocess.TimeoutExpired:
         run.timed_out = True
         run.error = f"timeout after {timeout_s}s"
-        out = (exc.stdout or b"").decode("utf-8", errors="replace") if isinstance(
-            exc.stdout, bytes
-        ) else (exc.stdout or "")
-        err = (exc.stderr or b"").decode("utf-8", errors="replace") if isinstance(
-            exc.stderr, bytes
-        ) else (exc.stderr or "")
+        proc.kill()
+        proc.wait()
+    err_thread.join(timeout=5)
+
+    run.exit_code = proc.returncode
+    out = "\n".join(text for _, text in timeline)
+    err = "".join(err_buf)
+    if run.exit_code not in (0, None) and not run.timed_out:
+        run.error = _brief(err or out)
+    run.timeline = timeline
+
     # Keep enough trace for stage-order checks without hoarding huge logs.
     if len(out) > 500_000:
         out = out[:100_000] + "\n...<truncated>...\n" + out[-400_000:]

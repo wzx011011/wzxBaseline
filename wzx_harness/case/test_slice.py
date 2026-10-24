@@ -10,6 +10,7 @@ downloader and the Windows-only plumbing.
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 
@@ -72,6 +73,13 @@ def test_slice_model(wzx_case, slicer_exe, orca_exe, harness_config):
         "error": best.error,
     }
 
+    # Per-stage timing on the user-defined CP segmentation (marker windows).
+    from utils.compare_stages import render_stage_table, stage_windows
+
+    owzx_windows = stage_windows(best.timeline or [])
+    row["stages_json"] = json.dumps(owzx_windows, ensure_ascii=False)
+    LEDGER.setdefault("stage_tables", [])
+
     # Optional same-model Orca comparison: informational only, never gates.
     if orca_exe is not None and best.slice_ok:
         orca_dir = runner.make_case_out_dir(cfg["artifacts_dir"], f"orca_{model}")
@@ -85,6 +93,19 @@ def test_slice_model(wzx_case, slicer_exe, orca_exe, harness_config):
         row["orca_layers"] = orca_run.gcode_layers
         if orca_run.slice_ok:
             row["orca_ratio"] = f"{best.total_ms / orca_run.total_ms:.3f}"
+        # Per-stage comparison table (user's segmentation; Orca CLI emits no
+        # stage progress, so its column carries the honest total only).
+        LEDGER.setdefault("stage_tables", []).append(
+            render_stage_table(
+                model, owzx_windows,
+                orca_run.total_ms if orca_run.slice_ok else None,
+                best.total_ms,
+            )
+        )
+    elif owzx_windows:
+        LEDGER.setdefault("stage_tables", []).append(
+            render_stage_table(model, owzx_windows, None, best.total_ms)
+        )
 
     baseline = load_baseline(cfg["baseline_csv"])
     baseline_row = baseline.get((model, cfg["platform"]))

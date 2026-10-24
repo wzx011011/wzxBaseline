@@ -32,6 +32,8 @@ FIELDS = [
     "crashed",
     "measured_at",
     "error",
+    # per-stage timing on the user's CP segmentation (JSON of caption->ms)
+    "stages_json",
     # informational only — recorded when --orca-exe is passed, never judged
     "orca_ms",
     "orca_ok",
