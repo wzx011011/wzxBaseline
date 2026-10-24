@@ -165,3 +165,23 @@ Orca CLI 两次均 -100 失败——大支撑模型的 CLI 稳定性两边都需
 
 - 正在准备（含进程启动+加载）≈ 0.6~0.9s，即与 Orca 差距的固定开销主体
 - 无支撑大模型的大头在 墙(3.8s)/填充(4.7s)/填充路径(2.6s)——优化优先级参考
+
+### 模型池试点（效率 39 + 卡在25% 8，2026-10-23）
+
+tools/sync_model_pool.py 从内网共享同步模型库（分类树保留、>30MB 自动进
+heavy/ 分层、可续传）。试点 28 个轻量模型双引擎基线：**15 过 / 13 失败，
+失败全部是产品侧问题**——这正是模型池的价值：
+
+- **7× SIGSEGV（exit -11）**：切片启动即崩。名单：效率/BBL/{24针织雪人,
+  30yoda, 多色恐龙, 满盘卡皮巴拉（BBL）}, 效率/CP/{Creatures_mc拖入3mf崩溃,
+  树状支撑_哥斯拉 (2)}, 效率/CP/雪人满盘——多色/AMS 配置的 3MF 是高危区
+  （这批模型在 CrealityPrint 自己的测试集里是通过的）
+- **6× rc=156**：`{if multicolor_method}` 等自定义 G-code 模板变量
+  owzx 不识别（machine_start_gcode Parsing error）——模板方言兼容缺口
+- 另有 1× std::bad_alloc（16拉布布，内存型，与 maorongxiong 同类）
+
+基线只记录成功运行（by design）：24 行已入库（含逐段耗时 stages_json）。
+失败清单就是给产品侧的 bug 候选列表；修复后重跑 --update-baseline 补录。
+
+后续批次：crash(84)/compat(229) 不依赖 Orca、可全量；全池一轮 owzx 约
+4~8h，适合夜间定时；重模型 heavy/ 留大内存机器。
