@@ -185,3 +185,25 @@ heavy/ 分层、可续传）。试点 28 个轻量模型双引擎基线：**15 �
 
 后续批次：crash(84)/compat(229) 不依赖 Orca、可全量；全池一轮 owzx 约
 4~8h，适合夜间定时；重模型 heavy/ 留大内存机器。
+
+### 13 失败模型修复记录（2026-10-25，12/13 修复）
+
+产品侧四层修复后复测：**12/13 通过**（原 0/13）。修复清单（3DPrinter_Qt6
+补丁列车 + 服务层）：
+
+| 补丁 | 根因 | 修复 |
+|---|---|---|
+| 0009 | `{if multicolor_method}` 无定义（CP 方言） | PrintConfig 加 coBool 定义 + FullPrintConfig 静态成员（两者缺一不可：defs map 不进 FullPrintConfig 实例） |
+| 0010 | Brim.cpp `filament_map[extruder-1]` 越界（map 默认 {1}） | 索引钳制 |
+| 0011 | mm 分割 `segmentation[layer][extruder]` 双维越界 | 尺寸守卫 |
+| 0012 | ToolOrdering `filament_map.values[filament]` 越界读+堆写 | 索引钳制（堆破坏元凶，延迟引爆在 brim） |
+| 0013 | `flush_length_5..8` 未定义（`g_max_flush_count=4`） | 上限提到 8 |
+| 0014 | WipeTower2::prime 单工具列表 `tools[-1]` 下溢 + m_filpar 维度错配 | 前工具回退 + 表尺寸覆盖 + 双下标钳制 |
+| 服务层 | 模型自带 printable_area 未翻译为 bed_shape（350 模型落 220 床） | MODEL-BED 翻译（模型床优先） |
+
+共性：**多耗材(≥3)/多色路径在此前从未被完整跑通过**，五处越界 + 两处
+方言缺口全部由模型池试点暴露。
+
+剩余 1 个：Creatures_mc拖入3mf崩溃.3mf —— normal 构建仍在 DynamicConfig
+析构时段错误（更早的堆破坏下游），ASan 下转为"Prime Tower 出界"校验
+错误。塔位语义需要产品决策（CP 侧塔位钳制策略），已单独立项跟踪。
