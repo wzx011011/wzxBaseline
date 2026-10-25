@@ -225,3 +225,20 @@ heavy/ 分层、可续传）。试点 28 个轻量模型双引擎基线：**15 �
 
 实例复盘：0009 第一版默认 false 是在猜 CP 行为（越线），修订为按耗材数
 派生（对齐上游"无守卫"语义）——多色模型 G-code 现在正确输出工具更换宏。
+
+### 上游对照审计（2026-10-25，对照 SoftFever/OrcaSlicer main）
+
+| 我们的修复 | 上游 main 现状 | 定性 |
+|---|---|---|
+| 0009 multicolor_method | **无此变量**（CP fork 专属方言） | 输入方言扩展，超出上游 |
+| 0013 flush 上限 4→8 | 同款 `g_max_flush_count = 4` | 上游同款限制，5 色模板上游也会失败 |
+| 0012 ToolOrdering 钳制 | **同款越界**（`filament_map.values[filament]`，还有第二处 lambda 同病） | 修了上游也没修的真 bug |
+| 0014 WipeTower prime 守卫 | **同款 `tools[idx_tool-1]` 下溢**（单工具列表即崩） | 同上 |
+| 0011 mm 分割守卫 | **同款未守卫** `segmentation[layer_id][extruder_id]` | 同上 |
+| 0010 Brim 钳制 | 上游 Brim 无 filament_map 代码——多耗材 brim 是 fork 层（Creality 系）代码 | fork 层 bug，上游无此代码 |
+| MODEL-BED 翻译 | 上游引擎同样不翻译（信任配置+校验拒绝）；重算塔位是 GUI 职责 | CLI 补 GUI 等价职责 |
+
+要点：**"上游"有两级** —— SoftFever/OrcaSlicer（公共）与 wzx011011/OrcaSlicer
+fork（子模块实际指向，携带 Creality 系多喷嘴/多耗材 brim 代码）。 filament_map
+是 SoftFever 的多喷嘴特性，但四处索引越界在公共上游原样存在——模型池试点
+等于替上游做了一次多色路径压测。已验证 12/13 的修复全部先于上游。
