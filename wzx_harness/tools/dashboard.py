@@ -266,9 +266,11 @@ def main():
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8765)
+    ap.add_argument("--bind", default="127.0.0.1",
+                    help="127.0.0.1 = 仅本机；0.0.0.0 = 局域网可访问（无鉴权，慎用）")
     args = ap.parse_args()
-    server = ThreadingHTTPServer(("127.0.0.1", args.port), Handler)
-    print(f"操作台: http://127.0.0.1:{args.port}  (Ctrl-C 退出)")
+    server = ThreadingHTTPServer((args.bind, args.port), Handler)
+    print(f"操作台: http://{args.bind}:{args.port}  (Ctrl-C 退出)")
     server.serve_forever()
 
 
