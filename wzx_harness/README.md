@@ -269,3 +269,22 @@ fork（子模块实际指向，携带 Creality 系多喷嘴/多耗材 brim 代�
 - **待做**：导入器性能专项（多线程解析/跳过冗余属性），收益 = 大型涂色
   3MF 的打开速度（GUI 同路径受益）；当前单点数据已可接受——鳄鱼总比值
   1.39 中的 27s 为已定位的独立瓶颈，25 模型中位比值 1.005 为验收口径
+
+### Perf 实锤：95% CPU = 接缝放置器射线求交（上游同款算法）
+
+perf record 全程采样（199Hz）聚合：**94.99% CPU** 集中于
+`AABBTreeIndirect::intersect_ray_recursive_all_hits`，次热点
+`tsp_remove_crossings` 23%。调用方 = `SeamPlacer`（GCode 导出阶段的
+raycasting visibility——为每个接缝候选点对网格投射射线判可见性）。
+
+对照 SoftFever/OrcaSlicer main 的 SeamPlacer.cpp：**同款
+intersect_ray_all_hits + raycasting_visibility，上游原样存在**。
+即：鳄鱼生成G-code 117s 的大头是上游接缝放置器的可见性射线，两家都付，
+不是我们的封装层偏离。Orca 侧无法分解验证（CLI 无阶段输出）。
+
+至此鳄鱼 1.39× 的完整归因：
+- 27s 导入：BBS_3MF_Importer 单线程 XML 解析（独立性能专项，已立项）
+- ~20s 差值：正在准备/配置合并（服务层，含 27s 内的杂项）
+- 其余：接缝射线 + mm 分割 + G-code 生成——上游同款引擎成本
+
+25 模型聚合中位比值 1.005 仍为验收口径；鳄鱼属重涂色边界样本。
