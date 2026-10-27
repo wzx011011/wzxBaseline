@@ -164,15 +164,41 @@ def _execute(cmd: list[str], model: Path, out_dir: Path, timeout_s: int) -> Slic
     err_thread.start()
 
     timeline: list[tuple[float, str]] = []
+
+    # owzx-fix (HANG-WATCHDOG): the streaming loop blocks on the child's
+    # stdout EOF — a child that spins while holding the pipe open (the 19h
+    # hang on a heavy multicolor model) never reaches the wait(timeout) below,
+    # making the per-case timeout dead code. Enforce it with a watchdog
+    # thread that kills the child at the deadline.
+    def _watchdog():
+        try:
+            if proc.wait(timeout=timeout_s) is not None:
+                return
+        except subprocess.TimeoutExpired:
+            pass
+        # still running at the deadline: kill hard
+        run.timed_out = True
+        run.error = f"timeout after {timeout_s}s"
+        try:
+            proc.kill()
+        except OSError:
+            pass
+
+    watchdog = threading.Thread(target=_watchdog, daemon=True)
+    watchdog.start()
+
     try:
         for line in proc.stdout:
             timeline.append(((time.perf_counter() - start) * 1000.0, line.rstrip()))
-        proc.wait(timeout=timeout_s)
+            if run.timed_out:
+                break
+        proc.wait(timeout=30)
     except subprocess.TimeoutExpired:
         run.timed_out = True
-        run.error = f"timeout after {timeout_s}s"
+        run.error = run.error or f"timeout after {timeout_s}s"
         proc.kill()
         proc.wait()
+    watchdog.join(timeout=5)
     err_thread.join(timeout=5)
 
     run.exit_code = proc.returncode
