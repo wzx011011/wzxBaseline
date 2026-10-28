@@ -332,3 +332,10 @@ intersect_ray_all_hits + raycasting_visibility，上游原样存在**。
 - 5 个全是 heavy/新同步模型首次测试——**不是 12 修复的回归**（12 修复本轮全绿保持）
 - 3 个解析失败疑似同一根因（表达式语法缺口），修一处可能连带收敛
 - 均为"CP 能切我们不能"的真实兼容差距，严重度已按档标注
+
+### 夜间定时回归（tools/nightly_regression.sh）
+
+git pull → 增量重编 → Linux 门禁（14 套件）→ 模型池全量回归（46 模型 ×
+双引擎）。任一失败非零退出。crontab 安装行见脚本头注释。
+大模型 heavy 层在 31GB 机器上单模型上限 1800s（超时跳过不阻塞批次）；
+>2GB 内存的极端模型移 models/heavy/ 外单独处理。
