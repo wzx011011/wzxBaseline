@@ -319,3 +319,16 @@ intersect_ray_all_hits + raycasting_visibility，上游原样存在**。
 - Tiger_mc_铺满盘切片崩溃：filament_start_gcode 模板语法差异（line 10）
 - 拉布布_用户运行内存ram≤8GB崩溃：按文件名即内存受限崩溃场景（heavy 专项）
 - Creatures_mc拖入3mf崩溃：prime tower 语义（前述已立项）
+
+### 剩余 5 失败的精确定性（2026-10-26 深夜，证据齐备）
+
+| 模型 | 失败点 | 定性 |
+|---|---|---|
+| Creatures_mc（效率/CP） | 塔出界校验 + 析构段错误 | 已立项产品缺陷（塔位语义） |
+| S2_叠加类型 / Tiger_mc_铺满盘 / 土拨鼠多色K2p_x16 | 占位符解析器拒绝内嵌 filament_start_gcode（S2: L4 {else} 孤立=前置 {if position[2]...} 失败；Tiger/土拨鼠: L10 {position[2] + 0.4} "Expecting tag literal-char"） | **组合性兼容缺陷**：单模板隔离复现通过，完整模型+配置组合失败 → 配置叠加/作用域路径 bug。嫌疑 = 表达式"向量下标后接算术"（position[2] + 0.4）的 spirit 语法缺口 |
+| 拉布布_内存≤8GB | rc=156，Bambu P1S 生态模板（Bambu 专属变量/指令） | 待提取完整报错（日志截断） |
+
+关键边界澄清：
+- 5 个全是 heavy/新同步模型首次测试——**不是 12 修复的回归**（12 修复本轮全绿保持）
+- 3 个解析失败疑似同一根因（表达式语法缺口），修一处可能连带收敛
+- 均为"CP 能切我们不能"的真实兼容差距，严重度已按档标注
